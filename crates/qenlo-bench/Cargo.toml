@@ -1,0 +1,33 @@
+[package]
+name = "qenlo-bench"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+description = "Independent correctness oracle and benchmark reporting support for Qenlo"
+
+[features]
+default = []
+otlp = [
+    "dep:opentelemetry",
+    "dep:opentelemetry-otlp",
+    "dep:opentelemetry_sdk",
+    "dep:tokio",
+    "dep:tracing",
+    "dep:tracing-opentelemetry",
+    "dep:tracing-subscriber",
+]
+
+[dependencies]
+opentelemetry = { version = "0.32", optional = true, features = ["metrics", "trace"] }
+opentelemetry-otlp = { version = "0.32", optional = true, default-features = false, features = ["http-proto", "metrics", "reqwest-client", "trace"] }
+opentelemetry_sdk = { version = "0.32.1", optional = true, features = ["metrics", "rt-tokio", "trace"] }
+tokio = { version = "1", optional = true, features = ["macros", "rt-multi-thread", "time"] }
+tracing = { workspace = true, optional = true }
+tracing-opentelemetry = { version = "0.33", optional = true }
+tracing-subscriber = { version = "0.3", optional = true, features = ["env-filter", "fmt"] }
+
+[[example]]
+name = "otlp"
+required-features = ["otlp"]
