@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none">
+  <!-- Qenlo Optimized Micro Favicon (16x16 / 32x32 Crisp Grid) -->
+  
+  <!-- Outer Hexagonal Frame & Bus Connectors -->
+  <g stroke="#1F2328" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+    <!-- North Terminal (Pointing UP) -->
+    <line x1="16" y1="6" x2="16" y2="2" />
+    <polyline points="14.5,7 13,5 13,2" fill="none" />
+    <polyline points="17.5,7 19,5 19,2" fill="none" />
+
+    <!-- South Terminal (Pointing DOWN) -->
+    <line x1="16" y1="26" x2="16" y2="30" />
+    <polyline points="14.5,25 13,27 13,30" fill="none" />
+    <polyline points="17.5,25 19,27 19,30" fill="none" />
+
+    <!-- West Terminal (Pointing LEFT) -->
+    <line x1="6" y1="16" x2="2" y2="16" />
+    <polyline points="7,14.5 5,13 2,13" fill="none" />
+    <polyline points="7,17.5 5,19 2,19" fill="none" />
+
+    <!-- East Terminal (Pointing RIGHT) -->
+    <line x1="26" y1="16" x2="30" y2="16" />
+    <polyline points="25,14.5 27,13 30,13" fill="none" />
+    <polyline points="25,17.5 27,19 30,19" fill="none" />
+
+    <!-- Hexagonal Outer Boundary -->
+    <polygon points="16,6.5 24,11 24,21 16,25.5 8,21 8,11" fill="none" />
+  </g>
+
+  <!-- Simplified Inner Coordinate Grid -->
+  <g stroke="#CBD5E1" stroke-width="1.2" opacity="0.8">
+    <line x1="16" y1="6.5" x2="16" y2="25.5" />
+    <line x1="8" y1="16" x2="24" y2="16" />
+    <polygon points="16,10.5 20.8,13.2 20.8,18.8 16,21.5 11.2,18.8 11.2,13.2" fill="none" />
+  </g>
+
+  <!-- Solid Central Hexagonal Core & Radiating Vector Axes -->
+  <polygon points="16,13.5 18.2,14.7 18.2,17.3 16,18.5 13.8,17.3 13.8,14.7" fill="#1F2328" />
+  <g stroke="#1F2328" stroke-width="1.8" stroke-linecap="square">
+    <line x1="16" y1="13.5" x2="16" y2="10" />
+    <line x1="13.8" y1="17.3" x2="11" y2="19" />
+    <line x1="18.2" y1="17.3" x2="21" y2="19" />
+  </g>
+
+  <!-- Prominent Bold Red Marker on the Coordinate Intersection -->
+  <circle cx="20.8" cy="18.8" r="2.8" fill="#B53C2F" stroke="#FFFFFF" stroke-width="0.8" />
+</svg>

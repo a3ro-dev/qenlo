@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 120" width="100%" height="100%" fill="none">
+  <!-- Qenlo Brand Lockup - Dark Background (Reversed) -->
+  <!-- 1. Emblem (Mark) Scaled and Positioned on the Left -->
+  <g transform="translate(16, 14) scale(0.18)">
+    <!-- Coordinate Lattice Grid -->
+    <g stroke="#2E3833" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
+      <line x1="256" y1="100" x2="256" y2="412" />
+      <line x1="100" y1="256" x2="412" y2="256" />
+      <line x1="178" y1="145" x2="334" y2="367" />
+      <line x1="334" y1="145" x2="178" y2="367" />
+      <polygon points="256,166 334,211 334,301 256,346 178,301 178,211" fill="none" />
+      <polygon points="256,206 299,231 299,281 256,306 213,281 213,231" fill="none" stroke-dasharray="3 3" />
+      <line x1="178" y1="211" x2="334" y2="211" />
+      <line x1="178" y1="301" x2="334" y2="301" />
+      <line x1="213" y1="170" x2="213" y2="342" />
+      <line x1="299" y1="170" x2="299" y2="342" />
+    </g>
+
+    <!-- Intermediate Nodes -->
+    <g fill="#6E7C74">
+      <polygon points="256,160 261,163 261,169 256,172 251,169 251,163" />
+      <polygon points="256,340 261,343 261,349 256,352 251,349 251,343" />
+      <polygon points="178,205 183,208 183,214 178,217 173,214 173,208" />
+      <polygon points="178,295 183,298 183,304 178,307 173,304 173,298" />
+      <polygon points="334,205 339,208 339,214 334,217 329,214 329,208" />
+    </g>
+
+    <!-- Red Accent Node -->
+    <g>
+      <circle cx="334" cy="301" r="10" fill="none" stroke="#EF8B79" stroke-width="1.75" opacity="0.45" />
+      <polygon points="334,292 342,297 342,305 334,310 326,305 326,297" fill="#EF8B79" />
+    </g>
+
+    <!-- Structural Outer Boundary -->
+    <g stroke="#F7F5F0" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter">
+      <line x1="256" y1="100" x2="178" y2="145" />
+      <line x1="256" y1="100" x2="334" y2="145" />
+      <line x1="256" y1="412" x2="178" y2="367" />
+      <line x1="256" y1="412" x2="334" y2="367" />
+      <line x1="178" y1="145" x2="178" y2="367" />
+      <line x1="334" y1="145" x2="334" y2="367" />
+      <polyline points="178,145 118,180 118,246 100,256 118,266 118,332 178,367" fill="none" />
+      <polyline points="334,145 394,180 394,246 412,256 394,266 394,332 334,367" fill="none" />
+    </g>
+
+    <!-- Primary Nodes -->
+    <g fill="#F7F5F0">
+      <polygon points="256,86 268,93 268,107 256,114 244,107 244,93" />
+      <polygon points="256,398 268,405 268,419 256,426 244,419 244,405" />
+      <polygon points="100,242 112,249 112,263 100,270 88,263 88,249" />
+      <polygon points="412,242 424,249 424,263 412,270 400,263 400,249" />
+      <polygon points="178,134 188,140 188,150 178,156 168,150 168,140" />
+      <polygon points="334,134 344,140 344,150 334,156 324,150 324,140" />
+      <polygon points="178,356 188,362 188,372 178,378 168,372 168,362" />
+      <polygon points="334,356 344,362 344,372 334,378 324,372 324,362" />
+    </g>
+
+    <!-- 4 Cardinal Bus Terminals -->
+    <g stroke="#F7F5F0" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter">
+      <line x1="256" y1="86" x2="256" y2="28" />
+      <polyline points="244,93 236,75 236,28" fill="none" />
+      <polyline points="268,93 276,75 276,28" fill="none" />
+      <line x1="256" y1="426" x2="256" y2="484" />
+      <polyline points="244,419 236,437 236,484" fill="none" />
+      <polyline points="268,419 276,437 276,484" fill="none" />
+      <line x1="88" y1="256" x2="28" y2="256" />
+      <polyline points="95,244 77,236 28,236" fill="none" />
+      <polyline points="95,268 77,276 28,276" fill="none" />
+      <line x1="424" y1="256" x2="484" y2="256" />
+      <polyline points="417,244 435,236 484,236" fill="none" />
+      <polyline points="417,268 435,276 484,276" fill="none" />
+    </g>
+
+    <!-- Central Hexagon & Radiating Axes -->
+    <polygon points="256,232 277,244 277,268 256,280 235,268 235,244" fill="#F7F5F0" />
+    <g stroke="#F7F5F0" stroke-width="6" stroke-linecap="square">
+      <line x1="256" y1="232" x2="256" y2="190" />
+      <line x1="256" y1="280" x2="256" y2="306" />
+      <line x1="235" y1="268" x2="199" y2="289" />
+      <line x1="277" y1="268" x2="313" y2="289" />
+    </g>
+  </g>
+
+  <!-- 2. Outlined Vector Wordmark 'Qenlo' (IBM Plex Sans SemiBold - 100% Vector Bezier Paths) -->
+  <g fill="#F7F5F0" fill-rule="evenodd">
+    <!-- Letter 'Q' -->
+    <path d="M 166.5 35 C 178.5 35 188 44.5 188 56.5 C 188 61.2 186.5 65.5 184 69 L 192.5 69 L 192.5 76 L 176.5 76 C 173.5 77.2 170.2 78 166.5 78 C 154.5 78 145 68.5 145 56.5 C 145 44.5 154.5 35 166.5 35 Z M 166.5 42.5 C 158.8 42.5 152.5 48.8 152.5 56.5 C 152.5 64.2 158.8 70.5 166.5 70.5 C 170.2 70.5 173.5 69 175.8 66.8 L 175.8 62 L 180.5 62 C 180.5 60.2 180.5 58.4 180.5 56.5 C 180.5 48.8 174.2 42.5 166.5 42.5 Z" />
+    
+    <!-- Letter 'e' -->
+    <path d="M 215.5 45.5 C 224.5 45.5 231.5 52 232 61 L 202.5 61 C 203 66.8 207 70.8 213.5 70.8 C 218 70.8 221.8 68.8 223.5 65.2 L 230.5 67.5 C 227.5 73.5 221.5 77.5 213.5 77.5 C 202 77.5 195 69.5 195 58.5 C 195 47.5 202.5 45.5 215.5 45.5 Z M 215.2 51.5 C 208.5 51.5 203.5 55.5 202.8 59.8 L 224.5 59.8 C 224 55.5 219.8 51.5 215.2 51.5 Z" />
+
+    <!-- Letter 'n' -->
+    <path d="M 239.5 46.5 L 246.5 46.5 L 246.5 51 C 248.8 47.8 253.5 45.5 259.5 45.5 C 267.5 45.5 272.5 50.2 272.5 59 L 272.5 76.5 L 265 76.5 L 265 59.5 C 265 53.5 262 51.5 257.5 51.5 C 251.5 51.5 247 55.8 247 62.5 L 247 76.5 L 239.5 76.5 Z" />
+
+    <!-- Letter 'l' -->
+    <path d="M 280 34.5 L 287.5 34.5 L 287.5 76.5 L 280 76.5 Z" />
+
+    <!-- Letter 'o' -->
+    <path d="M 311 45.5 C 322 45.5 329.5 53.5 329.5 61.5 C 329.5 69.5 322 77.5 311 77.5 C 300 77.5 292.5 69.5 292.5 61.5 C 292.5 53.5 300 45.5 311 45.5 Z M 311 52.2 C 304.5 52.2 300 56.5 300 61.5 C 300 66.5 304.5 70.8 311 70.8 C 317.5 70.8 322 66.5 322 61.5 C 322 56.5 317.5 52.2 311 52.2 Z" />
+  </g>
+</svg>

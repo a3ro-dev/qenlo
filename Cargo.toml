@@ -1,0 +1,21 @@
+[workspace]
+members = ["crates/qenlo-core", "crates/qenlo", "crates/qenlo-bench"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98.0"
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/qenlo/qenlo"
+
+[workspace.dependencies]
+qenlo-core = { path = "crates/qenlo-core" }
+thiserror = "2"
+tracing = "0.1.44"
+web-time = "1"
+
+[profile.bench]
+debug = true
+lto = "thin"
+

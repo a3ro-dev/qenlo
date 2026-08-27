@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+  <!-- Qenlo Emblem - Dark Background (Reversed) -->
+  <!-- 1. Subtle Coordinate Lattice Grid (Isometric) -->
+  <g stroke="#2E3833" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
+    <!-- Outer Diamond / Diagonal Cross Lattice -->
+    <line x1="256" y1="100" x2="256" y2="412" />
+    <line x1="100" y1="256" x2="412" y2="256" />
+    
+    <!-- Diagonal Lattice Crossings -->
+    <line x1="178" y1="145" x2="334" y2="367" />
+    <line x1="334" y1="145" x2="178" y2="367" />
+    
+    <!-- Concentric Isometric Hexagonal Rings -->
+    <!-- Mid Hexagon Ring -->
+    <polygon points="256,166 334,211 334,301 256,346 178,301 178,211" fill="none" />
+    
+    <!-- Inner Concentric Hexagon Ring -->
+    <polygon points="256,206 299,231 299,281 256,306 213,281 213,231" fill="none" stroke-dasharray="3 3" />
+    
+    <!-- Secondary Lattice Intersections -->
+    <line x1="178" y1="211" x2="334" y2="211" />
+    <line x1="178" y1="301" x2="334" y2="301" />
+    <line x1="213" y1="170" x2="213" y2="342" />
+    <line x1="299" y1="170" x2="299" y2="342" />
+  </g>
+
+  <!-- 2. Intermediate Hexagonal Grid Nodes (Faint Lattice Points) -->
+  <g fill="#6E7C74">
+    <polygon points="256,160 261,163 261,169 256,172 251,169 251,163" />
+    <polygon points="256,340 261,343 261,349 256,352 251,349 251,343" />
+    <polygon points="178,205 183,208 183,214 178,217 173,214 173,208" />
+    <polygon points="178,295 183,298 183,304 178,307 173,304 173,298" />
+    <polygon points="334,205 339,208 339,214 334,217 329,214 329,208" />
+  </g>
+
+  <!-- 3. Single Discrete Red Accent Node (Inner Right Lattice Intersection) -->
+  <g>
+    <!-- Coordinate marker halo / micro-ring -->
+    <circle cx="334" cy="301" r="9" fill="none" stroke="#EF8B79" stroke-width="1.5" opacity="0.4" />
+    <!-- Solid Red Coordinate Node -->
+    <polygon points="334,293 341,297 341,305 334,309 327,305 327,297" fill="#EF8B79" />
+  </g>
+
+  <!-- 4. Primary Structural Outer Boundary & Pillars -->
+  <g stroke="#F7F5F0" stroke-width="5.5" stroke-linecap="square" stroke-linejoin="miter">
+    <!-- North to Diagonal Nodes -->
+    <line x1="256" y1="100" x2="178" y2="145" />
+    <line x1="256" y1="100" x2="334" y2="145" />
+
+    <!-- South to Diagonal Nodes -->
+    <line x1="256" y1="412" x2="178" y2="367" />
+    <line x1="256" y1="412" x2="334" y2="367" />
+
+    <!-- Vertical Side Pillars -->
+    <line x1="178" y1="145" x2="178" y2="367" />
+    <line x1="334" y1="145" x2="334" y2="367" />
+
+    <!-- Outer Stepped Perimeter (West & East Terminal Enclosures) -->
+    <polyline points="178,145 118,180 118,246 100,256 118,266 118,332 178,367" fill="none" />
+    <polyline points="334,145 394,180 394,246 412,256 394,266 394,332 334,367" fill="none" />
+  </g>
+
+  <!-- 5. Primary Vertex Hexagon Nodes (Crisp Off-White) -->
+  <g fill="#F7F5F0">
+    <!-- North Cardinal Node -->
+    <polygon points="256,86 268,93 268,107 256,114 244,107 244,93" />
+    <!-- South Cardinal Node -->
+    <polygon points="256,398 268,405 268,419 256,426 244,419 244,405" />
+    <!-- West Cardinal Node -->
+    <polygon points="100,242 112,249 112,263 100,270 88,263 88,249" />
+    <!-- East Cardinal Node -->
+    <polygon points="412,242 424,249 424,263 412,270 400,263 400,249" />
+
+    <!-- 4 Diagonal Lattice Nodes -->
+    <polygon points="178,134 188,140 188,150 178,156 168,150 168,140" />
+    <polygon points="334,134 344,140 344,150 334,156 324,150 324,140" />
+    <polygon points="178,356 188,362 188,372 178,378 168,372 168,362" />
+    <polygon points="334,356 344,362 344,372 334,378 324,372 324,362" />
+  </g>
+
+  <!-- 6. Four Cardinal 3-Prong Bus Terminals (N, S, E, W) -->
+  <g stroke="#F7F5F0" stroke-width="5.5" stroke-linecap="square" stroke-linejoin="miter">
+    <!-- North Terminal (Pointing UP) -->
+    <line x1="256" y1="86" x2="256" y2="28" />
+    <polyline points="244,93 236,75 236,28" fill="none" />
+    <polyline points="268,93 276,75 276,28" fill="none" />
+
+    <!-- South Terminal (Pointing DOWN) -->
+    <line x1="256" y1="426" x2="256" y2="484" />
+    <polyline points="244,419 236,437 236,484" fill="none" />
+    <polyline points="268,419 276,437 276,484" fill="none" />
+
+    <!-- West Terminal (Pointing LEFT) -->
+    <line x1="88" y1="256" x2="28" y2="256" />
+    <polyline points="95,244 77,236 28,236" fill="none" />
+    <polyline points="95,268 77,276 28,276" fill="none" />
+
+    <!-- East Terminal (Pointing RIGHT) -->
+    <line x1="424" y1="256" x2="484" y2="256" />
+    <polyline points="417,244 435,236 484,236" fill="none" />
+    <polyline points="417,268 435,276 484,276" fill="none" />
+  </g>
+
+  <!-- 7. Solid Central Hexagonal Core & Radiating Vector Axes -->
+  <g>
+    <!-- Central Hexagonal Core -->
+    <polygon points="256,232 277,244 277,268 256,280 235,268 235,244" fill="#F7F5F0" />
+
+    <!-- Radiating Vector Axes -->
+    <g stroke="#F7F5F0" stroke-width="5.5" stroke-linecap="square">
+      <!-- Vector Axis: North (Straight UP) -->
+      <line x1="256" y1="232" x2="256" y2="190" />
+      <!-- Vector Axis: South (Straight DOWN) -->
+      <line x1="256" y1="280" x2="256" y2="306" />
+      <!-- Vector Axis: Down-Left (210° Isometric Basis) -->
+      <line x1="235" y1="268" x2="199" y2="289" />
+      <!-- Vector Axis: Down-Right (330° Isometric Basis) -->
+      <line x1="277" y1="268" x2="313" y2="289" />
+    </g>
+  </g>
+</svg>

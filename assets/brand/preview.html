@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qenlo — Brand Specimen &amp; Review Sheet</title>
+  <link rel="stylesheet" href="./tokens.css">
+  <style>
+    /* -------------------------------------------------------------
+       CSS Reset & Specimen Layout Styles
+       ------------------------------------------------------------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--qenlo-color-background);
+      color: var(--qenlo-color-text);
+      font-family: var(--qenlo-font-family-sans);
+      font-size: var(--qenlo-font-size-base);
+      line-height: 1.5;
+      padding: var(--qenlo-space-8) var(--qenlo-space-4);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+
+    header.specimen-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--qenlo-space-4);
+      padding-bottom: var(--qenlo-space-6);
+      border-bottom: 1px solid var(--qenlo-color-border);
+      margin-bottom: var(--qenlo-space-8);
+    }
+
+    .header-lockup img {
+      height: 38px;
+      width: auto;
+      display: block;
+    }
+
+    .header-meta {
+      font-family: var(--qenlo-font-family-mono);
+      font-size: var(--qenlo-font-size-xs);
+      color: var(--qenlo-color-muted-text);
+      letter-spacing: 0.05em;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--qenlo-color-surface);
+      border: 1px solid var(--qenlo-color-border);
+      border-radius: 3px;
+      font-family: var(--qenlo-font-family-mono);
+      font-size: var(--qenlo-font-size-xs);
+      color: var(--qenlo-color-text);
+      letter-spacing: 0.05em;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--qenlo-color-accent);
+    }
+
+    section.specimen-section {
+      margin-bottom: var(--qenlo-space-12);
+    }
+
+    .section-title {
+      font-size: var(--qenlo-font-size-xl);
+      font-weight: var(--qenlo-font-weight-semibold);
+      letter-spacing: -0.01em;
+      margin-bottom: var(--qenlo-space-2);
+      display: flex;
+      align-items: baseline;
+      gap: var(--qenlo-space-2);
+    }
+
+    .section-title span.mono-num {
+      font-family: var(--qenlo-font-family-mono);
+      font-size: var(--qenlo-font-size-sm);
+      color: var(--qenlo-color-muted-text);
+      font-weight: 400;
+    }
+
+    .section-desc {
+      color: var(--qenlo-color-muted-text);
+      font-size: var(--qenlo-font-size-sm);
+      margin-bottom: var(--qenlo-space-4);
+      max-width: 760px;
+      line-height: 1.6;
+    }
+
+    /* Dual Mode Split View Grid */
+    .dual-theme-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--qenlo-space-6);
+      margin-bottom: var(--qenlo-space-6);
+    }
+
+    @media (min-width: 860px) {
+      .dual-theme-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .theme-panel {
+      padding: var(--qenlo-space-6);
+      border-radius: 6px;
+      border: 1px solid var(--qenlo-color-border);
+      background-color: var(--qenlo-color-background);
+      color: var(--qenlo-color-text);
+    }
+
+    .panel-label {
+      font-family: var(--qenlo-font-family-mono);
+      font-size: var(--qenlo-font-size-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: var(--qenlo-space-4);
+      color: var(--qenlo-color-muted-text);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Multi-Scale Marks */
+    .scale-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: var(--qenlo-space-6);
+      padding: var(--qenlo-space-6) 0;
+      justify-content: space-around;
+      background: var(--qenlo-color-surface);
+      border-radius: 4px;
+      border: 1px solid var(--qenlo-color-border);
+    }
+
+    .scale-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--qenlo-space-2);
+    }
+
+    .scale-item img {
+      display: block;
+    }
+
+    .scale-label {
+      font-family: var(--qenlo-font-family-mono);
+      font-size: 11px;
+      color: var(--qenlo-color-muted-text);
+    }
+
+    /* Lockup Simulation in Header */
+    .header-simulation {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--qenlo-space-3) var(--qenlo-space-4);
+      border-radius: 4px;
+      background: var(--qenlo-color-surface);
+      border: 1px solid var(--qenlo-color-border);
+      margin-top: var(--qenlo-space-2);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: var(--qenlo-space-4);
+      font-size: var(--qenlo-font-size-sm);
+    }
+
+    .nav-links a {
+      color: var(--qenlo-color-muted-text);
+      text-decoration: none;
+    }
+    .nav-links a.active {
+      color: var(--qenlo-color-text);
+      font-weight: var(--qenlo-font-weight-semibold);
+    }
+
+    /* Palette Swatches */
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: var(--qenlo-space-3);
+      margin-top: var(--qenlo-space-2);
+    }
+
+    .swatch-card {
+      border-radius: 4px;
+      overflow: hidden;
+      font-size: 11px;
+      border: 1px solid var(--qenlo-color-border);
+      background: var(--qenlo-color-surface);
+    }
+
+    .swatch-color {
+      height: 48px;
+      width: 100%;
+      border-bottom: 1px solid var(--qenlo-color-border);
+    }
+
+    .swatch-info {
+      padding: var(--qenlo-space-2);
+      font-family: var(--qenlo-font-family-mono);
+    }
+
+    .swatch-name {
+      font-weight: 600;
+      margin-bottom: 2px;
+      color: var(--qenlo-color-text);
+    }
+
+    .swatch-hex {
+      color: var(--qenlo-color-muted-text);
+      font-size: 10px;
+    }
+
+    .swatch-ratio {
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--qenlo-color-accent);
+      font-weight: 600;
+    }
+
+    /* Typography & Code Specimen */
+    .type-specimen-block {
+      display: flex;
+      flex-direction: column;
+      gap: var(--qenlo-space-4);
+    }
+
+    .type-heading-2 {
+      font-size: var(--qenlo-font-size-xl);
+      font-weight: var(--qenlo-font-weight-semibold);
+      letter-spacing: -0.01em;
+      color: var(--qenlo-color-text);
+    }
+
+    .type-prose {
+      font-size: var(--qenlo-font-size-base);
+      line-height: 1.6;
+      color: var(--qenlo-color-text);
+      max-width: 65ch;
+    }
+
+    pre.code-specimen {
+      font-family: var(--qenlo-font-family-mono);
+      font-size: var(--qenlo-font-size-sm);
+      line-height: 1.6;
+      padding: var(--qenlo-space-4);
+      border-radius: 4px;
+      overflow-x: auto;
+      background: var(--qenlo-color-surface-raised);
+      border: 1px solid var(--qenlo-color-border);
+      color: var(--qenlo-color-text);
+    }
+
+    /* Benchmark Specimen Table */
+    .benchmark-table-container {
+      overflow-x: auto;
+      margin-top: var(--qenlo-space-2);
+      border-radius: 4px;
+    }
+
+    table.benchmark-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--qenlo-font-size-sm);
+      text-align: left;
+      border: 1px solid var(--qenlo-color-border);
+    }
+
+    table.benchmark-table th,
+    table.benchmark-table td {
+      padding: var(--qenlo-space-3) var(--qenlo-space-4);
+      border-bottom: 1px solid var(--qenlo-color-border);
+    }
+
+    table.benchmark-table th {
+      background: var(--qenlo-color-surface-raised);
+      color: var(--qenlo-color-text);
+      font-family: var(--qenlo-font-family-mono);
+      font-size: var(--qenlo-font-size-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tabular-val {
+      font-family: var(--qenlo-font-family-mono);
+      font-variant-numeric: tabular-nums;
+      color: var(--qenlo-color-muted-text);
+    }
+
+    .table-disclaimer {
+      font-family: var(--qenlo-font-family-mono);
+      font-size: var(--qenlo-font-size-xs);
+      margin-top: var(--qenlo-space-3);
+      color: var(--qenlo-color-muted-text);
+      line-height: 1.5;
+    }
+
+    /* Social Card Specimen */
+    .card-preview-wrap {
+      width: 100%;
+      max-width: 900px;
+      margin: var(--qenlo-space-4) 0;
+      border: 1px solid var(--qenlo-color-border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #171C19;
+    }
+
+    .card-preview-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Interactive Focus Specimen */
+    .interactive-demo {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--qenlo-space-3);
+      margin-top: var(--qenlo-space-2);
+    }
+
+    button.qenlo-btn {
+      font-family: var(--qenlo-font-family-sans);
+      font-size: var(--qenlo-font-size-sm);
+      font-weight: var(--qenlo-font-weight-semibold);
+      padding: var(--qenlo-space-2) var(--qenlo-space-4);
+      border-radius: 3px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: opacity 0.15s ease;
+    }
+
+    button.qenlo-btn-primary {
+      background: var(--qenlo-color-accent);
+      color: var(--qenlo-color-on-accent);
+    }
+    button.qenlo-btn-primary:focus-visible {
+      outline: 2px solid var(--qenlo-color-focus);
+      outline-offset: 2px;
+    }
+
+    button.qenlo-btn-secondary {
+      background: var(--qenlo-color-surface);
+      border-color: var(--qenlo-color-border);
+      color: var(--qenlo-color-text);
+    }
+    button.qenlo-btn-secondary:focus-visible {
+      outline: 2px solid var(--qenlo-color-focus);
+      outline-offset: 2px;
+    }
+
+    footer.specimen-footer {
+      margin-top: var(--qenlo-space-12);
+      padding-top: var(--qenlo-space-6);
+      border-top: 1px solid var(--qenlo-color-border);
+      font-family: var(--qenlo-font-family-mono);
+      font-size: var(--qenlo-font-size-xs);
+      color: var(--qenlo-color-muted-text);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--qenlo-space-2);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="specimen-header">
+      <div class="header-lockup">
+        <img src="./logo/lockup.svg" alt="Qenlo Lockup" height="38">
+      </div>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        <span>RESEARCH PREVIEW // BRAND SPECIMEN</span>
+      </div>
+      <div class="header-meta">
+        Offline Specimen &bull; Bundled Fonts &bull; Zero CDN
+      </div>
+    </header>
+
+    <!-- 1. Positioning & Product Truth -->
+    <section class="specimen-section">
+      <h2 class="section-title"><span class="mono-num">01.</span> Product Truth &amp; Research Scope</h2>
+      <p class="section-desc">
+        Qenlo is a Rust vector-database research project for native applications. The immediate engineering milestone tests a search hypothesis. Desktop comes first; mobile and browser are later targets.
+      </p>
+    </section>
+
+    <!-- 2. Emblem Multi-Scale & Resolution Inspection -->
+    <section class="specimen-section">
+      <h2 class="section-title"><span class="mono-num">02.</span> Emblem &amp; Multi-Scale Geometry</h2>
+      <p class="section-desc">
+        Mathematical reconstruction preserving hexagonal and radial geometry. Evaluated across 16px, 24px, 32px, 48px, and 128px scales in both light and dark themes.
+      </p>
+
+      <div class="dual-theme-grid">
+        <!-- Light Mode Scale Panel -->
+        <div class="theme-panel" data-theme="light">
+          <div class="panel-label">
+            <span>Light Background</span>
+            <code>#F7F5F0</code>
+          </div>
+          <div class="scale-row">
+            <div class="scale-item">
+              <img src="./logo/favicon.svg" width="16" height="16" alt="16px Favicon">
+              <span class="scale-label">16px</span>
+            </div>
+            <div class="scale-item">
+              <img src="./logo/favicon.svg" width="24" height="24" alt="24px Favicon">
+              <span class="scale-label">24px</span>
+            </div>
+            <div class="scale-item">
+              <img src="./logo/mark.svg" width="32" height="32" alt="32px Mark">
+              <span class="scale-label">32px</span>
+            </div>
+            <div class="scale-item">
+              <img src="./logo/mark.svg" width="48" height="48" alt="48px Mark">
+              <span class="scale-label">48px</span>
+            </div>
+            <div class="scale-item">
+              <img src="./logo/mark.svg" width="128" height="128" alt="128px Mark">
+              <span class="scale-label">128px</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dark Mode Scale Panel -->
+        <div class="theme-panel" data-theme="dark">
+          <div class="panel-label">
+            <span>Dark Background</span>
+            <code>#171C19</code>
+          </div>
+          <div class="scale-row">
+            <div class="scale-item">
+              <img src="./logo/favicon.svg" width="16" height="16" alt="16px Favicon">
+              <span class="scale-label">16px</span>
+            </div>
+            <div class="scale-item">
+              <img src="./logo/favicon.svg" width="24" height="24" alt="24px Favicon">
+              <span class="scale-label">24px</span>
+            </div>
+            <div class="scale-item">
+              <img src="./logo/mark-reversed.svg" width="32" height="32" alt="32px Mark">
+              <span class="scale-label">32px</span>
+            </div>
+            <div class="scale-item">
+              <img src="./logo/mark-reversed.svg" width="48" height="48" alt="48px Mark">
+              <span class="scale-label">48px</span>
+            </div>
+            <div class="scale-item">
+              <img src="./logo/mark-reversed.svg" width="128" height="128" alt="128px Mark">
+              <span class="scale-label">128px</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Horizontal Lockup & Realistic Header Widths -->
+    <section class="specimen-section">
+      <h2 class="section-title"><span class="mono-num">03.</span> Lockup &amp; Documentation Header Context</h2>
+      <p class="section-desc">
+        Horizontal lockup featuring vector-outlined IBM Plex Sans SemiBold letterforms. Zero runtime font dependencies.
+      </p>
+
+      <div class="dual-theme-grid">
+        <div class="theme-panel" data-theme="light">
+          <div class="panel-label">
+            <span>Light Documentation Header</span>
+            <code>lockup.svg</code>
+          </div>
+          <div class="header-simulation">
+            <img src="./logo/lockup.svg" alt="Qenlo Lockup" height="30">
+            <nav class="nav-links">
+              <a href="#overview" class="active">Overview</a>
+              <a href="#architecture">Architecture</a>
+              <a href="#research">Research</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="theme-panel" data-theme="dark">
+          <div class="panel-label">
+            <span>Dark Documentation Header</span>
+            <code>lockup-reversed.svg</code>
+          </div>
+          <div class="header-simulation">
+            <img src="./logo/lockup-reversed.svg" alt="Qenlo Lockup Reversed" height="30">
+            <nav class="nav-links">
+              <a href="#overview" class="active">Overview</a>
+              <a href="#architecture">Architecture</a>
+              <a href="#research">Research</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Palette & Contrast Matrix -->
+    <section class="specimen-section">
+      <h2 class="section-title"><span class="mono-num">04.</span> Palette &amp; Contrast Validation</h2>
+      <p class="section-desc">
+        Semantic token assignments with calculated WCAG contrast ratios against adjacent surfaces.
+      </p>
+
+      <div class="dual-theme-grid">
+        <!-- Light Swatches -->
+        <div class="theme-panel" data-theme="light">
+          <div class="panel-label">Light Theme Tokens</div>
+          <div class="swatch-grid">
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #F7F5F0;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Background</div>
+                <div class="swatch-hex">#F7F5F0</div>
+                <div class="swatch-ratio">Base Surface</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #1D2320;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Text</div>
+                <div class="swatch-hex">#1D2320</div>
+                <div class="swatch-ratio">14.67:1 (AAA)</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #5A615D;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Muted Text</div>
+                <div class="swatch-hex">#5A615D</div>
+                <div class="swatch-ratio">5.84:1 (AA)</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #B53C2F;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Accent</div>
+                <div class="swatch-hex">#B53C2F</div>
+                <div class="swatch-ratio">5.28:1 (AA)</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #EFECE6;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Surface</div>
+                <div class="swatch-hex">#EFECE6</div>
+                <div class="swatch-ratio">Panel Layer</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #878E8A;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Border Strong</div>
+                <div class="swatch-hex">#878E8A</div>
+                <div class="swatch-ratio">3.12:1 (UI 3:1)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dark Swatches -->
+        <div class="theme-panel" data-theme="dark">
+          <div class="panel-label">Dark Theme Tokens</div>
+          <div class="swatch-grid">
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #171C19;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Background</div>
+                <div class="swatch-hex">#171C19</div>
+                <div class="swatch-ratio">Base Surface</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #F7F5F0;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Text</div>
+                <div class="swatch-hex">#F7F5F0</div>
+                <div class="swatch-ratio">15.84:1 (AAA)</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #AAB3AD;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Muted Text</div>
+                <div class="swatch-hex">#AAB3AD</div>
+                <div class="swatch-ratio">8.02:1 (AAA)</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #EF8B79;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Accent</div>
+                <div class="swatch-hex">#EF8B79</div>
+                <div class="swatch-ratio">7.10:1 (AAA)</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #1F2622;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Surface</div>
+                <div class="swatch-hex">#1F2622</div>
+                <div class="swatch-ratio">Panel Layer</div>
+              </div>
+            </div>
+            <div class="swatch-card">
+              <div class="swatch-color" style="background: #6E7C74;"></div>
+              <div class="swatch-info">
+                <div class="swatch-name">Border Strong</div>
+                <div class="swatch-hex">#6E7C74</div>
+                <div class="swatch-ratio">3.98:1 (UI 3:1)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Technical Prose & Code Specimen -->
+    <section class="specimen-section">
+      <h2 class="section-title"><span class="mono-num">05.</span> Typography Specimen &amp; Technical Copy</h2>
+      <p class="section-desc">
+        IBM Plex Sans for headings and prose; IBM Plex Mono for code identifiers, configuration, and measurements.
+      </p>
+
+      <div class="dual-theme-grid">
+        <div class="theme-panel" data-theme="light">
+          <div class="type-specimen-block">
+            <h3 class="type-heading-2">Embedded Vector Retrieval Architecture</h3>
+            <p class="type-prose">
+              Qenlo indexes and searches pre-computed dense vector embeddings in memory-constrained native environments. Embedding generation and NPU inference belong to external runtimes; Qenlo manages graph navigation and distance indexing.
+            </p>
+            <pre class="code-specimen"><code>// Prospective embedded index configuration
+struct IndexConfig {
+    dimensions: usize,       // e.g. 384 or 768
+    metric: MetricKind,      // Cosine | DotProduct | L2
+    search_ef: usize,        // Beam search width
+}</code></pre>
+            <div class="interactive-demo">
+              <button class="qenlo-btn qenlo-btn-primary">Execute Search</button>
+              <button class="qenlo-btn qenlo-btn-secondary">Inspect Lattice</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="theme-panel" data-theme="dark">
+          <div class="type-specimen-block">
+            <h3 class="type-heading-2">Embedded Vector Retrieval Architecture</h3>
+            <p class="type-prose">
+              Qenlo indexes and searches pre-computed dense vector embeddings in memory-constrained native environments. Embedding generation and NPU inference belong to external runtimes; Qenlo manages graph navigation and distance indexing.
+            </p>
+            <pre class="code-specimen"><code>// Prospective embedded index configuration
+struct IndexConfig {
+    dimensions: usize,       // e.g. 384 or 768
+    metric: MetricKind,      // Cosine | DotProduct | L2
+    search_ef: usize,        // Beam search width
+}</code></pre>
+            <div class="interactive-demo">
+              <button class="qenlo-btn qenlo-btn-primary">Execute Search</button>
+              <button class="qenlo-btn qenlo-btn-secondary">Inspect Lattice</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Benchmark Specimen Table (Labeled "Not yet measured") -->
+    <section class="specimen-section">
+      <h2 class="section-title"><span class="mono-num">06.</span> Performance &amp; Benchmark Prototype Specimen</h2>
+      <p class="section-desc">
+        Research specimen placeholder. GPU acceleration and improved filtered-query latency are research objectives, not demonstrated capabilities.
+      </p>
+
+      <div class="dual-theme-grid">
+        <div class="theme-panel" data-theme="light">
+          <div class="panel-label">
+            <span>Latency Hypothesis</span>
+            <code>RESEARCH PROTOTYPE</code>
+          </div>
+          <div class="benchmark-table-container">
+            <table class="benchmark-table">
+              <thead>
+                <tr>
+                  <th>Dataset / Target</th>
+                  <th>Dimensions</th>
+                  <th>Recall @ 10</th>
+                  <th>p99 Latency</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Cohere Wiki (100k)</td>
+                  <td><span class="tabular-val">768</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                </tr>
+                <tr>
+                  <td>GloVe English (400k)</td>
+                  <td><span class="tabular-val">100</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                </tr>
+                <tr>
+                  <td>SIFT Image (1M)</td>
+                  <td><span class="tabular-val">128</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-disclaimer">
+            * Research preview status: Metrics are exploratory hypotheses; no performance claims are asserted.
+          </div>
+        </div>
+
+        <div class="theme-panel" data-theme="dark">
+          <div class="panel-label">
+            <span>Latency Hypothesis</span>
+            <code>RESEARCH PROTOTYPE</code>
+          </div>
+          <div class="benchmark-table-container">
+            <table class="benchmark-table">
+              <thead>
+                <tr>
+                  <th>Dataset / Target</th>
+                  <th>Dimensions</th>
+                  <th>Recall @ 10</th>
+                  <th>p99 Latency</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Cohere Wiki (100k)</td>
+                  <td><span class="tabular-val">768</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                </tr>
+                <tr>
+                  <td>GloVe English (400k)</td>
+                  <td><span class="tabular-val">100</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                </tr>
+                <tr>
+                  <td>SIFT Image (1M)</td>
+                  <td><span class="tabular-val">128</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                  <td><span class="tabular-val">Not yet measured</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-disclaimer">
+            * Research preview status: Metrics are exploratory hypotheses; no performance claims are asserted.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Social Card Specimen -->
+    <section class="specimen-section">
+      <h2 class="section-title"><span class="mono-num">07.</span> Social Preview Card (1200 &times; 630)</h2>
+      <p class="section-desc">
+        Editable vector card and rendered PNG asset for social previews and technical repository cards.
+      </p>
+
+      <div class="card-preview-wrap">
+        <img src="./social/card.png" alt="Qenlo Social Card Specimen">
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="specimen-footer">
+      <div>Qenlo Brand Specimen &bull; Assets located at <code>assets/brand/</code></div>
+      <div>Fonts: IBM Plex Sans &amp; Mono (OFL 1.1) &bull; Verified Offline</div>
+    </footer>
+  </div>
+
+</body>
+</html>
