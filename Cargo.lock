@@ -204,6 +204,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc32fast"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8498c871161e1742aaa9d52551b2d6ebdd4c3d45a3be423e3728f33b955be550"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "crunchy"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1229,6 +1238,7 @@ dependencies = [
 name = "qenlo"
 version = "0.1.0"
 dependencies = [
+ "crc32fast",
  "qenlo-core",
  "thiserror",
  "tracing",

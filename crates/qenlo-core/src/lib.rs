@@ -131,7 +131,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 /// Canonical record storage with metadata indexes and exact cosine search.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct CoreStore {
     dimension: usize,
     records: Vec<Record>,
@@ -156,6 +156,49 @@ impl CoreStore {
             live_len: 0,
             generation: 0,
         })
+    }
+
+    /// Restore canonical rows from a checked on-disk snapshot.
+    ///
+    /// This constructor preserves normalized vector bytes and tombstone slots. It
+    /// is intended for storage implementations; ordinary callers should use
+    /// [`CoreStore::new`] and [`CoreStore::add`].
+    pub fn restore(
+        dimension: usize,
+        generation: u64,
+        records: Vec<RestoredRecord>,
+    ) -> Result<Self, Error> {
+        let mut store = Self::new(dimension)?;
+        for restored in records {
+            if store.ids.contains_key(&restored.id) {
+                return Err(Error::DuplicateId(restored.id));
+            }
+            validate_stored_vector(&restored.vector, dimension)?;
+            let slot = u32::try_from(store.records.len()).map_err(|_| Error::CapacityExceeded)?;
+            store.ids.insert(restored.id, slot);
+            if restored.live {
+                store
+                    .users
+                    .entry(restored.user_id)
+                    .or_default()
+                    .insert(slot);
+                store
+                    .timestamps
+                    .entry(restored.timestamp)
+                    .or_default()
+                    .insert(slot);
+                store.live_len += 1;
+            }
+            store.records.push(Record {
+                id: restored.id,
+                user_id: restored.user_id,
+                timestamp: restored.timestamp,
+                vector: restored.vector,
+                live: restored.live,
+            });
+        }
+        store.generation = generation;
+        Ok(store)
     }
 
     pub fn dimension(&self) -> usize {
@@ -327,6 +370,17 @@ impl CoreStore {
     }
 }
 
+/// One canonical row decoded from durable storage.
+#[doc(hidden)]
+#[derive(Clone, Debug)]
+pub struct RestoredRecord {
+    pub id: u64,
+    pub user_id: u64,
+    pub timestamp: i64,
+    pub vector: Vec<f32>,
+    pub live: bool,
+}
+
 /// Validate and unit-normalize a vector using a float64 norm accumulator.
 pub fn normalize_vector(vector: &[f32], dimension: usize) -> Result<Vec<f32>, Error> {
     if vector.len() != dimension {
@@ -350,6 +404,22 @@ pub fn normalize_vector(vector: &[f32], dimension: usize) -> Result<Vec<f32>, Er
         .iter()
         .map(|value| (*value as f64 / norm) as f32)
         .collect())
+}
+
+fn validate_stored_vector(vector: &[f32], dimension: usize) -> Result<(), Error> {
+    if vector.len() != dimension {
+        return Err(Error::DimensionMismatch {
+            expected: dimension,
+            actual: vector.len(),
+        });
+    }
+    if vector.iter().any(|value| !value.is_finite()) {
+        return Err(Error::NonFiniteVector);
+    }
+    if vector.iter().all(|value| *value == 0.0) {
+        return Err(Error::ZeroNormVector);
+    }
+    Ok(())
 }
 
 fn remove_slot<K: Ord + Copy>(index: &mut BTreeMap<K, BTreeSet<u32>>, key: K, slot: u32) {

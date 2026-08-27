@@ -13,10 +13,10 @@ usearch = ["dep:usearch"]
 gpu-wgpu = ["dep:wgpu"]
 
 [dependencies]
+crc32fast.workspace = true
 qenlo-core.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 web-time.workspace = true
 usearch = { version = "2.26.1", optional = true }
 wgpu = { version = "30.0.1", optional = true }
-

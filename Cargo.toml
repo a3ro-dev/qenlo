@@ -10,6 +10,7 @@ license = "Apache-2.0 OR MIT"
 repository = "https://github.com/qenlo/qenlo"
 
 [workspace.dependencies]
+crc32fast = "1"
 qenlo-core = { path = "crates/qenlo-core" }
 thiserror = "2"
 tracing = "0.1.44"
@@ -18,4 +19,3 @@ web-time = "1"
 [profile.bench]
 debug = true
 lto = "thin"
-

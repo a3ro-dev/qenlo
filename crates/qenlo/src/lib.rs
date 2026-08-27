@@ -5,6 +5,7 @@
 
 #[cfg(feature = "usearch")]
 use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
 #[cfg(feature = "usearch")]
 use qenlo_core::Predicate;
@@ -15,6 +16,7 @@ use web_time::{Duration, Instant};
 
 #[cfg(feature = "gpu-wgpu")]
 mod gpu;
+mod storage;
 #[cfg(feature = "usearch")]
 mod usearch_backend;
 
@@ -161,6 +163,9 @@ pub struct CollectionStats {
     pub live_rows: usize,
     pub generation: u64,
     pub prepared_generation: Option<u64>,
+    pub durable_generation: Option<u64>,
+    pub recovered_interrupted_write: bool,
+    pub closed: bool,
 }
 
 #[derive(Debug, Error)]
@@ -175,6 +180,10 @@ pub enum Error {
     Preparation(String),
     #[error("backend search failed: {0}")]
     Search(String),
+    #[error("collection storage failed: {0}")]
+    Storage(String),
+    #[error("collection is closed")]
+    Closed,
 }
 
 enum Backend {
@@ -192,6 +201,10 @@ pub struct Collection {
     backend: Backend,
     prepared_generation: Option<u64>,
     fallback_reason: Option<String>,
+    path: Option<PathBuf>,
+    durable_generation: Option<u64>,
+    recovered_interrupted_write: bool,
+    closed: bool,
 }
 
 impl Collection {
@@ -205,6 +218,52 @@ impl Collection {
             backend,
             prepared_generation: None,
             fallback_reason,
+            path: None,
+            durable_generation: None,
+            recovered_interrupted_write: false,
+            closed: false,
+        })
+    }
+
+    /// Create a durable collection directory and its initial generation.
+    #[tracing::instrument(name = "qenlo.create", skip_all, fields(backend = ?config.backend))]
+    pub async fn create(path: impl AsRef<Path>, config: CollectionConfig) -> Result<Self, Error> {
+        let path = path.as_ref().to_path_buf();
+        let mut collection = Self::new(config).await?;
+        storage::create(&path, &collection.store)
+            .map_err(|error| Error::Storage(error.to_string()))?;
+        collection.path = Some(path);
+        collection.durable_generation = Some(collection.store.generation());
+        Ok(collection)
+    }
+
+    /// Open the newest committed generation of a durable collection.
+    ///
+    /// The configured dimension must exactly match the stored dimension. Format
+    /// versions are never inferred or migrated implicitly.
+    #[tracing::instrument(name = "qenlo.open", skip_all, fields(backend = ?config.backend))]
+    pub async fn open(path: impl AsRef<Path>, config: CollectionConfig) -> Result<Self, Error> {
+        let path = path.as_ref().to_path_buf();
+        let opened = storage::open(&path).map_err(|error| Error::Storage(error.to_string()))?;
+        if opened.store.dimension() != config.dimension {
+            return Err(CoreError::DimensionMismatch {
+                expected: opened.store.dimension(),
+                actual: config.dimension,
+            }
+            .into());
+        }
+        let durable_generation = opened.store.generation();
+        let (backend, fallback_reason) = Self::initialize_backend(&config).await?;
+        Ok(Self {
+            config,
+            store: opened.store,
+            backend,
+            prepared_generation: None,
+            fallback_reason,
+            path: Some(path),
+            durable_generation: Some(durable_generation),
+            recovered_interrupted_write: opened.recovered_interrupted_write,
+            closed: false,
         })
     }
 
@@ -247,6 +306,7 @@ impl Collection {
         timestamp: i64,
         vector: &[f32],
     ) -> Result<(), Error> {
+        self.ensure_open()?;
         self.store.add(id, user_id, timestamp, vector)?;
         self.prepared_generation = None;
         Ok(())
@@ -254,6 +314,7 @@ impl Collection {
 
     #[tracing::instrument(name = "qenlo.delete", skip_all, fields(operation = "delete"))]
     pub fn delete(&mut self, id: u64) -> Result<(), Error> {
+        self.ensure_open()?;
         self.store.delete(id)?;
         self.prepared_generation = None;
         Ok(())
@@ -261,6 +322,9 @@ impl Collection {
 
     /// Resolve the eligible public IDs without exposing internal row slots.
     pub fn filter(&self, filter: &Filter) -> Vec<u64> {
+        if self.closed {
+            return Vec::new();
+        }
         self.store
             .filter(filter)
             .into_iter()
@@ -270,6 +334,7 @@ impl Collection {
 
     #[tracing::instrument(name = "qenlo.prepare", skip_all, fields(operation = "prepare"))]
     pub async fn prepare(&mut self) -> Result<bool, Error> {
+        self.ensure_open()?;
         if self.prepared_generation == Some(self.store.generation()) {
             return Ok(false);
         }
@@ -315,6 +380,7 @@ impl Collection {
         filter: &Filter,
         k: usize,
     ) -> Result<SearchResponse, Error> {
+        self.ensure_open()?;
         if !(1..=MAX_K).contains(&k) {
             return Err(Error::InvalidK(k));
         }
@@ -393,6 +459,42 @@ impl Collection {
             live_rows: self.store.live_len(),
             generation: self.store.generation(),
             prepared_generation: self.prepared_generation,
+            durable_generation: self.durable_generation,
+            recovered_interrupted_write: self.recovered_interrupted_write,
+            closed: self.closed,
+        }
+    }
+
+    /// Durably publish the current canonical generation.
+    pub fn flush(&mut self) -> Result<(), Error> {
+        self.ensure_open()?;
+        let Some(path) = &self.path else {
+            return Ok(());
+        };
+        if self.durable_generation == Some(self.store.generation()) {
+            return Ok(());
+        }
+        storage::write_snapshot(path, &self.store)
+            .map_err(|error| Error::Storage(error.to_string()))?;
+        self.durable_generation = Some(self.store.generation());
+        Ok(())
+    }
+
+    /// Flush and close this handle. Further operations return [`Error::Closed`].
+    pub fn close(&mut self) -> Result<(), Error> {
+        if self.closed {
+            return Ok(());
+        }
+        self.flush()?;
+        self.closed = true;
+        Ok(())
+    }
+
+    fn ensure_open(&self) -> Result<(), Error> {
+        if self.closed {
+            Err(Error::Closed)
+        } else {
+            Ok(())
         }
     }
 }
@@ -447,7 +549,9 @@ fn eligible_ids(store: &CoreStore, predicate: &Predicate) -> HashSet<u64> {
 mod tests {
     use std::{
         future::Future,
+        path::PathBuf,
         task::{Context, Poll, Waker},
+        time::{SystemTime, UNIX_EPOCH},
     };
 
     use super::*;
@@ -461,6 +565,14 @@ mod tests {
                 Poll::Pending => std::thread::yield_now(),
             }
         }
+    }
+
+    fn temp_dir(label: &str) -> PathBuf {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::env::temp_dir().join(format!("qenlo-api-{label}-{}-{nonce}", std::process::id()))
     }
 
     #[test]
@@ -502,6 +614,42 @@ mod tests {
                     .collect::<Vec<_>>(),
                 [2]
             );
+        });
+    }
+
+    #[test]
+    fn durable_collection_survives_restart_with_tombstones() {
+        block_on(async {
+            let path = temp_dir("restart");
+            let config = CollectionConfig::cpu_exact(2);
+            let mut collection = Collection::create(&path, config.clone()).await.unwrap();
+            collection.add(1, 7, i64::MIN, &[1.0, 0.0]).unwrap();
+            collection.add(2, 8, i64::MAX, &[0.0, 1.0]).unwrap();
+            collection.delete(1).unwrap();
+            collection.flush().unwrap();
+            assert_eq!(collection.stats().durable_generation, Some(3));
+            collection.close().unwrap();
+            assert!(matches!(
+                collection.add(3, 9, 0, &[1.0, 0.0]),
+                Err(Error::Closed)
+            ));
+
+            let mut reopened = Collection::open(&path, config).await.unwrap();
+            assert_eq!(reopened.stats().rows, 2);
+            assert_eq!(reopened.stats().live_rows, 1);
+            assert_eq!(
+                reopened
+                    .search(&[0.0, 1.0], &Filter::ALL, 2)
+                    .await
+                    .unwrap()
+                    .results
+                    .iter()
+                    .map(|result| result.id)
+                    .collect::<Vec<_>>(),
+                [2]
+            );
+            reopened.close().unwrap();
+            std::fs::remove_dir_all(path).unwrap();
         });
     }
 
