@@ -1,0 +1,570 @@
+//! Observable embedded filtered vector search.
+//!
+//! Default features contain only the portable exact CPU backend. Applications
+//! opt into C++ (`usearch`) and GPU (`gpu-wgpu`) build requirements explicitly.
+
+#[cfg(feature = "usearch")]
+use std::collections::HashSet;
+
+#[cfg(feature = "usearch")]
+use qenlo_core::Predicate;
+use qenlo_core::{CoreStore, Error as CoreError, SearchHit};
+use thiserror::Error;
+use tracing::{Instrument, info_span};
+use web_time::{Duration, Instant};
+
+#[cfg(feature = "gpu-wgpu")]
+mod gpu;
+#[cfg(feature = "usearch")]
+mod usearch_backend;
+
+pub use qenlo_core::{Predicate as Filter, TimestampRange};
+
+/// Maximum supported result count for this prototype.
+pub const MAX_K: usize = 64;
+/// Default cap for all Qenlo-owned GPU allocations, including scratch buffers.
+pub const DEFAULT_GPU_BUDGET_BYTES: u64 = 512 * 1024 * 1024;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BackendSelection {
+    CpuExact,
+    #[cfg(feature = "usearch")]
+    Usearch,
+    #[cfg(feature = "gpu-wgpu")]
+    WgpuRequired(GpuFilterMode),
+    /// Try GPU and disclose a CPU fallback if initialization or allocation fails.
+    #[cfg(feature = "gpu-wgpu")]
+    Automatic(GpuFilterMode),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BackendKind {
+    Cpu,
+    Usearch,
+    Wgpu,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Algorithm {
+    Exact,
+    Hnsw,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GpuFilterMode {
+    CpuMask,
+    CpuEligibleRows,
+    GpuPredicate,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FilterExecution {
+    OrderedMetadataIndexes,
+    GraphPredicate,
+    Gpu(GpuFilterMode),
+}
+
+#[derive(Debug, Clone)]
+pub struct CollectionConfig {
+    pub dimension: usize,
+    pub backend: BackendSelection,
+    pub gpu_allocation_budget_bytes: u64,
+}
+
+impl CollectionConfig {
+    pub fn cpu_exact(dimension: usize) -> Self {
+        Self {
+            dimension,
+            backend: BackendSelection::CpuExact,
+            gpu_allocation_budget_bytes: DEFAULT_GPU_BUDGET_BYTES,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SearchResult {
+    pub id: u64,
+    pub distance: f32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Unavailable {
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Measurement<T> {
+    Available(T),
+    Unavailable(Unavailable),
+}
+
+impl<T> Measurement<T> {
+    fn unavailable(reason: impl Into<String>) -> Self {
+        Self::Unavailable(Unavailable {
+            reason: reason.into(),
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct PhaseTimings {
+    pub preparation: Measurement<Duration>,
+    pub filtering: Measurement<Duration>,
+    pub upload: Measurement<Duration>,
+    pub execution: Measurement<Duration>,
+    pub readback: Measurement<Duration>,
+    pub selection: Measurement<Duration>,
+}
+
+impl PhaseTimings {
+    fn cpu(preparation: Measurement<Duration>, execution: Duration) -> Self {
+        Self {
+            preparation,
+            filtering: Measurement::unavailable("included in exact CPU execution"),
+            upload: Measurement::unavailable("no device transfer"),
+            execution: Measurement::Available(execution),
+            readback: Measurement::unavailable("no device readback"),
+            selection: Measurement::unavailable("included in exact CPU execution"),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ExecutionReport {
+    pub requested_backend: BackendSelection,
+    pub actual_backend: BackendKind,
+    pub algorithm: Algorithm,
+    pub filter_execution: FilterExecution,
+    pub index_generation: u64,
+    pub rebuilt: bool,
+    pub fallback_reason: Option<String>,
+    pub total_duration: Duration,
+    pub phases: PhaseTimings,
+    pub upload_bytes: Measurement<u64>,
+    pub readback_bytes: Measurement<u64>,
+    pub dispatch_count: Measurement<u32>,
+    pub qenlo_allocation_bytes: Measurement<u64>,
+    pub candidates: Measurement<u64>,
+    pub results: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct SearchResponse {
+    pub results: Vec<SearchResult>,
+    pub report: ExecutionReport,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CollectionStats {
+    pub dimension: usize,
+    pub rows: usize,
+    pub live_rows: usize,
+    pub generation: u64,
+    pub prepared_generation: Option<u64>,
+}
+
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error(transparent)]
+    Core(#[from] CoreError),
+    #[error("k must be in 1..={MAX_K}, got {0}")]
+    InvalidK(usize),
+    #[error("requested backend is not enabled: {0}")]
+    BackendNotEnabled(&'static str),
+    #[error("backend preparation failed: {0}")]
+    Preparation(String),
+    #[error("backend search failed: {0}")]
+    Search(String),
+}
+
+enum Backend {
+    Cpu,
+    #[cfg(feature = "usearch")]
+    Usearch(usearch_backend::UsearchBackend),
+    #[cfg(feature = "gpu-wgpu")]
+    Wgpu(gpu::GpuBackend),
+}
+
+/// Sequential embedded collection. Mutations invalidate every derived index.
+pub struct Collection {
+    config: CollectionConfig,
+    store: CoreStore,
+    backend: Backend,
+    prepared_generation: Option<u64>,
+    fallback_reason: Option<String>,
+}
+
+impl Collection {
+    #[tracing::instrument(name = "qenlo.initialize", skip_all, fields(backend = ?config.backend))]
+    pub async fn new(config: CollectionConfig) -> Result<Self, Error> {
+        let store = CoreStore::new(config.dimension)?;
+        let (backend, fallback_reason) = Self::initialize_backend(&config).await?;
+        Ok(Self {
+            config,
+            store,
+            backend,
+            prepared_generation: None,
+            fallback_reason,
+        })
+    }
+
+    async fn initialize_backend(
+        config: &CollectionConfig,
+    ) -> Result<(Backend, Option<String>), Error> {
+        match config.backend {
+            BackendSelection::CpuExact => Ok((Backend::Cpu, None)),
+            #[cfg(feature = "usearch")]
+            BackendSelection::Usearch => Ok((
+                Backend::Usearch(usearch_backend::UsearchBackend::new(config.dimension)?),
+                None,
+            )),
+            #[cfg(feature = "gpu-wgpu")]
+            BackendSelection::WgpuRequired(mode) => {
+                gpu::GpuBackend::new(config.dimension, mode, config.gpu_allocation_budget_bytes)
+                    .await
+                    .map(|gpu| (Backend::Wgpu(gpu), None))
+                    .map_err(|error| Error::Preparation(error.to_string()))
+            }
+            #[cfg(feature = "gpu-wgpu")]
+            BackendSelection::Automatic(mode) => match gpu::GpuBackend::new(
+                config.dimension,
+                mode,
+                config.gpu_allocation_budget_bytes,
+            )
+            .await
+            {
+                Ok(gpu) => Ok((Backend::Wgpu(gpu), None)),
+                Err(error) => Ok((Backend::Cpu, Some(error.to_string()))),
+            },
+        }
+    }
+
+    #[tracing::instrument(name = "qenlo.add", skip_all, fields(operation = "add"))]
+    pub fn add(
+        &mut self,
+        id: u64,
+        user_id: u64,
+        timestamp: i64,
+        vector: &[f32],
+    ) -> Result<(), Error> {
+        self.store.add(id, user_id, timestamp, vector)?;
+        self.prepared_generation = None;
+        Ok(())
+    }
+
+    #[tracing::instrument(name = "qenlo.delete", skip_all, fields(operation = "delete"))]
+    pub fn delete(&mut self, id: u64) -> Result<(), Error> {
+        self.store.delete(id)?;
+        self.prepared_generation = None;
+        Ok(())
+    }
+
+    /// Resolve the eligible public IDs without exposing internal row slots.
+    pub fn filter(&self, filter: &Filter) -> Vec<u64> {
+        self.store
+            .filter(filter)
+            .into_iter()
+            .filter_map(|row| self.store.record(row).map(|r| r.id()))
+            .collect()
+    }
+
+    #[tracing::instrument(name = "qenlo.prepare", skip_all, fields(operation = "prepare"))]
+    pub async fn prepare(&mut self) -> Result<bool, Error> {
+        if self.prepared_generation == Some(self.store.generation()) {
+            return Ok(false);
+        }
+        let preparation: Result<(), Error> = match &mut self.backend {
+            Backend::Cpu => Ok(()),
+            #[cfg(feature = "usearch")]
+            Backend::Usearch(index) => index.rebuild(&self.store),
+            #[cfg(feature = "gpu-wgpu")]
+            Backend::Wgpu(gpu) => gpu
+                .prepare(&self.store)
+                .await
+                .map_err(|error| Error::Preparation(error.to_string())),
+        };
+        #[cfg(feature = "gpu-wgpu")]
+        if let Err(error) = preparation {
+            if matches!(self.config.backend, BackendSelection::Automatic(_)) {
+                self.fallback_reason = Some(error.to_string());
+                self.backend = Backend::Cpu;
+            } else {
+                return Err(error);
+            }
+        }
+        #[cfg(not(feature = "gpu-wgpu"))]
+        preparation?;
+        self.prepared_generation = Some(self.store.generation());
+        Ok(true)
+    }
+
+    pub async fn search(
+        &mut self,
+        query: &[f32],
+        filter: &Filter,
+        k: usize,
+    ) -> Result<SearchResponse, Error> {
+        self.search_inner(query, filter, k)
+            .instrument(info_span!("qenlo.search", operation = "search"))
+            .await
+    }
+
+    async fn search_inner(
+        &mut self,
+        query: &[f32],
+        filter: &Filter,
+        k: usize,
+    ) -> Result<SearchResponse, Error> {
+        if !(1..=MAX_K).contains(&k) {
+            return Err(Error::InvalidK(k));
+        }
+        let started = Instant::now();
+        let preparation_started = Instant::now();
+        let rebuilt = self.prepare().await?;
+        let preparation = if rebuilt {
+            Measurement::Available(preparation_started.elapsed())
+        } else {
+            Measurement::unavailable("index already current")
+        };
+
+        let execution_started = Instant::now();
+        let output = match &mut self.backend {
+            Backend::Cpu => {
+                let exact = self.store.search(query, filter, k)?;
+                BackendOutput::cpu(
+                    exact.hits,
+                    exact.evaluated_rows as u64,
+                    execution_started.elapsed(),
+                )
+            }
+            #[cfg(feature = "usearch")]
+            Backend::Usearch(index) => index.search(&self.store, query, filter, k)?,
+            #[cfg(feature = "gpu-wgpu")]
+            Backend::Wgpu(gpu) => gpu
+                .search(&self.store, query, filter, k)
+                .await
+                .map_err(|e| Error::Search(e.to_string()))?,
+        };
+        let results = output
+            .hits
+            .into_iter()
+            .map(|hit| SearchResult {
+                id: hit.id,
+                distance: hit.distance,
+            })
+            .collect::<Vec<_>>();
+        let report = ExecutionReport {
+            requested_backend: self.config.backend,
+            actual_backend: output.actual_backend,
+            algorithm: output.algorithm,
+            filter_execution: output.filter_execution,
+            index_generation: self.store.generation(),
+            rebuilt,
+            fallback_reason: self.fallback_reason.clone(),
+            total_duration: started.elapsed(),
+            phases: output.phases.with_preparation(preparation),
+            upload_bytes: output.upload_bytes,
+            readback_bytes: output.readback_bytes,
+            dispatch_count: output.dispatch_count,
+            qenlo_allocation_bytes: output.allocation_bytes,
+            candidates: output.candidates,
+            results: results.len(),
+        };
+        Ok(SearchResponse { results, report })
+    }
+
+    pub async fn search_batch(
+        &mut self,
+        queries: &[&[f32]],
+        filter: &Filter,
+        k: usize,
+    ) -> Result<Vec<SearchResponse>, Error> {
+        let mut responses = Vec::with_capacity(queries.len());
+        for query in queries {
+            responses.push(self.search(query, filter, k).await?);
+        }
+        Ok(responses)
+    }
+
+    pub fn stats(&self) -> CollectionStats {
+        CollectionStats {
+            dimension: self.store.dimension(),
+            rows: self.store.len(),
+            live_rows: self.store.live_len(),
+            generation: self.store.generation(),
+            prepared_generation: self.prepared_generation,
+        }
+    }
+}
+
+pub(crate) struct BackendOutput {
+    hits: Vec<SearchHit>,
+    actual_backend: BackendKind,
+    algorithm: Algorithm,
+    filter_execution: FilterExecution,
+    phases: PhaseTimings,
+    upload_bytes: Measurement<u64>,
+    readback_bytes: Measurement<u64>,
+    dispatch_count: Measurement<u32>,
+    allocation_bytes: Measurement<u64>,
+    candidates: Measurement<u64>,
+}
+
+impl BackendOutput {
+    fn cpu(hits: Vec<SearchHit>, candidates: u64, execution: Duration) -> Self {
+        Self {
+            hits,
+            actual_backend: BackendKind::Cpu,
+            algorithm: Algorithm::Exact,
+            filter_execution: FilterExecution::OrderedMetadataIndexes,
+            phases: PhaseTimings::cpu(Measurement::unavailable("set by collection"), execution),
+            upload_bytes: Measurement::Available(0),
+            readback_bytes: Measurement::Available(0),
+            dispatch_count: Measurement::Available(0),
+            allocation_bytes: Measurement::Available(0),
+            candidates: Measurement::Available(candidates),
+        }
+    }
+}
+
+impl PhaseTimings {
+    fn with_preparation(mut self, preparation: Measurement<Duration>) -> Self {
+        self.preparation = preparation;
+        self
+    }
+}
+
+#[cfg(feature = "usearch")]
+fn eligible_ids(store: &CoreStore, predicate: &Predicate) -> HashSet<u64> {
+    store
+        .filter(predicate)
+        .into_iter()
+        .filter_map(|row| store.record(row).map(|record| record.id()))
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        future::Future,
+        task::{Context, Poll, Waker},
+    };
+
+    use super::*;
+
+    fn block_on<F: Future>(future: F) -> F::Output {
+        let mut context = Context::from_waker(Waker::noop());
+        let mut future = std::pin::pin!(future);
+        loop {
+            match future.as_mut().poll(&mut context) {
+                Poll::Ready(output) => return output,
+                Poll::Pending => std::thread::yield_now(),
+            }
+        }
+    }
+
+    #[test]
+    fn cpu_collection_rebuilds_after_mutation_and_reports_execution() {
+        block_on(async {
+            let mut collection = Collection::new(CollectionConfig::cpu_exact(2))
+                .await
+                .unwrap();
+            collection.add(2, 7, 10, &[1.0, 0.0]).unwrap();
+            collection.add(1, 7, 11, &[1.0, 0.0]).unwrap();
+            let filter = Filter {
+                user_id: Some(7),
+                timestamp: TimestampRange::default(),
+            };
+            let first = collection.search(&[1.0, 0.0], &filter, 2).await.unwrap();
+            assert_eq!(
+                first.results.iter().map(|hit| hit.id).collect::<Vec<_>>(),
+                [1, 2]
+            );
+            assert!(first.report.rebuilt);
+            assert_eq!(first.report.actual_backend, BackendKind::Cpu);
+            assert!(matches!(first.report.candidates, Measurement::Available(2)));
+            assert!(
+                !collection
+                    .search(&[1.0, 0.0], &filter, 2)
+                    .await
+                    .unwrap()
+                    .report
+                    .rebuilt
+            );
+            collection.delete(1).unwrap();
+            let after_delete = collection.search(&[1.0, 0.0], &filter, 2).await.unwrap();
+            assert!(after_delete.report.rebuilt);
+            assert_eq!(
+                after_delete
+                    .results
+                    .iter()
+                    .map(|hit| hit.id)
+                    .collect::<Vec<_>>(),
+                [2]
+            );
+        });
+    }
+
+    #[cfg(feature = "usearch")]
+    #[test]
+    fn usearch_filters_during_graph_search_and_reports_unknown_traversal_count() {
+        block_on(async {
+            let mut collection = Collection::new(CollectionConfig {
+                dimension: 2,
+                backend: BackendSelection::Usearch,
+                gpu_allocation_budget_bytes: DEFAULT_GPU_BUDGET_BYTES,
+            })
+            .await
+            .unwrap();
+            collection.add(1, 10, 0, &[1.0, 0.0]).unwrap();
+            collection.add(2, 20, 0, &[1.0, 0.0]).unwrap();
+            let response = collection
+                .search(
+                    &[1.0, 0.0],
+                    &Filter {
+                        user_id: Some(20),
+                        timestamp: TimestampRange::ALL,
+                    },
+                    1,
+                )
+                .await
+                .unwrap();
+            assert_eq!(response.results[0].id, 2);
+            assert_eq!(response.report.actual_backend, BackendKind::Usearch);
+            assert!(matches!(
+                response.report.candidates,
+                Measurement::Unavailable(_)
+            ));
+        });
+    }
+
+    #[cfg(feature = "gpu-wgpu")]
+    #[test]
+    fn automatic_gpu_mode_discloses_over_budget_cpu_fallback_if_adapter_is_available() {
+        block_on(async {
+            let Ok(mut collection) = Collection::new(CollectionConfig {
+                dimension: 2,
+                backend: BackendSelection::Automatic(GpuFilterMode::CpuMask),
+                gpu_allocation_budget_bytes: 1,
+            })
+            .await
+            else {
+                return;
+            };
+            collection.add(1, 7, 0, &[1.0, 0.0]).unwrap();
+            let response = collection
+                .search(&[1.0, 0.0], &Filter::ALL, 1)
+                .await
+                .unwrap();
+            assert_eq!(response.results[0].id, 1);
+            assert_eq!(response.report.actual_backend, BackendKind::Cpu);
+            assert!(
+                response
+                    .report
+                    .fallback_reason
+                    .as_deref()
+                    .is_some_and(|reason| reason.contains("budget"))
+            );
+        });
+    }
+}

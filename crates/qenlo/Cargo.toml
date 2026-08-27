@@ -1,0 +1,22 @@
+[package]
+name = "qenlo"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Observable embedded filtered vector search prototype"
+
+[features]
+default = []
+usearch = ["dep:usearch"]
+gpu-wgpu = ["dep:wgpu"]
+
+[dependencies]
+qenlo-core.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+web-time.workspace = true
+usearch = { version = "2.26.1", optional = true }
+wgpu = { version = "30.0.1", optional = true }
+
