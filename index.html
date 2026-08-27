@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>qenlo — measured before it is marketed</title>
+  <meta name="description" content="embedded filtered vector search in rust, measured before it is marketed.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" type="image/svg+xml" href="assets/brand/logo/favicon.svg">
+
+  <script>
+    (function() {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('motion-pending');
+        window.__motionTimeout = setTimeout(function() {
+          document.documentElement.classList.remove('motion-pending');
+        }, 2200);
+      }
+    })();
+  </script>
+
+  <style>
+    @font-face {
+      font-family: 'IBM Plex Sans';
+      src: url('assets/brand/fonts/IBMPlexSans-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'IBM Plex Sans';
+      src: url('assets/brand/fonts/IBMPlexSans-SemiBold.woff2') format('woff2');
+      font-weight: 500 600;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'IBM Plex Mono';
+      src: url('assets/brand/fonts/IBMPlexMono-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Reference Display';
+      src: local('Reference Display'), local('IBM Plex Sans SemiBold'), local('Arial');
+      font-weight: 400 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Reference Sans';
+      src: local('Reference Sans'), local('IBM Plex Sans'), local('Arial');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: dark;
+      font-family: "Reference Sans", "IBM Plex Sans", Arial, sans-serif;
+      --qenlo-accent: #EF8B79;
+      --qenlo-accent-dark: #B53C2F;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .viewport {
+      position: fixed;
+      inset: 0;
+      isolation: isolate;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+
+      --gutter-start: clamp(36px, 4.177vw, 96px);
+      --gutter-end: clamp(36px, 4.04vw, 96px);
+      --header-top: clamp(20px, 2.264vh, 30px);
+      --hero-bottom: clamp(34px, 5.19vh, 64px);
+      --display-size: clamp(58px, 7.64vh, 88px);
+      --display-leading: clamp(72px, 9.34vh, 106px);
+      --copy-size: clamp(14px, 1.70vh, 19px);
+      --copy-leading: clamp(20px, 2.25vh, 25px);
+      --title-copy-gap: clamp(15px, 2.08vh, 24px);
+      --copy-cta-gap: clamp(24px, 3.11vh, 36px);
+      --cta-width: clamp(150px, 15.8vh, 180px);
+      --cta-height: clamp(38px, 3.96vh, 44px);
+      --compact-control-font-size: clamp(15px, 1.75vh, 18px);
+      --primary-control-font-size: clamp(15px, 1.77vh, 18px);
+      --control-inline-nudge: -1px;
+      --control-baseline-shift: clamp(1px, .19vh, 2px);
+      --copy-optical-shift: clamp(0px, .1vh, 1px);
+    }
+
+    .background {
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.03), transparent 24%, transparent 82%, rgba(0,0,0,.05)),
+        radial-gradient(ellipse at 44% 54%, transparent 30%, rgba(0,0,0,.055) 100%);
+    }
+
+    /* Header */
+    .header {
+      position: absolute;
+      inset: var(--header-top) var(--gutter-end) auto var(--gutter-start);
+      height: 48px;
+      display: flex;
+      align-items: flex-start;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .brand {
+      position: relative;
+      top: 6px;
+      display: inline-flex;
+      align-items: center;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .brand-logo {
+      height: 36px;
+      width: auto;
+      display: block;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      margin-left: clamp(32px, 2.8vw, 44px);
+      gap: clamp(26px, 2.4vw, 38px);
+      position: relative;
+      top: 9px;
+    }
+
+    .nav a {
+      font-size: 15px;
+      font-weight: 430;
+      letter-spacing: -.3px;
+      color: rgba(229, 229, 230, .77);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+      text-decoration: none;
+      position: relative;
+      cursor: pointer;
+      transition: color 140ms ease;
+    }
+
+    .nav a:hover {
+      color: #fff;
+    }
+
+    .nav a:first-child {
+      position: relative;
+      top: -3px;
+    }
+
+    .nav a.active {
+      color: #fff;
+    }
+
+    .nav a.active::after {
+      content: "";
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 32px;
+      height: 2px;
+      background: var(--qenlo-accent);
+      border-radius: 1px;
+    }
+
+    .time-panel {
+      margin-left: auto;
+      width: 220px;
+      height: 48px;
+      padding-left: 10px;
+      border-left: 2px solid rgba(230, 230, 230, .52);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    .time-label {
+      font-size: 13px;
+      font-weight: 420;
+      color: rgba(240, 240, 240, .77);
+      line-height: 1.25;
+      letter-spacing: -0.1px;
+    }
+
+    .time-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--qenlo-accent);
+      line-height: 1.25;
+      letter-spacing: -0.1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--qenlo-accent);
+      box-shadow: 0 0 6px var(--qenlo-accent);
+    }
+
+    .sign-up {
+      min-width: 114px;
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 7px;
+      background: #fff;
+      color: #101010;
+      font-family: inherit;
+      font-size: var(--compact-control-font-size);
+      font-weight: 460;
+      letter-spacing: -.34px;
+      border: none;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72), 0 1px 5px rgba(0, 0, 0, .34);
+      margin-left: clamp(18px, 1.8vw, 26px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-shrink: 0;
+      position: relative;
+      top: 3px;
+      text-decoration: none;
+    }
+
+    .menu-toggle {
+      display: none;
+    }
+
+    /* Hero Section */
+    .hero {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      pointer-events: auto;
+      position: absolute;
+      left: var(--gutter-start);
+      bottom: var(--hero-bottom);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      z-index: 5;
+    }
+
+    .hero-title {
+      font-family: "Reference Display", "IBM Plex Sans", Arial, sans-serif;
+      font-size: var(--display-size);
+      line-height: var(--display-leading);
+      font-weight: 500;
+      font-optical-sizing: auto;
+      letter-spacing: -2.1px;
+      -webkit-text-stroke: .12px currentColor;
+      white-space: nowrap;
+      text-shadow: 0 2px 2px rgba(0, 0, 0, .44);
+      margin: 0 0 var(--title-copy-gap) 0;
+    }
+
+    .hero-title .line {
+      display: block;
+      overflow: hidden;
+      transform-origin: left center;
+    }
+
+    .hero-title .line-one {
+      color: #fff;
+      transform: scaleX(.775);
+    }
+
+    .hero-title .line-two {
+      color: var(--qenlo-accent);
+      transform: scaleX(.793);
+    }
+
+    .hero-title .line-reveal {
+      display: inline-block;
+    }
+
+    .hero-copy {
+      color: rgba(226, 229, 228, .84);
+      font-size: var(--copy-size);
+      line-height: var(--copy-leading);
+      font-weight: 350;
+      letter-spacing: .13px;
+      width: clamp(420px, 36vw, 580px);
+      position: relative;
+      left: 1px;
+      transform: translateY(var(--copy-optical-shift, 0px));
+      text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+      margin: 0 0 var(--copy-cta-gap) 0;
+    }
+
+    .primary-cta {
+      position: relative;
+      width: var(--cta-width);
+      height: var(--cta-height);
+      border-radius: 7px;
+      background: #fff;
+      color: #111;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, .38);
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .primary-cta .label {
+      position: absolute;
+      left: 9%;
+      top: 50%;
+      transform: translateY(calc(-50% + var(--control-baseline-shift, 1px) + var(--control-inline-nudge, 0px)));
+      font-size: var(--primary-control-font-size);
+      font-weight: 450;
+      letter-spacing: -.3px;
+      color: #111;
+      white-space: nowrap;
+    }
+
+    .primary-cta .arrow-box {
+      position: absolute;
+      right: 3.125%;
+      top: 14.286%;
+      width: 20.625%;
+      height: 71.429%;
+      border-radius: 7px;
+      background: #070909;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Motion Initial States & Animations */
+    html.motion-pending .brand {
+      opacity: 0;
+      transform: translate3d(0, 7px, 0) scale(.94);
+      animation: entrance-brand 580ms cubic-bezier(.16, 1, .3, 1) 60ms forwards;
+    }
+
+    html.motion-pending .nav a:nth-child(1) { opacity: 0; transform: translate3d(0, 6px, 0); animation: entrance-nav 480ms cubic-bezier(.16, 1, .3, 1) 130ms forwards; }
+    html.motion-pending .nav a:nth-child(2) { opacity: 0; transform: translate3d(0, 6px, 0); animation: entrance-nav 480ms cubic-bezier(.16, 1, .3, 1) 175ms forwards; }
+    html.motion-pending .nav a:nth-child(3) { opacity: 0; transform: translate3d(0, 6px, 0); animation: entrance-nav 480ms cubic-bezier(.16, 1, .3, 1) 220ms forwards; }
+    html.motion-pending .nav a:nth-child(4) { opacity: 0; transform: translate3d(0, 6px, 0); animation: entrance-nav 480ms cubic-bezier(.16, 1, .3, 1) 265ms forwards; }
+
+    html.motion-pending .time-panel {
+      opacity: 0;
+      transform: translate3d(0, 6px, 0);
+      animation: entrance-nav 520ms cubic-bezier(.16, 1, .3, 1) 180ms forwards;
+    }
+
+    html.motion-pending .sign-up {
+      opacity: 0;
+      transform: translate3d(0, 8px, 0) scale(.985);
+      animation: entrance-action 520ms cubic-bezier(.16, 1, .3, 1) 220ms forwards;
+    }
+
+    html.motion-pending .menu-toggle {
+      opacity: 0;
+      transform: translate3d(0, 8px, 0) scale(.985);
+      animation: entrance-action 520ms cubic-bezier(.16, 1, .3, 1) 140ms forwards;
+    }
+
+    html.motion-pending .line-one .line-reveal {
+      transform: translate3d(0, 110%, 0) skewY(2deg);
+      animation: entrance-line 800ms cubic-bezier(.22, 1, .36, 1) 300ms forwards;
+    }
+
+    html.motion-pending .line-two .line-reveal {
+      transform: translate3d(0, 110%, 0) skewY(2deg);
+      animation: entrance-line 850ms cubic-bezier(.22, 1, .36, 1) 440ms forwards;
+    }
+
+    html.motion-pending .hero-copy {
+      opacity: 0;
+      transform: translate3d(0, 8px, 0);
+      animation: entrance-copy 620ms cubic-bezier(.16, 1, .3, 1) 740ms forwards;
+    }
+
+    html.motion-pending .primary-cta {
+      opacity: 0;
+      transform: translate3d(0, 8px, 0) scale(.985);
+      animation: entrance-action 560ms cubic-bezier(.16, 1, .3, 1) 960ms forwards;
+    }
+
+    @keyframes entrance-brand {
+      from { opacity: 0; transform: translate3d(0, 7px, 0) scale(.94); }
+      to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+    }
+    @keyframes entrance-nav {
+      from { opacity: 0; transform: translate3d(0, 6px, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    @keyframes entrance-action {
+      from { opacity: 0; transform: translate3d(0, 8px, 0) scale(.985); }
+      to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+    }
+    @keyframes entrance-line {
+      from { transform: translate3d(0, 110%, 0) skewY(2deg); }
+      to { transform: translate3d(0, 0, 0) skewY(0deg); }
+    }
+    @keyframes entrance-copy {
+      from { opacity: 0; transform: translate3d(0, 8px, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      button, a {
+        transition: filter 140ms ease, opacity 140ms ease;
+      }
+      button:hover, a:hover {
+        filter: brightness(1.08);
+      }
+    }
+
+    :focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 3px;
+    }
+
+    /* Slide-Over Glass Walkthrough Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 220ms ease, visibility 220ms ease;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(640px, 94vw);
+      background: linear-gradient(155deg, rgba(23, 28, 25, 0.96), rgba(15, 18, 16, 0.98));
+      border-left: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.85);
+      z-index: 101;
+      transform: translateX(100%);
+      transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .drawer-overlay.active .drawer {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(31, 38, 34, 0.6);
+    }
+
+    .drawer-header h2 {
+      font-size: 16px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(229, 229, 230, 0.77);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 140ms ease;
+    }
+
+    .close-btn:hover {
+      color: #fff;
+      border-color: #fff;
+    }
+
+    .drawer-body {
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .doc-section h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .doc-section h3 span.num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--qenlo-accent);
+    }
+
+    .doc-section p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(226, 229, 228, 0.82);
+      margin-bottom: 12px;
+    }
+
+    .doc-section p strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    pre.code-box {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      background: #121614;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      padding: 12px 14px;
+      color: #F7F5F0;
+      overflow-x: auto;
+      white-space: pre;
+      margin-bottom: 12px;
+    }
+
+    .drawer-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .drawer-table th, .drawer-table td {
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      text-align: left;
+    }
+
+    .drawer-table th {
+      background: rgba(33, 42, 38, 0.7);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: rgba(226, 229, 228, 0.7);
+    }
+
+    .drawer-table td {
+      background: rgba(20, 26, 23, 0.5);
+    }
+
+    .drawer-table code {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--qenlo-accent);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #212A26;
+      border: 1px solid var(--qenlo-accent);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      z-index: 200;
+      opacity: 0;
+      transition: all 180ms ease;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Tablet breakpoint */
+    @media (min-width: 620px) and (max-width: 790px), (min-width: 620px) and (max-width: 1100px) and (orientation: portrait) {
+      .screen {
+        --display-size: clamp(46px, 5.8vh, 70px);
+        --display-leading: clamp(56px, 7vh, 84px);
+      }
+
+      .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 46px;
+        height: 46px;
+        border-radius: 11px;
+        border: 1px solid rgba(255, 255, 255, .18);
+        background: linear-gradient(145deg, rgba(24, 22, 20, .80), rgba(5, 12, 14, .86));
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 2px 10px rgba(0,0,0,.44), inset 0 0 0 1px rgba(255,255,255,.05);
+        cursor: pointer;
+        z-index: 25;
+        color: #fff;
+        margin-left: auto;
+        position: relative;
+        top: 0;
+      }
+
+      .menu-toggle svg line {
+        transition: transform 220ms ease, opacity 220ms ease;
+        transform-origin: center;
+      }
+
+      .header.menu-open .menu-toggle .line-top {
+        transform: translateY(3.5px) rotate(45deg);
+      }
+
+      .header.menu-open .menu-toggle .line-bot {
+        transform: translateY(-3.5px) rotate(-45deg);
+      }
+
+      .header-actions {
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        width: min(324px, calc(100vw - 2 * var(--gutter-start)));
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: stretch;
+        border: 1px solid rgba(255, 255, 255, .18);
+        background: linear-gradient(145deg, rgba(20, 24, 26, .88), rgba(8, 14, 16, .94));
+        box-shadow: 0 12px 36px rgba(0, 0, 0, .6), inset 0 0 0 1px rgba(255, 255, 255, .05);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px) scale(.985);
+        transition: opacity 220ms ease, transform 220ms ease, visibility 220ms;
+        z-index: 20;
+        pointer-events: none;
+      }
+
+      .header.menu-open .header-actions {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+        margin: 0;
+        top: 0;
+      }
+
+      .nav a {
+        font-size: 17px;
+      }
+
+      .nav a:first-child {
+        top: 0;
+      }
+
+      .nav a.active::after {
+        left: 0;
+        transform: none;
+        bottom: -4px;
+        width: 28px;
+      }
+
+      .time-panel {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid rgba(230, 230, 230, .2);
+        padding: 14px 0 0 0;
+        margin: 0;
+        height: auto;
+      }
+
+      .sign-up {
+        width: 100%;
+        height: 44px;
+        margin: 0;
+        top: 0;
+      }
+    }
+
+    /* Mobile breakpoint */
+    @media (max-width: 619px) {
+      .screen {
+        --mobile-gutter: 20px;
+        --gutter-start: 20px;
+        --gutter-end: 20px;
+        --hero-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+        --header-top: max(16px, env(safe-area-inset-top, 16px));
+      }
+
+      .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 11px;
+        border: 1px solid rgba(255, 255, 255, .18);
+        background: linear-gradient(145deg, rgba(24, 22, 20, .80), rgba(5, 12, 14, .86));
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 2px 10px rgba(0,0,0,.44), inset 0 0 0 1px rgba(255,255,255,.05);
+        cursor: pointer;
+        z-index: 25;
+        color: #fff;
+        margin-left: auto;
+        position: relative;
+        top: 0;
+      }
+
+      .menu-toggle svg line {
+        transition: transform 220ms ease, opacity 220ms ease;
+        transform-origin: center;
+      }
+
+      .header.menu-open .menu-toggle .line-top {
+        transform: translateY(3.5px) rotate(45deg);
+      }
+
+      .header.menu-open .menu-toggle .line-bot {
+        transform: translateY(-3.5px) rotate(-45deg);
+      }
+
+      .header-actions {
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        width: min(340px, calc(100vw - 32px));
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        align-items: stretch;
+        border: 1px solid rgba(255, 255, 255, .18);
+        background: linear-gradient(145deg, rgba(20, 24, 26, .92), rgba(8, 14, 16, .96));
+        box-shadow: 0 12px 36px rgba(0, 0, 0, .7), inset 0 0 0 1px rgba(255, 255, 255, .05);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px) scale(.985);
+        transition: opacity 220ms ease, transform 220ms ease, visibility 220ms;
+        z-index: 20;
+        pointer-events: none;
+      }
+
+      .header.menu-open .header-actions {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        align-items: flex-start;
+        margin: 0;
+        top: 0;
+      }
+
+      .nav a {
+        font-size: 16px;
+      }
+
+      .nav a:first-child {
+        top: 0;
+      }
+
+      .nav a.active::after {
+        left: 0;
+        transform: none;
+        bottom: -4px;
+        width: 24px;
+      }
+
+      .time-panel {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid rgba(230, 230, 230, .2);
+        padding: 12px 0 0 0;
+        margin: 0;
+        height: auto;
+      }
+
+      .time-label {
+        font-size: 13px;
+      }
+
+      .time-value {
+        font-size: 13px;
+      }
+
+      .sign-up {
+        width: 100%;
+        height: 42px;
+        margin: 0;
+        top: 0;
+      }
+
+      .hero-title {
+        font-size: clamp(34px, 8.8vw, 48px);
+        line-height: clamp(40px, 10.2vw, 54px);
+        letter-spacing: -1.2px;
+      }
+
+      .hero-title .line-one {
+        transform: scaleX(.78);
+      }
+
+      .hero-title .line-two {
+        transform: scaleX(.78);
+      }
+
+      .hero-copy {
+        width: 100%;
+        max-width: 100%;
+        font-size: clamp(13px, 3.8vw, 15px);
+        line-height: 1.4;
+      }
+
+      .hero-copy br {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="viewport">
+    <section class="screen" id="screen">
+      <video class="background" autoplay muted loop playsinline disablepictureinpicture aria-hidden="true">
+        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260808_064556_051587f1-74a1-4336-8c05-4dde3594ed05.mp4" type="video/mp4">
+      </video>
+
+      <header class="header">
+        <a href="#the-question" class="brand open-drawer" data-target="question" aria-label="qenlo home">
+          <img src="assets/brand/logo/lockup-reversed.svg" alt="Qenlo" class="brand-logo" height="36">
+        </a>
+
+        <div class="header-actions" id="tablet-navigation">
+          <nav class="nav" aria-label="Main Navigation">
+            <a href="#the-question" class="active open-drawer" data-target="question">the question</a>
+            <a href="#whats-in-here" class="open-drawer" data-target="whats-in-here">what's in here</a>
+            <a href="#execution-paths" class="open-drawer" data-target="execution-paths">execution paths</a>
+            <a href="#research-status" class="open-drawer" data-target="research-status">research status</a>
+          </nav>
+          <div class="time-panel">
+            <span class="time-label">research hypothesis</span>
+            <span class="time-value"><span class="pulse-dot"></span> 2× P95 &bull; 1M × 768</span>
+          </div>
+          <button class="sign-up copy-code" data-code="cargo test --workspace --no-default-features">
+            <span>cargo test</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
+
+        <button class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="tablet-navigation">
+          <svg class="hamburger-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line class="line-top" x1="3" y1="6.5" x2="17" y2="6.5" />
+            <line class="line-bot" x1="3" y1="13.5" x2="17" y2="13.5" />
+          </svg>
+        </button>
+      </header>
+
+      <section class="hero">
+        <div class="hero-content">
+          <h1 class="hero-title">
+            <span class="line line-one"><span class="line-reveal">measured before</span></span>
+            <span class="line line-two"><span class="line-reveal">it is marketed.</span></span>
+          </h1>
+          <p class="hero-copy">filtered vector search is often described as a database problem long before<br>
+anyone measures the work a real query does. qenlo starts with the measurement:<br>
+an embedded rust prototype testing if exact gpu search beats cpu by 2× at p95.</p>
+          <button class="primary-cta open-drawer" data-target="get-running" aria-label="get running">
+            <span class="label">get running</span>
+            <span class="arrow-box" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2.5 7h9M7.5 2.5l4.5 4.5-4.5 4.5"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- Technical Doc & Walkthrough Slide-Over Drawer -->
+  <div class="drawer-overlay" id="drawer-overlay">
+    <div class="drawer" id="walkthrough-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <div class="drawer-header">
+        <h2 id="drawer-title">
+          <svg width="20" height="20" viewBox="0 0 512 512" fill="none">
+            <circle cx="256" cy="256" r="240" stroke="#EF8B79" stroke-width="32" opacity="0.3"/>
+            <polygon points="256,120 374,370 138,370" stroke="#F7F5F0" stroke-width="28" fill="none"/>
+          </svg>
+          <span>qenlo &bull; technical writeup</span>
+        </h2>
+        <button class="close-btn" id="drawer-close" aria-label="close walkthrough">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="doc-section" id="sec-question">
+          <h3><span class="num">01.</span> the question</h3>
+          <p>
+            filtered vector search is often described as a database problem long before anyone measures the work a real query does. qenlo starts with the measurement.
+          </p>
+          <p>
+            it is a rust research prototype for native applications that embed dense-vector search directly in the client. the engine indexes pre-computed embeddings; it does not generate them, transform tensors, or run neural inference. those belong to the runtime that produced the vectors.
+          </p>
+          <p>
+            the current bet is narrow: on a repeatable <strong>1m × 768</strong>, <strong>1%-eligible</strong>, <strong>batch-1</strong>, <strong>k=10</strong> workload, can an exact gpu path beat the strongest qualifying cpu path by <strong>2× at p95</strong> without giving up recall or correct filtering? until that run exists, gpu acceleration is an experiment, not a claim.
+          </p>
+        </div>
+
+        <div class="doc-section" id="sec-whats-in-here">
+          <h3><span class="num">02.</span> what’s in here</h3>
+          <table class="drawer-table">
+            <thead>
+              <tr>
+                <th>crate</th>
+                <th>responsibility</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>qenlo-core</code></td>
+                <td>canonical records, metadata predicates and indexes, normalized vectors, exact cosine search</td>
+              </tr>
+              <tr>
+                <td><code>qenlo</code></td>
+                <td>async embedded collection API, execution reports, optional USearch and wgpu backends</td>
+              </tr>
+              <tr>
+                <td><code>qenlo-bench</code></td>
+                <td>independent correctness oracle, benchmark support, and OTLP example</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="doc-section" id="sec-execution-paths">
+          <h3><span class="num">03.</span> execution paths</h3>
+          <p>
+            the baseline is deliberately plain: portable, exact cpu search with no c++ or gpu build requirement. optional backends are explicit because a feature flag should tell the truth about the toolchain it brings along.
+          </p>
+          <table class="drawer-table">
+            <thead>
+              <tr>
+                <th>path</th>
+                <th>algorithm</th>
+                <th>filter execution</th>
+                <th>intent</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>CPU (default)</code></td>
+                <td>exact cosine</td>
+                <td>ordered metadata indexes</td>
+                <td>correctness baseline</td>
+              </tr>
+              <tr>
+                <td><code>usearch</code></td>
+                <td>HNSW</td>
+                <td>graph predicate</td>
+                <td>approximate comparison</td>
+              </tr>
+              <tr>
+                <td><code>gpu-wgpu</code></td>
+                <td>exact cosine</td>
+                <td>CPU mask, eligible rows, or GPU predicate</td>
+                <td>acceleration research</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="margin-top: 12px;">
+            every search returns an <code>ExecutionReport</code>: requested and actual backend, algorithm, filtering path, rebuild state, phase timings, transfer sizes, and a fallback reason where one exists. that is there so a fast-looking result has to explain itself.
+          </p>
+          <pre class="code-box"><code>pub struct ExecutionReport {
+    pub requested_backend: BackendSelection,
+    pub actual_backend: BackendKind,
+    pub algorithm: Algorithm,
+    pub filter_execution: FilterExecution,
+    pub rebuild_state: RebuildState,
+    pub phase_timings: PhaseTimings,
+    pub transfer_bytes: MemoryTransfers,
+    pub fallback_reason: Option&lt;String&gt;,
+}</code></pre>
+        </div>
+
+        <div class="doc-section" id="sec-research-status">
+          <h3><span class="num">04.</span> research status</h3>
+          <table class="drawer-table">
+            <thead>
+              <tr>
+                <th>area</th>
+                <th>current state</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>exact CPU search and metadata filtering</td>
+                <td>implemented and tested</td>
+              </tr>
+              <tr>
+                <td>USearch filtered ANN path</td>
+                <td>implemented; local Windows toolchain workaround documented</td>
+              </tr>
+              <tr>
+                <td>wgpu device smoke tests</td>
+                <td>implemented and tested</td>
+              </tr>
+              <tr>
+                <td>dataset preparation and competitor benchmarks</td>
+                <td>not yet run</td>
+              </tr>
+              <tr>
+                <td>2× P95 gate</td>
+                <td>not yet evaluated</td>
+              </tr>
+              <tr>
+                <td>native runtime acceptance</td>
+                <td>Windows DX12/Vulkan; other platforms untested</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="doc-section" id="sec-get-running">
+          <h3><span class="num">05.</span> get running</h3>
+          <p>
+            you need the rust toolchain declared in <code>rust-toolchain.toml</code>. then clone the repository and run the portable suite:
+          </p>
+          <pre class="code-box"><code>git clone https://github.com/a3ro-dev/qenlo.git
+cd qenlo
+cargo test --workspace --no-default-features</code></pre>
+
+          <p>build the optional paths only when you are ready for their dependencies:</p>
+          <pre class="code-box"><code># wgpu exact-search path
+cargo test -p qenlo --features gpu-wgpu
+
+# USearch / C++ path
+cargo test -p qenlo --features usearch
+
+# benchmark crate and OTLP example
+cargo check -p qenlo-bench --all-features --examples</code></pre>
+
+          <p>
+            on windows, if msvc 14.29 crashes in usearch's numkong dependency, clang-cl is a verified local workaround:
+          </p>
+          <pre class="code-box"><code>$env:CC = 'clang-cl'
+$env:CXX = 'clang-cl'
+cargo test -p qenlo --features usearch</code></pre>
+        </div>
+
+        <div class="doc-section">
+          <h3><span class="num">06.</span> project boundaries</h3>
+          <p>
+            this is early research, not a production-ready database. the public api, broad platform support, and performance conclusions are still being earned. if you use the prototype, treat the exact cpu path and its correctness checks as the ground truth, then make every faster path prove it deserves to stay.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">copied to clipboard</div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const header = document.querySelector('.header');
+      const menuToggle = document.querySelector('.menu-toggle');
+      const tabletNav = document.getElementById('tablet-navigation');
+      const drawerOverlay = document.getElementById('drawer-overlay');
+      const drawerClose = document.getElementById('drawer-close');
+      const toast = document.getElementById('toast');
+
+      // Motion cleanup
+      const primaryCta = document.querySelector('.primary-cta');
+      if (primaryCta) {
+        primaryCta.addEventListener('animationend', (e) => {
+          if (e.animationName === 'entrance-action') {
+            document.documentElement.classList.remove('motion-pending');
+            if (window.__motionTimeout) clearTimeout(window.__motionTimeout);
+          }
+        });
+      }
+
+      // Drawer Open/Close
+      function openDrawer(targetSec) {
+        drawerOverlay.classList.add('active');
+        if (targetSec) {
+          const el = document.getElementById('sec-' + targetSec);
+          if (el) {
+            setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 50);
+          }
+        }
+      }
+
+      function closeDrawer() {
+        drawerOverlay.classList.remove('active');
+      }
+
+      document.querySelectorAll('.open-drawer').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = btn.dataset.target || 'question';
+          openDrawer(target);
+        });
+      });
+
+      if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+      drawerOverlay.addEventListener('click', (e) => {
+        if (e.target === drawerOverlay) closeDrawer();
+      });
+
+      // Copy buttons
+      function showToast(msg) {
+        toast.textContent = msg || 'copied to clipboard';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      }
+
+      document.querySelectorAll('.copy-code').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const code = btn.dataset.code;
+          if (code) {
+            navigator.clipboard.writeText(code).then(() => {
+              showToast(`copied: ${code}`);
+            }).catch(() => {
+              showToast('copied to clipboard');
+            });
+          }
+        });
+      });
+
+      // Mobile Menu
+      function updateNavInert() {
+        const isToggleVisible = window.getComputedStyle(menuToggle).display !== 'none';
+        if (isToggleVisible) {
+          const isOpen = header.classList.contains('menu-open');
+          if (isOpen) {
+            tabletNav.removeAttribute('inert');
+          } else {
+            tabletNav.setAttribute('inert', '');
+          }
+        } else {
+          tabletNav.removeAttribute('inert');
+        }
+      }
+
+      function toggleMenu(force) {
+        const shouldOpen = typeof force === 'boolean' ? force : !header.classList.contains('menu-open');
+        header.classList.toggle('menu-open', shouldOpen);
+        menuToggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        updateNavInert();
+      }
+
+      menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (drawerOverlay.classList.contains('active')) closeDrawer();
+          if (header.classList.contains('menu-open')) toggleMenu(false);
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (header.classList.contains('menu-open') && !header.contains(e.target)) {
+          toggleMenu(false);
+        }
+      });
+
+      window.addEventListener('resize', updateNavInert);
+      updateNavInert();
+    });
+  </script>
+</body>
+</html>
