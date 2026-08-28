@@ -51,11 +51,11 @@ Use a prepared dataset containing 1,000 tuning and 5,000 evaluation queries for
 the full protocol; the adapter uses the reference's splits and timing protocol.
 Repeat GPU runs with `gpu-mask` and `gpu-predicate`; use `--batch 8` or `--batch 32`
 for shared-filter batch measurements. Distinct-filter batches are not implemented.
-For Chroma, add `--tune-ef-search 128,256,512,1024,2048,4096,8192,16384` to select
-the smallest supplied expansion meeting the target on tuning queries, before any
-held-out query is run. All attempted settings are retained in `tuning.csv`.
-Without this option Chroma uses fixed `--ef-search`. Qenlo requires an independent
-tuning experiment to select USearch expansion before held-out evaluation. Recall must
+Chroma uses fixed `--ef-search` at index creation, with tuning-query recall retained
+in `tuning.csv`. An attempted runtime parameter sweep in native 1.5.9 reported
+updated configuration but unchanged query results across expansions 128..100000;
+do not rely on modifying a warm index for tuning. Use independent index builds
+and tuning experiments to select ANN expansion before held-out evaluation. Recall must
 pass in every cell. Repeat at `--recall-target 0.99`; failed runs retain samples.
 
 The predeclared gate remains **1,000,000 x 768, batch 1, 1% eligible, k=10**: these commands

@@ -128,9 +128,6 @@ def replay(args):
         raise ValueError(f"expected chromadb==1.5.9, got {chromadb.__version__}")
     if args.ef_search < 1 or args.threads < 1:
         raise ValueError("ef-search and threads must be positive")
-    expansions = sorted(set(int(value) for value in args.tune_ef_search.split(","))) if args.tune_ef_search else [args.ef_search]
-    if not expansions or min(expansions) < 1:
-        raise ValueError("tuning expansions must be positive")
     reference = args.reference.resolve()
     config = properties(reference / "configuration.txt")
     if properties(reference / "summary.txt")["status"] != "completed":
@@ -174,12 +171,11 @@ def replay(args):
                       ef_search=args.ef_search, num_threads=args.threads, recall_tuning="fixed-ef-no-adaptive-tuning",
                       host_rss_bytes="unavailable:no-process-measurement", scale_gate="untested-by-this-single-cell")
     config_out["algorithm"] = "Chroma-local-configured-HNSW; internal-exact-fallback-not-instrumented"
-    config_out["recall_tuning"] = "smallest-supplied-ef-meeting-tuning-recall-before-heldout" if args.tune_ef_search else "fixed-ef-no-adaptive-tuning"
-    config_out["tuning_ef_candidates"] = expansions
     config_out["input_sha256"] = {name: digest(reference / name) for name in
                                  ["configuration.txt", "metadata.csv", "truth.csv", "samples.csv"]}
     config_out["dataset_sha256"] = digest(dataset)
     config_out["python"] = sys.version
+    config_out["adapter_sha256"] = digest(Path(__file__))
     native_dir = Path(chromadb_rust_bindings.__file__).parent
     config_out["native_binary_sha256"] = {path.name: digest(path) for path in native_dir.iterdir()
                                           if path.suffix in (".pyd", ".so", ".dll")}
@@ -206,17 +202,9 @@ def replay(args):
     with (args.output / "tuning.csv").open("w", newline="") as tuning_file:
         writer = csv.writer(tuning_file)
         writer.writerow(["ef_search", "query_count", "recall_at_10", "wall_ns"])
-        for expansion in expansions:
-            collection.modify(configuration={"hnsw": {"ef_search": expansion}})
-            tune_start = time.perf_counter_ns()
-            tuning_recall = sum(validate(query([vector]), [vector], corpus, metadata, config,
-                                        [truth[("tuning", index)]]) for index, vector in enumerate(tuning)) / len(tuning)
-            writer.writerow([expansion, len(tuning), tuning_recall, time.perf_counter_ns() - tune_start])
-            tuning_file.flush()
-            if tuning_recall >= float(config["recall_target"]):
-                break
-    config_out["ef_search"] = expansion
-    (args.output / "configuration.json").write_text(json.dumps(config_out, indent=2) + "\n")
+        tuning_recall = sum(validate(query([vector]), [vector], corpus, metadata, config,
+                                    [truth[("tuning", index)]]) for index, vector in enumerate(tuning)) / len(tuning)
+        writer.writerow([args.ef_search, len(tuning), tuning_recall, time.perf_counter_ns() - start])
     (args.output / "hnsw-configuration.json").write_text(json.dumps(collection.configuration, indent=2) + "\n")
     readiness_ns = time.perf_counter_ns() - start
     for index in range(int(config["warmup_queries"])):
@@ -267,6 +255,5 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, required=True, help="new directory; includes persistent database")
     parser.add_argument("--dataset", type=Path, help="override prepared dataset path without changing its checksum")
     parser.add_argument("--ef-search", type=int, default=128)
-    parser.add_argument("--tune-ef-search", help="comma-separated candidates; select using only tuning queries before evaluation")
     parser.add_argument("--threads", type=int, default=1)
     replay(parser.parse_args())
