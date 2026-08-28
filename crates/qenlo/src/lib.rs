@@ -499,6 +499,25 @@ impl Collection {
             .await?;
         response.report.lock_wait = lock_wait;
         response.report.preparation_reason = if rebuilt { preparation_reason } else { None };
+        #[cfg(feature = "gpu-wgpu")]
+        if rebuilt {
+            if response.report.actual_backend == BackendKind::Wgpu {
+                // Preparation uploads every stored vector and three u64 metadata columns.
+                let resident_upload =
+                    state.store.len() as u64 * (state.store.dimension() as u64 * 4 + 24);
+                if let Measurement::Available(bytes) = &mut response.report.upload_bytes {
+                    *bytes += resident_upload;
+                }
+            } else if matches!(state.config.backend, BackendSelection::Automatic(_))
+                && response.report.fallback_reason.is_some()
+            {
+                response.report.upload_bytes =
+                    Measurement::unavailable("GPU preparation failed; partial uploads unavailable");
+                response.report.qenlo_allocation_bytes = Measurement::unavailable(
+                    "GPU preparation failed; partial allocations unavailable",
+                );
+            }
+        }
         response.report.total_duration = started.elapsed();
         if self.diagnostics.load(Ordering::Relaxed) == Diagnostics::Detailed as u8 {
             response.report.eligible_rows =
