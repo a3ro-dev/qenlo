@@ -216,6 +216,9 @@ cargo test -p qenlo --features usearch
 
 see [contributing](CONTRIBUTING.md) for full commands and
 [verification](docs/verification.md) for recorded results and platform limits.
+[Measured 2026-08-28 results](docs/results-2026-08-28.md) contains the real-data
+CPU, RTX 4050 GPU, USearch, and native Chroma cells with their recall gates and
+limits.
 [Native Chroma replay](scripts/chroma-replay.md) uses identical prepared vectors,
 synthetic metadata, oracle results and query order, with recall validation.
 [architecture](docs/architecture.md) explains the storage/index boundary;

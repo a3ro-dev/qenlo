@@ -1,0 +1,1 @@
+completed benchmarks/2026-08-28/real/usearch-384-all-v4: recall@10=0.9922400000000001 target_passed=true median-run-P95-batch=3624500ns; no scale claim

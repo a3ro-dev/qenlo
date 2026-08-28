@@ -1,0 +1,14 @@
+{
+  "status": "completed",
+  "build_ns": 33898182000,
+  "readiness_and_tuning_ns": 1000406300,
+  "tuning_recall_at_10": 0.9945,
+  "evaluation_recall_at_10": 0.9941400000000001,
+  "recall_target_passed": true,
+  "median_run_p95_batch_ns": 1130300,
+  "min_run_p95_batch_ns": 1093700,
+  "max_run_p95_batch_ns": 1211700,
+  "filter_violations": 0,
+  "median_convention": "lower-middle",
+  "scale_performance_claim": "none"
+}

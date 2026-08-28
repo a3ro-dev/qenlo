@@ -1,0 +1,2 @@
+    Checking qenlo-bench v0.1.0 (D:\qenloDB\crates\qenlo-bench)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.69s

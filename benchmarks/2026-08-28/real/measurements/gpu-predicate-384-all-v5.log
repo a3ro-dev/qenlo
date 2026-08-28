@@ -1,0 +1,1 @@
+completed benchmarks/2026-08-28/real/gpu-predicate-384-all-v5: recall@10=0.9999800000000001 target_passed=true median-run-P95-batch=3240400ns; no scale claim

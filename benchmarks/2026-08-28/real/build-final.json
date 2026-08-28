@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-08-28T20:20:41.7701791+05:30",
+  "git_revision": "76bb34df396b9f4a120e3a21d78070975f68a249",
+  "git_worktree_dirty": true,
+  "binary": "target/release/qenlo-bench.exe",
+  "binary_sha256": "187c6b55aaa27c18c95dd3cc00089714769cdc70aeb5d3046be3e1476b931fc2",
+  "features": [
+    "usearch",
+    "gpu-wgpu"
+  ],
+  "profile": "release",
+  "compiler": {
+    "CC": "clang-cl",
+    "CARGO_INCREMENTAL": "0",
+    "CXX": "clang-cl"
+  }
+}
