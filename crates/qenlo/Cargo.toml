@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Observable embedded filtered vector search prototype"
+description = "Observable embedded filtered vector search with durable collections"
 
 [features]
 default = []

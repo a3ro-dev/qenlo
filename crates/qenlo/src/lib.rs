@@ -2,6 +2,23 @@
 //!
 //! Default features contain only the portable exact CPU backend. Applications
 //! opt into C++ (`usearch`) and GPU (`gpu-wgpu`) build requirements explicitly.
+//!
+//! ```no_run
+//! # async fn example() -> Result<(), qenlo::Error> {
+//! use qenlo::{Collection, CollectionConfig, Filter, NewRecord};
+//! let collection = Collection::create("vectors.qenlo", CollectionConfig::cpu_exact(2)).await?;
+//! collection.add_batch(&[NewRecord {
+//!     id: 1, user_id: 7, timestamp: -1, vector: vec![1.0, 0.0],
+//! }])?;
+//! let found = collection.search(&[1.0, 0.0], &Filter::ALL, 10).await?;
+//! assert_eq!(found.results[0].id, 1);
+//! collection.close()?;
+//! let reopened = Collection::open("vectors.qenlo", CollectionConfig::cpu_exact(2)).await?;
+//! assert_eq!(reopened.stats().live_rows, 1);
+//! reopened.close()?;
+//! # Ok(())
+//! # }
+//! ```
 
 use async_lock::{RwLock, RwLockWriteGuard};
 #[cfg(feature = "usearch")]
@@ -109,6 +126,7 @@ pub enum PreparationReason {
     MissingIndex,
     CorruptIndex,
     StaleIndex,
+    DeviceRecovery,
 }
 
 /// Tracing detail. Base reports remain available with instrumentation disabled.
@@ -907,6 +925,9 @@ impl CollectionState {
         };
         if self.prepared_generation == Some(self.store.generation()) && healthy {
             return Ok(false);
+        }
+        if !healthy {
+            self.preparation_reason = PreparationReason::DeviceRecovery;
         }
         // Cancellation or failure cannot leave a removed resident index marked ready.
         self.prepared_generation = None;

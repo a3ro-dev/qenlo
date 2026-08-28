@@ -7,7 +7,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.98.0"
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/qenlo/qenlo"
+repository = "https://github.com/a3ro-dev/qenlo"
 
 [workspace.dependencies]
 crc32fast = "1"
