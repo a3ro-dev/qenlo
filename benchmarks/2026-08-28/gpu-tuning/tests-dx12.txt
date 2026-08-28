@@ -1,0 +1,35 @@
+
+running 14 tests
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+test gpu::tests::all_optional_predicates_match_cpu_including_signed_extremes ... ok
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+test gpu::tests::allocation_validation_is_returned_instead_of_uncaptured_panic ... ok
+test gpu::tests::budget_failure_is_explicit ... ok
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+test gpu::tests::chunks_keep_readback_and_allocations_bounded ... ok
+test gpu::tests::empty_backend_selection_has_no_adapter ... ok
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+test gpu::tests::failed_rebuild_releases_old_residents_and_can_retry ... ok
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+test gpu::tests::gpu_exact_mask_smoke_if_adapter_is_available ... ok
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+test gpu::tests::gpu_predicate_handles_signed_timestamps_and_tombstones_if_adapter_is_available ... ok
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+test gpu::tests::initialization_and_search_reject_overbudget ... ok
+test gpu::tests::packed_words_round_trip ... ok
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+test gpu::tests::parallel_scoring_and_selection_match_f64_oracle ... ok
+GPU runtime: NVIDIA GeForce RTX 4050 Laptop GPU / Dx12
+test gpu::tests::real_device_destroy_returns_sticky_error ... ok
+test gpu::tests::signed_i64_word_order_reference_handles_extremes ... ok
+test gpu::tests::unsupported_adapter_limits_are_unavailable ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 26 filtered out; finished in 11.85s
+
