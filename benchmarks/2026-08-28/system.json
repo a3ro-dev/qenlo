@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-08-28T19:21:22.1236300+05:30",
+  "platform": "Microsoft Windows 11 Home Single Language",
+  "os_version": "10.0.26100",
+  "architecture": "AMD64",
+  "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+  "logical_processors": 12,
+  "total_physical_memory_bytes": 16869351424,
+  "free_physical_memory_bytes": 4537008128,
+  "gpu_driver_report": "NVIDIA GeForce RTX 4050 Laptop GPU, 616.56, 6141 MiB",
+  "rustc": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
+  "cargo": "cargo 1.98.0 (797e8a9bc 2026-08-05)",
+  "benchmark_build": "release; CC=clang-cl CXX=clang-cl CARGO_INCREMENTAL=0; features usearch,gpu-wgpu",
+  "gate_1m768_minimum_two_vector_copies_bytes": 6144000000,
+  "gate_note": "1m768 requires at least two full host vector copies, additional metadata/index/oracle and GPU preparation copy. Available host memory is below even two-copy payload; no forced OOM run.",
+  "environment_note": "Native Windows laptop, shared interactive OS. Benchmark workloads scheduled sequentially; background applications and network downloads not controlled."
+}

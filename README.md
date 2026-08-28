@@ -30,6 +30,25 @@ IDs belonging to tombstones.
 filters combine optional `user_id` equality with a signed `i64` timestamp range:
 lower inclusive, upper exclusive, absent bounds unbounded.
 
+## try it now
+
+These runnable examples create a collection, insert vectors, search with a
+compound user/time filter, delete a row, rebuild, and verify the result after
+reopening. Use a new directory each time; the data is kept for inspection.
+
+```powershell
+cargo run -p qenlo --example quickstart -- ./demo.qenlo cpu
+$env:WGPU_BACKEND = 'dx12'
+cargo run -p qenlo --features gpu-wgpu --example quickstart -- ./gpu-demo.qenlo gpu
+```
+
+The GPU example prints the actual adapter, backend, dispatch count and readback
+bytes. Required GPU mode errors rather than quietly substituting the CPU.
+`vulkan` is also exercised on this laptop. These tiny hand-written vectors
+demonstrate behavior, not speed. [How the GPU kernels work](docs/gpu-design.md)
+separates our scoring and selection code from the wgpu device layer and the
+external USearch CPU ANN adapter.
+
 ## a small durable example
 
 use Rust 1.98.0 from [rust-toolchain.toml](rust-toolchain.toml). this example belongs
@@ -197,6 +216,8 @@ cargo test -p qenlo --features usearch
 
 see [contributing](CONTRIBUTING.md) for full commands and
 [verification](docs/verification.md) for recorded results and platform limits.
+[Native Chroma replay](scripts/chroma-replay.md) uses identical prepared vectors,
+synthetic metadata, oracle results and query order, with recall validation.
 [architecture](docs/architecture.md) explains the storage/index boundary;
 [security](SECURITY.md) describes the local trust model.
 
