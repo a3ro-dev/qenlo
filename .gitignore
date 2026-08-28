@@ -3,3 +3,4 @@
 *.trace
 *.pdb
 /data/
+__pycache__/
