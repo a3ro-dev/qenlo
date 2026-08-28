@@ -99,7 +99,7 @@ def validate(result, queries, corpus, metadata, config, truths):
     import numpy as np
 
     recalls = []
-    if len(result["ids"]) != len(queries) or len(result["distances"]) != len(queries):
+    if len(truths) != len(queries) or len(result["ids"]) != len(queries) or len(result["distances"]) != len(queries):
         raise ValueError("wrong response count")
     for ids, distances, query, truth in zip(result["ids"], result["distances"], queries, truths):
         ids = [int(value) for value in ids]
@@ -154,6 +154,8 @@ def replay(args):
         samples = list(csv.DictReader(stream))
     grouped = {}
     for row in samples:
+        if len(row["query_indices"].split(";")) != int(row["query_count"]) or not 1 <= int(row["query_count"]) <= int(config["batch"]):
+            raise ValueError("reference batch query count mismatch")
         grouped.setdefault(int(row["run"]), []).append(row)
     if len(grouped) != int(config["repetitions"]):
         raise ValueError("reference repetition count mismatch")
@@ -168,6 +170,7 @@ def replay(args):
                       diagnostics="Chroma-default-telemetry-disabled", transport="embedded-no-http",
                       ef_search=args.ef_search, num_threads=args.threads, recall_tuning="fixed-ef-no-adaptive-tuning",
                       host_rss_bytes="unavailable:no-process-measurement", scale_gate="untested-by-this-single-cell")
+    config_out["algorithm"] = "Chroma-local-configured-HNSW; internal-exact-fallback-not-instrumented"
     config_out["input_sha256"] = {name: digest(reference / name) for name in
                                  ["configuration.txt", "metadata.csv", "truth.csv", "samples.csv"]}
     config_out["dataset_sha256"] = digest(dataset)

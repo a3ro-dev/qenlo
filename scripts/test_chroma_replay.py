@@ -2,14 +2,48 @@
 
 import tempfile
 import unittest
+import struct
+import zlib
 from pathlib import Path
 
 import numpy as np
 
-from chroma_replay import eligible, percentile, read_metadata, validate, where_filter
+from chroma_replay import eligible, load_dataset, percentile, read_metadata, validate, where_filter
 
 
 class ReplayChecks(unittest.TestCase):
+    def test_dataset_checksum_length_split_dimension_source_and_vector_validation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "vectors.qnb"
+            config = dict(dimensions="2", rows="2", seed="42")
+            payload = struct.pack("<8f", 1, 0, 0, 1, 1, 1, -1, 1)
+            header = b"QNLOB001" + struct.pack("<6Q", 2, 2, 1, 1, 42, 0)
+            def write(content, expected=None):
+                checksum = zlib.crc32(content)
+                path.write_bytes(content + struct.pack("<I", checksum if expected is None else expected))
+                config["dataset_crc32"] = f"{checksum:08x}"
+            write(header + payload)
+            splits = load_dataset(path, config)
+            self.assertEqual([len(split) for split in splits], [2, 1, 1])
+            self.assertEqual(splits[2][0].tolist(), [-1, 1])
+            # Release Windows memmap handles before rewriting the test file.
+            del splits
+            config["dataset_crc32"] = "00000000"
+            with self.assertRaises(ValueError):
+                load_dataset(path, config)
+            for content, footer in [(header + payload, 0), (header + payload[:-1], None),
+                                    (b"BADMAGIC" + header[8:] + payload, None),
+                                    (b"QNLOB001" + struct.pack("<6Q", 2, 2, 1, 1, 42, 2 << 32) + payload, None),
+                                    (header + struct.pack("<8f", 0, 0, 0, 1, 1, 1, -1, 1), None),
+                                    (header + struct.pack("<8f", float("nan"), 0, 0, 1, 1, 1, -1, 1), None)]:
+                write(content, footer)
+                with self.assertRaises(ValueError):
+                    load_dataset(path, config)
+            write(header + payload)
+            config["dimensions"] = "3"
+            with self.assertRaises(ValueError):
+                load_dataset(path, config)
+
     def test_compound_signed_half_open_boundaries_and_empty_truth(self):
         config = dict(filter_user_id="0", filter_timestamp_from="-2", filter_timestamp_to="0")
         self.assertEqual(where_filter(config), {"$and": [{"user_id": {"$eq": 0}},
