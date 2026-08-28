@@ -42,7 +42,7 @@ Then run each backend independently with identical options:
 
 ```powershell
 target/release/qenlo-bench.exe run --dataset data/ag-news/ag-news-100k-384.qnb --dimensions 384 --output target/ag-cpu --backend cpu --user-id 0 --fraction 1 --warmups 200 --repetitions 5
-target/release/qenlo-bench.exe run --dataset data/ag-news/ag-news-100k-384.qnb --dimensions 384 --output target/ag-usearch --backend usearch --user-id 0 --fraction 1 --warmups 200 --repetitions 5 --expansion-search 128
+target/release/qenlo-bench.exe run --dataset data/ag-news/ag-news-100k-384.qnb --dimensions 384 --output target/ag-usearch --backend usearch --user-id 0 --fraction 1 --warmups 200 --repetitions 5 --tune-expansion-search 128,256,512,1024,2048,4096,8192
 target/release/qenlo-bench.exe run --dataset data/ag-news/ag-news-100k-384.qnb --dimensions 384 --output target/ag-gpu --backend gpu-rows --user-id 0 --fraction 1 --warmups 200 --repetitions 5
 target/chroma-venv/Scripts/python.exe scripts/chroma_replay.py --reference target/ag-cpu --output target/ag-chroma --ef-search 128
 ```
@@ -55,7 +55,12 @@ Chroma uses fixed `--ef-search` at index creation, with tuning-query recall reta
 in `tuning.csv`. An attempted runtime parameter sweep in native 1.5.9 reported
 updated configuration but unchanged query results across expansions 128..100000;
 do not rely on modifying a warm index for tuning. Use independent index builds
-and tuning experiments to select ANN expansion before held-out evaluation. Recall must
+and tuning experiments to select Chroma expansion before held-out evaluation.
+Qenlo's `--tune-expansion-search` sorts/deduplicates the supplied USearch grid,
+selects the smallest expansion reaching tuning recall, records each attempt in
+`tuning.csv` and `expansion_search_effective` in the manifest, then evaluates
+held-out queries once. No passing candidate aborts before held-out evaluation.
+GPU runs also record the selected adapter, API and negotiated limits. Recall must
 pass in every cell. Repeat at `--recall-target 0.99`; failed runs retain samples.
 
 The predeclared gate remains **1,000,000 x 768, batch 1, 1% eligible, k=10**: these commands

@@ -33,6 +33,7 @@ run     --dataset PATH --output NEW_DIRECTORY [--dimensions 16|384|768]
         [--user-id U64]
         [--batch 1|8|32] [--warmups 8] [--repetitions 3]
         [--recall-target 0.95|0.99] [--expansion-search 128]
+        [--tune-expansion-search 128,256,512,1024]
         [--diagnostics disabled|basic|detailed]
         [--vector-budget-mib 512] [--gpu-budget-mib 512]
 
@@ -44,7 +45,7 @@ Each batch uses one shared filter. --user-id adds equality AND a bounded timesta
 range; --fraction then applies within that user's population. k=10.
 Raw CSV samples, timing/recall summaries and configuration.txt are retained.
 Vector budget is a payload estimate, not an RSS/allocator limit. External dataset
-downloads, distinct-filter batches and automatic ANN tuning
+downloads and distinct-filter batches
 are not implemented. Optional backends require the matching cargo feature.";
 
 fn main() {
@@ -276,6 +277,25 @@ fn bytes(value: Measurement<u64>) -> Option<u64> {
     }
 }
 
+fn tuning_expansions(value: Option<String>, backend: &str, fixed: usize) -> Result<Vec<usize>> {
+    let Some(value) = value else {
+        return Ok(vec![fixed]);
+    };
+    if backend != "usearch" {
+        return Err("--tune-expansion-search requires --backend usearch".into());
+    }
+    let mut values: Vec<usize> = value
+        .split(',')
+        .map(str::parse)
+        .collect::<std::result::Result<_, _>>()?;
+    if values.contains(&0) {
+        return Err("tuning expansions must be nonzero".into());
+    }
+    values.sort_unstable();
+    values.dedup();
+    Ok(values)
+}
+
 fn csv_value(value: Option<u64>) -> String {
     value.map(|v| v.to_string()).unwrap_or_default()
 }
@@ -317,6 +337,11 @@ async fn run_cell(
     if expansion == 0 {
         return Err("--expansion-search must be nonzero".into());
     }
+    let expansions = tuning_expansions(
+        options.remove("--tune-expansion-search"),
+        &backend_name,
+        expansion,
+    )?;
     let vector_budget = (count(&take(&mut options, "--vector-budget-mib", "512"))? as u64)
         .checked_mul(1 << 20)
         .ok_or("vector budget overflow")?;
@@ -456,11 +481,26 @@ async fn run_cell(
     let readiness = Instant::now();
     collection.prepare().await?;
     let readiness_time = readiness.elapsed();
+    #[cfg(feature = "gpu-wgpu")]
+    if let Some(capabilities) = collection.gpu_capabilities() {
+        writeln!(
+            manifest,
+            "gpu_adapter={:?}\ngpu_api={}\ngpu_device_type={}\ngpu_max_buffer_size={}\ngpu_max_storage_buffer_binding_size={}\ngpu_max_compute_workgroups_per_dimension={}\ngpu_timestamp_queries_supported={}\ngpu_capability_allocation_budget_bytes={}",
+            capabilities.adapter_name,
+            capabilities.backend,
+            capabilities.device_type,
+            capabilities.max_buffer_size,
+            capabilities.max_storage_buffer_binding_size,
+            capabilities.max_compute_workgroups_per_dimension,
+            capabilities.timestamp_queries_supported,
+            capabilities.allocation_budget_bytes
+        )?;
+    }
     // Ground truth exhausts the eligible subset. It is outside every measured query window.
     let oracle_started = Instant::now();
     let oracle = PreparedOracle::new(&data.corpus, dimension, oracle_filter)?;
-    let truth: Vec<Vec<u64>> = data
-        .evaluation
+    let tuning_truth: Vec<Vec<u64>> = data
+        .tuning
         .iter()
         .map(|query| {
             oracle
@@ -471,6 +511,66 @@ async fn run_cell(
     let mut tuning_recall = 0.0;
     let mut replay_truth = BufWriter::new(File::create_new(output.join("truth.csv"))?);
     writeln!(replay_truth, "split,query_index,ids")?;
+    for (index, ids) in tuning_truth.iter().enumerate() {
+        writeln!(
+            replay_truth,
+            "tuning,{index},{}",
+            ids.iter().map(u64::to_string).collect::<Vec<_>>().join(";")
+        )?;
+    }
+    let mut tuning_samples = BufWriter::new(File::create_new(output.join("tuning.csv"))?);
+    writeln!(
+        tuning_samples,
+        "expansion_search,query_count,recall_at_10,wall_ns"
+    )?;
+    let mut effective_expansion = expansion;
+    for candidate in expansions {
+        #[cfg(feature = "usearch")]
+        if backend_name == "usearch" {
+            collection.set_ann_search_expansion(candidate)?;
+        }
+        effective_expansion = candidate;
+        tuning_recall = 0.0;
+        let tuning_started = Instant::now();
+        for (query, expected) in data.tuning.iter().zip(&tuning_truth) {
+            let response = collection.search(query, &filter, 10).await?;
+            validate_scores(&data.corpus, query, &response.results)?;
+            let actual: Vec<_> = response.results.iter().map(|hit| hit.id).collect();
+            if actual.len() != expected.len() {
+                return Err("backend returned fewer results than min(k, eligible_count)".into());
+            }
+            validate_results(&data.corpus, oracle_filter, &actual)?;
+            tuning_recall += recall_at_k(expected, &actual, 10)?;
+        }
+        tuning_recall /= data.tuning.len() as f64;
+        writeln!(
+            tuning_samples,
+            "{candidate},{},{tuning_recall},{}",
+            data.tuning.len(),
+            tuning_started.elapsed().as_nanos()
+        )?;
+        tuning_samples.flush()?;
+        if tuning_recall >= target {
+            break;
+        }
+    }
+    writeln!(
+        manifest,
+        "expansion_search_effective={effective_expansion}\ntuning_selection=smallest-supplied-expansion-meeting-target-before-heldout"
+    )?;
+    manifest.flush()?;
+    if tuning_recall < target {
+        return Err("no supplied expansion met tuning recall target; held-out evaluation not run; tuning.csv retained".into());
+    }
+    let truth: Vec<Vec<u64>> = data
+        .evaluation
+        .iter()
+        .map(|query| {
+            oracle
+                .search(query, 10)
+                .map(|hits| hits.into_iter().map(|hit| hit.id).collect())
+        })
+        .collect::<std::result::Result<_, _>>()?;
     for (index, ids) in truth.iter().enumerate() {
         writeln!(
             replay_truth,
@@ -478,31 +578,6 @@ async fn run_cell(
             ids.iter().map(u64::to_string).collect::<Vec<_>>().join(";")
         )?;
     }
-    for (index, query) in data.tuning.iter().enumerate() {
-        let expected: Vec<_> = oracle
-            .search(query, 10)?
-            .into_iter()
-            .map(|hit| hit.id)
-            .collect();
-        writeln!(
-            replay_truth,
-            "tuning,{index},{}",
-            expected
-                .iter()
-                .map(u64::to_string)
-                .collect::<Vec<_>>()
-                .join(";")
-        )?;
-        let response = collection.search(query, &filter, 10).await?;
-        validate_scores(&data.corpus, query, &response.results)?;
-        let actual: Vec<_> = response.results.iter().map(|hit| hit.id).collect();
-        if actual.len() != expected.len() {
-            return Err("backend returned fewer results than min(k, eligible_count)".into());
-        }
-        validate_results(&data.corpus, oracle_filter, &actual)?;
-        tuning_recall += recall_at_k(&expected, &actual, 10)?;
-    }
-    tuning_recall /= data.tuning.len() as f64;
     replay_truth.flush()?;
     let oracle_time = oracle_started.elapsed();
     for i in 0..warmups {
@@ -769,6 +844,15 @@ mod tests {
 
     #[test]
     fn parser_rejects_ambiguous_options_and_cells_have_exact_cardinality() {
+        assert_eq!(
+            tuning_expansions(Some("512,128,128".into()), "usearch", 32).unwrap(),
+            vec![128, 512]
+        );
+        assert_eq!(tuning_expansions(None, "cpu", 128).unwrap(), vec![128]);
+        for bad in ["", "0", "128,", "oops"] {
+            assert!(tuning_expansions(Some(bad.into()), "usearch", 128).is_err());
+        }
+        assert!(tuning_expansions(Some("128".into()), "cpu", 128).is_err());
         assert!(parse(vec!["run".into(), "--batch".into()]).is_err());
         assert!(
             parse(
