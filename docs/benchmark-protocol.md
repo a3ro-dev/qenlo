@@ -115,12 +115,12 @@ row independently of the library implementation. retain corpus originals for f64
 the collection normalizes its own copy. result IDs are checked for membership,
 deletion, duplication, and filter eligibility after every measured call.
 recall is unique-ID overlap divided by min(10,eligible count), with empty truth
-defined as recall 1. strict ID recall can penalize a boundary tie: the runner does
-not silently relax ties or redefine recall. every returned score is independently
-recomputed in f64 and must be within absolute distance tolerance 1e-5. results
-must be sorted by computed f32 distance, then ID. exact backends must also achieve
-strict ID recall 1; a boundary tie with different IDs fails explicitly rather
-than silently passing under an undocumented equivalence rule.
+defined as recall 1. every returned score is independently recomputed in f64 and
+must be within absolute distance tolerance 1e-5. results must be sorted by
+computed f32 distance, then ID. exact backends must achieve the recall target and
+strict score, filter, count, and uniqueness checks; if the only ID difference is
+an f64 boundary tie within 1e-5, the tie checker accepts it and records the raw
+recall rather than hiding the difference.
 
 `samples.csv` contains every completed batch's wall-clock latency, evaluation
 indices, query count, recall, result/eligible counts, actual backend, and available
@@ -140,12 +140,19 @@ recall, pass/fail and the lower-middle median across run P95 values. reference
 runs use five repetitions, so the median is unambiguous. a failed recall target
 returns a nonzero exit code but retains samples. filter violations fail immediately.
 publish every cell, including failures, rather than only a favorable aggregate.
+The completed 2026-08-28 100k × 384 real-data cells are retained in the
+[result record](results-2026-08-28.md); the preregistered 1m × 768 gate remains
+untested.
 
 `configuration.txt` retains split ranges, seed, source and prepared CRC32, requested
 backend, metadata distribution, fraction/count, batch, target, ANN expansion,
 budgets, platform/architecture, package version, git revision and metric conventions.
 also archive your compiler version, feature flags, build profile, dirty diff,
 GPU driver/adapter, power settings and machine specifications with a published run.
+On the measured hybrid host, wgpu enumerated Intel UHD Graphics (integrated) and
+NVIDIA GeForce RTX 4050 Laptop GPU (discrete). The high-performance request
+selected the NVIDIA adapter; `gpu_adapter`, `gpu_device_type`, and `gpu_api` in
+the run manifest are the source of truth for reproductions on multi-GPU hosts.
 the runner does not infer those hardware details or claim a clean checkout.
 
 ## memory and reporting limits

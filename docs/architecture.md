@@ -134,7 +134,11 @@ wgpu remains an exact-search experiment: CPU-mask, eligible-row, or GPU-predicat
 filtering; signed timestamps; bounded chunks and candidate readback; resident and
 scratch admission; capability and device-loss reporting. required failures and
 automatic fallback are explicit. there is no custom GPU ANN graph or established
-scale-performance advantage.
+scale-performance advantage. On a hybrid machine, the high-performance adapter
+request is observable in the returned capabilities and benchmark manifest; the
+2026-08-28 Windows measurements used the discrete NVIDIA GeForce RTX 4050 rather
+than the integrated Intel UHD adapter. Callers should treat the reported actual
+adapter as part of the performance result.
 
 ## reports and evidence
 

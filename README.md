@@ -49,6 +49,12 @@ demonstrate behavior, not speed. [How the GPU kernels work](docs/gpu-design.md)
 separates our scoring and selection code from the wgpu device layer and the
 external USearch CPU ANN adapter.
 
+On this hybrid host, wgpu sees Intel UHD Graphics (integrated) and an NVIDIA
+GeForce RTX 4050 Laptop GPU (discrete). The measured GPU runs requested the high
+performance adapter and record `NVIDIA GeForce RTX 4050 Laptop GPU`,
+`DiscreteGpu`, and DX12 in their manifests. Always inspect the reported adapter
+when reproducing a result on a machine with more than one GPU.
+
 ## a small durable example
 
 use Rust 1.98.0 from [rust-toolchain.toml](rust-toolchain.toml). this example belongs
@@ -202,8 +208,11 @@ commands are smoke workloads, not evidence of scale performance.
 one deterministic correctness fixture measured recall@10 of 1.0 for exact CPU
 and USearch across nine filters, 16 queries each, and 2,048 vectors at 32
 dimensions, including empty and fewer-than-k cases. this does not establish
-0.95 or 0.99 recall on arbitrary embeddings or the larger matrix. no measured
-2× GPU P95 claim is made here.
+0.95 or 0.99 recall on arbitrary embeddings or the larger matrix. The retained
+[2026-08-28 real-data results](docs/results-2026-08-28.md) include a 100k × 384
+all-row cell where the RTX 4050 exact GPU predicate path is 5.14× lower P95 than
+Qenlo exact CPU, plus a selective 1% cell where the GPU is slower. The
+predeclared 1m × 768 gate remains untested.
 
 the Windows setup previously hit an MSVC 14.29 compiler crash in USearch's native
 dependency. the local workaround is explicit rather than forced on consumers:

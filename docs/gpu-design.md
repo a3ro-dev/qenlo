@@ -48,7 +48,10 @@ k better items under the same ordering.
 
 Chunk size respects negotiated buffer and dispatch limits, with an additional
 131,072-row cap. At 384 dimensions a 100k corpus can fit in one chunk on the
-tested adapter. Each chunk uses a scoring dispatch and a selection dispatch;
+tested adapter. On the measured hybrid Windows host, wgpu enumerates Intel UHD
+Graphics (integrated) and NVIDIA GeForce RTX 4050 Laptop GPU (discrete); the
+high-performance request selected the NVIDIA adapter for the retained runs, and
+the manifest records the actual adapter and API. Each chunk uses a scoring dispatch and a selection dispatch;
 an empty compact eligible list needs only the selection dispatch. Every chunk
 currently completes readback before the next starts.
 
@@ -76,10 +79,14 @@ query sets are exploratory, not the preregistered scale gate.
 
 GPU and CPU use different floating-point reduction orders. Returned scores are
 checked against an independent float64 oracle with absolute tolerance `1e-5`;
-the benchmark additionally requires exact paths to return the same IDs. A
-boundary tie can therefore fail explicitly rather than silently count as a pass.
+the benchmark additionally requires exact paths to return the same IDs except for
+a documented boundary tie within `1e-5`; score, filter, count, and uniqueness
+checks remain strict. A non-tie mismatch fails explicitly.
 
 This is exact brute-force search with bounded top-k output. It is not GPU ANN,
 does not establish novelty for GPU filtering, and does not promise a gain at
 every selectivity. Physical runtime tests cover this Windows RTX 4050 through
-DX12 and Vulkan only. Metal, mobile and browser execution remain untested.
+DX12 and Vulkan only. The [real-data result record](results-2026-08-28.md)
+shows a 5.14× all-row P95 reduction versus Qenlo exact CPU at 100k × 384, but
+also a slower GPU result at 1% selectivity. Metal, mobile and browser execution
+remain untested.

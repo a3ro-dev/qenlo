@@ -1,8 +1,10 @@
 # verification record
 
-2026-08-28, native Windows, `x86_64-pc-windows-msvc`, NVIDIA GeForce RTX 4050
-Laptop GPU. Rust 1.98.0 (`88d9e12ae`, LLVM 22.1.8), Cargo 1.98.0.
-this is a local correctness record, not a production-readiness or scale claim.
+2026-08-28, native Windows, `x86_64-pc-windows-msvc`, Intel UHD Graphics
+(integrated) plus NVIDIA GeForce RTX 4050 Laptop GPU (discrete). Rust 1.98.0
+(`88d9e12ae`, LLVM 22.1.8), Cargo 1.98.0.
+this is a local correctness and benchmark record, not a production-readiness or
+general scale claim.
 
 ## commands and results
 
@@ -18,16 +20,17 @@ $env:CARGO_INCREMENTAL = '0'
 | command | final result |
 | --- | --- |
 | `cargo fmt --all -- --check` | passed |
-| `cargo test --workspace --no-default-features` | 42 tests + 1 doctest passed |
-| `cargo test --workspace --all-features` | 61 tests + 1 doctest passed |
+| `cargo test --workspace --no-default-features -- --test-threads=1` | 47 tests + 1 doctest passed |
+| `cargo test --workspace --all-features --all-targets -- --test-threads=1` | 67 tests + 1 doctest passed |
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | passed, no warnings |
 | `cargo doc --workspace --all-features --no-deps` | passed |
 | `cargo test -p qenlo --features usearch --test cpu_quality -- --nocapture` | 2 tests passed; CPU and USearch recall@10 = 1.0 in all 9 fixture filters |
 | `cargo test -p qenlo-bench --all-features --all-targets` | 8 tests passed, including the real stalled-collector test |
 
-the all-features total consists of 39 collection/storage/GPU unit tests, 2 CPU
-quality tests, 2 process-exit tests, 5 benchmark-library tests, 2 runner tests,
-1 telemetry test, and 10 core tests. the doctest compiles the durable quickstart.
+the final all-features total consists of 40 collection/storage/GPU unit tests, 2
+CPU quality tests, 2 process-exit tests, 7 benchmark-library tests, 3 runner
+tests, 1 telemetry test, and 12 core tests. the doctest compiles the durable
+quickstart.
 both README Rust snippets also passed a separate `rustdoc --test` compilation.
 
 hardware acceptance was run twice, with adapter absence made fatal:
@@ -41,6 +44,9 @@ cargo test -p qenlo --features gpu-wgpu --lib -- --nocapture --test-threads=1
 ```
 
 both runs passed 37 tests and printed the RTX 4050 with the requested backend.
+The Intel adapter was present on the host but was not the reported device: the
+high-performance request selected the discrete NVIDIA adapter. The retained
+manifests record the actual adapter, device type, API, and negotiated limits.
 coverage includes optional predicate combinations and signed extremes, tombstones,
 bounded chunk/readback accounting, real device destruction, required errors,
 automatic fallback, explicit recovery, unavailable adapters and allocation validation.
@@ -90,11 +96,14 @@ and [the protocol](benchmark-protocol.md).
 
 the larger independent correctness fixture has 2,048 rows, dimension 32 and 16
 disjoint queries across 9 filters. both CPU and USearch measured recall 1.0.
-neither fixture establishes recall on 100k/1m real embeddings. those scale runs,
-competitor comparisons, confidence intervals and the 2x P95 investment gate
-remain untested. host RSS/allocator totals and GPU kernel timestamps remain
-explicitly unavailable. the runner currently uses shared timestamp filters;
-distinct-filter and compound-filter performance cells remain to be implemented.
+The follow-up [real-data result record](results-2026-08-28.md) now retains
+100k × 384 CPU, RTX 4050 GPU, USearch, and native Chroma cells with five runs,
+independent truth, recall gates, and seeded whole-run intervals. The exact GPU
+predicate path measured 5.14× lower P95 than Qenlo exact CPU when all rows were
+eligible, while the 1% selective GPU predicate cell was slower than CPU. The
+predeclared 1m × 768 investment gate remains untested because this host lacks
+the required memory. host RSS/allocator totals and GPU kernel timestamps remain
+explicitly unavailable for the library reports.
 
 ## toolchain and remaining release limits
 
@@ -136,6 +145,8 @@ ebd7d5f fix(obs): account for resident uploads and failed GPU preparation
 f70b5d6 docs(api): add checked quickstart and clarify recovery diagnostics
 ```
 
-the documentation-only commit containing this record follows those commits.
-the pre-existing `index.html` modification was preserved and excluded from every
-commit; the working tree is therefore intentionally not clean.
+the documentation-only commit containing this historical record follows those
+commits. Later result, site, and adapter documentation is tracked in the current
+repository history. The pre-existing `index.html` modification was preserved
+until the site update requested after this record; the current site file now
+includes the measured adapter and result status.

@@ -65,8 +65,15 @@ held-out queries once. No passing candidate aborts before held-out evaluation.
 GPU runs also record the selected adapter, API and negotiated limits. Recall must
 pass in every cell. Repeat at `--recall-target 0.99`; failed runs retain samples.
 
+On the 2026-08-28 hybrid Windows host, the available adapters were Intel UHD
+Graphics (integrated) and NVIDIA GeForce RTX 4050 Laptop GPU (discrete). The
+GPU measurements requested the high-performance adapter and must be interpreted
+from the manifest's `gpu_adapter`, `gpu_device_type`, and `gpu_api` fields rather
+than from the presence of a GPU feature flag alone. The retained real-data
+[result record](../docs/results-2026-08-28.md) uses the NVIDIA adapter.
+
 The predeclared gate remains **1,000,000 x 768, batch 1, 1% eligible, k=10**: these commands
-do not establish it. For that run prepare a separate 1m768 dataset and set explicit
+do not establish it; the current real-data cells are 100,000 x 384. For that run prepare a separate 1m768 dataset and set explicit
 vector/GPU budgets only if hardware memory can accommodate the measured allocation.
 
 ## Interpretation and checks
@@ -85,6 +92,8 @@ Query latency includes the completed API call. Chroma includes Python input
 validation, bindings, serialization, local database execution and result conversion;
 Qenlo's Rust API has a different boundary. A large difference on a tiny corpus can
 be dominated by those costs and is **not evidence of a better ANN algorithm or GPU**.
+The retained 100k × 384 native replay and the matching Qenlo CPU/GPU cells are
+summarized in [the 2026-08-28 result record](../docs/results-2026-08-28.md).
 Both measured QPS windows also include driver correctness validation and CSV writes.
 Build time, readiness/tuning, and warmups are excluded from steady-state query
 latency. Host RSS and physical VRAM are not measured by this adapter.
