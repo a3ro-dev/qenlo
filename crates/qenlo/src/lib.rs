@@ -205,6 +205,7 @@ pub struct Collection {
     durable_generation: Option<u64>,
     recovered_interrupted_write: bool,
     closed: bool,
+    storage_lock: Option<std::fs::File>,
 }
 
 impl Collection {
@@ -222,6 +223,7 @@ impl Collection {
             durable_generation: None,
             recovered_interrupted_write: false,
             closed: false,
+            storage_lock: None,
         })
     }
 
@@ -230,8 +232,9 @@ impl Collection {
     pub async fn create(path: impl AsRef<Path>, config: CollectionConfig) -> Result<Self, Error> {
         let path = path.as_ref().to_path_buf();
         let mut collection = Self::new(config).await?;
-        storage::create(&path, &collection.store)
+        let lock = storage::create(&path, &collection.store)
             .map_err(|error| Error::Storage(error.to_string()))?;
+        collection.storage_lock = Some(lock);
         collection.path = Some(path);
         collection.durable_generation = Some(collection.store.generation());
         Ok(collection)
@@ -264,6 +267,7 @@ impl Collection {
             durable_generation: Some(durable_generation),
             recovered_interrupted_write: opened.recovered_interrupted_write,
             closed: false,
+            storage_lock: Some(opened.lock),
         })
     }
 
@@ -487,6 +491,7 @@ impl Collection {
         }
         self.flush()?;
         self.closed = true;
+        self.storage_lock = None;
         Ok(())
     }
 

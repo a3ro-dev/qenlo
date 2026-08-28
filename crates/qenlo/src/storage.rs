@@ -13,7 +13,7 @@ const MAGIC: &[u8; 8] = b"QENLODB\0";
 const FORMAT_VERSION: u32 = 1;
 const HEADER_BYTES: u64 = 8 + 4 + 4 + 8 + 8 + 8;
 const CHECKSUM_BYTES: u64 = 4;
-const MAX_LOAD_BYTES: u64 = 8 * 1024 * 1024 * 1024;
+pub(crate) const MAX_LOAD_BYTES: u64 = 512 * 1024 * 1024;
 
 #[derive(Debug, Error)]
 pub(crate) enum StorageError {
@@ -31,6 +31,12 @@ pub(crate) enum StorageError {
     Corrupt(String),
     #[error("collection snapshot exceeds the {MAX_LOAD_BYTES}-byte load limit")]
     LoadLimitExceeded,
+    #[error("collection is already open by another handle or process")]
+    Locked,
+    #[error(
+        "snapshot was published but directory sync failed; close and reopen to resolve commit: {0}"
+    )]
+    CommitUncertain(io::Error),
     #[error(transparent)]
     Io(#[from] io::Error),
     #[error(transparent)]
@@ -41,25 +47,59 @@ pub(crate) enum StorageError {
 pub(crate) struct OpenedStore {
     pub store: CoreStore,
     pub recovered_interrupted_write: bool,
+    pub lock: File,
 }
 
-pub(crate) fn create(path: &Path, store: &CoreStore) -> Result<(), StorageError> {
+pub(crate) fn create(path: &Path, store: &CoreStore) -> Result<File, StorageError> {
     if path.exists() {
         let mut entries = fs::read_dir(path).map_err(StorageError::Io)?;
-        if entries.next().transpose()?.is_some() {
+        if entries
+            .any(|entry| entry.is_err() || entry.is_ok_and(|e| e.file_name() != "collection.lock"))
+        {
             return Err(StorageError::AlreadyExists(path.to_path_buf()));
         }
     } else {
         fs::create_dir_all(path)?;
     }
-    write_snapshot(path, store)
+    let lock = lock_directory(path)?;
+    // Recheck under the lock: another creator may have won the race.
+    if fs::read_dir(path)?
+        .any(|entry| entry.is_err() || entry.is_ok_and(|e| e.file_name() != "collection.lock"))
+    {
+        return Err(StorageError::AlreadyExists(path.to_path_buf()));
+    }
+    write_snapshot(path, store)?;
+    Ok(lock)
 }
 
 pub(crate) fn open(path: &Path) -> Result<OpenedStore, StorageError> {
+    open_with_limit(path, MAX_LOAD_BYTES)
+}
+
+fn lock_directory(path: &Path) -> Result<File, StorageError> {
+    let lock = OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .read(true)
+        .write(true)
+        .open(path.join("collection.lock"))?;
+    lock.try_lock().map_err(|error| match error {
+        fs::TryLockError::WouldBlock => StorageError::Locked,
+        fs::TryLockError::Error(error) => StorageError::Io(error),
+    })?;
+    Ok(lock)
+}
+
+pub(crate) fn open_with_limit(
+    path: &Path,
+    max_load_bytes: u64,
+) -> Result<OpenedStore, StorageError> {
     if !path.is_dir() {
         return Err(StorageError::NotFound(path.to_path_buf()));
     }
 
+    let lock = lock_directory(path)?;
+    let mut interrupted = false;
     let mut committed = Vec::new();
     let mut temporary = Vec::new();
     for entry in fs::read_dir(path)? {
@@ -69,6 +109,11 @@ pub(crate) fn open(path: &Path) -> Result<OpenedStore, StorageError> {
             committed.push((generation, entry.path()));
         } else if let Some(generation) = generation_from_name(&file_name, ".tmp") {
             temporary.push((generation, entry.path()));
+            interrupted = true;
+        } else if generation_from_name(&file_name, ".pending").is_some() {
+            // New writers publish only by rename. A staged transaction is never
+            // promoted on restart; v1 .tmp recovery below remains compatible.
+            interrupted = true;
         }
     }
     committed.sort_unstable_by_key(|(generation, _)| *generation);
@@ -82,7 +127,12 @@ pub(crate) fn open(path: &Path) -> Result<OpenedStore, StorageError> {
         .into_iter()
         .rev()
         .find(|(generation, _)| latest_committed.is_none() || *generation > committed_generation)
-        && let Ok(store) = read_snapshot(&temp, generation)
+        && let Some(store) = match read_snapshot(&temp, generation, max_load_bytes) {
+            Ok(store) => Some(store),
+            Err(error @ StorageError::UnsupportedVersion { .. }) => return Err(error),
+            Err(error @ StorageError::LoadLimitExceeded) => return Err(error),
+            Err(_) => None,
+        }
     {
         let final_path = snapshot_path(path, generation, ".qdb");
         fs::rename(&temp, &final_path)?;
@@ -91,6 +141,7 @@ pub(crate) fn open(path: &Path) -> Result<OpenedStore, StorageError> {
         return Ok(OpenedStore {
             store,
             recovered_interrupted_write: true,
+            lock,
         });
     }
 
@@ -98,8 +149,9 @@ pub(crate) fn open(path: &Path) -> Result<OpenedStore, StorageError> {
         return Err(StorageError::NoSnapshot(path.to_path_buf()));
     };
     Ok(OpenedStore {
-        store: read_snapshot(&snapshot, generation)?,
-        recovered_interrupted_write: false,
+        store: read_snapshot(&snapshot, generation, max_load_bytes)?,
+        recovered_interrupted_write: interrupted,
+        lock,
     })
 }
 
@@ -108,9 +160,9 @@ pub(crate) fn write_snapshot(path: &Path, store: &CoreStore) -> Result<(), Stora
     let generation = store.generation();
     let final_path = snapshot_path(path, generation, ".qdb");
     if final_path.exists() {
-        return Ok(());
+        return Err(StorageError::AlreadyExists(final_path));
     }
-    let temp_path = snapshot_path(path, generation, ".tmp");
+    let temp_path = snapshot_path(path, generation, ".pending");
     let file = OpenOptions::new()
         .create(true)
         .truncate(true)
@@ -119,7 +171,9 @@ pub(crate) fn write_snapshot(path: &Path, store: &CoreStore) -> Result<(), Stora
     let mut writer = CheckedWriter::new(BufWriter::new(file));
     writer.write_all(MAGIC)?;
     writer.write_all(&FORMAT_VERSION.to_le_bytes())?;
-    writer.write_all(&(store.dimension() as u32).to_le_bytes())?;
+    let dimension =
+        u32::try_from(store.dimension()).map_err(|_| StorageError::LoadLimitExceeded)?;
+    writer.write_all(&dimension.to_le_bytes())?;
     writer.write_all(&generation.to_le_bytes())?;
     writer.write_all(&(store.len() as u64).to_le_bytes())?;
     writer.write_all(&(store.live_len() as u64).to_le_bytes())?;
@@ -139,16 +193,20 @@ pub(crate) fn write_snapshot(path: &Path, store: &CoreStore) -> Result<(), Stora
     drop(writer);
 
     fs::rename(&temp_path, &final_path)?;
-    sync_directory(path)?;
+    sync_directory(path).map_err(StorageError::CommitUncertain)?;
     prune_snapshots(path, generation);
     Ok(())
 }
 
-fn read_snapshot(path: &Path, expected_generation: u64) -> Result<CoreStore, StorageError> {
+fn read_snapshot(
+    path: &Path,
+    expected_generation: u64,
+    max_load_bytes: u64,
+) -> Result<CoreStore, StorageError> {
     let file = File::open(path)?;
     let file_len = file.metadata()?.len();
-    if file_len > MAX_LOAD_BYTES || file_len < HEADER_BYTES + CHECKSUM_BYTES {
-        return Err(if file_len > MAX_LOAD_BYTES {
+    if file_len > max_load_bytes || file_len < HEADER_BYTES + CHECKSUM_BYTES {
+        return Err(if file_len > max_load_bytes {
             StorageError::LoadLimitExceeded
         } else {
             StorageError::Corrupt("snapshot is shorter than its header".into())
@@ -193,15 +251,23 @@ fn read_snapshot(path: &Path, expected_generation: u64) -> Result<CoreStore, Sto
         )
         .and_then(|bytes| bytes.checked_add(CHECKSUM_BYTES))
         .ok_or(StorageError::LoadLimitExceeded)?;
-    if expected_len != file_len || expected_len > MAX_LOAD_BYTES {
+    if expected_len != file_len {
         return Err(StorageError::Corrupt(format!(
             "declared shape requires {expected_len} bytes, file has {file_len}"
         )));
     }
     let rows = usize::try_from(rows_u64).map_err(|_| StorageError::LoadLimitExceeded)?;
-    let mut records = Vec::with_capacity(rows);
+    // Budget vector payload plus a conservative allowance for records and both
+    // ordered indexes. This is admission accounting, not measured allocator RSS.
+    if rows_u64 > u64::from(u32::MAX)
+        || rows_u64
+            .checked_mul(row_bytes + 512)
+            .is_none_or(|bytes| bytes > max_load_bytes)
+    {
+        return Err(StorageError::LoadLimitExceeded);
+    }
     let mut actual_live = 0_u64;
-    for _ in 0..rows {
+    let records = (0..rows).map(|_| -> Result<RestoredRecord, StorageError> {
         let id = reader.u64()?;
         let user_id = reader.u64()?;
         let timestamp = reader.i64()?;
@@ -215,14 +281,15 @@ fn read_snapshot(path: &Path, expected_generation: u64) -> Result<CoreStore, Sto
         for _ in 0..dimension {
             vector.push(f32::from_bits(reader.u32()?));
         }
-        records.push(RestoredRecord {
+        Ok(RestoredRecord {
             id,
             user_id,
             timestamp,
             vector,
             live,
-        });
-    }
+        })
+    });
+    let store = CoreStore::restore_iter(dimension, generation, records)?;
     if actual_live != expected_live {
         return Err(StorageError::Corrupt(format!(
             "declared {expected_live} live rows, decoded {actual_live}"
@@ -235,7 +302,7 @@ fn read_snapshot(path: &Path, expected_generation: u64) -> Result<CoreStore, Sto
             "checksum mismatch: expected {stored:08x}, calculated {calculated:08x}"
         )));
     }
-    CoreStore::restore(dimension, generation, records).map_err(StorageError::Core)
+    Ok(store)
 }
 
 fn snapshot_path(path: &Path, generation: u64, extension: &str) -> PathBuf {
@@ -438,6 +505,76 @@ mod tests {
                 supported: 1
             })
         ));
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn exclusive_lock_is_released_on_drop() {
+        let path = temp_dir("lock");
+        let lock = create(&path, &populated_store()).unwrap();
+        assert!(matches!(open(&path), Err(StorageError::Locked)));
+        drop(lock);
+        drop(open(&path).unwrap());
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn unpublished_transaction_is_never_promoted() {
+        let path = temp_dir("pending");
+        let mut store = populated_store();
+        drop(create(&path, &store).unwrap());
+        let previous = store.generation();
+        store.add(3, 9, 0, [1.0, 1.0]).unwrap();
+        write_snapshot(&path, &store).unwrap();
+        fs::rename(
+            snapshot_path(&path, store.generation(), ".qdb"),
+            snapshot_path(&path, store.generation(), ".pending"),
+        )
+        .unwrap();
+        let opened = open(&path).unwrap();
+        assert_eq!(opened.store.generation(), previous);
+        assert!(opened.recovered_interrupted_write);
+        drop(opened);
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn load_budget_and_generation_collision_are_explicit() {
+        let path = temp_dir("budget");
+        let store = populated_store();
+        drop(create(&path, &store).unwrap());
+        assert!(matches!(
+            open_with_limit(&path, 100),
+            Err(StorageError::LoadLimitExceeded)
+        ));
+        assert!(matches!(
+            write_snapshot(&path, &store),
+            Err(StorageError::AlreadyExists(_))
+        ));
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn checksum_bit_flip_and_truncated_pending_are_detected() {
+        use std::io::{Seek, SeekFrom};
+        let path = temp_dir("bit-flip");
+        let store = populated_store();
+        drop(create(&path, &store).unwrap());
+        fs::write(
+            snapshot_path(&path, store.generation() + 1, ".pending"),
+            b"partial",
+        )
+        .unwrap();
+        assert!(open(&path).unwrap().recovered_interrupted_write);
+        let mut file = OpenOptions::new()
+            .write(true)
+            .open(snapshot_path(&path, store.generation(), ".qdb"))
+            .unwrap();
+        file.seek(SeekFrom::Start(HEADER_BYTES)).unwrap();
+        file.write_all(&99_u64.to_le_bytes()).unwrap();
+        file.sync_all().unwrap();
+        assert!(matches!(open(&path), Err(StorageError::Corrupt(_))));
+        drop(file);
         fs::remove_dir_all(path).unwrap();
     }
 }
