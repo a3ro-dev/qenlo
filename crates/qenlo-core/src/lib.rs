@@ -1,6 +1,7 @@
 //! Portable canonical storage and exact filtered vector search for Qenlo.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::cmp::Ordering;
+use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap};
 use std::fmt;
 
 /// Inclusive-lower, exclusive-upper timestamp range.
@@ -168,10 +169,21 @@ impl CoreStore {
         generation: u64,
         records: Vec<RestoredRecord>,
     ) -> Result<Self, Error> {
+        Self::restore_iter(dimension, generation, records.into_iter().map(Ok))
+    }
+
+    /// Restore one decoded row at a time without staging a second vector store.
+    /// Decoder errors propagate unchanged; no partially restored store is returned.
+    pub fn restore_iter<E: From<Error>>(
+        dimension: usize,
+        generation: u64,
+        records: impl IntoIterator<Item = Result<RestoredRecord, E>>,
+    ) -> Result<Self, E> {
         let mut store = Self::new(dimension)?;
         for restored in records {
+            let restored = restored?;
             if store.ids.contains_key(&restored.id) {
-                return Err(Error::DuplicateId(restored.id));
+                return Err(Error::DuplicateId(restored.id).into());
             }
             validate_stored_vector(&restored.vector, dimension)?;
             let slot = u32::try_from(store.records.len()).map_err(|_| Error::CapacityExceeded)?;
@@ -336,27 +348,25 @@ impl CoreStore {
         }
         let query = normalize_vector(query.as_ref(), self.dimension)?;
         let slots = self.filter(predicate);
-        let mut hits: Vec<_> = slots
-            .iter()
-            .map(|&slot| {
-                let record = &self.records[slot as usize];
-                let dot = query
-                    .iter()
-                    .zip(&record.vector)
-                    .map(|(left, right)| left * right)
-                    .sum::<f32>();
-                SearchHit {
-                    id: record.id,
-                    distance: 1.0 - dot,
-                }
-            })
+        let mut best = BinaryHeap::with_capacity(k);
+        let dot = dot_implementation();
+        for &slot in &slots {
+            let record = &self.records[slot as usize];
+            let hit = RankedHit(SearchHit {
+                id: record.id,
+                distance: (1.0 - dot(&query, &record.vector)) as f32,
+            });
+            if best.len() < k {
+                best.push(hit);
+            } else if best.peek().is_some_and(|worst| hit < *worst) {
+                *best.peek_mut().expect("heap contains k entries") = hit;
+            }
+        }
+        let hits = best
+            .into_sorted_vec()
+            .into_iter()
+            .map(|hit| hit.0)
             .collect();
-        hits.sort_unstable_by(|left, right| {
-            left.distance
-                .total_cmp(&right.distance)
-                .then_with(|| left.id.cmp(&right.id))
-        });
-        hits.truncate(k);
         Ok(SearchOutput {
             hits,
             evaluated_rows: slots.len(),
@@ -368,6 +378,93 @@ impl CoreStore {
             .checked_add(1)
             .ok_or(Error::GenerationExhausted)
     }
+}
+
+// Only k distances are retained; the largest (distance, ID) is replaced first.
+struct RankedHit(SearchHit);
+
+impl PartialEq for RankedHit {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == Ordering::Equal
+    }
+}
+
+impl Eq for RankedHit {}
+
+impl PartialOrd for RankedHit {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for RankedHit {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0
+            .distance
+            .total_cmp(&other.0.distance)
+            .then_with(|| self.0.id.cmp(&other.0.id))
+    }
+}
+
+/// Runtime-selected exact CPU distance implementation.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CpuDistancePath {
+    /// Portable float64 accumulation.
+    Scalar,
+    /// x86/x86-64 AVX2 with float64 accumulation and a scalar remainder.
+    Avx2,
+}
+
+/// Report the distance implementation selected on this CPU.
+pub fn cpu_distance_path() -> CpuDistancePath {
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if std::is_x86_feature_detected!("avx2") {
+        return CpuDistancePath::Avx2;
+    }
+    CpuDistancePath::Scalar
+}
+
+fn dot_implementation() -> fn(&[f32], &[f32]) -> f64 {
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if cpu_distance_path() == CpuDistancePath::Avx2 {
+        // SAFETY: selected only after runtime AVX2 detection. Both input lengths
+        // are validated against the store dimension before this function is used.
+        return |left, right| unsafe { dot_avx2(left, right) };
+    }
+    dot_scalar
+}
+
+fn dot_scalar(left: &[f32], right: &[f32]) -> f64 {
+    left.iter()
+        .zip(right)
+        .map(|(&a, &b)| f64::from(a) * f64::from(b))
+        .sum()
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2")]
+unsafe fn dot_avx2(left: &[f32], right: &[f32]) -> f64 {
+    #[cfg(target_arch = "x86")]
+    use std::arch::x86::*;
+    #[cfg(target_arch = "x86_64")]
+    use std::arch::x86_64::*;
+    debug_assert_eq!(left.len(), right.len());
+    let mut sum = _mm256_setzero_pd();
+    let end = left.len() / 4 * 4;
+    for offset in (0..end).step_by(4) {
+        // SAFETY: each unaligned load stays within four valid elements.
+        let (a, b) = unsafe {
+            (
+                _mm_loadu_ps(left.as_ptr().add(offset)),
+                _mm_loadu_ps(right.as_ptr().add(offset)),
+            )
+        };
+        sum = _mm256_add_pd(sum, _mm256_mul_pd(_mm256_cvtps_pd(a), _mm256_cvtps_pd(b)));
+    }
+    let mut lanes = [0.0; 4];
+    // SAFETY: lanes has room for all four doubles and unaligned stores are allowed.
+    unsafe { _mm256_storeu_pd(lanes.as_mut_ptr(), sum) };
+    lanes.iter().sum::<f64>() + dot_scalar(&left[end..], &right[end..])
 }
 
 /// One canonical row decoded from durable storage.
@@ -532,5 +629,73 @@ mod tests {
             store.search([1.0, 0.0], &Predicate::ALL, 65),
             Err(Error::InvalidK(65))
         );
+    }
+
+    #[test]
+    fn bounded_selection_orders_ties_for_every_supported_k() {
+        let mut store = CoreStore::new(7).unwrap();
+        for id in (0..100).rev() {
+            store.add(id, 1, 0, [1.0; 7]).unwrap();
+        }
+        store.delete(0).unwrap();
+        for k in 1..=64 {
+            let output = store.search([1.0; 7], &Predicate::ALL, k).unwrap();
+            assert_eq!(
+                output.hits.iter().map(|hit| hit.id).collect::<Vec<_>>(),
+                (1..=k as u64).collect::<Vec<_>>()
+            );
+            assert_eq!(output.evaluated_rows, 99);
+        }
+    }
+
+    #[test]
+    fn runtime_distance_agrees_with_scalar_including_vector_remainders() {
+        for dimension in [1, 2, 3, 4, 7, 16, 31, 384, 768] {
+            let left: Vec<_> = (0..dimension)
+                .map(|i| ((i * 17 % 31) as f32 - 15.0) / 16.0)
+                .collect();
+            let right: Vec<_> = (0..dimension)
+                .map(|i| ((i * 11 % 37) as f32 - 17.0) / 32.0)
+                .collect();
+            assert!(
+                (dot_implementation()(&left, &right) - dot_scalar(&left, &right)).abs() < 1e-10
+            );
+        }
+    }
+
+    #[test]
+    fn malformed_queries_are_rejected_even_when_filter_is_empty() {
+        let store = store();
+        let none = Predicate::new(Some(999), TimestampRange::ALL);
+        for value in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+            assert_eq!(
+                store.search([value, 0.0], &none, 1),
+                Err(Error::NonFiniteVector)
+            );
+        }
+        assert_eq!(store.search([0.0; 2], &none, 1), Err(Error::ZeroNormVector));
+        assert!(matches!(
+            store.search([1.0], &none, 1),
+            Err(Error::DimensionMismatch { .. })
+        ));
+    }
+
+    #[test]
+    fn streaming_restore_preserves_generation_and_propagates_decode_errors() {
+        let row = RestoredRecord {
+            id: 5,
+            user_id: 7,
+            timestamp: i64::MIN,
+            vector: vec![1.0, 0.0],
+            live: false,
+        };
+        let restored = CoreStore::restore_iter(2, 17, [Ok::<_, Error>(row.clone())]).unwrap();
+        assert_eq!(restored.generation(), 17);
+        assert_eq!(restored.len(), 1);
+        assert_eq!(restored.live_len(), 0);
+        assert!(matches!(
+            CoreStore::restore_iter(2, 17, [Ok(row), Err(Error::NonFiniteVector)]),
+            Err(Error::NonFiniteVector)
+        ));
     }
 }
