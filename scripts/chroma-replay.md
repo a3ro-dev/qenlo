@@ -71,6 +71,9 @@ vector/GPU budgets only if hardware memory can accommodate the measured allocati
 
 ## Interpretation and checks
 
+Recall threshold comparisons allow `1e-12` solely for floating-point accumulation
+roundoff (for example 0.9899999999999999 versus 0.99); raw recalls are not rounded.
+
 Query latency includes the completed API call. Chroma includes Python input
 validation, bindings, serialization, local database execution and result conversion;
 Qenlo's Rust API has a different boundary. A large difference on a tiny corpus can

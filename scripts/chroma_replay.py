@@ -32,6 +32,10 @@ def percentile(values, fraction):
     return sorted(values)[max(0, math.ceil(len(values) * fraction) - 1)]
 
 
+def recall_passes(recall, target):
+    return recall + 1e-12 >= target
+
+
 def where_filter(config):
     terms = []
     for name, key, op in [
@@ -207,7 +211,7 @@ def replay(args):
         writer.writerow([args.ef_search, len(tuning), tuning_recall, time.perf_counter_ns() - start])
     (args.output / "hnsw-configuration.json").write_text(json.dumps(collection.configuration, indent=2) + "\n")
     readiness_ns = time.perf_counter_ns() - start
-    if tuning_recall < float(config["recall_target"]):
+    if not recall_passes(tuning_recall, float(config["recall_target"])):
         failure = dict(status="tuning-failed", build_ns=build_ns, readiness_and_tuning_ns=readiness_ns,
                        tuning_recall_at_10=tuning_recall, recall_target=float(config["recall_target"]),
                        heldout_queries_run=0, ef_search=args.ef_search)
@@ -215,7 +219,7 @@ def replay(args):
         raise ValueError("tuning recall target not met; held-out evaluation not run; tuning metadata retained")
     for index in range(int(config["warmup_queries"])):
         query([tuning[index % len(tuning)]])
-    p95s, recalls, passed = [], [], tuning_recall >= float(config["recall_target"])
+    p95s, recalls, passed = [], [], recall_passes(tuning_recall, float(config["recall_target"]))
     with (args.output / "samples.csv").open("w", newline="") as sample_file, (args.output / "runs.csv").open("w", newline="") as run_file:
         sample_writer, run_writer = csv.writer(sample_file), csv.writer(run_file)
         sample_writer.writerow(["run", "batch_index", "query_indices", "query_count", "batch_latency_ns", "recall_at_10", "result_ids"])
@@ -239,10 +243,10 @@ def replay(args):
             p95 = percentile(latencies, .95)
             p95s.append(p95)
             recalls.append(recall)
-            passed &= recall >= float(config["recall_target"])
+            passed &= recall_passes(recall, float(config["recall_target"]))
             run_writer.writerow([run, len(rows), len(evaluation), percentile(latencies, .5), p95,
                                  percentile(latencies, .99), wall, len(evaluation) * 1e9 / wall, recall,
-                                 recall >= float(config["recall_target"])])
+                                 recall_passes(recall, float(config["recall_target"]))])
             run_file.flush()
     summary = dict(status="completed", build_ns=build_ns, readiness_and_tuning_ns=readiness_ns,
                    tuning_recall_at_10=tuning_recall, evaluation_recall_at_10=sum(recalls) / len(recalls),

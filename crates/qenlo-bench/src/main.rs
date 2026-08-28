@@ -299,6 +299,10 @@ fn csv_value(value: Option<u64>) -> String {
     value.map(|v| v.to_string()).unwrap_or_default()
 }
 
+fn recall_passes(recall: f64, target: f64) -> bool {
+    recall + 1e-12 >= target
+}
+
 async fn run_cell(
     path: PathBuf,
     dimension: usize,
@@ -549,7 +553,7 @@ async fn run_cell(
             tuning_started.elapsed().as_nanos()
         )?;
         tuning_samples.flush()?;
-        if tuning_recall >= target {
+        if recall_passes(tuning_recall, target) {
             break;
         }
     }
@@ -558,7 +562,7 @@ async fn run_cell(
         "expansion_search_effective={effective_expansion}\ntuning_selection=smallest-supplied-expansion-meeting-target-before-heldout"
     )?;
     manifest.flush()?;
-    if tuning_recall < target {
+    if !recall_passes(tuning_recall, target) {
         return Err("no supplied expansion met tuning recall target; held-out evaluation not run; tuning.csv retained".into());
     }
     let truth: Vec<Vec<u64>> = data
@@ -596,7 +600,7 @@ async fn run_cell(
     )?;
     let mut p95s = Vec::new();
     let mut all_recall = 0.0;
-    let mut all_passed = tuning_recall >= target;
+    let mut all_passed = recall_passes(tuning_recall, target);
     for run in 0..repetitions {
         let mut order: Vec<_> = (0..data.evaluation.len()).collect();
         shuffle(&mut order, data.spec.seed.wrapping_add(run as u64));
@@ -691,7 +695,7 @@ async fn run_cell(
         p95s.push(p95);
         run_recall /= order.len() as f64;
         all_recall += run_recall;
-        all_passed &= run_recall >= target;
+        all_passed &= recall_passes(run_recall, target);
         writeln!(
             runs,
             "{run},{},{},{},{},{},{},{},{},{}",
@@ -703,7 +707,7 @@ async fn run_cell(
             wall.as_nanos(),
             order.len() as f64 / wall.as_secs_f64(),
             run_recall,
-            run_recall >= target
+            recall_passes(run_recall, target)
         )?;
     }
     runs.flush()?;
@@ -843,6 +847,8 @@ mod tests {
 
     #[test]
     fn parser_rejects_ambiguous_options_and_cells_have_exact_cardinality() {
+        assert!(recall_passes(0.9899999999999999, 0.99));
+        assert!(!recall_passes(0.989999, 0.99));
         assert_eq!(
             tuning_expansions(Some("512,128,128".into()), "usearch", 32).unwrap(),
             vec![128, 512]

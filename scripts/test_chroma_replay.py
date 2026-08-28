@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from chroma_replay import eligible, load_dataset, percentile, read_metadata, validate, where_filter
+from chroma_replay import eligible, load_dataset, percentile, read_metadata, recall_passes, validate, where_filter
 
 
 class ReplayChecks(unittest.TestCase):
@@ -45,6 +45,8 @@ class ReplayChecks(unittest.TestCase):
                 load_dataset(path, config)
 
     def test_compound_signed_half_open_boundaries_and_empty_truth(self):
+        self.assertTrue(recall_passes(.9899999999999999, .99))
+        self.assertFalse(recall_passes(.989999, .99))
         config = dict(filter_user_id="0", filter_timestamp_from="-2", filter_timestamp_to="0")
         self.assertEqual(where_filter(config), {"$and": [{"user_id": {"$eq": 0}},
             {"timestamp_micros": {"$gte": -2}}, {"timestamp_micros": {"$lt": 0}}]})
