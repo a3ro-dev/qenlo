@@ -207,6 +207,12 @@ def replay(args):
         writer.writerow([args.ef_search, len(tuning), tuning_recall, time.perf_counter_ns() - start])
     (args.output / "hnsw-configuration.json").write_text(json.dumps(collection.configuration, indent=2) + "\n")
     readiness_ns = time.perf_counter_ns() - start
+    if tuning_recall < float(config["recall_target"]):
+        failure = dict(status="tuning-failed", build_ns=build_ns, readiness_and_tuning_ns=readiness_ns,
+                       tuning_recall_at_10=tuning_recall, recall_target=float(config["recall_target"]),
+                       heldout_queries_run=0, ef_search=args.ef_search)
+        (args.output / "tuning-failure.json").write_text(json.dumps(failure, indent=2) + "\n")
+        raise ValueError("tuning recall target not met; held-out evaluation not run; tuning metadata retained")
     for index in range(int(config["warmup_queries"])):
         query([tuning[index % len(tuning)]])
     p95s, recalls, passed = [], [], tuning_recall >= float(config["recall_target"])

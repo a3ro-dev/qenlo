@@ -52,7 +52,9 @@ the full protocol; the adapter uses the reference's splits and timing protocol.
 Repeat GPU runs with `gpu-mask` and `gpu-predicate`; use `--batch 8` or `--batch 32`
 for shared-filter batch measurements. Distinct-filter batches are not implemented.
 Chroma uses fixed `--ef-search` at index creation, with tuning-query recall retained
-in `tuning.csv`. An attempted runtime parameter sweep in native 1.5.9 reported
+in `tuning.csv`. A failed tuning target writes `tuning-failure.json` and aborts
+before any held-out query; retry with a fresh index and a larger fixed expansion.
+An attempted runtime parameter sweep in native 1.5.9 reported
 updated configuration but unchanged query results across expansions 128..100000;
 do not rely on modifying a warm index for tuning. Use independent index builds
 and tuning experiments to select Chroma expansion before held-out evaluation.
