@@ -145,6 +145,92 @@ fn checked_norm(vector: &[f32], id: Option<u64>) -> Result<f64, OracleError> {
     Ok(squared.sqrt())
 }
 
+/// Independent exhaustive oracle for repeated queries against one fixed filter.
+/// Validation and f64 norms are cached outside measured query windows. Borrowing
+/// the records prevents corpus mutation from invalidating those cached facts.
+pub struct PreparedOracle<'a> {
+    dimension: usize,
+    eligible: Vec<(&'a OracleRecord, f64)>,
+}
+
+impl<'a> PreparedOracle<'a> {
+    pub fn new(
+        records: &'a [OracleRecord],
+        dimension: usize,
+        filter: OracleFilter,
+    ) -> Result<Self, OracleError> {
+        if dimension == 0 {
+            return Err(OracleError::EmptyDimension);
+        }
+        if filter
+            .timestamp_from
+            .zip(filter.timestamp_to)
+            .is_some_and(|(a, b)| a > b)
+        {
+            return Err(OracleError::InvalidFilterRange);
+        }
+        let mut ids = HashSet::with_capacity(records.len());
+        let mut eligible = Vec::new();
+        for record in records {
+            if !ids.insert(record.id) {
+                return Err(OracleError::DuplicateId(record.id));
+            }
+            if record.vector.len() != dimension {
+                return Err(OracleError::DimensionMismatch {
+                    id: record.id,
+                    expected: dimension,
+                    actual: record.vector.len(),
+                });
+            }
+            let norm = checked_norm(&record.vector, Some(record.id))?;
+            if !record.deleted && filter.matches(record) {
+                eligible.push((record, norm));
+            }
+        }
+        Ok(Self {
+            dimension,
+            eligible,
+        })
+    }
+
+    pub fn search(&self, query: &[f32], k: usize) -> Result<Vec<OracleHit>, OracleError> {
+        if k == 0 {
+            return Err(OracleError::InvalidK);
+        }
+        let query_norm = checked_norm(query, None)?;
+        if query.len() != self.dimension {
+            return Err(OracleError::DimensionMismatch {
+                id: 0,
+                expected: self.dimension,
+                actual: query.len(),
+            });
+        }
+        let mut hits: Vec<_> = self
+            .eligible
+            .iter()
+            .map(|&(record, norm)| {
+                let dot = query
+                    .iter()
+                    .zip(&record.vector)
+                    .map(|(&a, &b)| f64::from(a) * f64::from(b))
+                    .sum::<f64>();
+                OracleHit {
+                    id: record.id,
+                    distance: 1.0 - (dot / (query_norm * norm)).clamp(-1.0, 1.0),
+                }
+            })
+            .collect();
+        let order =
+            |a: &OracleHit, b: &OracleHit| a.distance.total_cmp(&b.distance).then(a.id.cmp(&b.id));
+        if hits.len() > k {
+            hits.select_nth_unstable_by(k, order);
+            hits.truncate(k);
+        }
+        hits.sort_unstable_by(order);
+        Ok(hits)
+    }
+}
+
 /// Recall over unique IDs, with the denominator capped by available ground truth.
 pub fn recall_at_k(expected: &[u64], actual: &[u64], k: usize) -> Result<f64, OracleError> {
     if k == 0 {
@@ -343,6 +429,28 @@ mod tests {
         };
         let hits = exact_cosine_search(&records, &[1.0, 0.0], filter, 10).unwrap();
         assert_eq!(hits.iter().map(|hit| hit.id).collect::<Vec<_>>(), [3]);
+        for predicate in [
+            filter,
+            OracleFilter::default(),
+            OracleFilter {
+                user_id: Some(99),
+                ..OracleFilter::default()
+            },
+        ] {
+            let prepared = PreparedOracle::new(&records, 2, predicate).unwrap();
+            for query in [[1.0, 0.0], [0.0, 1.0], [-1.0, 0.0]] {
+                for k in [1, 2, 10] {
+                    assert_eq!(
+                        prepared.search(&query, k).unwrap(),
+                        exact_cosine_search(&records, &query, predicate, k).unwrap()
+                    );
+                }
+            }
+            assert!(prepared.search(&[0.0, 0.0], 1).is_err());
+            assert!(prepared.search(&[1.0], 1).is_err());
+        }
+        let invalid = [record(8, 99, 0, &[f32::NAN, 1.0])];
+        assert!(PreparedOracle::new(&invalid, 2, filter).is_err());
     }
 
     #[test]
