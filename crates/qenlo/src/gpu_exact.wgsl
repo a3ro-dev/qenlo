@@ -101,12 +101,8 @@ fn select() {
         for (var row = 0u; row < params.rows; row += 1u) {
             let distance = scores[row];
             let id = ids[row];
-            var used = false;
-            for (var prior = 0u; prior < out; prior += 1u) {
-                used = used || selected[prior].row == row;
-            }
             let id_less = id.y < best_id.y || (id.y == best_id.y && id.x < best_id.x);
-            if (!used && (distance < best_distance || (distance == best_distance && id_less))) {
+            if (distance < best_distance || (distance == best_distance && id_less)) {
                 best_distance = distance;
                 best_row = row;
                 best_id = id;
@@ -120,5 +116,9 @@ fn select() {
         selected[out].row = best_row;
         selected[out].id_lo = best_id.x;
         selected[out].id_hi = best_id.y;
+        // One invocation owns selection; consuming scores avoids an O(k) prior-output scan.
+        if (best_row != 0xffffffffu) {
+            scores[best_row] = 3.402823466e+38;
+        }
     }
 }

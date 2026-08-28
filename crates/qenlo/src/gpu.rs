@@ -4,21 +4,89 @@
 //! metadata buffers stay resident; query scratch is allocated and released per chunk so the
 //! configured budget is a hard bound on Qenlo-owned allocations.
 
-use std::{fmt, sync::mpsc};
+use std::{
+    fmt,
+    sync::{Arc, Mutex, mpsc},
+    time::Duration,
+};
 
 const DEFAULT_BUDGET: u64 = 512 * 1024 * 1024;
 const CANDIDATE_BYTES: u64 = 16;
 const PARAM_BYTES: u64 = 48;
 const WORKGROUP_SIZE: u64 = 256;
+// ponytail: serial O(rows*k) selector; cap work per dispatch until a parallel selector is justified.
+const MAX_CHUNK_ROWS: u64 = 16_384;
+const DEVICE_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// Capabilities of the adapter selected for this collection, not physical VRAM usage.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GpuCapabilities {
+    /// Adapter's driver-reported name.
+    pub adapter_name: String,
+    /// Portable backend name, such as Vulkan or Dx12.
+    pub backend: String,
+    /// Driver-reported adapter category.
+    pub device_type: String,
+    /// Maximum individual buffer size.
+    pub max_buffer_size: u64,
+    /// Maximum storage binding size.
+    pub max_storage_buffer_binding_size: u64,
+    /// Maximum compute workgroups along one dimension.
+    pub max_compute_workgroups_per_dimension: u32,
+    /// Whether timestamp queries are supported; this prototype does not enable them.
+    pub timestamp_queries_supported: bool,
+    /// Configured bound on buffers and conservative transfer staging estimates.
+    pub allocation_budget_bytes: u64,
+}
+
+#[derive(Clone, Default)]
+struct DeviceHealth(Arc<Mutex<Option<String>>>);
+
+impl DeviceHealth {
+    fn fail(&self, reason: String) {
+        let mut failure = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        failure.get_or_insert(reason);
+    }
+
+    fn check(&self) -> Result<(), GpuError> {
+        match self
+            .0
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .as_ref()
+        {
+            Some(reason) => Err(GpuError::Device(reason.clone())),
+            None => Ok(()),
+        }
+    }
+
+    fn install(device: &wgpu::Device) -> Self {
+        let health = Self::default();
+        let lost = health.clone();
+        device.set_device_lost_callback(move |reason, message| {
+            lost.fail(format!("device lost ({reason:?}): {message}"));
+        });
+        let uncaptured = health.clone();
+        // wgpu's default handler panics. Make every driver/validation error sticky instead.
+        device.on_uncaptured_error(Arc::new(move |error: wgpu::Error| {
+            uncaptured.fail(error.to_string());
+        }));
+        health
+    }
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum FilterMode<'a> {
     /// One entry per collection row; `true` means eligible.
     Mask(&'a [bool]),
-    /// Collection row numbers. Duplicates are harmless but waste work.
+    /// Collection row numbers; duplicates are removed before dispatch.
     EligibleRows(&'a [u32]),
-    /// Fixed `(user == value) AND (lower <= timestamp < upper)` predicate.
-    Predicate { user: u64, lower: i64, upper: i64 },
+    /// All supplied user/time clauses joined by AND; absent clauses are unrestricted.
+    Predicate {
+        user: Option<u64>,
+        lower: Option<i64>,
+        upper: Option<i64>,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -85,6 +153,8 @@ pub(crate) struct GpuExact {
     rows: u32,
     budget: u64,
     resident_bytes: u64,
+    health: DeviceHealth,
+    capabilities: GpuCapabilities,
 }
 
 impl GpuExact {
@@ -111,14 +181,24 @@ impl GpuExact {
         if users.len() != rows
             || timestamps.len() != rows
             || live.len() != rows
-            || vectors.len() != rows * dimension
+            || rows.checked_mul(dimension) != Some(vectors.len())
         {
             return Err(GpuError::InvalidInput(
                 "vector and metadata lengths disagree".into(),
             ));
         }
 
-        let instance = wgpu::Instance::default();
+        let budget = budget.unwrap_or(DEFAULT_BUDGET);
+        let row_bytes = dimension as u64 * 4 + 24;
+        let resident_bytes = row_bytes
+            .checked_mul(rows as u64)
+            .ok_or_else(|| GpuError::InvalidInput("allocation size overflow".into()))?;
+        let fixed_scratch = dimension as u64 * 8 + 64 * CANDIDATE_BYTES * 2 + PARAM_BYTES * 2;
+        let minimum = resident_bytes
+            .checked_add((fixed_scratch + 12).max(row_bytes))
+            .ok_or_else(|| GpuError::InvalidInput("allocation size overflow".into()))?;
+        ensure_budget(minimum, budget)?;
+        let instance = gpu_instance();
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
@@ -129,6 +209,8 @@ impl GpuExact {
             .await
             .map_err(|e| GpuError::Unavailable(e.to_string()))?;
         let adapter_limits = adapter.limits();
+        validate_limits(&adapter_limits, dimension)?;
+        let capabilities = adapter_capabilities(&adapter, budget);
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
                 label: Some("qenlo exact-search device"),
@@ -137,6 +219,7 @@ impl GpuExact {
             })
             .await
             .map_err(|e| GpuError::Unavailable(e.to_string()))?;
+        let health = DeviceHealth::install(&device);
 
         let group0_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("qenlo exact group 0"),
@@ -186,24 +269,22 @@ impl GpuExact {
         let init_pipeline = make_pipeline("init_scores");
         let score_pipeline = make_pipeline("score");
         let select_pipeline = make_pipeline("select");
-
-        let budget = budget.unwrap_or(DEFAULT_BUDGET);
-        let row_bytes = dimension as u64 * 4 + 8 + 8 + 8;
-        let resident_bytes = row_bytes
-            .checked_mul(rows as u64)
-            .ok_or_else(|| GpuError::InvalidInput("allocation size overflow".into()))?;
-        // Query, eligibility, scores, candidates, staging and uniforms are live together.
-        let minimum_scratch =
-            dimension as u64 * 4 + rows as u64 * 8 + 64 * CANDIDATE_BYTES * 2 + PARAM_BYTES;
-        ensure_budget(resident_bytes + minimum_scratch, budget)?;
+        health.check()?;
 
         let vector_row_bytes = dimension as u64 * 4;
-        let max_binding = adapter_limits.max_storage_buffer_binding_size as u64;
+        let max_binding = adapter_limits
+            .max_storage_buffer_binding_size
+            .min(adapter_limits.max_buffer_size);
         let max_dispatch_rows =
             adapter_limits.max_compute_workgroups_per_dimension as u64 * WORKGROUP_SIZE;
         let rows_per_chunk = (max_binding / vector_row_bytes)
             .min(max_binding / 8)
             .min(max_dispatch_rows)
+            .min(MAX_CHUNK_ROWS)
+            .min(u32::MAX as u64 / dimension as u64)
+            // Reserve upload staging during rebuild and worst-case k=64 query scratch.
+            .min((budget - resident_bytes - fixed_scratch) / 12)
+            .min((budget - resident_bytes) / row_bytes)
             .min(u32::MAX as u64) as usize;
         if rows_per_chunk == 0 {
             return Err(GpuError::Unavailable(
@@ -225,15 +306,25 @@ impl GpuExact {
                     &queue,
                     "qenlo vectors",
                     &vectors[start * dimension..end * dimension],
-                ),
-                users: uploaded(&device, &queue, "qenlo users", &packed_users),
-                timestamps: uploaded(&device, &queue, "qenlo timestamps", &packed_timestamps),
-                ids: uploaded(&device, &queue, "qenlo ids", &packed_ids),
+                    &health,
+                )?,
+                users: uploaded(&device, &queue, "qenlo users", &packed_users, &health)?,
+                timestamps: uploaded(
+                    &device,
+                    &queue,
+                    "qenlo timestamps",
+                    &packed_timestamps,
+                    &health,
+                )?,
+                ids: uploaded(&device, &queue, "qenlo ids", &packed_ids, &health)?,
                 live: live[start..end]
                     .iter()
                     .map(|value| u32::from(*value))
                     .collect(),
             });
+            queue.submit([]);
+            poll_wait(&device)?;
+            health.check()?;
         }
 
         Ok(Self {
@@ -249,6 +340,8 @@ impl GpuExact {
             rows: rows as u32,
             budget,
             resident_bytes,
+            health,
+            capabilities,
         })
     }
 
@@ -258,8 +351,12 @@ impl GpuExact {
         k: usize,
         filter: FilterMode<'_>,
     ) -> Result<(Vec<GpuHit>, GpuExecution), GpuError> {
+        self.health.check()?;
         if query.len() != self.dimension as usize {
             return Err(GpuError::InvalidInput("query dimension mismatch".into()));
+        }
+        if query.iter().any(|value| !value.is_finite()) {
+            return Err(GpuError::InvalidInput("query must be finite".into()));
         }
         if !(1..=64).contains(&k) {
             return Err(GpuError::InvalidInput("k must be in 1..=64".into()));
@@ -284,7 +381,7 @@ impl GpuExact {
             chunks: self.chunks.len() as u32,
             ..Default::default()
         };
-        let mut merged = Vec::with_capacity(k * self.chunks.len());
+        let mut merged = Vec::with_capacity(k * 2);
 
         for chunk in &self.chunks {
             let (mode, eligibility) = chunk_eligibility(filter, chunk);
@@ -306,11 +403,11 @@ impl GpuExact {
                 dispatch_items,
                 filter,
             );
-            let scratch = query.len() as u64 * 4
-                + eligibility.len() as u64 * 4
+            let scratch = query.len() as u64 * 8
+                + eligibility.len() as u64 * 8
                 + chunk.rows as u64 * 4
                 + k as u64 * CANDIDATE_BYTES * 2
-                + PARAM_BYTES;
+                + PARAM_BYTES * 2;
             ensure_budget(self.resident_bytes + scratch, self.budget)?;
             execution.allocation_bytes = execution
                 .allocation_bytes
@@ -319,29 +416,48 @@ impl GpuExact {
                 query.len() as u64 * 4 + eligibility.len() as u64 * 4 + PARAM_BYTES;
             execution.readback_bytes += k as u64 * CANDIDATE_BYTES;
 
-            let query_buffer = uploaded(&self.device, &self.queue, "qenlo query", query);
-            let eligibility_buffer =
-                uploaded(&self.device, &self.queue, "qenlo eligibility", &eligibility);
-            let params_buffer =
-                uploaded_uniform(&self.device, &self.queue, "qenlo params", &params);
+            let query_buffer = uploaded(
+                &self.device,
+                &self.queue,
+                "qenlo query",
+                query,
+                &self.health,
+            )?;
+            let eligibility_buffer = uploaded(
+                &self.device,
+                &self.queue,
+                "qenlo eligibility",
+                &eligibility,
+                &self.health,
+            )?;
+            let params_buffer = uploaded_uniform(
+                &self.device,
+                &self.queue,
+                "qenlo params",
+                &params,
+                &self.health,
+            )?;
             let scores = buffer(
                 &self.device,
                 "qenlo scores",
                 chunk.rows as u64 * 4,
                 wgpu::BufferUsages::STORAGE,
-            );
+                &self.health,
+            )?;
             let selected = buffer(
                 &self.device,
                 "qenlo candidates",
                 k as u64 * CANDIDATE_BYTES,
                 wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
-            );
+                &self.health,
+            )?;
             let staging = buffer(
                 &self.device,
                 "qenlo readback",
                 k as u64 * CANDIDATE_BYTES,
                 wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
-            );
+                &self.health,
+            )?;
 
             let group0 = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some("qenlo exact resources"),
@@ -385,9 +501,14 @@ impl GpuExact {
             }
             encoder.copy_buffer_to_buffer(&selected, 0, &staging, 0, k as u64 * CANDIDATE_BYTES);
             self.queue.submit([encoder.finish()]);
+            self.health.check()?;
             execution.dispatch_count += if dispatch_items == 0 { 2 } else { 3 };
 
-            map_wait(&self.device, &staging)?;
+            map_wait(&self.device, &staging).inspect_err(|error| {
+                self.health.fail(error.to_string());
+                self.device.destroy();
+            })?;
+            self.health.check()?;
             let mapped = staging
                 .slice(..)
                 .get_mapped_range()
@@ -402,6 +523,13 @@ impl GpuExact {
             }
             drop(mapped);
             staging.unmap();
+            merged.sort_by(|a, b| {
+                a.distance
+                    .total_cmp(&b.distance)
+                    .then_with(|| a.id.cmp(&b.id))
+            });
+            merged.dedup_by_key(|hit| hit.id);
+            merged.truncate(k);
         }
 
         merged.sort_by(|a, b| {
@@ -420,7 +548,8 @@ pub(crate) struct GpuBackend {
     dimension: usize,
     mode: super::GpuFilterMode,
     budget: u64,
-    exact: Option<GpuExact>,
+    exact: Option<Box<GpuExact>>,
+    capabilities: GpuCapabilities,
 }
 
 impl GpuBackend {
@@ -435,7 +564,7 @@ impl GpuBackend {
             ));
         }
         // Probe now so `WgpuRequired` fails at collection construction rather than first search.
-        wgpu::Instance::default()
+        let adapter = gpu_instance()
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
                 force_fallback_adapter: false,
@@ -444,15 +573,37 @@ impl GpuBackend {
             })
             .await
             .map_err(|error| GpuError::Unavailable(error.to_string()))?;
+        validate_limits(&adapter.limits(), dimension)?;
+        let capabilities = adapter_capabilities(&adapter, budget);
         Ok(Self {
             dimension,
             mode,
             budget,
             exact: None,
+            capabilities,
         })
     }
 
+    pub(crate) fn capabilities(&self) -> &GpuCapabilities {
+        self.exact
+            .as_ref()
+            .map_or(&self.capabilities, |exact| &exact.capabilities)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn destroy_device_for_test(&self) {
+        if let Some(exact) = &self.exact {
+            exact.device.destroy();
+            let _ = exact.device.poll(wgpu::PollType::Poll);
+        }
+    }
+
     pub(crate) async fn prepare(&mut self, store: &qenlo_core::CoreStore) -> Result<(), GpuError> {
+        // Canonical storage is authoritative; release old residents before allocating replacements.
+        if let Some(old) = self.exact.take() {
+            old.device.destroy();
+            drop(old);
+        }
         if store.is_empty() {
             self.exact = None;
             return Ok(());
@@ -469,7 +620,7 @@ impl GpuBackend {
             timestamps.push(record.timestamp());
             live.push(record.is_live());
         }
-        self.exact = Some(
+        self.exact = Some(Box::new(
             GpuExact::new(
                 self.dimension,
                 &vectors,
@@ -480,7 +631,7 @@ impl GpuBackend {
                 Some(self.budget),
             )
             .await?,
-        );
+        ));
         Ok(())
     }
 
@@ -494,9 +645,9 @@ impl GpuBackend {
         let started = web_time::Instant::now();
         let normalized = qenlo_core::normalize_vector(query, self.dimension)
             .map_err(|error| GpuError::InvalidInput(error.to_string()))?;
-        let eligible = store.filter(predicate);
         let filter = match self.mode {
             super::GpuFilterMode::CpuMask => {
+                let eligible = store.filter(predicate);
                 let mut mask = vec![false; store.len()];
                 for &row in &eligible {
                     mask[row as usize] = true;
@@ -514,6 +665,7 @@ impl GpuBackend {
                     .await;
             }
             super::GpuFilterMode::CpuEligibleRows => {
+                let eligible = store.filter(predicate);
                 return self
                     .search_owned(
                         store,
@@ -526,15 +678,9 @@ impl GpuBackend {
                     .await;
             }
             super::GpuFilterMode::GpuPredicate => FilterMode::Predicate {
-                user: predicate.user_id.ok_or_else(|| {
-                    GpuError::InvalidInput("GPU predicate mode requires user equality".into())
-                })?,
-                lower: predicate.timestamp.lower.ok_or_else(|| {
-                    GpuError::InvalidInput("GPU predicate mode requires a lower timestamp".into())
-                })?,
-                upper: predicate.timestamp.upper.ok_or_else(|| {
-                    GpuError::InvalidInput("GPU predicate mode requires an upper timestamp".into())
-                })?,
+                user: predicate.user_id,
+                lower: predicate.timestamp.lower,
+                upper: predicate.timestamp.upper,
             },
         };
         self.finish_search(&normalized, k, filter, None, started)
@@ -652,13 +798,17 @@ fn buffer(
     label: &str,
     size: u64,
     usage: wgpu::BufferUsages,
-) -> wgpu::Buffer {
-    device.create_buffer(&wgpu::BufferDescriptor {
+    health: &DeviceHealth,
+) -> Result<wgpu::Buffer, GpuError> {
+    health.check()?;
+    let result = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some(label),
         size,
         usage,
         mapped_at_creation: false,
-    })
+    });
+    health.check()?;
+    Ok(result)
 }
 
 fn uploaded<T: Copy>(
@@ -666,16 +816,19 @@ fn uploaded<T: Copy>(
     queue: &wgpu::Queue,
     label: &str,
     value: &[T],
-) -> wgpu::Buffer {
+    health: &DeviceHealth,
+) -> Result<wgpu::Buffer, GpuError> {
     let bytes = bytes_of(value);
     let result = buffer(
         device,
         label,
         bytes.len() as u64,
         wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
-    );
+        health,
+    )?;
     queue.write_buffer(&result, 0, bytes);
-    result
+    health.check()?;
+    Ok(result)
 }
 
 fn uploaded_uniform(
@@ -683,16 +836,19 @@ fn uploaded_uniform(
     queue: &wgpu::Queue,
     label: &str,
     value: &[u32; 12],
-) -> wgpu::Buffer {
+    health: &DeviceHealth,
+) -> Result<wgpu::Buffer, GpuError> {
     let bytes = bytes_of(value);
     let result = buffer(
         device,
         label,
         PARAM_BYTES,
         wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-    );
+        health,
+    )?;
     queue.write_buffer(&result, 0, bytes);
-    result
+    health.check()?;
+    Ok(result)
 }
 
 fn bytes_of<T: Copy>(value: &[T]) -> &[u8] {
@@ -725,15 +881,27 @@ fn chunk_eligibility(filter: FilterMode<'_>, chunk: &Chunk) -> (u32, Vec<u32>) {
     let start = chunk.row_base as usize;
     let end = start + chunk.rows as usize;
     match filter {
-        FilterMode::Mask(mask) => (0, mask[start..end].iter().map(|v| u32::from(*v)).collect()),
-        FilterMode::EligibleRows(rows) => (
-            1,
-            rows.iter()
+        FilterMode::Mask(mask) => (
+            0,
+            mask[start..end]
+                .iter()
+                .zip(&chunk.live)
+                .map(|(eligible, live)| u32::from(*eligible) & live)
+                .collect(),
+        ),
+        FilterMode::EligibleRows(rows) => {
+            let mut local: Vec<_> = rows
+                .iter()
                 .copied()
                 .filter(|row| (*row as usize) >= start && (*row as usize) < end)
                 .map(|row| row - chunk.row_base)
-                .collect(),
-        ),
+                .filter(|row| chunk.live[*row as usize] != 0)
+                .collect();
+            // Duplicate rows would cause concurrent shader writes and unbounded dispatch sizes.
+            local.sort_unstable();
+            local.dedup();
+            (1, local)
+        }
         FilterMode::Predicate { .. } => (2, chunk.live.clone()),
     }
 }
@@ -747,7 +915,14 @@ fn params(
     filter: FilterMode<'_>,
 ) -> [u32; 12] {
     let (user, lower, upper, flags) = match filter {
-        FilterMode::Predicate { user, lower, upper } => (user, lower as u64, upper as u64, 7),
+        FilterMode::Predicate { user, lower, upper } => (
+            user.unwrap_or(0),
+            lower.unwrap_or(0) as u64,
+            upper.unwrap_or(0) as u64,
+            u32::from(user.is_some())
+                | (u32::from(lower.is_some()) << 1)
+                | (u32::from(upper.is_some()) << 2),
+        ),
         _ => (0, 0, 0, 0),
     };
     let (ul, uh) = split(user);
@@ -777,18 +952,70 @@ fn ensure_budget(required: u64, budget: u64) -> Result<(), GpuError> {
     }
 }
 
+fn gpu_instance() -> wgpu::Instance {
+    // Honor WGPU_BACKEND for reproducible DX12/Vulkan runtime verification.
+    wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle_from_env())
+}
+
+fn validate_limits(limits: &wgpu::Limits, dimension: usize) -> Result<(), GpuError> {
+    if limits.max_storage_buffers_per_shader_stage < 8
+        || limits.max_bind_groups < 2
+        || limits.max_bindings_per_bind_group < 8
+        || limits.max_compute_workgroup_size_x < WORKGROUP_SIZE as u32
+        || limits.max_compute_invocations_per_workgroup < WORKGROUP_SIZE as u32
+        || limits.max_compute_workgroups_per_dimension == 0
+        || limits.max_storage_buffer_binding_size < 64 * CANDIDATE_BYTES
+        || limits.max_buffer_size < 64 * CANDIDATE_BYTES
+        || limits.max_uniform_buffer_binding_size < PARAM_BYTES
+        || limits
+            .max_storage_buffer_binding_size
+            .min(limits.max_buffer_size)
+            < dimension as u64 * 4
+    {
+        Err(GpuError::Unavailable(
+            "adapter limits cannot run the exact-search kernel".into(),
+        ))
+    } else {
+        Ok(())
+    }
+}
+
+fn adapter_capabilities(adapter: &wgpu::Adapter, budget: u64) -> GpuCapabilities {
+    let info = adapter.get_info();
+    let limits = adapter.limits();
+    GpuCapabilities {
+        adapter_name: info.name,
+        backend: format!("{:?}", info.backend),
+        device_type: format!("{:?}", info.device_type),
+        max_buffer_size: limits.max_buffer_size,
+        max_storage_buffer_binding_size: limits.max_storage_buffer_binding_size,
+        max_compute_workgroups_per_dimension: limits.max_compute_workgroups_per_dimension,
+        timestamp_queries_supported: adapter.features().contains(wgpu::Features::TIMESTAMP_QUERY),
+        allocation_budget_bytes: budget,
+    }
+}
+
+fn poll_wait(device: &wgpu::Device) -> Result<(), GpuError> {
+    device
+        .poll(wgpu::PollType::Wait {
+            submission_index: None,
+            timeout: Some(DEVICE_TIMEOUT),
+        })
+        .map(|_| ())
+        .map_err(|error| GpuError::Device(error.to_string()))
+}
+
 fn map_wait(device: &wgpu::Device, buffer: &wgpu::Buffer) -> Result<(), GpuError> {
+    let started = web_time::Instant::now();
     let (sender, receiver) = mpsc::sync_channel(1);
     buffer
         .slice(..)
         .map_async(wgpu::MapMode::Read, move |result| {
             let _ = sender.send(result);
         });
-    device
-        .poll(wgpu::PollType::wait_indefinitely())
-        .map_err(|e| GpuError::Device(e.to_string()))?;
+    poll_wait(device)?;
     receiver
-        .recv()
+        .recv_timeout(DEVICE_TIMEOUT.saturating_sub(started.elapsed()))
         .map_err(|e| GpuError::Device(e.to_string()))?
         .map_err(|e| GpuError::Device(e.to_string()))
 }
@@ -811,6 +1038,39 @@ mod tests {
                 Poll::Pending => std::thread::yield_now(),
             }
         }
+    }
+
+    fn available(result: Result<GpuExact, GpuError>) -> Option<GpuExact> {
+        match result {
+            Ok(exact) => {
+                eprintln!(
+                    "GPU runtime: {} / {}",
+                    exact.capabilities.adapter_name, exact.capabilities.backend
+                );
+                Some(exact)
+            }
+            Err(GpuError::Unavailable(reason))
+                if std::env::var_os("QENLO_REQUIRE_GPU").is_none() =>
+            {
+                eprintln!(
+                    "SKIP GPU runtime: {reason}; set QENLO_REQUIRE_GPU=1 to require hardware"
+                );
+                None
+            }
+            Err(error) => panic!("GPU initialization failed: {error}"),
+        }
+    }
+
+    fn tiny_gpu() -> Option<GpuExact> {
+        available(block_on(GpuExact::new(
+            2,
+            &[1.0, 0.0],
+            &[1],
+            &[1],
+            &[0],
+            &[true],
+            None,
+        )))
     }
 
     #[test]
@@ -849,7 +1109,7 @@ mod tests {
 
     #[test]
     fn gpu_exact_mask_smoke_if_adapter_is_available() {
-        let Ok(exact) = block_on(GpuExact::new(
+        let Some(exact) = available(block_on(GpuExact::new(
             2,
             &[1.0, 0.0, 0.0, 1.0],
             &[20, 10],
@@ -857,7 +1117,7 @@ mod tests {
             &[0, 0],
             &[true, true],
             Some(16 * 1024 * 1024),
-        )) else {
+        ))) else {
             return;
         };
         let (hits, report) =
@@ -874,9 +1134,9 @@ mod tests {
             &[1.0, 0.0],
             2,
             FilterMode::Predicate {
-                user: 1,
-                lower: 0,
-                upper: 1,
+                user: Some(1),
+                lower: Some(0),
+                upper: Some(1),
             },
         ))
         .expect("GPU predicate search completes");
@@ -885,7 +1145,7 @@ mod tests {
 
     #[test]
     fn gpu_predicate_handles_signed_timestamps_and_tombstones_if_adapter_is_available() {
-        let Ok(exact) = block_on(GpuExact::new(
+        let Some(exact) = available(block_on(GpuExact::new(
             2,
             &[1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0],
             &[1, 2, 3, 4],
@@ -893,19 +1153,234 @@ mod tests {
             &[i64::MIN, -1, 1, i64::MAX],
             &[true, true, false, true],
             Some(16 * 1024 * 1024),
-        )) else {
+        ))) else {
             return;
         };
         let (hits, _) = block_on(exact.search(
             &[1.0, 0.0],
             4,
             FilterMode::Predicate {
-                user: 7,
-                lower: -2,
-                upper: 2,
+                user: Some(7),
+                lower: Some(-2),
+                upper: Some(2),
             },
         ))
         .expect("GPU predicate search completes");
         assert_eq!(hits.iter().map(|hit| hit.id).collect::<Vec<_>>(), [2]);
+    }
+
+    #[test]
+    fn all_optional_predicates_match_cpu_including_signed_extremes() {
+        let timestamps = [i64::MIN, i64::MIN + 1, -1, 0, 1, i64::MAX - 1, i64::MAX];
+        let ids = [u64::MAX, 1, 2, 3, 4, 5, 1 << 32];
+        let users = [u64::MAX, 0, 1, u64::MAX, 1, 0, u64::MAX];
+        let live = [true, true, false, true, true, true, true];
+        let vectors: Vec<_> = timestamps.iter().flat_map(|_| [1.0, 0.0]).collect();
+        let Some(exact) = available(block_on(GpuExact::new(
+            2,
+            &vectors,
+            &ids,
+            &users,
+            &timestamps,
+            &live,
+            None,
+        ))) else {
+            return;
+        };
+        let bounds = [
+            None,
+            Some(i64::MIN),
+            Some(-1),
+            Some(0),
+            Some(1),
+            Some(i64::MAX),
+        ];
+        for user in [None, Some(0), Some(1), Some(u64::MAX)] {
+            for lower in bounds {
+                for upper in bounds {
+                    let mask: Vec<_> = (0..ids.len())
+                        .map(|row| {
+                            live[row]
+                                && user.is_none_or(|user| users[row] == user)
+                                && lower.is_none_or(|lower| timestamps[row] >= lower)
+                                && upper.is_none_or(|upper| timestamps[row] < upper)
+                        })
+                        .collect();
+                    let rows: Vec<_> = mask
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, live)| **live)
+                        .flat_map(|(row, _)| [row as u32, row as u32])
+                        .collect();
+                    let mut expected: Vec<_> = mask
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, live)| **live)
+                        .map(|(row, _)| ids[row])
+                        .collect();
+                    expected.sort_unstable();
+                    for filter in [
+                        FilterMode::Predicate { user, lower, upper },
+                        FilterMode::Mask(&mask),
+                        FilterMode::EligibleRows(&rows),
+                    ] {
+                        let (hits, report) = block_on(exact.search(&[1.0, 0.0], 8, filter))
+                            .expect("exact predicate execution");
+                        assert_eq!(
+                            hits.iter().map(|hit| hit.id).collect::<Vec<_>>(),
+                            expected,
+                            "{filter:?}"
+                        );
+                        assert!(report.allocation_bytes <= exact.budget);
+                        assert_eq!(report.readback_bytes, 8 * CANDIDATE_BYTES);
+                    }
+                }
+            }
+        }
+        // Masks/lists cannot resurrect deleted rows even if the caller includes them.
+        for filter in [
+            FilterMode::Mask(&[true; 7]),
+            FilterMode::EligibleRows(&[2, 2]),
+        ] {
+            let (hits, _) = block_on(exact.search(&[1.0, 0.0], 8, filter)).unwrap();
+            assert!(!hits.iter().any(|hit| hit.id == ids[2]));
+        }
+    }
+
+    #[test]
+    fn chunks_keep_readback_and_allocations_bounded() {
+        let rows = MAX_CHUNK_ROWS as usize + 1;
+        let ids: Vec<_> = (1..=rows as u64).rev().collect();
+        let Some(exact) = available(block_on(GpuExact::new(
+            1,
+            &vec![1.0; rows],
+            &ids,
+            &vec![0; rows],
+            &vec![0; rows],
+            &vec![true; rows],
+            Some(2 * 1024 * 1024),
+        ))) else {
+            return;
+        };
+        assert_eq!(exact.chunks.len(), 2);
+        let (hits, report) = block_on(exact.search(
+            &[1.0],
+            3,
+            FilterMode::Predicate {
+                user: None,
+                lower: None,
+                upper: None,
+            },
+        ))
+        .unwrap();
+        assert_eq!(hits.iter().map(|hit| hit.id).collect::<Vec<_>>(), [1, 2, 3]);
+        assert_eq!(report.readback_bytes, 2 * 3 * CANDIDATE_BYTES);
+        assert!(report.allocation_bytes <= exact.budget);
+    }
+
+    #[test]
+    fn real_device_destroy_returns_sticky_error() {
+        let Some(exact) = tiny_gpu() else {
+            return;
+        };
+        exact.device.destroy();
+        let _ = exact.device.poll(wgpu::PollType::Poll);
+        assert!(matches!(
+            block_on(exact.search(&[1.0, 0.0], 1, FilterMode::Mask(&[true]))),
+            Err(GpuError::Device(_))
+        ));
+        assert!(matches!(exact.health.check(), Err(GpuError::Device(_))));
+    }
+
+    #[test]
+    fn allocation_validation_is_returned_instead_of_uncaptured_panic() {
+        let Some(exact) = tiny_gpu() else {
+            return;
+        };
+        let result = buffer(
+            &exact.device,
+            "deliberately invalid allocation",
+            exact.device.limits().max_buffer_size + 4,
+            wgpu::BufferUsages::STORAGE,
+            &exact.health,
+        );
+        assert!(matches!(result, Err(GpuError::Device(_))));
+    }
+
+    #[test]
+    fn initialization_and_search_reject_overbudget() {
+        assert!(matches!(
+            block_on(GpuExact::new(
+                2,
+                &[1.0, 0.0],
+                &[1],
+                &[1],
+                &[0],
+                &[true],
+                Some(1)
+            )),
+            Err(GpuError::OverBudget { .. })
+        ));
+        let Some(mut exact) = tiny_gpu() else {
+            return;
+        };
+        exact.budget = exact.resident_bytes;
+        assert!(matches!(
+            block_on(exact.search(&[1.0, 0.0], 1, FilterMode::Mask(&[true]))),
+            Err(GpuError::OverBudget { .. })
+        ));
+    }
+
+    #[test]
+    fn unsupported_adapter_limits_are_unavailable() {
+        let limits = wgpu::Limits {
+            max_storage_buffers_per_shader_stage: 7,
+            ..wgpu::Limits::default()
+        };
+        assert!(matches!(
+            validate_limits(&limits, 2),
+            Err(GpuError::Unavailable(_))
+        ));
+    }
+
+    #[test]
+    fn failed_rebuild_releases_old_residents_and_can_retry() {
+        let Some(exact) = tiny_gpu() else {
+            return;
+        };
+        let mut backend = GpuBackend {
+            dimension: 2,
+            mode: super::super::GpuFilterMode::GpuPredicate,
+            budget: 1,
+            capabilities: exact.capabilities.clone(),
+            exact: Some(Box::new(exact)),
+        };
+        let mut store = qenlo_core::CoreStore::new(2).unwrap();
+        store.add(2, 1, 0, [1.0, 0.0]).unwrap();
+        assert!(matches!(
+            block_on(backend.prepare(&store)),
+            Err(GpuError::OverBudget { .. })
+        ));
+        assert!(backend.exact.is_none());
+        backend.budget = DEFAULT_BUDGET;
+        block_on(backend.prepare(&store)).unwrap();
+        let output =
+            block_on(backend.search(&store, &[1.0, 0.0], &qenlo_core::Predicate::ALL, 1)).unwrap();
+        assert_eq!(output.hits[0].id, 2);
+        backend.destroy_device_for_test();
+        assert!(matches!(
+            block_on(backend.search(&store, &[1.0, 0.0], &qenlo_core::Predicate::ALL, 1)),
+            Err(GpuError::Device(_))
+        ));
+    }
+
+    #[test]
+    fn empty_backend_selection_has_no_adapter() {
+        let mut descriptor = wgpu::InstanceDescriptor::new_without_display_handle();
+        descriptor.backends = wgpu::Backends::empty();
+        let instance = wgpu::Instance::new(descriptor);
+        assert!(
+            block_on(instance.request_adapter(&wgpu::RequestAdapterOptions::default())).is_err()
+        );
     }
 }
