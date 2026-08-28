@@ -80,9 +80,11 @@ a regression test distinguishes it from positive rank. all metadata is synthetic
 user or publication data. these are controlled projection correlations, not a
 claim to model every real-world relationship to semantic distance.
 
-the runner currently exercises timestamp-only, shared-filter batches. compound
-user/time predicates have correctness tests elsewhere; distinct-filter batches
-and compound-filter performance comparisons remain to be added. batches are
+By default the runner exercises timestamp-only, shared-filter batches. Adding
+`--user-id 0` joins user equality with bounded timestamps; in that case fraction
+is relative to the selected user's population and actual corpus eligibility is
+recorded. Independent metadata with `--user-id 0 --fraction 1` selects 1% of a
+100k corpus. Distinct-filter batches remain to be added. Batches are
 sequential API batches, not an assertion of parallel device execution. the final
 batch may be partial and its query count is recorded.
 
@@ -96,15 +98,20 @@ cargo run --release -p qenlo-bench --features usearch -- run --dataset ag-news-1
 cargo run --release -p qenlo-bench --features gpu-wgpu -- run --dataset ag-news-100k-384.qnb --output gpu-01 --dimensions 384 --backend gpu-predicate --fraction 0.01 --warmups 200 --repetitions 5
 ```
 
-ANN expansion is explicit and fixed for a run. tuning-query recall is reported
-separately; automatic parameter search is not implemented. choose settings using
-tuning queries only, then freeze them before inspecting held-out evaluation.
-do not choose parameters by repeatedly chasing evaluation recall.
+ANN expansion is explicit and fixed for measured queries. For USearch,
+`--tune-expansion-search 128,256,512,1024,2048,4096,8192` tests the supplied values
+on tuning queries first and records every attempt in `tuning.csv`. It selects the
+smallest supplied passing value before accessing held-out queries; no passing
+value means an error with no evaluation run. The effective value is recorded in
+the manifest. Without the grid, only `--expansion-search` is tried. Do not choose
+parameters by repeatedly chasing evaluation recall.
 
 ## timing and correctness
 
 ground truth is `TopK({x in corpus where filter(x)}, query)`, never a filtered
-unfiltered top-k. compute it before timing. retain corpus originals for f64 scoring;
+unfiltered top-k. compute it before timing. `PreparedOracle` validates the corpus
+and caches f64 norms and eligibility once; each query still scores every eligible
+row independently of the library implementation. retain corpus originals for f64 scoring;
 the collection normalizes its own copy. result IDs are checked for membership,
 deletion, duplication, and filter eligibility after every measured call.
 recall is unique-ID overlap divided by min(10,eligible count), with empty truth
@@ -151,8 +158,12 @@ vectors are RAM-resident. a 1m x 768 run needs an explicit larger vector budget
 (for example `--vector-budget-mib 8192`) and enough real host memory. do not run
 that command merely to force an out-of-memory result on a constrained laptop.
 
-host RSS and allocator totals are explicitly unavailable because there is no
-portable process sampler or instrumented allocator here. empty transfer/allocation
+The runner itself has no portable process sampler or instrumented allocator.
+For native Windows, `scripts/measure_command.py` wraps the benchmark executable,
+recording sampled host working set and the OS peak working set separately from
+latency reports. It measures that process only, not descendants, allocator totals
+or GPU VRAM. Do not wrap a virtualenv Python launcher and mistake its memory for
+the child workload. Empty transfer/allocation
 CSV cells mean the backend did not report them. Qenlo-owned GPU allocations are
 not physical VRAM residency. `--gpu-budget-mib` separately controls the backend
 budget, including its supported scratch accounting. required GPU errors remain
@@ -197,7 +208,12 @@ the preregistered gate is 1m x 768, 1% eligible, batch 1, k=10: at least 2x lowe
 P95 than the best validated CPU path at the recall target, no invalid results,
 five shuffled runs with uncertainty reported, and complete transfer/selection
 costs with basic diagnostics. this runner enables measurements; it does not
-establish that gate. competitor adapters, pinned service environments, confidence
-interval analysis and real scale results are not included. native Windows library
+establish that gate. [Native Chroma replay](../scripts/chroma-replay.md) now
+validates the same vectors, canonical synthetic metadata, compound filter,
+independent truth and shuffled query order. `scripts/compare_runs.py` checks
+workload compatibility and recall gates before reporting latency ratios and
+seeded whole-run bootstrap intervals. Five repetitions give coarse uncertainty;
+neither bootstrap nor one laptop establishes general performance. Other competitor
+adapters and pinned service environments remain absent. Native Windows library
 measurements must not be presented as directly comparable to Linux/WSL HTTP
 service latency. if memory or toolchains prevent the run, report it as untested.
