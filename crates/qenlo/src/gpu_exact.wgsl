@@ -29,13 +29,6 @@ struct Candidate {
 @group(0) @binding(6) var<storage, read_write> scores: array<f32>;
 @group(0) @binding(7) var<uniform> params: Params;
 
-@compute @workgroup_size(256)
-fn init_scores(@builtin(global_invocation_id) gid: vec3<u32>) {
-    if (gid.x < params.rows) {
-        scores[gid.x] = 3.402823466e+38;
-    }
-}
-
 fn u64_equal(a: vec2<u32>, lo: u32, hi: u32) -> bool {
     return a.x == lo && a.y == hi;
 }
@@ -59,66 +52,89 @@ fn predicate_matches(row: u32) -> bool {
         && at_or_after_lower && before_upper;
 }
 
-@compute @workgroup_size(256)
-fn score(@builtin(global_invocation_id) gid: vec3<u32>) {
-    let item = gid.x;
-    var row = item;
-    if (params.mode == 1u) {
-        if (item >= params.eligible_count) { return; }
-        row = eligibility[item];
-    } else if (item >= params.rows) {
-        return;
-    }
+// Eight vectors per workgroup, with 32 adjacent lanes loading adjacent dimensions.
+// This is an ordinary shared-memory reduction; it needs no subgroup extension.
+var<workgroup> partial_dot: array<f32, 256>;
 
-    var eligible = true;
-    if (params.mode == 0u) {
-        eligible = eligibility[row] != 0u;
-    } else if (params.mode == 2u) {
-        eligible = predicate_matches(row);
+@compute @workgroup_size(256)
+fn score(@builtin(workgroup_id) group: vec3<u32>,
+         @builtin(local_invocation_index) tid: u32) {
+    let item = group.x * 8u + tid / 32u;
+    let lane = tid % 32u;
+    var row = item;
+    var eligible = item < params.rows;
+    if (params.mode == 1u) {
+        eligible = item < params.eligible_count;
+        if (eligible) { row = eligibility[item]; }
     }
-    if (!eligible || row >= params.rows) {
-        return;
+    if (eligible) {
+        if (params.mode == 0u) {
+            eligible = eligibility[row] != 0u;
+        } else if (params.mode == 2u) {
+            eligible = predicate_matches(row);
+        }
     }
 
     var dot = 0.0;
-    let offset = row * params.dimension;
-    for (var d = 0u; d < params.dimension; d += 1u) {
-        dot += vectors[offset + d] * query[d];
+    if (eligible) {
+        let offset = row * params.dimension;
+        for (var d = lane; d < params.dimension; d += 32u) {
+            dot += vectors[offset + d] * query[d];
+        }
     }
-    scores[row] = 1.0 - dot;
+    partial_dot[tid] = dot;
+    workgroupBarrier();
+    for (var stride = 16u; stride > 0u; stride /= 2u) {
+        if (lane < stride) { partial_dot[tid] += partial_dot[tid + stride]; }
+        workgroupBarrier();
+    }
+    let count = select(params.rows, params.eligible_count, params.mode == 1u);
+    if (lane == 0u && item < count) {
+        scores[item] = select(3.402823466e+38, 1.0 - partial_dot[tid], eligible);
+    }
 }
 
 @group(1) @binding(0) var<storage, read_write> selected: array<Candidate>;
 
-// This intentionally simple reference selector makes readback bounded. It is O(rows*k)
-// and should be replaced only after the experiment establishes that selection dominates.
-@compute @workgroup_size(1)
-fn select() {
+fn better(a: Candidate, b: Candidate) -> bool {
+    return a.distance < b.distance || (a.distance == b.distance &&
+        (a.id_hi < b.id_hi || (a.id_hi == b.id_hi && a.id_lo < b.id_lo)));
+}
+
+var<workgroup> best: array<Candidate, 256>;
+
+// Each lane scans 1/256 of the rows, then a tree reduction elects the exact minimum.
+// Consuming that score and repeating k times keeps readback at k candidates per chunk.
+@compute @workgroup_size(256)
+fn select_topk(@builtin(local_invocation_index) tid: u32) {
+    let count = select(params.rows, params.eligible_count, params.mode == 1u);
     for (var out = 0u; out < params.k; out += 1u) {
-        var best_distance = 3.402823466e+38;
-        var best_row = 0xffffffffu;
-        var best_id = vec2<u32>(0xffffffffu, 0xffffffffu);
-        for (var row = 0u; row < params.rows; row += 1u) {
-            let distance = scores[row];
+        var local_best = Candidate(3.402823466e+38, 0xffffffffu, 0xffffffffu, 0xffffffffu);
+        for (var item = tid; item < count; item += 256u) {
+            var row = item;
+            if (params.mode == 1u) { row = eligibility[item]; }
             let id = ids[row];
-            let id_less = id.y < best_id.y || (id.y == best_id.y && id.x < best_id.x);
-            if (distance < best_distance || (distance == best_distance && id_less)) {
-                best_distance = distance;
-                best_row = row;
-                best_id = id;
+            let candidate = Candidate(scores[item], item, id.x, id.y);
+            if (better(candidate, local_best)) { local_best = candidate; }
+        }
+        best[tid] = local_best;
+        workgroupBarrier();
+        for (var stride = 128u; stride > 0u; stride /= 2u) {
+            if (tid < stride && better(best[tid + stride], best[tid])) {
+                best[tid] = best[tid + stride];
             }
+            workgroupBarrier();
         }
-        if (best_distance == 3.402823466e+38) {
-            best_row = 0xffffffffu;
-            best_id = vec2<u32>(0xffffffffu, 0xffffffffu);
+        if (tid == 0u) {
+            var winner = best[0];
+            if (winner.distance == 3.402823466e+38) {
+                winner.row = 0xffffffffu;
+            } else {
+                scores[winner.row] = 3.402823466e+38;
+            }
+            selected[out] = winner;
         }
-        selected[out].distance = best_distance;
-        selected[out].row = best_row;
-        selected[out].id_lo = best_id.x;
-        selected[out].id_hi = best_id.y;
-        // One invocation owns selection; consuming scores avoids an O(k) prior-output scan.
-        if (best_row != 0xffffffffu) {
-            scores[best_row] = 3.402823466e+38;
-        }
+        storageBarrier();
+        workgroupBarrier();
     }
 }

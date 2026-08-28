@@ -1,6 +1,6 @@
 //! Experimental exact filtered search implemented with portable wgpu compute.
 //!
-//! The selector is intentionally a correctness-first `O(rows * k)` GPU kernel. Vector and
+//! The selector uses a parallel workgroup reduction for exact top-k. Vector and
 //! metadata buffers stay resident; query scratch is allocated and released per chunk so the
 //! configured budget is a hard bound on Qenlo-owned allocations.
 
@@ -14,8 +14,9 @@ const DEFAULT_BUDGET: u64 = 512 * 1024 * 1024;
 const CANDIDATE_BYTES: u64 = 16;
 const PARAM_BYTES: u64 = 48;
 const WORKGROUP_SIZE: u64 = 256;
-// ponytail: serial O(rows*k) selector; cap work per dispatch until a parallel selector is justified.
-const MAX_CHUNK_ROWS: u64 = 16_384;
+const SCORE_ROWS_PER_WORKGROUP: u64 = 8;
+// ponytail: one workgroup selects each chunk's top-k; hierarchical selection if this dominates.
+const MAX_CHUNK_ROWS: u64 = 131_072;
 const DEVICE_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Capabilities of the adapter selected for this collection, not physical VRAM usage.
@@ -143,7 +144,6 @@ struct Chunk {
 pub(crate) struct GpuExact {
     device: wgpu::Device,
     queue: wgpu::Queue,
-    init_pipeline: wgpu::ComputePipeline,
     score_pipeline: wgpu::ComputePipeline,
     select_pipeline: wgpu::ComputePipeline,
     group0_layout: wgpu::BindGroupLayout,
@@ -266,9 +266,8 @@ impl GpuExact {
                 cache: None,
             })
         };
-        let init_pipeline = make_pipeline("init_scores");
         let score_pipeline = make_pipeline("score");
-        let select_pipeline = make_pipeline("select");
+        let select_pipeline = make_pipeline("select_topk");
         health.check()?;
 
         let vector_row_bytes = dimension as u64 * 4;
@@ -276,7 +275,7 @@ impl GpuExact {
             .max_storage_buffer_binding_size
             .min(adapter_limits.max_buffer_size);
         let max_dispatch_rows =
-            adapter_limits.max_compute_workgroups_per_dimension as u64 * WORKGROUP_SIZE;
+            adapter_limits.max_compute_workgroups_per_dimension as u64 * SCORE_ROWS_PER_WORKGROUP;
         let rows_per_chunk = (max_binding / vector_row_bytes)
             .min(max_binding / 8)
             .min(max_dispatch_rows)
@@ -330,7 +329,6 @@ impl GpuExact {
         Ok(Self {
             device,
             queue,
-            init_pipeline,
             score_pipeline,
             select_pipeline,
             group0_layout,
@@ -490,11 +488,13 @@ impl GpuExact {
                 });
                 pass.set_bind_group(0, &group0, &[]);
                 pass.set_bind_group(1, &group1, &[]);
-                pass.set_pipeline(&self.init_pipeline);
-                pass.dispatch_workgroups(chunk.rows.div_ceil(WORKGROUP_SIZE as u32), 1, 1);
                 if dispatch_items != 0 {
                     pass.set_pipeline(&self.score_pipeline);
-                    pass.dispatch_workgroups(dispatch_items.div_ceil(WORKGROUP_SIZE as u32), 1, 1);
+                    pass.dispatch_workgroups(
+                        dispatch_items.div_ceil(SCORE_ROWS_PER_WORKGROUP as u32),
+                        1,
+                        1,
+                    );
                 }
                 pass.set_pipeline(&self.select_pipeline);
                 pass.dispatch_workgroups(1, 1, 1);
@@ -502,7 +502,7 @@ impl GpuExact {
             encoder.copy_buffer_to_buffer(&selected, 0, &staging, 0, k as u64 * CANDIDATE_BYTES);
             self.queue.submit([encoder.finish()]);
             self.health.check()?;
-            execution.dispatch_count += if dispatch_items == 0 { 2 } else { 3 };
+            execution.dispatch_count += if dispatch_items == 0 { 1 } else { 2 };
 
             map_wait(&self.device, &staging).inspect_err(|error| {
                 self.health.fail(error.to_string());
@@ -969,6 +969,7 @@ fn validate_limits(limits: &wgpu::Limits, dimension: usize) -> Result<(), GpuErr
         || limits.max_bindings_per_bind_group < 8
         || limits.max_compute_workgroup_size_x < WORKGROUP_SIZE as u32
         || limits.max_compute_invocations_per_workgroup < WORKGROUP_SIZE as u32
+        || limits.max_compute_workgroup_storage_size < (WORKGROUP_SIZE * CANDIDATE_BYTES) as u32
         || limits.max_compute_workgroups_per_dimension == 0
         || limits.max_storage_buffer_binding_size < 64 * CANDIDATE_BYTES
         || limits.max_buffer_size < 64 * CANDIDATE_BYTES
@@ -1264,7 +1265,7 @@ mod tests {
             &vec![0; rows],
             &vec![0; rows],
             &vec![true; rows],
-            Some(2 * 1024 * 1024),
+            Some(16 * 1024 * 1024),
         ))) else {
             return;
         };
@@ -1282,6 +1283,107 @@ mod tests {
         assert_eq!(hits.iter().map(|hit| hit.id).collect::<Vec<_>>(), [1, 2, 3]);
         assert_eq!(report.readback_bytes, 2 * 3 * CANDIDATE_BYTES);
         assert!(report.allocation_bytes <= exact.budget);
+    }
+
+    #[test]
+    fn parallel_scoring_and_selection_match_f64_oracle() {
+        // Exercise partial workgroups, dimensions either side of the 32-lane boundary,
+        // maximum k, unsigned IDs above 2^32, and selection after sparse row compaction.
+        let rows = 521;
+        let ids: Vec<_> = (0..rows)
+            .map(|row| u64::MAX - row as u64 * 0x100000001)
+            .collect();
+        let users: Vec<_> = (0..rows).map(|row| (1u64 << 40) + row as u64 % 3).collect();
+        let timestamps: Vec<_> = (0..rows).map(|row| row as i64 - 260).collect();
+        let live: Vec<_> = (0..rows).map(|row| row % 13 != 0).collect();
+        let mask: Vec<_> = (0..rows).map(|row| row % 5 < 3).collect();
+        let eligible: Vec<_> = (0..rows)
+            .filter(|&row| mask[row])
+            .flat_map(|row| [row as u32; 2])
+            .collect();
+        let mut random = 0x9e3779b97f4a7c15u64;
+        for dimension in [1, 7, 31, 32, 33, 128, 384, 768] {
+            let mut next_vector = || {
+                let raw: Vec<_> = (0..dimension)
+                    .map(|_| {
+                        random ^= random << 13;
+                        random ^= random >> 7;
+                        random ^= random << 17;
+                        (random as u32 as f64 / u32::MAX as f64 * 2.0 - 1.0) as f32
+                    })
+                    .collect();
+                qenlo_core::normalize_vector(&raw, dimension).unwrap()
+            };
+            let vectors: Vec<_> = (0..rows).flat_map(|_| next_vector()).collect();
+            let query = next_vector();
+            let Some(exact) = available(block_on(GpuExact::new(
+                dimension,
+                &vectors,
+                &ids,
+                &users,
+                &timestamps,
+                &live,
+                None,
+            ))) else {
+                return;
+            };
+            for filter in [
+                FilterMode::Mask(&mask),
+                FilterMode::EligibleRows(&eligible),
+                FilterMode::EligibleRows(&[]),
+                FilterMode::EligibleRows(&[1, 2]),
+                FilterMode::Predicate {
+                    user: None,
+                    lower: None,
+                    upper: None,
+                },
+                FilterMode::Predicate {
+                    user: Some((1u64 << 40) + 1),
+                    lower: Some(-190),
+                    upper: Some(190),
+                },
+            ] {
+                let mut expected: Vec<_> = (0..rows)
+                    .filter(|&row| {
+                        live[row]
+                            && match filter {
+                                FilterMode::Mask(mask) => mask[row],
+                                FilterMode::EligibleRows(eligible) => {
+                                    eligible.contains(&(row as u32))
+                                }
+                                FilterMode::Predicate { user, lower, upper } => {
+                                    user.is_none_or(|user| users[row] == user)
+                                        && lower.is_none_or(|lower| timestamps[row] >= lower)
+                                        && upper.is_none_or(|upper| timestamps[row] < upper)
+                                }
+                            }
+                    })
+                    .map(|row| {
+                        let dot: f64 = vectors[row * dimension..(row + 1) * dimension]
+                            .iter()
+                            .zip(&query)
+                            .map(|(&v, &q)| v as f64 * q as f64)
+                            .sum();
+                        (ids[row], 1.0 - dot)
+                    })
+                    .collect();
+                expected.sort_by(|a, b| a.1.total_cmp(&b.1).then(a.0.cmp(&b.0)));
+                for k in [1, 10, 64] {
+                    let (hits, report) = block_on(exact.search(&query, k, filter)).unwrap();
+                    let expected = &expected[..k.min(expected.len())];
+                    assert_eq!(hits.len(), expected.len());
+                    for (hit, &(id, distance)) in hits.iter().zip(expected) {
+                        assert_eq!(
+                            hit.id, id,
+                            "dimension={dimension}, k={k}, filter={filter:?}"
+                        );
+                        assert!((hit.distance as f64 - distance).abs() < 2e-6);
+                    }
+                    assert_eq!(report.readback_bytes, k as u64 * CANDIDATE_BYTES);
+                    assert!(report.allocation_bytes <= exact.budget);
+                }
+            }
+        }
     }
 
     #[test]
