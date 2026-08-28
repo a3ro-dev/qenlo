@@ -86,6 +86,18 @@ class ComparisonChecks(unittest.TestCase):
                 self.assertIsNone(result["baseline_over_candidate_median_p95_ratio"])
                 self.assertIsNone(result["bootstrap_95_percent_interval"])
 
+    def test_recall_gate_tolerates_accumulation_roundoff_without_rounding_values(self):
+        recall = .9899999999999999
+        path = self.fixture("rounded-sum", changes={"recall_target": ".99"},
+                            recalls=[recall] * 5, tuning=recall)
+        result = read_run(path)
+        self.assertTrue(result["recall_gate"]["passed"])
+        self.assertEqual(result["tuning_recall_at_10"], recall)
+        self.assertEqual(result["runs"][0]["recall_at_10"], recall)
+        below = self.fixture("below-threshold", changes={"recall_target": ".99"},
+                             recalls=[.99 - 1e-10] * 5)
+        self.assertFalse(read_run(below)["recall_gate"]["passed"])
+
     def test_incomplete_corrupt_and_nonfinite_artifacts_fail(self):
         for index, changes in enumerate([{"status": "incomplete"}, {"tuning_recall_at_10": "NaN"},
                                          {"median_run_p95_batch_ns": "99"}, {"filter_violations": "1"}]):

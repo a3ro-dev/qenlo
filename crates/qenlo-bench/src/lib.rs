@@ -281,6 +281,9 @@ pub fn exact_cosine_tie_compatible(
     if actual.len() != available {
         return Ok(false);
     }
+    if available == 0 {
+        return Ok(true);
+    }
     distances.sort_unstable_by(f64::total_cmp);
     let boundary = distances[available - 1];
     for id in actual {
@@ -562,6 +565,10 @@ mod tests {
                 1e-5
             )
             .unwrap()
+        );
+        assert!(
+            exact_cosine_tie_compatible(&[], &[1.0, 0.0], OracleFilter::default(), &[], 10, 1e-5)
+                .unwrap()
         );
     }
 

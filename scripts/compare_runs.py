@@ -22,6 +22,7 @@ MATCH_FIELDS = (
 INTEGER_FIELDS = {"dimensions", "rows", "eligible_count", "batch", "seed", "k",
                   "warmup_queries", "repetitions"}
 BOOTSTRAP_DRAWS = 10_000
+RECALL_GATE_TOLERANCE = 1e-12
 
 
 def read_record(path):
@@ -117,6 +118,8 @@ def read_run(directory):
     if declared not in ("true", "false"):
         raise ValueError("invalid declared recall gate")
     target = workload["recall_target"]
+    tuning_passed = tuning + RECALL_GATE_TOLERANCE >= target
+    evaluation_passed = min(recalls) + RECALL_GATE_TOLERANCE >= target
     boundary = ("Python PersistentClient query, including validation, native bindings, serialization and local execution"
                 if chroma else "Rust in-memory Collection search_batch call, including completed backend execution")
     return {
@@ -127,10 +130,11 @@ def read_run(directory):
         "min_evaluation_recall_at_10": min(recalls),
         "mean_evaluation_recall_at_10": sum(recalls) / len(recalls),
         "tuning_recall_at_10": tuning,
-        "recall_gate": {"target": target, "tuning_passed": tuning >= target,
-                        "every_evaluation_run_passed": min(recalls) >= target,
+        "recall_gate": {"target": target, "absolute_tolerance": RECALL_GATE_TOLERANCE,
+                        "tuning_passed": tuning_passed,
+                        "every_evaluation_run_passed": evaluation_passed,
                         "reported_passed": declared == "true",
-                        "passed": tuning >= target and min(recalls) >= target and declared == "true"},
+                        "passed": tuning_passed and evaluation_passed and declared == "true"},
         "artifact_sha256": {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
                             for path in (config_path, summary_path, directory / "runs.csv")},
     }
