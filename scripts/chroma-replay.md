@@ -71,6 +71,13 @@ vector/GPU budgets only if hardware memory can accommodate the measured allocati
 
 ## Interpretation and checks
 
+For repeated Rust backends on the same cell, `--oracle-reference EXACT_CPU_DIR`
+reuses a completed exact-CPU run's independent truth. The importer checks dataset
+CRC, shape and query splits, metadata distribution and every metadata row, actual
+user/time filter, oracle query coverage, result counts, uniqueness and eligibility.
+It requires source recall 1 and zero violations. Source truth content is trusted
+as a prior exact computation, not recomputed; its CRC and path are recorded.
+
 Recall threshold comparisons allow `1e-12` solely for floating-point accumulation
 roundoff (for example 0.9899999999999999 versus 0.99); raw recalls are not rounded.
 

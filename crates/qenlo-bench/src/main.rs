@@ -1,5 +1,7 @@
 //! One explicit, reproducible workload cell per invocation; no benchmark framework.
 
+mod replay;
+
 use std::{
     collections::{BTreeMap, HashSet},
     error::Error,
@@ -34,6 +36,7 @@ run     --dataset PATH --output NEW_DIRECTORY [--dimensions 16|384|768]
         [--batch 1|8|32] [--warmups 8] [--repetitions 3]
         [--recall-target 0.95|0.99] [--expansion-search 128]
         [--tune-expansion-search 128,256,512,1024]
+        [--oracle-reference COMPLETED_EXACT_CPU_DIRECTORY]
         [--diagnostics disabled|basic|detailed]
         [--vector-budget-mib 512] [--gpu-budget-mib 512]
 
@@ -309,6 +312,7 @@ async fn run_cell(
     mut options: BTreeMap<String, String>,
 ) -> Result<()> {
     let output = PathBuf::from(options.remove("--output").ok_or("--output is required")?);
+    let oracle_reference = options.remove("--oracle-reference").map(PathBuf::from);
     let backend_name = take(&mut options, "--backend", "cpu");
     let distribution_name = take(&mut options, "--distribution", "independent");
     let distribution = match distribution_name.as_str() {
@@ -501,16 +505,38 @@ async fn run_cell(
     }
     // Ground truth exhausts the eligible subset. It is outside every measured query window.
     let oracle_started = Instant::now();
-    let oracle = PreparedOracle::new(&data.corpus, dimension, oracle_filter)?;
-    let tuning_truth: Vec<Vec<u64>> = data
-        .tuning
-        .iter()
-        .map(|query| {
-            oracle
-                .search(query, 10)
-                .map(|hits| hits.into_iter().map(|hit| hit.id).collect())
-        })
-        .collect::<std::result::Result<_, _>>()?;
+    let reference_truth = oracle_reference
+        .as_ref()
+        .map(|path| replay::load(path, &data, distribution, oracle_filter, eligible))
+        .transpose()?;
+    if let Some(path) = &oracle_reference {
+        writeln!(
+            manifest,
+            "oracle_reference={}\noracle_reference_truth_crc32={:08x}",
+            path.display(),
+            dataset::checksum(&path.join("truth.csv"))?
+        )?;
+        manifest.flush()?;
+    }
+    let oracle = if reference_truth.is_none() {
+        Some(PreparedOracle::new(&data.corpus, dimension, oracle_filter)?)
+    } else {
+        None
+    };
+    let tuning_truth: Vec<Vec<u64>> = if let Some(truth) = &reference_truth {
+        truth.tuning.clone()
+    } else {
+        data.tuning
+            .iter()
+            .map(|query| {
+                oracle
+                    .as_ref()
+                    .unwrap()
+                    .search(query, 10)
+                    .map(|hits| hits.into_iter().map(|hit| hit.id).collect())
+            })
+            .collect::<std::result::Result<_, _>>()?
+    };
     let mut tuning_recall = 0.0;
     let mut replay_truth = BufWriter::new(File::create_new(output.join("truth.csv"))?);
     writeln!(replay_truth, "split,query_index,ids")?;
@@ -565,15 +591,20 @@ async fn run_cell(
     if !recall_passes(tuning_recall, target) {
         return Err("no supplied expansion met tuning recall target; held-out evaluation not run; tuning.csv retained".into());
     }
-    let truth: Vec<Vec<u64>> = data
-        .evaluation
-        .iter()
-        .map(|query| {
-            oracle
-                .search(query, 10)
-                .map(|hits| hits.into_iter().map(|hit| hit.id).collect())
-        })
-        .collect::<std::result::Result<_, _>>()?;
+    let truth: Vec<Vec<u64>> = if let Some(truth) = reference_truth {
+        truth.evaluation
+    } else {
+        data.evaluation
+            .iter()
+            .map(|query| {
+                oracle
+                    .as_ref()
+                    .unwrap()
+                    .search(query, 10)
+                    .map(|hits| hits.into_iter().map(|hit| hit.id).collect())
+            })
+            .collect::<std::result::Result<_, _>>()?
+    };
     for (index, ids) in truth.iter().enumerate() {
         writeln!(
             replay_truth,
