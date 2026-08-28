@@ -1,7 +1,11 @@
 //! Independent correctness and reporting support for Qenlo benchmarks.
 //!
-//! This crate intentionally does not call Qenlo's public API. Benchmark harnesses
-//! adapt Qenlo records and results into these small, backend-neutral types.
+//! The oracle never calls Qenlo's scoring or filtering implementation. The CLI
+//! adapts public API results into these backend-neutral types.
+
+pub mod dataset;
+#[cfg(feature = "otlp")]
+pub mod telemetry;
 
 use std::{collections::HashSet, error::Error, fmt, time::Duration};
 

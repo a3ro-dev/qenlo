@@ -9,6 +9,8 @@ description = "Independent correctness oracle and benchmark reporting support fo
 
 [features]
 default = []
+usearch = ["qenlo/usearch"]
+gpu-wgpu = ["qenlo/gpu-wgpu"]
 otlp = [
     "dep:opentelemetry",
     "dep:opentelemetry-otlp",
@@ -20,8 +22,10 @@ otlp = [
 ]
 
 [dependencies]
+crc32fast.workspace = true
+qenlo = { path = "../qenlo" }
 opentelemetry = { version = "0.32", optional = true, features = ["metrics", "trace"] }
-opentelemetry-otlp = { version = "0.32", optional = true, default-features = false, features = ["http-proto", "metrics", "reqwest-client", "trace"] }
+opentelemetry-otlp = { version = "0.32", optional = true, default-features = false, features = ["http-proto", "metrics", "reqwest-blocking-client", "trace"] }
 opentelemetry_sdk = { version = "0.32.1", optional = true, features = ["metrics", "rt-tokio", "trace"] }
 tokio = { version = "1", optional = true, features = ["macros", "rt-multi-thread", "time"] }
 tracing = { workspace = true, optional = true }
