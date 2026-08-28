@@ -247,7 +247,6 @@ fn workload_filter(
             user_id,
             timestamp_from: user_id.and_then(|_| timestamps.first().copied()),
             timestamp_to: upper,
-            ..OracleFilter::default()
         },
         count,
     ))
