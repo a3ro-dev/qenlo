@@ -1,0 +1,4 @@
+expansion_search,query_count,recall_at_10,wall_ns
+1,8,0.7625,839200
+16,8,0.8625,596900
+128,8,1,973800

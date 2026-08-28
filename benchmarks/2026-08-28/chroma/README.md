@@ -8,6 +8,7 @@ real embeddings, the full benchmark protocol, or the 1m x 768 gate.
 |---|---|---|---|
 | 2,000 x 32, user 0 AND bounded time range, 20 eligible | ef=128 at creation | 1 / 1 | 2.5812 ms |
 | 100,000 x 384, all eligible | ef=8192 at creation | 1 / 0.99 | 21.5418 ms |
+| 100,000 x 384, 1% eligible timestamp range | ef=128 at creation | 1 / 0.99 | 42.9983 ms |
 
 The 100k cell has only **4 tuning queries, 20 evaluation queries, 4 warmups and
 2 repetitions**. Its two P95s are 27.0829 and 21.5418 ms; the lower-middle median
@@ -16,6 +17,13 @@ baseline's is 34.1576 ms. This is a noisy exploratory sample, not a production
 tail estimate or an algorithm superiority claim. Chroma includes Python API
 validation, bindings, serialization and local database execution, with no HTTP;
 Qenlo uses its Rust API. Chroma's internal exact fallback is not instrumented.
+
+The 1% cell has 8 warmups and 3 repetitions, with the same 4 tuning / 20
+evaluation vectors. Its P95s are 42.9983, 42.4526 and 43.0363 ms. It replays
+`../gpu-tuning/gpu-parallel-100k384-onepct-cpu` exactly. In that same cell, CPU
+exact P95 is 0.2369 ms and GPU eligible-row P95 is 0.8070 ms: **the strongest
+validated CPU path beats GPU**. Chroma's Python/local query path is particularly
+costly for this filter; it does not prove a general competitor slowdown.
 
 All accepted runs returned the expected number of unique eligible IDs and passed
 independent f64 cosine-score checks. Recall uses the exported Qenlo exhaustive
@@ -60,3 +68,14 @@ reference run**, not the adapter source. The fixed-8192 adapter is commit
 `daf2116`; its source hash is also recorded. The failed runtime sweep is adapter
 commit `59b028a`. The first smoke was run during development of `78c6c5c`.
 No physical VRAM or process RSS measurement is claimed.
+
+`usearch-tuned` verifies the independent tuning workflow on synthetic 2,000 x 32
+with all rows eligible (different from the compound smoke). Eight tuning queries
+gave recall 0.7625 at expansion 1, 0.8625 at 16, and 1 at 128; expansion 128 was
+selected before held-out evaluation, which returned recall 1. The separate
+`usearch-tuning-failed` run supplied only expansion 1 and aborted before any
+held-out samples were created. Their metadata are identical to the compound
+smoke reference metadata. These small cells test the harness, not scale claims.
+
+Run `python benchmarks/2026-08-28/chroma/verify.py` to independently recompute
+archived Chroma recall and nearest-rank P95 from raw returned IDs and latencies.
