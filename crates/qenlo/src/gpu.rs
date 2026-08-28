@@ -590,6 +590,12 @@ impl GpuBackend {
             .map_or(&self.capabilities, |exact| &exact.capabilities)
     }
 
+    pub(crate) fn is_healthy(&self) -> bool {
+        self.exact
+            .as_ref()
+            .is_none_or(|exact| exact.health.check().is_ok())
+    }
+
     #[cfg(test)]
     pub(crate) fn destroy_device_for_test(&self) {
         if let Some(exact) = &self.exact {
@@ -1367,7 +1373,9 @@ mod tests {
         let output =
             block_on(backend.search(&store, &[1.0, 0.0], &qenlo_core::Predicate::ALL, 1)).unwrap();
         assert_eq!(output.hits[0].id, 2);
+        assert!(backend.is_healthy());
         backend.destroy_device_for_test();
+        assert!(!backend.is_healthy());
         assert!(matches!(
             block_on(backend.search(&store, &[1.0, 0.0], &qenlo_core::Predicate::ALL, 1)),
             Err(GpuError::Device(_))
