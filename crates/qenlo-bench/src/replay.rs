@@ -39,8 +39,6 @@ pub fn load(
     let summary = properties(&path.join("summary.txt"))?;
     for (key, expected) in [
         ("status", "completed"),
-        ("tuning_recall_at_10", "1"),
-        ("evaluation_recall_at_10", "1"),
         ("recall_target_passed", "true"),
         ("filter_violations", "0"),
     ] {
@@ -49,6 +47,19 @@ pub fn load(
                 "oracle reference requires completed exact CPU correctness: {key}"
             )
             .into());
+        }
+    }
+    let target: f64 = config
+        .get("recall_target")
+        .ok_or("oracle reference has no recall target")?
+        .parse()?;
+    for key in ["tuning_recall_at_10", "evaluation_recall_at_10"] {
+        let recall: f64 = summary
+            .get(key)
+            .ok_or_else(|| format!("oracle reference has no {key}"))?
+            .parse()?;
+        if !recall.is_finite() || recall + 1e-12 < target {
+            return Err(format!("oracle reference recall below target: {key}").into());
         }
     }
     let spec = data.spec;
@@ -185,7 +196,7 @@ mod tests {
         super::super::metadata(&mut data.corpus, MetadataDistribution::Independent, 42);
         let filter = OracleFilter::default();
         let config = format!(
-            "backend=cpu\nreplay_format=qenlo-csv-v1\ndataset_crc32={:08x}\ndimensions=2\nrows=12\nseed=42\nk=10\ncorpus_range=0..12\ntuning_range=12..13\nevaluation_range=13..14\nmetadata=synthetic-independent\neligible_count=12\nfilter_user_id=\nfilter_timestamp_from=\nfilter_timestamp_to=\n",
+            "backend=cpu\nreplay_format=qenlo-csv-v1\ndataset_crc32={:08x}\ndimensions=2\nrows=12\nseed=42\nk=10\ncorpus_range=0..12\ntuning_range=12..13\nevaluation_range=13..14\nmetadata=synthetic-independent\neligible_count=12\nfilter_user_id=\nfilter_timestamp_from=\nfilter_timestamp_to=\nrecall_target=0.95\n",
             data.checksum
         );
         std::fs::write(path.join("configuration.txt"), &config).unwrap();

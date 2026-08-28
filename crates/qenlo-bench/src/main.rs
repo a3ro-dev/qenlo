@@ -18,7 +18,7 @@ use qenlo::{BackendSelection, Collection, CollectionConfig, Filter, Measurement,
 use qenlo_bench::{
     MetadataDistribution, OracleFilter, OracleRecord, PreparedOracle,
     dataset::{self, DatasetSpec},
-    exact_cosine_search, nearest_rank_percentile, recall_at_k,
+    exact_cosine_search, exact_cosine_tie_compatible, nearest_rank_percentile, recall_at_k,
 };
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
@@ -669,8 +669,16 @@ async fn run_cell(
                 let query_recall = recall_at_k(&truth[index], &ids, 10)?;
                 if response.report.actual_backend != qenlo::BackendKind::Usearch
                     && query_recall != 1.0
+                    && !exact_cosine_tie_compatible(
+                        &data.corpus,
+                        &data.evaluation[index],
+                        oracle_filter,
+                        &ids,
+                        10,
+                        1e-5,
+                    )?
                 {
-                    return Err("exact backend differs from independent oracle IDs (including boundary ties)".into());
+                    return Err("exact backend differs from independent oracle IDs outside the 1e-5 boundary-tie tolerance".into());
                 }
                 recall += query_recall;
                 results += ids.len();

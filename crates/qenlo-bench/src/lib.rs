@@ -248,6 +248,59 @@ pub fn recall_at_k(expected: &[u64], actual: &[u64], k: usize) -> Result<f64, Or
     Ok(expected.intersection(&actual).count() as f64 / expected.len() as f64)
 }
 
+/// Whether an exact result set differs from the f64 oracle only at a numerical
+/// boundary tie. CPU SIMD reduction order and GPU f32 reduction order can choose
+/// different IDs whose f64 distances are indistinguishable at the documented
+/// tolerance; this never waives score, filter, duplicate, or result-count checks.
+pub fn exact_cosine_tie_compatible(
+    records: &[OracleRecord],
+    query: &[f32],
+    filter: OracleFilter,
+    actual: &[u64],
+    k: usize,
+    tolerance: f64,
+) -> Result<bool, OracleError> {
+    if k == 0 || actual.len() > k || tolerance < 0.0 || !tolerance.is_finite() {
+        return Err(OracleError::InvalidK);
+    }
+    let query_norm = checked_norm(query, None)?;
+    let mut distances = Vec::new();
+    for record in records {
+        if record.deleted || !filter.matches(record) {
+            continue;
+        }
+        let norm = checked_norm(&record.vector, Some(record.id))?;
+        let dot = query
+            .iter()
+            .zip(&record.vector)
+            .map(|(&a, &b)| f64::from(a) * f64::from(b))
+            .sum::<f64>();
+        distances.push(1.0 - (dot / (query_norm * norm)).clamp(-1.0, 1.0));
+    }
+    let available = distances.len().min(k);
+    if actual.len() != available {
+        return Ok(false);
+    }
+    distances.sort_unstable_by(f64::total_cmp);
+    let boundary = distances[available - 1];
+    for id in actual {
+        let Some(record) = records.iter().find(|record| record.id == *id) else {
+            return Ok(false);
+        };
+        let norm = checked_norm(&record.vector, Some(record.id))?;
+        let dot = query
+            .iter()
+            .zip(&record.vector)
+            .map(|(&a, &b)| f64::from(a) * f64::from(b))
+            .sum::<f64>();
+        let distance = 1.0 - (dot / (query_norm * norm)).clamp(-1.0, 1.0);
+        if distance > boundary + tolerance {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
 /// The nearest-rank percentile: rank = ceil(p * n), with p in (0, 1].
 pub fn nearest_rank_percentile(samples: &[Duration], percentile: f64) -> Option<Duration> {
     if samples.is_empty() || !(0.0 < percentile && percentile <= 1.0) {
@@ -482,6 +535,34 @@ mod tests {
             exact_cosine_search(&records, &[1.0, 0.0], OracleFilter::default(), 10).unwrap();
         assert_eq!(one_shot.len(), 10);
         assert!(one_shot.capacity() <= 10);
+    }
+
+    #[test]
+    fn exact_tie_tolerance_accepts_boundary_only() {
+        let records = [record(0, 1, 0, &[1.0, 0.0]), record(1, 1, 0, &[1.0, 0.0])];
+        assert!(
+            exact_cosine_tie_compatible(
+                &records,
+                &[1.0, 0.0],
+                OracleFilter::default(),
+                &[1],
+                1,
+                1e-5
+            )
+            .unwrap()
+        );
+        let near = [record(0, 1, 0, &[1.0, 0.0]), record(1, 1, 0, &[0.0, 1.0])];
+        assert!(
+            !exact_cosine_tie_compatible(
+                &near,
+                &[1.0, 0.0],
+                OracleFilter::default(),
+                &[1],
+                1,
+                1e-5
+            )
+            .unwrap()
+        );
     }
 
     #[test]
