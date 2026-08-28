@@ -213,6 +213,38 @@ mod tests {
         }
         std::fs::write(path.join("truth.csv"), &truth).unwrap();
         assert!(load(&path, &data, MetadataDistribution::Independent, filter, 12).is_ok());
+        let output = path.join("replayed");
+        super::super::run_cli(vec![
+            "run".into(),
+            "--dataset".into(),
+            path.join("data.qnb").display().to_string(),
+            "--output".into(),
+            output.display().to_string(),
+            "--dimensions".into(),
+            "2".into(),
+            "--fraction".into(),
+            "1".into(),
+            "--oracle-reference".into(),
+            path.display().to_string(),
+            "--warmups".into(),
+            "1".into(),
+            "--repetitions".into(),
+            "1".into(),
+        ])
+        .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(output.join("truth.csv")).unwrap(),
+            truth
+        );
+        assert!(
+            std::fs::read_to_string(output.join("configuration.txt"))
+                .unwrap()
+                .contains("oracle_reference_truth_crc32=")
+        );
+        for entry in std::fs::read_dir(&output).unwrap() {
+            std::fs::remove_file(entry.unwrap().path()).unwrap();
+        }
+        std::fs::remove_dir(output).unwrap();
         for damaged in [
             config.replace("backend=cpu", "backend=usearch"),
             config.replace("rows=12", "rows=13"),
