@@ -496,6 +496,9 @@ async fn run_cell(
         let response = collection.search(query, &filter, 10).await?;
         validate_scores(&data.corpus, query, &response.results)?;
         let actual: Vec<_> = response.results.iter().map(|hit| hit.id).collect();
+        if actual.len() != expected.len() {
+            return Err("backend returned fewer results than min(k, eligible_count)".into());
+        }
         validate_results(&data.corpus, oracle_filter, &actual)?;
         tuning_recall += recall_at_k(&expected, &actual, 10)?;
     }
@@ -519,7 +522,7 @@ async fn run_cell(
     )?;
     let mut p95s = Vec::new();
     let mut all_recall = 0.0;
-    let mut all_passed = true;
+    let mut all_passed = tuning_recall >= target;
     for run in 0..repetitions {
         let mut order: Vec<_> = (0..data.evaluation.len()).collect();
         shuffle(&mut order, data.spec.seed.wrapping_add(run as u64));
@@ -549,6 +552,9 @@ async fn run_cell(
             let mut fallback = false;
             for (&index, response) in indices.iter().zip(responses) {
                 let ids: Vec<_> = response.results.iter().map(|hit| hit.id).collect();
+                if ids.len() != truth[index].len() {
+                    return Err("backend returned fewer results than min(k, eligible_count)".into());
+                }
                 validate_results(&data.corpus, oracle_filter, &ids)?;
                 validate_scores(&data.corpus, &data.evaluation[index], &response.results)?;
                 let query_recall = recall_at_k(&truth[index], &ids, 10)?;

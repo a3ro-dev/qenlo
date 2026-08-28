@@ -103,7 +103,7 @@ def validate(result, queries, corpus, metadata, config, truths):
         raise ValueError("wrong response count")
     for ids, distances, query, truth in zip(result["ids"], result["distances"], queries, truths):
         ids = [int(value) for value in ids]
-        if len(ids) != len(distances) or len(ids) > 10 or len(set(ids)) != len(ids):
+        if len(ids) != len(truth) or len(ids) != len(distances) or len(ids) > 10 or len(set(ids)) != len(ids):
             raise ValueError("duplicate IDs or invalid result count")
         if any(value < 0 or value >= len(metadata) or not eligible(metadata[value], config) for value in ids):
             raise ValueError("out-of-range or filter-violating result ID")

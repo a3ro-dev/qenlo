@@ -57,6 +57,7 @@ class ReplayChecks(unittest.TestCase):
         self.assertEqual(validate(dict(ids=[["0"]], distances=[[0.0]]), [[1, 0]], corpus, metadata, config, [[0]]), 1)
         self.assertEqual(validate(dict(ids=[[]], distances=[[]]), [[1, 0]], corpus, metadata, config, [[]]), 1)
         for result in [dict(ids=[["0", "0"]], distances=[[0, 0]]),
+                       dict(ids=[[]], distances=[[]]),
                        dict(ids=[["1"]], distances=[[1]]),
                        dict(ids=[["0"]], distances=[[.01]]),
                        dict(ids=[["0"]], distances=[[float("nan")]])]:
