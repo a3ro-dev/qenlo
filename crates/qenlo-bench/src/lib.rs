@@ -122,6 +122,9 @@ pub fn exact_cosine_search(
 
     hits.sort_unstable_by(|a, b| a.distance.total_cmp(&b.distance).then(a.id.cmp(&b.id)));
     hits.truncate(k);
+    // Do not retain corpus-sized capacity in cached top-k results. Rust can reuse
+    // this allocation when callers collect mapped IDs from the consuming iterator.
+    hits.shrink_to_fit();
     Ok(hits)
 }
 
@@ -227,6 +230,7 @@ impl<'a> PreparedOracle<'a> {
             hits.truncate(k);
         }
         hits.sort_unstable_by(order);
+        hits.shrink_to_fit();
         Ok(hits)
     }
 }
@@ -451,6 +455,33 @@ mod tests {
         }
         let invalid = [record(8, 99, 0, &[f32::NAN, 1.0])];
         assert!(PreparedOracle::new(&invalid, 2, filter).is_err());
+    }
+
+    #[test]
+    fn cached_oracle_results_release_corpus_sized_capacity() {
+        let records: Vec<_> = (0..10_000)
+            .map(|id| record(id, 1, 0, &[1.0, id as f32 + 1.0]))
+            .collect();
+        let oracle = PreparedOracle::new(&records, 2, OracleFilter::default()).unwrap();
+        let cached: Vec<Vec<u64>> = (0..32)
+            .map(|_| {
+                oracle
+                    .search(&[1.0, 0.0], 10)
+                    .unwrap()
+                    .into_iter()
+                    .map(|hit| hit.id)
+                    .collect()
+            })
+            .collect();
+        assert!(
+            cached
+                .iter()
+                .all(|ids| ids.len() == 10 && ids.capacity() <= 20)
+        );
+        let one_shot =
+            exact_cosine_search(&records, &[1.0, 0.0], OracleFilter::default(), 10).unwrap();
+        assert_eq!(one_shot.len(), 10);
+        assert!(one_shot.capacity() <= 10);
     }
 
     #[test]
