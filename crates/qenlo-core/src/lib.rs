@@ -99,6 +99,7 @@ pub enum Error {
     DimensionMismatch { expected: usize, actual: usize },
     NonFiniteVector,
     ZeroNormVector,
+    NonUnitStoredVector,
     DuplicateId(u64),
     UnknownId(u64),
     AlreadyDeleted(u64),
@@ -119,6 +120,7 @@ impl fmt::Display for Error {
             }
             Self::NonFiniteVector => write!(f, "vectors must contain only finite values"),
             Self::ZeroNormVector => write!(f, "vectors must have a non-zero finite norm"),
+            Self::NonUnitStoredVector => write!(f, "stored vectors must be unit-normalized"),
             Self::DuplicateId(id) => write!(f, "record ID {id} already exists"),
             Self::UnknownId(id) => write!(f, "record ID {id} does not exist"),
             Self::AlreadyDeleted(id) => write!(f, "record ID {id} is already deleted"),
@@ -516,6 +518,12 @@ fn validate_stored_vector(vector: &[f32], dimension: usize) -> Result<(), Error>
     if vector.iter().all(|value| *value == 0.0) {
         return Err(Error::ZeroNormVector);
     }
+    // Preserve the stored f32 bytes, but do not let restoration bypass the
+    // invariant used by cosine scoring (1 - dot). Allow normalization rounding.
+    let norm_squared: f64 = vector.iter().map(|&value| f64::from(value).powi(2)).sum();
+    if (norm_squared - 1.0).abs() > 1e-5 {
+        return Err(Error::NonUnitStoredVector);
+    }
     Ok(())
 }
 
@@ -697,5 +705,53 @@ mod tests {
             CoreStore::restore_iter(2, 17, [Ok(row), Err(Error::NonFiniteVector)]),
             Err(Error::NonFiniteVector)
         ));
+    }
+
+    #[test]
+    fn restore_rejects_non_unit_vectors_but_preserves_extreme_normalized_inputs() {
+        let mut row = RestoredRecord {
+            id: u64::MAX,
+            user_id: u64::MAX,
+            timestamp: i64::MAX,
+            vector: vec![3.0, 4.0],
+            live: true,
+        };
+        assert!(matches!(
+            CoreStore::restore(2, 1, vec![row.clone()]),
+            Err(Error::NonUnitStoredVector)
+        ));
+        for vector in [[f32::MAX, f32::MAX], [f32::from_bits(1), 0.0], [3.0, 4.0]] {
+            row.vector = normalize_vector(&vector, 2).unwrap();
+            let restored = CoreStore::restore(2, 1, vec![row.clone()]).unwrap();
+            assert_eq!(restored.record(0).unwrap().vector(), row.vector);
+            let hit = restored.search(vector, &Predicate::ALL, 1).unwrap().hits[0];
+            assert_eq!(hit.id, u64::MAX);
+            assert!(hit.distance.abs() < 1e-6);
+        }
+    }
+
+    #[test]
+    fn exhausted_generation_rejects_mutations_without_partial_changes() {
+        let mut store = CoreStore::restore(
+            2,
+            u64::MAX,
+            vec![RestoredRecord {
+                id: 1,
+                user_id: 7,
+                timestamp: 0,
+                vector: vec![1.0, 0.0],
+                live: true,
+            }],
+        )
+        .unwrap();
+        assert_eq!(
+            store.add(2, 7, 0, [0.0, 1.0]),
+            Err(Error::GenerationExhausted)
+        );
+        assert_eq!(store.delete(1), Err(Error::GenerationExhausted));
+        assert_eq!(store.generation(), u64::MAX);
+        assert_eq!(store.len(), 1);
+        assert_eq!(store.live_len(), 1);
+        assert_eq!(store.filter(&Predicate::ALL), [0]);
     }
 }
