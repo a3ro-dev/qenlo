@@ -73,7 +73,9 @@ def main():
                         args.rows + args.tuning + args.evaluation)
     report = {
         "dataset": "DTU pretrained sentence BERT AG News embeddings v1",
+        "author": "Beatrix Miranda Ginn Nielsen",
         "doi": "10.11583/DTU.21286923.v1", "license": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
         "source_url": f"https://ndownloader.figshare.com/files/{file_id}",
         "model": model, "source_hashes": source_hashes,
         "verification": "publisher MD5 matched; SHA256 additionally recorded locally",
