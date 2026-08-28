@@ -3,6 +3,7 @@
 //! Default features contain only the portable exact CPU backend. Applications
 //! opt into C++ (`usearch`) and GPU (`gpu-wgpu`) build requirements explicitly.
 
+use async_lock::{RwLock, RwLockWriteGuard};
 #[cfg(feature = "usearch")]
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -133,6 +134,10 @@ impl PhaseTimings {
 
 #[derive(Debug, Clone)]
 pub struct ExecutionReport {
+    /// Time waiting for collection locks, included in `total_duration`.
+    pub lock_wait: Duration,
+    /// Effective `(connectivity, expansion_add, expansion_search)` for ANN.
+    pub ann_parameters: Option<(usize, usize, usize)>,
     pub requested_backend: BackendSelection,
     pub actual_backend: BackendKind,
     pub algorithm: Algorithm,
@@ -222,8 +227,180 @@ enum Backend {
     Wgpu(gpu::GpuBackend),
 }
 
-/// Sequential embedded collection. Mutations invalidate every derived index.
+/// Embedded collection shared with `Arc<Collection>` across threads.
+///
+/// Ready CPU and USearch searches share a read lock. Mutations and rebuilds
+/// take a write lock. GPU queries additionally serialize their scratch buffers.
+/// Synchronous mutation/inspection methods block; use a blocking thread when
+/// contending with async GPU work on a single-thread executor. No workers run.
 pub struct Collection {
+    inner: RwLock<CollectionState>,
+    #[cfg(feature = "gpu-wgpu")]
+    gpu_gate: async_lock::Mutex<()>,
+}
+
+impl Collection {
+    /// Construct an in-memory collection; use `create` for durable commits.
+    pub async fn new(config: CollectionConfig) -> Result<Self, Error> {
+        Ok(Self::from_state(CollectionState::new(config).await?))
+    }
+
+    /// Create a collection in an empty directory, held under an exclusive OS lock.
+    pub async fn create(path: impl AsRef<Path>, config: CollectionConfig) -> Result<Self, Error> {
+        Ok(Self::from_state(
+            CollectionState::create(path, config).await?,
+        ))
+    }
+
+    /// Recover a durable collection. A second open handle is rejected.
+    pub async fn open(path: impl AsRef<Path>, config: CollectionConfig) -> Result<Self, Error> {
+        Ok(Self::from_state(CollectionState::open(path, config).await?))
+    }
+
+    fn from_state(state: CollectionState) -> Self {
+        Self {
+            inner: RwLock::new(state),
+            #[cfg(feature = "gpu-wgpu")]
+            gpu_gate: async_lock::Mutex::new(()),
+        }
+    }
+
+    /// Validate and add one row; durable collections sync before returning.
+    pub fn add(&self, id: u64, user_id: u64, timestamp: i64, vector: &[f32]) -> Result<(), Error> {
+        self.inner
+            .write_blocking()
+            .add(id, user_id, timestamp, vector)
+    }
+
+    /// Delete one row immediately and durably; IDs are never reused.
+    pub fn delete(&self, id: u64) -> Result<(), Error> {
+        self.inner.write_blocking().delete(id)
+    }
+
+    /// Commit ordered add/delete operations atomically. Errors roll back before publication.
+    pub fn commit(&self, mutations: &[Mutation]) -> Result<CommitReport, Error> {
+        self.inner.write_blocking().commit(mutations)
+    }
+
+    /// Add all rows atomically, rejecting duplicate IDs and invalid vectors.
+    pub fn add_batch(&self, rows: &[NewRecord]) -> Result<CommitReport, Error> {
+        self.inner.write_blocking().add_batch(rows)
+    }
+
+    /// Delete all IDs atomically; any invalid deletion rolls back the batch.
+    pub fn delete_batch(&self, ids: &[u64]) -> Result<CommitReport, Error> {
+        self.inner.write_blocking().delete_batch(ids)
+    }
+
+    /// Return live eligible IDs. Retains the original empty-on-closed behavior.
+    pub fn filter(&self, filter: &Filter) -> Vec<u64> {
+        self.inner.read_blocking().filter(filter)
+    }
+
+    /// Explicitly prepare the current generation, serialized with all mutations.
+    pub async fn prepare(&self) -> Result<bool, Error> {
+        self.inner.write().await.prepare().await
+    }
+
+    /// Search one committed generation. A concurrent commit is visible entirely or not at all.
+    pub async fn search(
+        &self,
+        query: &[f32],
+        filter: &Filter,
+        k: usize,
+    ) -> Result<SearchResponse, Error> {
+        self.search_locked(query, filter, k)
+            .instrument(info_span!("qenlo.search", operation = "search"))
+            .await
+    }
+
+    async fn search_locked(
+        &self,
+        query: &[f32],
+        filter: &Filter,
+        k: usize,
+    ) -> Result<SearchResponse, Error> {
+        let started = Instant::now();
+        let mut state = self.inner.read().await;
+        let mut lock_wait = started.elapsed();
+        state.ensure_open()?;
+        if !(1..=MAX_K).contains(&k) {
+            return Err(Error::InvalidK(k));
+        }
+        qenlo_core::normalize_vector(query, state.store.dimension())?;
+        let mut rebuilt = false;
+        let mut preparation = Measurement::unavailable("index already current");
+        if state.prepared_generation != Some(state.store.generation()) {
+            drop(state);
+            let waiting = Instant::now();
+            let mut writer = self.inner.write().await;
+            lock_wait += waiting.elapsed();
+            let preparing = Instant::now();
+            rebuilt = writer.prepare().await?;
+            if rebuilt {
+                preparation = Measurement::Available(preparing.elapsed());
+            }
+            state = RwLockWriteGuard::downgrade(writer);
+        }
+        #[cfg(feature = "gpu-wgpu")]
+        let _gpu_guard = if matches!(state.backend, Backend::Wgpu(_)) {
+            let waiting = Instant::now();
+            let guard = self.gpu_gate.lock().await;
+            lock_wait += waiting.elapsed();
+            Some(guard)
+        } else {
+            None
+        };
+        let mut response = state
+            .search_inner(query, filter, k, rebuilt, preparation)
+            .await?;
+        response.report.lock_wait = lock_wait;
+        response.report.total_duration = started.elapsed();
+        Ok(response)
+    }
+
+    /// Run queries in order. Each query sees its own committed generation.
+    pub async fn search_batch(
+        &self,
+        queries: &[&[f32]],
+        filter: &Filter,
+        k: usize,
+    ) -> Result<Vec<SearchResponse>, Error> {
+        let mut responses = Vec::with_capacity(queries.len());
+        for query in queries {
+            responses.push(self.search(query, filter, k).await?);
+        }
+        Ok(responses)
+    }
+
+    /// Inspect canonical and durable generations without scanning vectors.
+    pub fn stats(&self) -> CollectionStats {
+        self.inner.read_blocking().stats()
+    }
+
+    /// Sync pending canonical data. Normal durable mutations are already synced.
+    pub fn flush(&self) -> Result<(), Error> {
+        self.inner.write_blocking().flush()
+    }
+
+    /// Flush, mark closed, and release the exclusive filesystem lock. Idempotent.
+    pub fn close(&self) -> Result<(), Error> {
+        self.inner.write_blocking().close()
+    }
+
+    /// Configure USearch's search expansion for this handle, including future rebuilds.
+    #[cfg(feature = "usearch")]
+    pub fn set_ann_search_expansion(&self, expansion: usize) -> Result<(), Error> {
+        let mut state = self.inner.write_blocking();
+        state.ensure_open()?;
+        match &mut state.backend {
+            Backend::Usearch(index) => index.set_search_expansion(expansion),
+            _ => Err(Error::Preparation("collection does not use USearch".into())),
+        }
+    }
+}
+
+struct CollectionState {
     config: CollectionConfig,
     store: CoreStore,
     backend: Backend,
@@ -236,7 +413,7 @@ pub struct Collection {
     storage_lock: Option<std::fs::File>,
 }
 
-impl Collection {
+impl CollectionState {
     #[tracing::instrument(name = "qenlo.initialize", skip_all, fields(backend = ?config.backend))]
     pub async fn new(config: CollectionConfig) -> Result<Self, Error> {
         let store = CoreStore::new(config.dimension)?;
@@ -474,38 +651,21 @@ impl Collection {
         Ok(true)
     }
 
-    pub async fn search(
-        &mut self,
-        query: &[f32],
-        filter: &Filter,
-        k: usize,
-    ) -> Result<SearchResponse, Error> {
-        self.search_inner(query, filter, k)
-            .instrument(info_span!("qenlo.search", operation = "search"))
-            .await
-    }
-
     async fn search_inner(
-        &mut self,
+        &self,
         query: &[f32],
         filter: &Filter,
         k: usize,
+        rebuilt: bool,
+        preparation: Measurement<Duration>,
     ) -> Result<SearchResponse, Error> {
         self.ensure_open()?;
         if !(1..=MAX_K).contains(&k) {
             return Err(Error::InvalidK(k));
         }
         let started = Instant::now();
-        let preparation_started = Instant::now();
-        let rebuilt = self.prepare().await?;
-        let preparation = if rebuilt {
-            Measurement::Available(preparation_started.elapsed())
-        } else {
-            Measurement::unavailable("index already current")
-        };
-
         let execution_started = Instant::now();
-        let output = match &mut self.backend {
+        let output = match &self.backend {
             Backend::Cpu => {
                 let exact = self.store.search(query, filter, k)?;
                 BackendOutput::cpu(
@@ -531,6 +691,12 @@ impl Collection {
             })
             .collect::<Vec<_>>();
         let report = ExecutionReport {
+            lock_wait: Duration::ZERO,
+            ann_parameters: match &self.backend {
+                #[cfg(feature = "usearch")]
+                Backend::Usearch(index) => Some(index.parameters()),
+                _ => None,
+            },
             requested_backend: self.config.backend,
             actual_backend: output.actual_backend,
             algorithm: output.algorithm,
@@ -548,19 +714,6 @@ impl Collection {
             results: results.len(),
         };
         Ok(SearchResponse { results, report })
-    }
-
-    pub async fn search_batch(
-        &mut self,
-        queries: &[&[f32]],
-        filter: &Filter,
-        k: usize,
-    ) -> Result<Vec<SearchResponse>, Error> {
-        let mut responses = Vec::with_capacity(queries.len());
-        for query in queries {
-            responses.push(self.search(query, filter, k).await?);
-        }
-        Ok(responses)
     }
 
     pub fn stats(&self) -> CollectionStats {
@@ -690,7 +843,7 @@ mod tests {
     #[test]
     fn cpu_collection_rebuilds_after_mutation_and_reports_execution() {
         block_on(async {
-            let mut collection = Collection::new(CollectionConfig::cpu_exact(2))
+            let collection = Collection::new(CollectionConfig::cpu_exact(2))
                 .await
                 .unwrap();
             collection.add(2, 7, 10, &[1.0, 0.0]).unwrap();
@@ -734,7 +887,7 @@ mod tests {
         block_on(async {
             let path = temp_dir("restart");
             let config = CollectionConfig::cpu_exact(2);
-            let mut collection = Collection::create(&path, config.clone()).await.unwrap();
+            let collection = Collection::create(&path, config.clone()).await.unwrap();
             collection.add(1, 7, i64::MIN, &[1.0, 0.0]).unwrap();
             collection.add(2, 8, i64::MAX, &[0.0, 1.0]).unwrap();
             collection.delete(1).unwrap();
@@ -746,7 +899,7 @@ mod tests {
                 Err(Error::Closed)
             ));
 
-            let mut reopened = Collection::open(&path, config).await.unwrap();
+            let reopened = Collection::open(&path, config).await.unwrap();
             assert_eq!(reopened.stats().rows, 2);
             assert_eq!(reopened.stats().live_rows, 1);
             assert_eq!(
@@ -769,7 +922,7 @@ mod tests {
     fn transactions_validate_all_rows_and_roll_back_before_publication() {
         block_on(async {
             let path = temp_dir("transaction");
-            let mut collection = Collection::create(&path, CollectionConfig::cpu_exact(2))
+            let collection = Collection::create(&path, CollectionConfig::cpu_exact(2))
                 .await
                 .unwrap();
             let row = NewRecord {
@@ -811,7 +964,7 @@ mod tests {
     fn transaction_io_failure_preserves_memory_and_last_commit() {
         block_on(async {
             let path = temp_dir("transaction-io");
-            let mut collection = Collection::create(&path, CollectionConfig::cpu_exact(2))
+            let collection = Collection::create(&path, CollectionConfig::cpu_exact(2))
                 .await
                 .unwrap();
             // A directory at the precise staging file path deterministically fails writing.
@@ -829,11 +982,71 @@ mod tests {
         });
     }
 
+    #[test]
+    fn shared_collection_and_search_futures_are_send() {
+        fn send_sync<T: Send + Sync>() {}
+        fn send<T: Send>(_: T) {}
+        send_sync::<Collection>();
+        let collection = block_on(Collection::new(CollectionConfig::cpu_exact(2))).unwrap();
+        send(collection.search(&[1.0, 0.0], &Filter::ALL, 1));
+    }
+
+    #[test]
+    fn searches_observe_whole_transactions_while_writer_runs() {
+        use std::sync::{Arc, Barrier};
+        let collection =
+            Arc::new(block_on(Collection::new(CollectionConfig::cpu_exact(2))).unwrap());
+        collection.add(0, 1, 0, &[1.0, 0.0]).unwrap();
+        collection.add(1, 1, 0, &[1.0, 0.0]).unwrap();
+        let barrier = Arc::new(Barrier::new(5));
+        std::thread::scope(|scope| {
+            for _ in 0..4 {
+                let collection = Arc::clone(&collection);
+                let barrier = Arc::clone(&barrier);
+                scope.spawn(move || {
+                    barrier.wait();
+                    for _ in 0..100 {
+                        let response =
+                            block_on(collection.search(&[1.0, 0.0], &Filter::ALL, 64)).unwrap();
+                        assert_eq!(response.results.len(), 2);
+                        assert_eq!(response.results[1].id, response.results[0].id + 1);
+                        assert!(response.report.total_duration >= response.report.lock_wait);
+                    }
+                });
+            }
+            barrier.wait();
+            for pair in 1..=50_u64 {
+                collection
+                    .commit(&[
+                        Mutation::Delete((pair - 1) * 2),
+                        Mutation::Delete((pair - 1) * 2 + 1),
+                        Mutation::Add(NewRecord {
+                            id: pair * 2,
+                            user_id: 1,
+                            timestamp: 0,
+                            vector: vec![1.0, 0.0],
+                        }),
+                        Mutation::Add(NewRecord {
+                            id: pair * 2 + 1,
+                            user_id: 1,
+                            timestamp: 0,
+                            vector: vec![1.0, 0.0],
+                        }),
+                    ])
+                    .unwrap();
+            }
+        });
+        // Ready reads can hold the lock at the same time, rather than a hidden mutex.
+        let first = collection.inner.try_read().unwrap();
+        let second = collection.inner.try_read().unwrap();
+        assert_eq!(first.store.generation(), second.store.generation());
+    }
+
     #[cfg(feature = "usearch")]
     #[test]
     fn usearch_filters_during_graph_search_and_reports_unknown_traversal_count() {
         block_on(async {
-            let mut collection = Collection::new(CollectionConfig {
+            let collection = Collection::new(CollectionConfig {
                 dimension: 2,
                 backend: BackendSelection::Usearch,
                 gpu_allocation_budget_bytes: DEFAULT_GPU_BUDGET_BYTES,
@@ -866,7 +1079,7 @@ mod tests {
     #[test]
     fn automatic_gpu_mode_discloses_over_budget_cpu_fallback_if_adapter_is_available() {
         block_on(async {
-            let Ok(mut collection) = Collection::new(CollectionConfig {
+            let Ok(collection) = Collection::new(CollectionConfig {
                 dimension: 2,
                 backend: BackendSelection::Automatic(GpuFilterMode::CpuMask),
                 gpu_allocation_budget_bytes: 1,

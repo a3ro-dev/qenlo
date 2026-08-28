@@ -13,6 +13,7 @@ usearch = ["dep:usearch"]
 gpu-wgpu = ["dep:wgpu"]
 
 [dependencies]
+async-lock = "3"
 crc32fast.workspace = true
 qenlo-core.workspace = true
 thiserror.workspace = true
