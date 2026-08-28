@@ -1,0 +1,201 @@
+{
+  "url_public_html": "https://data.dtu.dk/articles/dataset/Pretrained_sentence_BERT_models_AG_News_embeddings/21286923/1",
+  "files": [
+    {
+      "id": 37763682,
+      "name": "all-MiniLM-L12-v2_ag_news_test.h5",
+      "size": 10837079,
+      "is_link_only": false,
+      "download_url": "https://ndownloader.figshare.com/files/37763682",
+      "supplied_md5": "7d26a95ebfa1eede1bf5f6700239ed62",
+      "computed_md5": "7d26a95ebfa1eede1bf5f6700239ed62",
+      "mimetype": "undefined"
+    },
+    {
+      "id": 37763697,
+      "name": "all-MiniLM-L12-v2_ag_news_train.h5",
+      "size": 170800305,
+      "is_link_only": false,
+      "download_url": "https://ndownloader.figshare.com/files/37763697",
+      "supplied_md5": "364dd01d4a383fd5a2628f9d4ea8279a",
+      "computed_md5": "364dd01d4a383fd5a2628f9d4ea8279a",
+      "mimetype": "undefined"
+    },
+    {
+      "id": 37993779,
+      "name": "all-distilroberta-v1_ag_news_test.h5",
+      "size": 21726890,
+      "is_link_only": false,
+      "download_url": "https://ndownloader.figshare.com/files/37993779",
+      "supplied_md5": "922bcee0dec6f45aba27f38afd707f07",
+      "computed_md5": "922bcee0dec6f45aba27f38afd707f07",
+      "mimetype": "application/x-hdf"
+    },
+    {
+      "id": 37993782,
+      "name": "all-distilroberta-v1_ag_news_train.h5",
+      "size": 342702067,
+      "is_link_only": false,
+      "download_url": "https://ndownloader.figshare.com/files/37993782",
+      "supplied_md5": "6a41bdbe264ac68fc71942ca3c2aa53b",
+      "computed_md5": "6a41bdbe264ac68fc71942ca3c2aa53b",
+      "mimetype": "application/x-hdf"
+    },
+    {
+      "id": 37993911,
+      "name": "all-mpnet-base-v2_ag_news_train.h5",
+      "size": 342844031,
+      "is_link_only": false,
+      "download_url": "https://ndownloader.figshare.com/files/37993911",
+      "supplied_md5": "0a004c3e6d87fa8db9605eed900b986a",
+      "computed_md5": "0a004c3e6d87fa8db9605eed900b986a",
+      "mimetype": "application/x-hdf"
+    },
+    {
+      "id": 37993914,
+      "name": "all-mpnet-base-v2_ag_news_test.h5",
+      "size": 21747335,
+      "is_link_only": false,
+      "download_url": "https://ndownloader.figshare.com/files/37993914",
+      "supplied_md5": "c2a8eeb17c50c9e18b453f7531b9958b",
+      "computed_md5": "c2a8eeb17c50c9e18b453f7531b9958b",
+      "mimetype": "application/x-hdf"
+    },
+    {
+      "id": 40409750,
+      "name": "multi-qa-distilbert-cos-v1_ag_news_train.h5",
+      "size": 342287947,
+      "is_link_only": false,
+      "download_url": "https://ndownloader.figshare.com/files/40409750",
+      "supplied_md5": "2f9902dfc67cd60a34c59432eaa0f4af",
+      "computed_md5": "2f9902dfc67cd60a34c59432eaa0f4af",
+      "mimetype": "application/x-hdf"
+    },
+    {
+      "id": 40409753,
+      "name": "multi-qa-distilbert-cos-v1_ag_news_test.h5",
+      "size": 21712391,
+      "is_link_only": false,
+      "download_url": "https://ndownloader.figshare.com/files/40409753",
+      "supplied_md5": "c422d7aa3152b506a9e06c73433b3f4f",
+      "computed_md5": "c422d7aa3152b506a9e06c73433b3f4f",
+      "mimetype": "application/x-hdf"
+    }
+  ],
+  "folder_structure": {},
+  "authors": [
+    {
+      "id": 12252365,
+      "full_name": "Beatrix Miranda Ginn Nielsen",
+      "first_name": "Beatrix Miranda Ginn",
+      "last_name": "Nielsen",
+      "is_active": false,
+      "url_name": "Beatrix_Miranda_Ginn_Nielsen",
+      "orcid_id": ""
+    }
+  ],
+  "custom_fields": [
+    {
+      "name": "ORCID for corresponding depositor",
+      "value": [
+        "https://orcid.org/0009-0005-0092-024X"
+      ],
+      "settings": {
+        "placeholder": "Add ORCID - e.g. https://orcid.org/0000-0001-9264-7669",
+        "is_multiple": false
+      },
+      "field_type": "url",
+      "order": null,
+      "is_mandatory": false
+    }
+  ],
+  "figshare_url": "https://data.dtu.dk/articles/dataset/Pretrained_sentence_BERT_models_AG_News_embeddings/21286923",
+  "download_disabled": false,
+  "description": "<p>Embeddings on the AG News dataset using pretrained Sentence BERT models.  </p>\n<p><br></p>\n<p>AG News dataset: https://www.kaggle.com/datasets/amananandrai/ag-news-classification-dataset</p>\n<p><br></p>\n<p>Pretrained models used:</p>\n<p>all-distilroberta-v1: https://huggingface.co/sentence-transformers/all-distilroberta-v1</p>\n<p>all-MiniLM-L12-v2: https://huggingface.co/sentence-transformers/all-MiniLM-L12-v2</p>\n<p>all-mpnet-base-v2: https://huggingface.co/sentence-transformers/all-mpnet-base-v2</p>\n<p>multi-qa-distilbert-cos-v1: https://huggingface.co/sentence-transformers/multi-qa-distilbert-cos-v1</p>",
+  "funding": "Danish Pioneer Centre for AI, DNRF grant number P1",
+  "funding_list": [
+    {
+      "id": 22853133,
+      "title": "Danish Pioneer Centre for AI, DNRF grant number P1",
+      "grant_code": "",
+      "funder_name": null,
+      "is_user_defined": 1
+    }
+  ],
+  "version": 1,
+  "status": "public",
+  "size": 1274658045,
+  "created_date": "2023-09-29T08:12:53Z",
+  "modified_date": "2024-07-26T10:47:05Z",
+  "is_public": true,
+  "is_confidential": false,
+  "is_metadata_record": false,
+  "confidential_reason": "",
+  "metadata_reason": "",
+  "license": {
+    "value": 1,
+    "name": "CC BY 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "tags": [
+    "nlp",
+    "AG News",
+    "text embeddings"
+  ],
+  "keywords": [
+    "nlp",
+    "AG News",
+    "text embeddings"
+  ],
+  "categories": [
+    {
+      "id": 29161,
+      "title": "Deep learning",
+      "parent_id": 29152,
+      "path": "/28798/29152/29161",
+      "source_id": "461103",
+      "taxonomy_id": 100
+    }
+  ],
+  "references": [
+    "https://proceedings.mlr.press/v233/nielsen24a/nielsen24a.pdf"
+  ],
+  "has_linked_file": false,
+  "citation": "Nielsen, Beatrix Miranda Ginn (2023). Pretrained sentence BERT models AG News embeddings. Technical University of Denmark. Dataset. https://doi.org/10.11583/DTU.21286923.v1",
+  "related_materials": [
+    {
+      "id": 173705158,
+      "identifier": "https://proceedings.mlr.press/v233/nielsen24a/nielsen24a.pdf",
+      "title": "Hubness Reduction Improves Sentence-BERT Semantic Spaces",
+      "relation": "IsSupplementTo",
+      "identifier_type": "URL",
+      "is_linkout": true,
+      "link": "https://proceedings.mlr.press/v233/nielsen24a/nielsen24a.pdf"
+    }
+  ],
+  "is_embargoed": false,
+  "embargo_date": null,
+  "embargo_type": "file",
+  "embargo_title": "",
+  "embargo_reason": "",
+  "embargo_options": [],
+  "id": 21286923,
+  "title": "Pretrained sentence BERT models AG News embeddings",
+  "doi": "10.11583/DTU.21286923.v1",
+  "handle": "",
+  "url": "https://api.figshare.com/v2/articles/21286923",
+  "published_date": "2023-09-29T08:12:53Z",
+  "thumb": "",
+  "defined_type": 3,
+  "defined_type_name": "dataset",
+  "group_id": 18038,
+  "url_private_api": "https://api.figshare.com/v2/account/articles/21286923",
+  "url_public_api": "https://api.figshare.com/v2/articles/21286923",
+  "url_private_html": "https://figshare.com/account/articles/21286923",
+  "timeline": {
+    "posted": "2023-09-29T08:12:53",
+    "firstOnline": "2023-09-29"
+  },
+  "resource_title": null,
+  "resource_doi": null
+}

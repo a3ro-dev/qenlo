@@ -1,0 +1,142 @@
+{
+  "command": [
+    "target/release/qenlo-bench.exe",
+    "run",
+    "--dataset",
+    "data/ag-news/ag-news-100k-384.qnb",
+    "--dimensions",
+    "384",
+    "--output",
+    "benchmarks/2026-08-28/real/cpu-384-onepct",
+    "--backend",
+    "cpu",
+    "--user-id",
+    "0",
+    "--fraction",
+    "1",
+    "--warmups",
+    "200",
+    "--repetitions",
+    "5",
+    "--recall-target",
+    "0.95"
+  ],
+  "cwd": "D:\\qenloDB",
+  "platform": "Windows-11-10.0.26100-SP0",
+  "exit_code": 0,
+  "observed_wall_seconds": 6.094710299999861,
+  "peak_host_working_set_bytes": 457076736,
+  "host_working_set_samples_seconds_bytes": [
+    [
+      0.006,
+      2039808
+    ],
+    [
+      0.256,
+      85430272
+    ],
+    [
+      0.507,
+      171708416
+    ],
+    [
+      0.757,
+      349278208
+    ],
+    [
+      1.008,
+      370188288
+    ],
+    [
+      1.258,
+      377643008
+    ],
+    [
+      1.508,
+      394006528
+    ],
+    [
+      1.758,
+      410218496
+    ],
+    [
+      2.009,
+      426565632
+    ],
+    [
+      2.259,
+      442929152
+    ],
+    [
+      2.509,
+      456683520
+    ],
+    [
+      2.76,
+      456699904
+    ],
+    [
+      3.01,
+      456863744
+    ],
+    [
+      3.26,
+      457031680
+    ],
+    [
+      3.511,
+      457064448
+    ],
+    [
+      3.761,
+      457064448
+    ],
+    [
+      4.011,
+      457064448
+    ],
+    [
+      4.262,
+      457064448
+    ],
+    [
+      4.512,
+      457064448
+    ],
+    [
+      4.763,
+      457064448
+    ],
+    [
+      5.013,
+      457064448
+    ],
+    [
+      5.263,
+      457064448
+    ],
+    [
+      5.514,
+      457064448
+    ],
+    [
+      5.764,
+      457064448
+    ],
+    [
+      6.014,
+      32768
+    ]
+  ],
+  "memory_errors": [],
+  "memory_scope": "child process only, OS working set; excludes GPU and child descendants",
+  "observer_interval_seconds": 0.25,
+  "environment": {
+    "WGPU_BACKEND": "dx12",
+    "CC": null,
+    "CXX": null,
+    "CARGO_INCREMENTAL": null
+  },
+  "executable_sha256": "7f859a775da07d6e6a7ae6cdcdbe69626a9c1bc0ef09c11f17f5831c9b75c6f0",
+  "git_revision": "78e3947f48baf17ce90c3b4194a4fed3f0c6d81d"
+}

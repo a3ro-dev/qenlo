@@ -1,0 +1,9 @@
+{
+  "source_git_revision": "0257d4bc0a958ad75b17caa16db97778c89e43b9",
+  "executable_sha256": "7f859a775da07d6e6a7ae6cdcdbe69626a9c1bc0ef09c11f17f5831c9b75c6f0",
+  "cargo_lock_sha256": "9d352bb96357ee9f65acfbbc368a3ac747e41290f1b592232dc118ee135d9d33",
+  "command": "CC=clang-cl CXX=clang-cl CARGO_INCREMENTAL=0 cargo build --release -p qenlo-bench --features usearch,gpu-wgpu",
+  "prepared_dataset_sha256": "ba87a322b6846ce225ce54140cf00ac33250271447ef8f9f83df246131719cba",
+  "dataset_crc32": "beb3c848",
+  "note": "Build source revision is separate from the workspace revision observed at run completion. Later documentation commits do not change the binary."
+}

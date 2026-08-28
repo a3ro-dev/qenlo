@@ -1,0 +1,44 @@
+{
+  "dataset": "DTU pretrained sentence BERT AG News embeddings v1",
+  "author": "Beatrix Miranda Ginn Nielsen",
+  "doi": "10.11583/DTU.21286923.v1",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "source_url": "https://ndownloader.figshare.com/files/37763697",
+  "model": "all-MiniLM-L12-v2",
+  "source_hashes": {
+    "md5": "364dd01d4a383fd5a2628f9d4ea8279a",
+    "sha256": "ffb627fb80111b83a0907e29a7a1d4bc242810944b07ae304246184c26cb00d8",
+    "crc32": "c44ccafa"
+  },
+  "verification": "publisher MD5 matched; SHA256 additionally recorded locally",
+  "dimensions": 384,
+  "hdf5_dataset": "embeddings",
+  "source_shape": [
+    120000,
+    384
+  ],
+  "source_dtype": "float32",
+  "selection": "first consecutive source training rows; no shuffle or normalization",
+  "corpus_range": [
+    0,
+    100000
+  ],
+  "tuning_range": [
+    100000,
+    101000
+  ],
+  "evaluation_range": [
+    101000,
+    106000
+  ],
+  "content_deduplication": "not performed; row intervals are disjoint",
+  "output": "data\\ag-news\\ag-news-100k-384.f32",
+  "output_hashes": {
+    "md5": "41d5fa60f681e09d34005fd5c2ae49f5",
+    "sha256": "8f686ab3661ce0caddda43a4c1bf8f1db39bee655d779edc1ffdfe38a16d505d",
+    "crc32": "188d6ef2"
+  },
+  "h5py_version": "3.16.0",
+  "numpy_version": "2.5.2"
+}

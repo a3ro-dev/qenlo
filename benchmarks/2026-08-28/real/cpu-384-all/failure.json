@@ -1,0 +1,9 @@
+{
+  "status": "aborted-before-measured-queries",
+  "reason": "Cached oracle top-k vectors retained corpus-sized allocation through Rust in-place collect. RSS grew to 4.22GB during oracle preparation; agent stopped its own process before OOM.",
+  "measured_evaluation_queries": 0,
+  "fix_commit": "2d91cb2",
+  "regression": "cached_oracle_results_release_corpus_sized_capacity",
+  "restart": "cpu-384-all-v2 with fixed oracle",
+  "benchmark_durations_valid": false
+}
