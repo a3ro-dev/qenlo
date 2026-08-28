@@ -14,7 +14,7 @@ use std::{
 
 use qenlo::{BackendSelection, Collection, CollectionConfig, Filter, Measurement, TimestampRange};
 use qenlo_bench::{
-    MetadataDistribution, OracleFilter, OracleRecord,
+    MetadataDistribution, OracleFilter, OracleRecord, PreparedOracle,
     dataset::{self, DatasetSpec},
     exact_cosine_search, nearest_rank_percentile, recall_at_k,
 };
@@ -30,6 +30,7 @@ run     --dataset PATH --output NEW_DIRECTORY [--dimensions 16|384|768]
         [--backend cpu|usearch|gpu-mask|gpu-rows|gpu-predicate|automatic]
         [--distribution independent|positive|negative|skewed]
         [--fraction 1|0.1|0.01|0.001|0.0001|empty|fewer]
+        [--user-id U64]
         [--batch 1|8|32] [--warmups 8] [--repetitions 3]
         [--recall-target 0.95|0.99] [--expansion-search 128]
         [--diagnostics disabled|basic|detailed]
@@ -39,10 +40,11 @@ Defaults are small synthetic smoke workloads, NOT scale measurements.
 Reference protocol: --rows 100k or 1m, --dimensions 384 or 768,
 --tuning 1000 --evaluation 5000; run --warmups 200 --repetitions 5.
 All vectors come from disjoint source-row intervals; imported content may repeat.
-Each batch uses one shared timestamp filter. k=10. Run cells separately.
+Each batch uses one shared filter. --user-id adds equality AND a bounded timestamp
+range; --fraction then applies within that user's population. k=10.
 Raw CSV samples, timing/recall summaries and configuration.txt are retained.
 Vector budget is a payload estimate, not an RSS/allocator limit. External dataset
-downloads, competitor adapters, distinct-filter batches and automatic ANN tuning
+downloads, distinct-filter batches and automatic ANN tuning
 are not implemented. Optional backends require the matching cargo feature.";
 
 fn main() {
@@ -213,22 +215,36 @@ fn metadata(records: &mut [OracleRecord], distribution: MetadataDistribution, se
     }
 }
 
-fn workload_filter(records: &[OracleRecord], fraction: &str) -> Result<(OracleFilter, usize)> {
+fn workload_filter(
+    records: &[OracleRecord],
+    fraction: &str,
+    user_id: Option<u64>,
+) -> Result<(OracleFilter, usize)> {
+    let mut timestamps: Vec<_> = records
+        .iter()
+        .filter(|row| user_id.is_none_or(|user| row.user_id == user))
+        .map(|row| row.timestamp_micros)
+        .collect();
+    timestamps.sort_unstable();
+    let population = timestamps.len();
     let count = match fraction {
-        "1" => records.len(),
-        "0.1" => records.len() / 10,
-        "0.01" => records.len() / 100,
-        "0.001" => records.len() / 1_000,
-        "0.0001" => records.len() / 10_000,
+        "1" => population,
+        "0.1" => population / 10,
+        "0.01" => population / 100,
+        "0.001" => population / 1_000,
+        "0.0001" => population / 10_000,
         "empty" => 0,
-        "fewer" => records.len().min(5),
+        "fewer" => population.min(5),
         _ => return Err("unsupported --fraction".into()),
     };
-    let mut timestamps: Vec<_> = records.iter().map(|row| row.timestamp_micros).collect();
-    timestamps.sort_unstable();
-    let upper = timestamps.get(count).copied();
+    let upper = timestamps
+        .get(count)
+        .copied()
+        .or_else(|| user_id.and_then(|_| timestamps.last()?.checked_add(1)));
     Ok((
         OracleFilter {
+            user_id,
+            timestamp_from: user_id.and_then(|_| timestamps.first().copied()),
             timestamp_to: upper,
             ..OracleFilter::default()
         },
@@ -280,6 +296,10 @@ async fn run_cell(
         _ => return Err("unknown --distribution".into()),
     };
     let fraction = take(&mut options, "--fraction", "0.1");
+    let user_id = options
+        .remove("--user-id")
+        .map(|value| value.parse::<u64>())
+        .transpose()?;
     let batch = count(&take(&mut options, "--batch", "1"))?;
     if ![1, 8, 32].contains(&batch) {
         return Err("--batch must be 1, 8 or 32".into());
@@ -315,7 +335,7 @@ async fn run_cell(
     let load_started = Instant::now();
     let mut data = dataset::load(&path, dimension, vector_budget)?;
     metadata(&mut data.corpus, distribution, data.spec.seed);
-    let (oracle_filter, eligible) = workload_filter(&data.corpus, &fraction)?;
+    let (oracle_filter, eligible) = workload_filter(&data.corpus, &fraction, user_id)?;
     let filter = Filter {
         user_id: oracle_filter.user_id,
         timestamp: TimestampRange {
@@ -377,7 +397,46 @@ async fn run_cell(
             .unwrap_or_else(|| "not-applicable".into())
     )?;
     writeln!(manifest, "diagnostics={diagnostics_name}\nsubscriber=none")?;
+    let dirty = std::process::Command::new("git")
+        .args(["status", "--porcelain", "--untracked-files=no"])
+        .output()
+        .ok()
+        .filter(|out| out.status.success())
+        .map(|out| (!out.stdout.is_empty()).to_string())
+        .unwrap_or_else(|| "unavailable".into());
+    writeln!(manifest, "git_worktree_dirty={dirty}")?;
+    writeln!(
+        manifest,
+        "filter_user_id={}\nfilter_timestamp_from={}\nfilter_timestamp_to={}\nfraction_scope={}\nreplay_format=qenlo-csv-v1",
+        oracle_filter
+            .user_id
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        oracle_filter
+            .timestamp_from
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        oracle_filter
+            .timestamp_to
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        if user_id.is_some() {
+            "selected-user-population"
+        } else {
+            "corpus"
+        }
+    )?;
     manifest.flush()?;
+    let mut replay_metadata = BufWriter::new(File::create_new(output.join("metadata.csv"))?);
+    writeln!(replay_metadata, "id,user_id,timestamp_micros")?;
+    for row in &data.corpus {
+        writeln!(
+            replay_metadata,
+            "{},{},{}",
+            row.id, row.user_id, row.timestamp_micros
+        )?;
+    }
+    replay_metadata.flush()?;
     let build_started = Instant::now();
     let collection = Collection::new(CollectionConfig {
         dimension,
@@ -399,20 +458,41 @@ async fn run_cell(
     let readiness_time = readiness.elapsed();
     // Ground truth exhausts the eligible subset. It is outside every measured query window.
     let oracle_started = Instant::now();
+    let oracle = PreparedOracle::new(&data.corpus, dimension, oracle_filter)?;
     let truth: Vec<Vec<u64>> = data
         .evaluation
         .iter()
         .map(|query| {
-            exact_cosine_search(&data.corpus, query, oracle_filter, 10)
+            oracle
+                .search(query, 10)
                 .map(|hits| hits.into_iter().map(|hit| hit.id).collect())
         })
         .collect::<std::result::Result<_, _>>()?;
     let mut tuning_recall = 0.0;
-    for query in &data.tuning {
-        let expected: Vec<_> = exact_cosine_search(&data.corpus, query, oracle_filter, 10)?
+    let mut replay_truth = BufWriter::new(File::create_new(output.join("truth.csv"))?);
+    writeln!(replay_truth, "split,query_index,ids")?;
+    for (index, ids) in truth.iter().enumerate() {
+        writeln!(
+            replay_truth,
+            "evaluation,{index},{}",
+            ids.iter().map(u64::to_string).collect::<Vec<_>>().join(";")
+        )?;
+    }
+    for (index, query) in data.tuning.iter().enumerate() {
+        let expected: Vec<_> = oracle
+            .search(query, 10)?
             .into_iter()
             .map(|hit| hit.id)
             .collect();
+        writeln!(
+            replay_truth,
+            "tuning,{index},{}",
+            expected
+                .iter()
+                .map(u64::to_string)
+                .collect::<Vec<_>>()
+                .join(";")
+        )?;
         let response = collection.search(query, &filter, 10).await?;
         validate_scores(&data.corpus, query, &response.results)?;
         let actual: Vec<_> = response.results.iter().map(|hit| hit.id).collect();
@@ -420,6 +500,7 @@ async fn run_cell(
         tuning_recall += recall_at_k(&expected, &actual, 10)?;
     }
     tuning_recall /= data.tuning.len() as f64;
+    replay_truth.flush()?;
     let oracle_time = oracle_started.elapsed();
     for i in 0..warmups {
         collection
@@ -653,7 +734,7 @@ mod tests {
         );
         metadata(&mut skewed, MetadataDistribution::Skewed, 42);
         let selected = |records: &[OracleRecord]| {
-            let (filter, _) = workload_filter(records, "0.1").unwrap();
+            let (filter, _) = workload_filter(records, "0.1", None).unwrap();
             records
                 .iter()
                 .filter(|row| row.timestamp_micros < filter.timestamp_to.unwrap())
@@ -708,7 +789,7 @@ mod tests {
         ] {
             metadata(&mut records, distribution, 42);
             for fraction in ["1", "0.1", "0.01", "0.001", "0.0001", "empty", "fewer"] {
-                let (filter, expected) = workload_filter(&records, fraction).unwrap();
+                let (filter, expected) = workload_filter(&records, fraction, None).unwrap();
                 let actual = records
                     .iter()
                     .filter(|row| {
@@ -718,6 +799,28 @@ mod tests {
                     })
                     .count();
                 assert_eq!(actual, expected);
+                for user_id in [0, 99, u64::MAX] {
+                    let (compound, expected) =
+                        workload_filter(&records, fraction, Some(user_id)).unwrap();
+                    let actual = records
+                        .iter()
+                        .filter(|row| {
+                            row.user_id == user_id
+                                && compound
+                                    .timestamp_from
+                                    .is_none_or(|from| row.timestamp_micros >= from)
+                                && compound
+                                    .timestamp_to
+                                    .is_none_or(|to| row.timestamp_micros < to)
+                        })
+                        .count();
+                    assert_eq!(actual, expected);
+                    assert_eq!(compound.user_id, Some(user_id));
+                    if expected > 0 {
+                        assert!(compound.timestamp_from.is_some());
+                        assert!(compound.timestamp_to.is_some());
+                    }
+                }
             }
         }
     }
