@@ -13,6 +13,7 @@ const MAGIC: &[u8; 8] = b"QENLODB\0";
 const FORMAT_VERSION: u32 = 1;
 const HEADER_BYTES: u64 = 8 + 4 + 4 + 8 + 8 + 8;
 const CHECKSUM_BYTES: u64 = 4;
+const HEAD_MAGIC: &[u8; 8] = b"QENLOHD\0";
 pub(crate) const MAX_LOAD_BYTES: u64 = 512 * 1024 * 1024;
 
 #[derive(Debug, Error)]
@@ -29,12 +30,12 @@ pub(crate) enum StorageError {
     UnsupportedVersion { found: u32, supported: u32 },
     #[error("collection snapshot is corrupt: {0}")]
     Corrupt(String),
-    #[error("collection snapshot exceeds the {MAX_LOAD_BYTES}-byte load limit")]
+    #[error("collection snapshot exceeds the configured load budget or format capacity")]
     LoadLimitExceeded,
     #[error("collection is already open by another handle or process")]
     Locked,
     #[error(
-        "snapshot was published but directory sync failed; close and reopen to resolve commit: {0}"
+        "snapshot was published but durability confirmation failed; close and reopen to resolve commit: {0}"
     )]
     CommitUncertain(io::Error),
     #[error(transparent)]
@@ -51,6 +52,15 @@ pub(crate) struct OpenedStore {
 }
 
 pub(crate) fn create(path: &Path, store: &CoreStore) -> Result<File, StorageError> {
+    create_with_limit(path, store, MAX_LOAD_BYTES)
+}
+
+pub(crate) fn create_with_limit(
+    path: &Path,
+    store: &CoreStore,
+    max_load_bytes: u64,
+) -> Result<File, StorageError> {
+    check_admission(store.dimension(), store.len() as u64, max_load_bytes)?;
     if path.exists() {
         let mut entries = fs::read_dir(path).map_err(StorageError::Io)?;
         if entries
@@ -59,7 +69,7 @@ pub(crate) fn create(path: &Path, store: &CoreStore) -> Result<File, StorageErro
             return Err(StorageError::AlreadyExists(path.to_path_buf()));
         }
     } else {
-        fs::create_dir_all(path)?;
+        create_directory(path)?;
     }
     let lock = lock_directory(path)?;
     // Recheck under the lock: another creator may have won the race.
@@ -68,7 +78,7 @@ pub(crate) fn create(path: &Path, store: &CoreStore) -> Result<File, StorageErro
     {
         return Err(StorageError::AlreadyExists(path.to_path_buf()));
     }
-    write_snapshot(path, store)?;
+    write_snapshot_with_limit(path, store, max_load_bytes)?;
     Ok(lock)
 }
 
@@ -99,16 +109,34 @@ pub(crate) fn open_with_limit(
     }
 
     let lock = lock_directory(path)?;
-    let mut interrupted = false;
-    let mut committed = Vec::new();
-    let mut temporary = Vec::new();
+    let acknowledged = read_head(path)?;
+    if let Some(generation) = acknowledged
+        && !snapshot_path(path, generation, ".qdb").is_file()
+    {
+        return Err(StorageError::Corrupt(format!(
+            "acknowledged generation {generation} is missing"
+        )));
+    }
+    let mut interrupted = path.join("HEAD.pending").exists();
+    let mut latest_committed: Option<(u64, PathBuf)> = None;
+    let mut latest_temporary: Option<(u64, PathBuf)> = None;
     for entry in fs::read_dir(path)? {
         let entry = entry?;
         let file_name = entry.file_name();
         if let Some(generation) = generation_from_name(&file_name, ".qdb") {
-            committed.push((generation, entry.path()));
+            if latest_committed
+                .as_ref()
+                .is_none_or(|(latest, _)| generation > *latest)
+            {
+                latest_committed = Some((generation, entry.path()));
+            }
         } else if let Some(generation) = generation_from_name(&file_name, ".tmp") {
-            temporary.push((generation, entry.path()));
+            if latest_temporary
+                .as_ref()
+                .is_none_or(|(latest, _)| generation > *latest)
+            {
+                latest_temporary = Some((generation, entry.path()));
+            }
             interrupted = true;
         } else if generation_from_name(&file_name, ".pending").is_some() {
             // New writers publish only by rename. A staged transaction is never
@@ -116,17 +144,12 @@ pub(crate) fn open_with_limit(
             interrupted = true;
         }
     }
-    committed.sort_unstable_by_key(|(generation, _)| *generation);
-    temporary.sort_unstable_by_key(|(generation, _)| *generation);
-
-    let latest_committed = committed.last().cloned();
     let committed_generation = latest_committed
         .as_ref()
         .map_or(0, |(generation, _)| *generation);
-    if let Some((generation, temp)) = temporary
-        .into_iter()
-        .rev()
-        .find(|(generation, _)| latest_committed.is_none() || *generation > committed_generation)
+    interrupted |= acknowledged.is_some_and(|generation| generation < committed_generation);
+    if let Some((generation, temp)) = latest_temporary
+        .filter(|(generation, _)| latest_committed.is_none() || *generation > committed_generation)
         && let Some(store) = match read_snapshot(&temp, generation, max_load_bytes) {
             Ok(store) => Some(store),
             Err(error @ StorageError::UnsupportedVersion { .. }) => return Err(error),
@@ -136,7 +159,8 @@ pub(crate) fn open_with_limit(
     {
         let final_path = snapshot_path(path, generation, ".qdb");
         fs::rename(&temp, &final_path)?;
-        sync_directory(path)?;
+        sync_directory(path).map_err(StorageError::CommitUncertain)?;
+        write_head(path, generation).map_err(StorageError::CommitUncertain)?;
         prune_snapshots(path, generation);
         return Ok(OpenedStore {
             store,
@@ -148,15 +172,31 @@ pub(crate) fn open_with_limit(
     let Some((generation, snapshot)) = latest_committed else {
         return Err(StorageError::NoSnapshot(path.to_path_buf()));
     };
+    let store = read_snapshot(&snapshot, generation, max_load_bytes)?;
+    if acknowledged != Some(generation) {
+        // Reopening resolves an uncertain publication (or upgrades a legacy
+        // snapshot) only after its validated generation is acknowledged too.
+        write_head(path, generation).map_err(StorageError::CommitUncertain)?;
+    }
     Ok(OpenedStore {
-        store: read_snapshot(&snapshot, generation, max_load_bytes)?,
+        store,
         recovered_interrupted_write: interrupted,
         lock,
     })
 }
 
+#[cfg(test)]
 pub(crate) fn write_snapshot(path: &Path, store: &CoreStore) -> Result<(), StorageError> {
-    fs::create_dir_all(path)?;
+    write_snapshot_with_limit(path, store, MAX_LOAD_BYTES)
+}
+
+pub(crate) fn write_snapshot_with_limit(
+    path: &Path,
+    store: &CoreStore,
+    max_load_bytes: u64,
+) -> Result<(), StorageError> {
+    check_admission(store.dimension(), store.len() as u64, max_load_bytes)?;
+    create_directory(path)?;
     let generation = store.generation();
     let final_path = snapshot_path(path, generation, ".qdb");
     if final_path.exists() {
@@ -194,6 +234,7 @@ pub(crate) fn write_snapshot(path: &Path, store: &CoreStore) -> Result<(), Stora
 
     fs::rename(&temp_path, &final_path)?;
     sync_directory(path).map_err(StorageError::CommitUncertain)?;
+    write_head(path, generation).map_err(StorageError::CommitUncertain)?;
     prune_snapshots(path, generation);
     Ok(())
 }
@@ -259,13 +300,7 @@ fn read_snapshot(
     let rows = usize::try_from(rows_u64).map_err(|_| StorageError::LoadLimitExceeded)?;
     // Budget vector payload plus a conservative allowance for records and both
     // ordered indexes. This is admission accounting, not measured allocator RSS.
-    if rows_u64 > u64::from(u32::MAX)
-        || rows_u64
-            .checked_mul(row_bytes + 512)
-            .is_none_or(|bytes| bytes > max_load_bytes)
-    {
-        return Err(StorageError::LoadLimitExceeded);
-    }
+    check_admission(dimension, rows_u64, max_load_bytes)?;
     let mut actual_live = 0_u64;
     let records = (0..rows).map(|_| -> Result<RestoredRecord, StorageError> {
         let id = reader.u64()?;
@@ -309,6 +344,86 @@ fn snapshot_path(path: &Path, generation: u64, extension: &str) -> PathBuf {
     path.join(format!("canonical-{generation:020}{extension}"))
 }
 
+fn check_admission(dimension: usize, rows: u64, max_load_bytes: u64) -> Result<(), StorageError> {
+    let dimension = u32::try_from(dimension).map_err(|_| StorageError::LoadLimitExceeded)?;
+    let row_bytes = u64::from(dimension)
+        .checked_mul(4)
+        .and_then(|bytes| bytes.checked_add(32))
+        .ok_or(StorageError::LoadLimitExceeded)?;
+    let file_bytes = rows
+        .checked_mul(row_bytes)
+        .and_then(|bytes| bytes.checked_add(HEADER_BYTES + CHECKSUM_BYTES))
+        .ok_or(StorageError::LoadLimitExceeded)?;
+    let admission_bytes = row_bytes
+        .checked_add(512)
+        .and_then(|bytes| rows.checked_mul(bytes))
+        .ok_or(StorageError::LoadLimitExceeded)?;
+    if rows > u64::from(u32::MAX) || file_bytes > max_load_bytes || admission_bytes > max_load_bytes
+    {
+        return Err(StorageError::LoadLimitExceeded);
+    }
+    Ok(())
+}
+
+// HEAD is a durable lower bound on acknowledged generations, not permission to
+// ignore a newer canonical snapshot published immediately before a crash.
+fn read_head(path: &Path) -> Result<Option<u64>, StorageError> {
+    let mut file = match File::open(path.join("HEAD")) {
+        Ok(file) => file,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error.into()),
+    };
+    if file.metadata()?.len() != 20 {
+        return Err(StorageError::Corrupt("invalid HEAD length".into()));
+    }
+    let mut bytes = [0; 20];
+    file.read_exact(&mut bytes)?;
+    if &bytes[..8] != HEAD_MAGIC
+        || crc32fast::hash(&bytes[..16]) != u32::from_le_bytes(bytes[16..].try_into().unwrap())
+    {
+        return Err(StorageError::Corrupt(
+            "invalid HEAD checksum or magic".into(),
+        ));
+    }
+    Ok(Some(u64::from_le_bytes(bytes[8..16].try_into().unwrap())))
+}
+
+fn write_head(path: &Path, generation: u64) -> io::Result<()> {
+    let mut bytes = [0; 20];
+    bytes[..8].copy_from_slice(HEAD_MAGIC);
+    bytes[8..16].copy_from_slice(&generation.to_le_bytes());
+    let checksum = crc32fast::hash(&bytes[..16]);
+    bytes[16..].copy_from_slice(&checksum.to_le_bytes());
+    let pending = path.join("HEAD.pending");
+    let mut file = File::create(&pending)?;
+    file.write_all(&bytes)?;
+    file.sync_all()?;
+    drop(file);
+    fs::rename(pending, path.join("HEAD"))?;
+    sync_directory(path)
+}
+
+fn create_directory(path: &Path) -> io::Result<()> {
+    let mut missing = Vec::new();
+    let mut cursor = path;
+    while !cursor.as_os_str().is_empty() && !cursor.exists() {
+        missing.push(cursor);
+        let Some(parent) = cursor.parent() else { break };
+        cursor = parent;
+    }
+    fs::create_dir_all(path)?;
+    // Sync the entry of every newly created directory in its parent, including
+    // intermediate parents created by create_dir_all. A child fsync is not enough.
+    for created in missing.into_iter().rev() {
+        let parent = created
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
+        sync_directory(parent)?;
+    }
+    Ok(())
+}
+
 fn generation_from_name(name: &OsStr, extension: &str) -> Option<u64> {
     let name = name.to_str()?;
     let digits = name.strip_prefix("canonical-")?.strip_suffix(extension)?;
@@ -316,20 +431,24 @@ fn generation_from_name(name: &OsStr, extension: &str) -> Option<u64> {
 }
 
 fn prune_snapshots(path: &Path, current_generation: u64) {
-    let mut snapshots: Vec<_> = match fs::read_dir(path) {
+    let previous = match fs::read_dir(path) {
         Ok(entries) => entries
             .filter_map(Result::ok)
-            .filter_map(|entry| {
-                generation_from_name(&entry.file_name(), ".qdb")
-                    .map(|generation| (generation, entry.path()))
-            })
-            .filter(|(generation, _)| *generation < current_generation)
-            .collect(),
+            .filter_map(|entry| generation_from_name(&entry.file_name(), ".qdb"))
+            .filter(|generation| *generation < current_generation)
+            .max(),
         Err(_) => return,
     };
-    snapshots.sort_unstable_by_key(|(generation, _)| *generation);
-    for (_, old) in snapshots.into_iter().rev().skip(1) {
-        let _ = fs::remove_file(old);
+    let Some(previous) = previous else { return };
+    let Ok(entries) = fs::read_dir(path) else {
+        return;
+    };
+    for entry in entries.filter_map(Result::ok) {
+        if generation_from_name(&entry.file_name(), ".qdb")
+            .is_some_and(|generation| generation < previous)
+        {
+            let _ = fs::remove_file(entry.path());
+        }
     }
 }
 
@@ -478,6 +597,8 @@ mod tests {
         let path = temp_dir("recovery");
         let store = populated_store();
         create(&path, &store).unwrap();
+        // Legacy snapshots predate the acknowledged-generation watermark.
+        fs::remove_file(path.join("HEAD")).unwrap();
         let final_path = snapshot_path(&path, store.generation(), ".qdb");
         let temp_path = snapshot_path(&path, store.generation(), ".tmp");
         fs::rename(final_path, temp_path).unwrap();
@@ -526,6 +647,8 @@ mod tests {
         let previous = store.generation();
         store.add(3, 9, 0, [1.0, 1.0]).unwrap();
         write_snapshot(&path, &store).unwrap();
+        // Simulate staging before publication, not loss of an acknowledged file.
+        write_head(&path, previous).unwrap();
         fs::rename(
             snapshot_path(&path, store.generation(), ".qdb"),
             snapshot_path(&path, store.generation(), ".pending"),
@@ -576,5 +699,99 @@ mod tests {
         assert!(matches!(open(&path), Err(StorageError::Corrupt(_))));
         drop(file);
         fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn write_and_open_share_admission_limits_before_publication() {
+        let path = temp_dir("write-budget");
+        let mut store = populated_store();
+        // Two 2D rows need 2 * (32 + 8 + 512) admission bytes.
+        assert!(matches!(
+            create_with_limit(&path, &store, 1103),
+            Err(StorageError::LoadLimitExceeded)
+        ));
+        assert!(!path.exists());
+        drop(create_with_limit(&path, &store, 1104).unwrap());
+        drop(open_with_limit(&path, 1104).unwrap());
+        let previous = store.generation();
+        store.add(3, 1, 0, [1.0, 0.0]).unwrap();
+        assert!(matches!(
+            write_snapshot_with_limit(&path, &store, 1104),
+            Err(StorageError::LoadLimitExceeded)
+        ));
+        assert!(!snapshot_path(&path, store.generation(), ".pending").exists());
+        assert_eq!(
+            open_with_limit(&path, 1104).unwrap().store.generation(),
+            previous
+        );
+        assert!(matches!(
+            check_admission(usize::MAX, u64::MAX, u64::MAX),
+            Err(StorageError::LoadLimitExceeded)
+        ));
+        assert!(matches!(
+            check_admission(2, 0, HEADER_BYTES),
+            Err(StorageError::LoadLimitExceeded)
+        ));
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn missing_acknowledged_snapshot_never_rolls_back_silently() {
+        let path = temp_dir("missing-committed");
+        let mut store = populated_store();
+        drop(create(&path, &store).unwrap());
+        store.add(3, 1, 0, [1.0, 0.0]).unwrap();
+        write_snapshot(&path, &store).unwrap();
+        fs::remove_file(snapshot_path(&path, store.generation(), ".qdb")).unwrap();
+        assert!(
+            matches!(open(&path), Err(StorageError::Corrupt(message)) if message.contains("acknowledged generation"))
+        );
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn head_checksum_and_truncation_are_rejected() {
+        let path = temp_dir("head-corrupt");
+        drop(create(&path, &populated_store()).unwrap());
+        let mut bytes = fs::read(path.join("HEAD")).unwrap();
+        bytes[8] ^= 1;
+        fs::write(path.join("HEAD"), &bytes).unwrap();
+        assert!(
+            matches!(open(&path), Err(StorageError::Corrupt(message)) if message.contains("HEAD checksum"))
+        );
+        fs::write(path.join("HEAD"), &bytes[..10]).unwrap();
+        assert!(
+            matches!(open(&path), Err(StorageError::Corrupt(message)) if message.contains("HEAD length"))
+        );
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn failed_head_publication_is_uncertain_and_reopen_resolves_newer_snapshot() {
+        let path = temp_dir("head-failure");
+        let mut store = populated_store();
+        drop(create(&path, &store).unwrap());
+        fs::create_dir(path.join("HEAD.pending")).unwrap();
+        store.add(3, 1, 0, [1.0, 0.0]).unwrap();
+        assert!(matches!(
+            write_snapshot(&path, &store),
+            Err(StorageError::CommitUncertain(_))
+        ));
+        fs::remove_dir(path.join("HEAD.pending")).unwrap();
+        let opened = open(&path).unwrap();
+        assert_eq!(opened.store.generation(), store.generation());
+        assert!(opened.recovered_interrupted_write);
+        assert_eq!(read_head(&path).unwrap(), Some(store.generation()));
+        drop(opened);
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn nested_collection_creation_is_readable() {
+        let root = temp_dir("nested");
+        let path = root.join("a").join("b");
+        drop(create(&path, &populated_store()).unwrap());
+        assert_eq!(open(&path).unwrap().store.live_len(), 1);
+        fs::remove_dir_all(root).unwrap();
     }
 }
