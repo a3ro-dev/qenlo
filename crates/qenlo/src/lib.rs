@@ -156,6 +156,32 @@ pub struct SearchResponse {
     pub report: ExecutionReport,
 }
 
+/// An owned input row. Its vector is validated and normalized on commit.
+#[derive(Clone, Debug)]
+pub struct NewRecord {
+    pub id: u64,
+    pub user_id: u64,
+    pub timestamp: i64,
+    pub vector: Vec<f32>,
+}
+
+/// One ordered operation in an atomic batch. Deleted IDs cannot be reused.
+#[derive(Clone, Debug)]
+pub enum Mutation {
+    Add(NewRecord),
+    Delete(u64),
+}
+
+/// A committed mutation batch. In-memory collections have no durable generation.
+#[derive(Clone, Debug)]
+pub struct CommitReport {
+    pub generation: u64,
+    pub durable_generation: Option<u64>,
+    pub mutations: usize,
+    pub total_duration: Duration,
+    pub persistence: Measurement<Duration>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CollectionStats {
     pub dimension: usize,
@@ -184,6 +210,8 @@ pub enum Error {
     Storage(String),
     #[error("collection is closed")]
     Closed,
+    #[error("commit outcome is uncertain; reopen the collection: {0}")]
+    CommitUncertain(String),
 }
 
 enum Backend {
@@ -311,6 +339,15 @@ impl Collection {
         vector: &[f32],
     ) -> Result<(), Error> {
         self.ensure_open()?;
+        if self.path.is_some() {
+            self.commit(&[Mutation::Add(NewRecord {
+                id,
+                user_id,
+                timestamp,
+                vector: vector.to_vec(),
+            })])?;
+            return Ok(());
+        }
         self.store.add(id, user_id, timestamp, vector)?;
         self.prepared_generation = None;
         Ok(())
@@ -319,9 +356,79 @@ impl Collection {
     #[tracing::instrument(name = "qenlo.delete", skip_all, fields(operation = "delete"))]
     pub fn delete(&mut self, id: u64) -> Result<(), Error> {
         self.ensure_open()?;
+        if self.path.is_some() {
+            self.commit(&[Mutation::Delete(id)])?;
+            return Ok(());
+        }
         self.store.delete(id)?;
         self.prepared_generation = None;
         Ok(())
+    }
+
+    /// Validate an entire ordered batch, publish it durably, then make it visible.
+    ///
+    /// Any validation or pre-publication I/O error leaves the collection unchanged.
+    /// An error syncing a published directory entry returns `CommitUncertain` and
+    /// closes the handle; reopen to resolve the outcome. An empty batch is a no-op.
+    #[tracing::instrument(name = "qenlo.commit", skip_all, fields(operation = "commit"))]
+    pub fn commit(&mut self, mutations: &[Mutation]) -> Result<CommitReport, Error> {
+        self.ensure_open()?;
+        let started = Instant::now();
+        let persistence = if mutations.is_empty() {
+            Measurement::unavailable("empty transaction")
+        } else {
+            // ponytail: copy-on-commit costs one extra canonical store and O(n)
+            // snapshot I/O; add a WAL only when measured write workloads need it.
+            let mut staged = self.store.clone();
+            for mutation in mutations {
+                match mutation {
+                    Mutation::Add(row) => {
+                        staged.add(row.id, row.user_id, row.timestamp, &row.vector)?;
+                    }
+                    Mutation::Delete(id) => staged.delete(*id)?,
+                }
+            }
+            let persistence = if let Some(path) = &self.path {
+                let writing = Instant::now();
+                if let Err(error) = storage::write_snapshot(path, &staged) {
+                    if matches!(error, storage::StorageError::CommitUncertain(_)) {
+                        self.closed = true;
+                        self.storage_lock = None;
+                        return Err(Error::CommitUncertain(error.to_string()));
+                    }
+                    return Err(Error::Storage(error.to_string()));
+                }
+                self.durable_generation = Some(staged.generation());
+                Measurement::Available(writing.elapsed())
+            } else {
+                Measurement::unavailable("in-memory collection")
+            };
+            self.store = staged;
+            self.prepared_generation = None;
+            persistence
+        };
+        Ok(CommitReport {
+            generation: self.store.generation(),
+            durable_generation: self.durable_generation,
+            mutations: mutations.len(),
+            total_duration: started.elapsed(),
+            persistence,
+        })
+    }
+
+    /// Atomically add all rows; duplicate IDs within the batch are errors.
+    pub fn add_batch(&mut self, rows: &[NewRecord]) -> Result<CommitReport, Error> {
+        self.commit(&rows.iter().cloned().map(Mutation::Add).collect::<Vec<_>>())
+    }
+
+    /// Atomically delete all IDs; an unknown or already-deleted ID rolls back all.
+    pub fn delete_batch(&mut self, ids: &[u64]) -> Result<CommitReport, Error> {
+        self.commit(
+            &ids.iter()
+                .copied()
+                .map(Mutation::Delete)
+                .collect::<Vec<_>>(),
+        )
     }
 
     /// Resolve the eligible public IDs without exposing internal row slots.
@@ -654,6 +761,70 @@ mod tests {
                 [2]
             );
             reopened.close().unwrap();
+            std::fs::remove_dir_all(path).unwrap();
+        });
+    }
+
+    #[test]
+    fn transactions_validate_all_rows_and_roll_back_before_publication() {
+        block_on(async {
+            let path = temp_dir("transaction");
+            let mut collection = Collection::create(&path, CollectionConfig::cpu_exact(2))
+                .await
+                .unwrap();
+            let row = NewRecord {
+                id: 1,
+                user_id: 2,
+                timestamp: i64::MIN,
+                vector: vec![1.0, 0.0],
+            };
+            assert!(collection.add_batch(&[row.clone(), row.clone()]).is_err());
+            assert_eq!(collection.stats().generation, 0);
+            collection.add_batch(&[row]).unwrap();
+            assert!(collection.delete_batch(&[1, 99]).is_err());
+            assert_eq!(collection.filter(&Filter::ALL), [1]);
+            let report = collection
+                .commit(&[
+                    Mutation::Delete(1),
+                    Mutation::Add(NewRecord {
+                        id: 2,
+                        user_id: 3,
+                        timestamp: i64::MAX,
+                        vector: vec![0.0, 1.0],
+                    }),
+                ])
+                .unwrap();
+            assert_eq!(report.mutations, 2);
+            assert_eq!(report.durable_generation, Some(3));
+            // No flush or close: successful commits already survive handle loss.
+            drop(collection);
+            let collection = Collection::open(&path, CollectionConfig::cpu_exact(2))
+                .await
+                .unwrap();
+            assert_eq!(collection.filter(&Filter::ALL), [2]);
+            drop(collection);
+            std::fs::remove_dir_all(path).unwrap();
+        });
+    }
+
+    #[test]
+    fn transaction_io_failure_preserves_memory_and_last_commit() {
+        block_on(async {
+            let path = temp_dir("transaction-io");
+            let mut collection = Collection::create(&path, CollectionConfig::cpu_exact(2))
+                .await
+                .unwrap();
+            // A directory at the precise staging file path deterministically fails writing.
+            let obstruction = path.join("canonical-00000000000000000001.pending");
+            std::fs::create_dir(&obstruction).unwrap();
+            assert!(collection.add(1, 2, 3, &[1.0, 0.0]).is_err());
+            assert_eq!(collection.stats().live_rows, 0);
+            drop(collection);
+            let collection = Collection::open(&path, CollectionConfig::cpu_exact(2))
+                .await
+                .unwrap();
+            assert_eq!(collection.stats().generation, 0);
+            drop(collection);
             std::fs::remove_dir_all(path).unwrap();
         });
     }
