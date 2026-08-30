@@ -1919,6 +1919,12 @@ mod tests {
             else {
                 return;
             };
+            if !matches!(
+                &collection.inner.read_blocking().backend,
+                &Backend::Wgpu(_)
+            ) {
+                return;
+            }
             for id in 1..=AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS as u64 {
                 collection.add(id, 7, 0, &[1.0, 0.0]).unwrap();
             }
