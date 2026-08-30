@@ -1,0 +1,31 @@
+name: QenloLab
+options:
+  bundleIdPrefix: dev.qenlo
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    IPHONEOS_DEPLOYMENT_TARGET: 16.0
+targets:
+  QenloLab:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources: [QenloLab]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.qenlo.lab
+        PRODUCT_NAME: Qenlo Lab
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_OBJC_BRIDGING_HEADER: QenloLab/QenloLab-Bridging-Header.h
+        LIBRARY_SEARCH_PATHS: "$(SRCROOT)/Native"
+        OTHER_LDFLAGS: "-lqenlo_mobile -framework Metal -framework QuartzCore -framework Foundation -framework Security -framework SystemConfiguration"
+    preBuildScripts:
+      - name: Build Rust engine
+        basedOnDependencyAnalysis: false
+        script: |
+          set -euo pipefail
+          cd "$SRCROOT/../.."
+          rustup target add aarch64-apple-ios
+          cargo build --locked --release --target aarch64-apple-ios -p qenlo-mobile
+          mkdir -p "$SRCROOT/Native"
+          cp target/aarch64-apple-ios/release/libqenlo_mobile.a "$SRCROOT/Native/"

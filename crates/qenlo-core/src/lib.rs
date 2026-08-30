@@ -93,6 +93,79 @@ pub struct SearchOutput {
     pub evaluated_rows: usize,
 }
 
+/// Disposable symmetric scalar quantization for ANN candidate generation.
+/// Canonical vectors remain FP32 and should re-rank final candidates.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Sq8Vector {
+    codes: Vec<i8>,
+    scale: f32,
+}
+
+impl Sq8Vector {
+    pub fn quantize(vector: &[f32]) -> Result<Self, Error> {
+        if vector.is_empty() {
+            return Err(Error::ZeroDimension);
+        }
+        if vector.iter().any(|value| !value.is_finite()) {
+            return Err(Error::NonFiniteVector);
+        }
+        let maximum = vector
+            .iter()
+            .map(|value| value.abs())
+            .fold(0.0f32, f32::max);
+        if maximum == 0.0 {
+            return Err(Error::ZeroNormVector);
+        }
+        let scale = maximum / 127.0;
+        Ok(Self {
+            codes: vector
+                .iter()
+                .map(|value| (value / scale).round().clamp(-127.0, 127.0) as i8)
+                .collect(),
+            scale,
+        })
+    }
+
+    pub fn dimension(&self) -> usize {
+        self.codes.len()
+    }
+
+    pub fn approximate_dot(&self, query: &[f32]) -> Result<f32, Error> {
+        if query.len() != self.codes.len() {
+            return Err(Error::DimensionMismatch {
+                expected: self.codes.len(),
+                actual: query.len(),
+            });
+        }
+        if query.iter().any(|value| !value.is_finite()) {
+            return Err(Error::NonFiniteVector);
+        }
+        Ok(self
+            .codes
+            .iter()
+            .zip(query)
+            .map(|(&code, &value)| f32::from(code) * self.scale * value)
+            .sum())
+    }
+
+    pub fn bytes(&self) -> usize {
+        self.codes.len() + std::mem::size_of::<f32>()
+    }
+}
+
+/// One borrowed canonical mutation for atomic storage/WAL integration.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug)]
+pub enum Mutation<'a> {
+    Add {
+        id: u64,
+        user_id: u64,
+        timestamp: i64,
+        vector: &'a [f32],
+    },
+    Delete(u64),
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Error {
     ZeroDimension,
@@ -293,6 +366,84 @@ impl CoreStore {
         Ok(())
     }
 
+    /// Validate an ordered batch without changing canonical state.
+    pub fn validate_batch(&self, mutations: &[Mutation<'_>]) -> Result<(), Error> {
+        self.prepare_batch(mutations).map(drop)
+    }
+
+    /// Validate an ordered batch completely before applying any mutation.
+    pub fn apply_batch(&mut self, mutations: &[Mutation<'_>]) -> Result<(), Error> {
+        let normalized = self.prepare_batch(mutations)?;
+        for mutation in normalized {
+            match mutation {
+                OwnedMutation::Add {
+                    id,
+                    user_id,
+                    timestamp,
+                    vector,
+                } => {
+                    self.add(id, user_id, timestamp, vector)?;
+                }
+                OwnedMutation::Delete(id) => self.delete(id)?,
+            }
+        }
+        Ok(())
+    }
+
+    fn prepare_batch(&self, mutations: &[Mutation<'_>]) -> Result<Vec<OwnedMutation>, Error> {
+        if mutations.is_empty() {
+            return Ok(Vec::new());
+        }
+        let mutation_count =
+            u64::try_from(mutations.len()).map_err(|_| Error::GenerationExhausted)?;
+        self.generation
+            .checked_add(mutation_count)
+            .ok_or(Error::GenerationExhausted)?;
+
+        let mut states = HashMap::<u64, bool>::with_capacity(mutations.len());
+        let mut normalized = Vec::with_capacity(mutations.len());
+        let mut next_len = self.records.len();
+        for mutation in mutations {
+            match mutation {
+                Mutation::Add {
+                    id,
+                    user_id,
+                    timestamp,
+                    vector,
+                } => {
+                    if self.ids.contains_key(id) || states.contains_key(id) {
+                        return Err(Error::DuplicateId(*id));
+                    }
+                    u32::try_from(next_len).map_err(|_| Error::CapacityExceeded)?;
+                    next_len = next_len.checked_add(1).ok_or(Error::CapacityExceeded)?;
+                    normalized.push(OwnedMutation::Add {
+                        id: *id,
+                        user_id: *user_id,
+                        timestamp: *timestamp,
+                        vector: normalize_vector(vector, self.dimension)?,
+                    });
+                    states.insert(*id, true);
+                }
+                Mutation::Delete(id) => {
+                    let live = states.get(id).copied().or_else(|| {
+                        self.ids
+                            .get(id)
+                            .map(|slot| self.records[*slot as usize].live)
+                    });
+                    match live {
+                        None => return Err(Error::UnknownId(*id)),
+                        Some(false) => return Err(Error::AlreadyDeleted(*id)),
+                        Some(true) => {}
+                    }
+                    normalized.push(OwnedMutation::Delete(*id));
+                    states.insert(*id, false);
+                }
+            }
+        }
+
+        Ok(normalized)
+    }
+
     /// Return matching live row slots in ascending slot order.
     pub fn filter(&self, predicate: &Predicate) -> Vec<u32> {
         if predicate.timestamp.is_empty() {
@@ -382,6 +533,16 @@ impl CoreStore {
     }
 }
 
+enum OwnedMutation {
+    Add {
+        id: u64,
+        user_id: u64,
+        timestamp: i64,
+        vector: Vec<f32>,
+    },
+    Delete(u64),
+}
+
 // Only k distances are retained; the largest (distance, ID) is replaced first.
 struct RankedHit(SearchHit);
 
@@ -415,15 +576,24 @@ pub enum CpuDistancePath {
     Scalar,
     /// x86/x86-64 AVX2 with float64 accumulation and a scalar remainder.
     Avx2,
+    /// AArch64 NEON with float64 accumulation and a scalar remainder.
+    Neon,
 }
 
 /// Report the distance implementation selected on this CPU.
 pub fn cpu_distance_path() -> CpuDistancePath {
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    if std::is_x86_feature_detected!("avx2") {
-        return CpuDistancePath::Avx2;
+    #[cfg(target_arch = "aarch64")]
+    {
+        CpuDistancePath::Neon
     }
-    CpuDistancePath::Scalar
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        if std::is_x86_feature_detected!("avx2") {
+            return CpuDistancePath::Avx2;
+        }
+        CpuDistancePath::Scalar
+    }
 }
 
 fn dot_implementation() -> fn(&[f32], &[f32]) -> f64 {
@@ -432,6 +602,12 @@ fn dot_implementation() -> fn(&[f32], &[f32]) -> f64 {
         // SAFETY: selected only after runtime AVX2 detection. Both input lengths
         // are validated against the store dimension before this function is used.
         return |left, right| unsafe { dot_avx2(left, right) };
+    }
+    #[cfg(target_arch = "aarch64")]
+    if cpu_distance_path() == CpuDistancePath::Neon {
+        // SAFETY: NEON is part of the AArch64 baseline. Input lengths are
+        // validated against the store dimension before this function is used.
+        return |left, right| unsafe { dot_neon(left, right) };
     }
     dot_scalar
 }
@@ -467,6 +643,29 @@ unsafe fn dot_avx2(left: &[f32], right: &[f32]) -> f64 {
     // SAFETY: lanes has room for all four doubles and unaligned stores are allowed.
     unsafe { _mm256_storeu_pd(lanes.as_mut_ptr(), sum) };
     lanes.iter().sum::<f64>() + dot_scalar(&left[end..], &right[end..])
+}
+
+#[cfg(target_arch = "aarch64")]
+#[target_feature(enable = "neon")]
+unsafe fn dot_neon(left: &[f32], right: &[f32]) -> f64 {
+    use std::arch::aarch64::*;
+    // SAFETY: the function requires NEON and every load stays within the input.
+    unsafe {
+        debug_assert_eq!(left.len(), right.len());
+        let mut low = vdupq_n_f64(0.0);
+        let mut high = vdupq_n_f64(0.0);
+        let end = left.len() / 4 * 4;
+        for offset in (0..end).step_by(4) {
+            let a = vld1q_f32(left.as_ptr().add(offset));
+            let b = vld1q_f32(right.as_ptr().add(offset));
+            low = vaddq_f64(
+                low,
+                vmulq_f64(vcvt_f64_f32(vget_low_f32(a)), vcvt_f64_f32(vget_low_f32(b))),
+            );
+            high = vaddq_f64(high, vmulq_f64(vcvt_high_f64_f32(a), vcvt_high_f64_f32(b)));
+        }
+        vaddvq_f64(vaddq_f64(low, high)) + dot_scalar(&left[end..], &right[end..])
+    }
 }
 
 /// One canonical row decoded from durable storage.
@@ -753,5 +952,55 @@ mod tests {
         assert_eq!(store.len(), 1);
         assert_eq!(store.live_len(), 1);
         assert_eq!(store.filter(&Predicate::ALL), [0]);
+    }
+
+    #[test]
+    fn mutation_batch_is_ordered_and_atomic() {
+        let mut store = CoreStore::new(2).unwrap();
+        store.add(1, 7, 10, [1.0, 0.0]).unwrap();
+        let generation = store.generation();
+        let invalid = [
+            Mutation::Add {
+                id: 2,
+                user_id: 7,
+                timestamp: 11,
+                vector: &[0.0, 1.0],
+            },
+            Mutation::Delete(999),
+        ];
+        assert_eq!(store.apply_batch(&invalid), Err(Error::UnknownId(999)));
+        assert_eq!(store.generation(), generation);
+        assert_eq!(store.len(), 1);
+
+        let valid = [
+            Mutation::Add {
+                id: 2,
+                user_id: 7,
+                timestamp: 11,
+                vector: &[0.0, 2.0],
+            },
+            Mutation::Delete(2),
+        ];
+        store.apply_batch(&valid).unwrap();
+        assert_eq!(store.generation(), generation + 2);
+        assert_eq!(store.len(), 2);
+        assert_eq!(store.live_len(), 1);
+        assert!(!store.record(1).unwrap().is_live());
+    }
+
+    #[test]
+    fn sq8_is_bounded_and_preserves_dot_products_for_reranking() {
+        let vector = normalize_vector(&[3.0, -4.0, 1.0], 3).unwrap();
+        let quantized = Sq8Vector::quantize(&vector).unwrap();
+        assert_eq!(quantized.dimension(), 3);
+        assert_eq!(quantized.bytes(), 7);
+        let exact = vector.iter().map(|value| value * value).sum::<f32>();
+        let approximate = quantized.approximate_dot(&vector).unwrap();
+        assert!((exact - approximate).abs() < 0.01);
+        assert!(matches!(
+            quantized.approximate_dot(&[1.0]),
+            Err(Error::DimensionMismatch { .. })
+        ));
+        assert_eq!(Sq8Vector::quantize(&[0.0, 0.0]), Err(Error::ZeroNormVector));
     }
 }

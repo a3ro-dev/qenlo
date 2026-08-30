@@ -78,11 +78,12 @@ async fn run() -> Result<(), Box<dyn Error>> {
     );
     println!("filtered results: {:?}", found.results);
     println!(
-        "requested={:?} actual={:?} generation={} query={:?} fallback={:?}",
+        "requested={:?} actual={:?} generation={} query={:?} route={:?} fallback={:?}",
         found.report.requested_backend,
         found.report.actual_backend,
         found.report.index_generation,
         found.report.total_duration,
+        found.report.routing_reason,
         found.report.fallback_reason,
     );
     println!(

@@ -28,7 +28,7 @@ use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 
 #[cfg(feature = "usearch")]
 use qenlo_core::Predicate;
-use qenlo_core::{CoreStore, Error as CoreError, SearchHit};
+use qenlo_core::{CoreStore, Error as CoreError, Mutation as CoreMutation, SearchHit};
 use thiserror::Error;
 use tracing::{Instrument, info_span};
 use web_time::{Duration, Instant};
@@ -49,6 +49,8 @@ pub use qenlo_core::{Predicate as Filter, TimestampRange};
 pub const MAX_K: usize = 64;
 /// Default cap for all Qenlo-owned GPU allocations, including scratch buffers.
 pub const DEFAULT_GPU_BUDGET_BYTES: u64 = 512 * 1024 * 1024;
+#[cfg(feature = "gpu-wgpu")]
+const AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS: usize = 4_096;
 
 /// Requested execution policy. Required backends error; automatic GPU mode reports CPU fallback.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -76,6 +78,8 @@ pub enum BackendKind {
 pub enum Algorithm {
     Exact,
     Hnsw,
+    IvfFlat,
+    IvfSq8,
 }
 
 /// Exact GPU eligibility strategy; all modes obey the same canonical predicate.
@@ -229,6 +233,8 @@ pub struct ExecutionReport {
     pub filter_execution: FilterExecution,
     pub index_generation: u64,
     pub rebuilt: bool,
+    /// Why automatic routing selected the backend; absent for required backends.
+    pub routing_reason: Option<String>,
     pub fallback_reason: Option<String>,
     pub total_duration: Duration,
     pub phases: PhaseTimings,
@@ -238,6 +244,8 @@ pub struct ExecutionReport {
     pub qenlo_allocation_bytes: Measurement<u64>,
     pub candidates: Measurement<u64>,
     pub results: usize,
+    /// Queries sharing this execution. Transfer/dispatch metrics are batch totals.
+    pub batch_size: usize,
 }
 
 /// Ordered results and the work report for a single committed generation.
@@ -313,6 +321,8 @@ pub enum Error {
     CommitUncertain(String),
     #[error("derived index is not prepared; call prepare() or use RebuildPolicy::OnSearch")]
     IndexNotPrepared,
+    #[error("invalid IVF configuration: lists and nprobe must satisfy 1 <= nprobe <= lists <= 64")]
+    InvalidIvfConfig,
 }
 
 enum Backend {
@@ -320,7 +330,7 @@ enum Backend {
     #[cfg(feature = "usearch")]
     Usearch(usearch_backend::UsearchBackend),
     #[cfg(feature = "gpu-wgpu")]
-    Wgpu(gpu::GpuBackend),
+    Wgpu(Box<gpu::GpuBackend>),
 }
 
 /// Embedded collection shared with `Arc<Collection>` across threads.
@@ -545,16 +555,63 @@ impl Collection {
         Ok(response)
     }
 
-    /// Run queries in order. Each query sees its own committed generation.
+    /// Search one committed generation. GPU-capable backends execute one native batch.
     pub async fn search_batch(
         &self,
         queries: &[&[f32]],
         filter: &Filter,
         k: usize,
     ) -> Result<Vec<SearchResponse>, Error> {
-        let mut responses = Vec::with_capacity(queries.len());
+        if queries.is_empty() {
+            return Ok(Vec::new());
+        }
+        let started = Instant::now();
+        let mut state = self.inner.read().await;
+        let mut lock_wait = started.elapsed();
+        state.ensure_open()?;
+        if !(1..=MAX_K).contains(&k) {
+            return Err(Error::InvalidK(k));
+        }
         for query in queries {
-            responses.push(self.search(query, filter, k).await?);
+            qenlo_core::normalize_vector(query, state.store.dimension())?;
+        }
+        let mut rebuilt = false;
+        let mut preparation = Measurement::unavailable("index already current");
+        let mut preparation_reason = None;
+        if state.prepared_generation != Some(state.store.generation()) {
+            if state.rebuild_policy == RebuildPolicy::Explicit {
+                return Err(Error::IndexNotPrepared);
+            }
+            drop(state);
+            let waiting = Instant::now();
+            let mut writer = self.inner.write().await;
+            lock_wait += waiting.elapsed();
+            let preparing = Instant::now();
+            preparation_reason = Some(writer.preparation_reason);
+            rebuilt = writer.prepare().await?;
+            if rebuilt {
+                preparation = Measurement::Available(preparing.elapsed());
+            }
+            state = RwLockWriteGuard::downgrade(writer);
+        }
+        #[cfg(feature = "gpu-wgpu")]
+        let _gpu_guard = if matches!(state.backend, Backend::Wgpu(_)) {
+            let waiting = Instant::now();
+            let guard = self.gpu_gate.lock().await;
+            lock_wait += waiting.elapsed();
+            Some(guard)
+        } else {
+            None
+        };
+        let mut responses = state
+            .search_batch_inner(queries, filter, k, rebuilt, preparation)
+            .await?;
+        for response in &mut responses {
+            response.report.operation_id = NEXT_OPERATION_ID.fetch_add(1, Ordering::Relaxed);
+            response.report.lock_wait = lock_wait;
+            response.report.preparation_reason = if rebuilt { preparation_reason } else { None };
+            response.report.total_duration = started.elapsed();
+            response.report.batch_size = queries.len();
         }
         Ok(responses)
     }
@@ -575,6 +632,41 @@ impl Collection {
     /// Select tracing detail; only `Detailed` adds an eligibility-count scan.
     pub fn set_diagnostics(&self, diagnostics: Diagnostics) {
         self.diagnostics.store(diagnostics as u8, Ordering::Relaxed);
+    }
+
+    /// Enable portable IVF candidate generation with exact FP32 GPU re-ranking.
+    /// The derived index is rebuilt on the next prepare/search and is never canonical.
+    #[cfg(feature = "gpu-wgpu")]
+    pub fn set_gpu_ivf(&self, lists: usize, nprobe: usize) -> Result<(), Error> {
+        if lists == 0 || lists > 64 || nprobe == 0 || nprobe > lists {
+            return Err(Error::InvalidIvfConfig);
+        }
+        let mut state = self.inner.write_blocking();
+        state.ensure_open()?;
+        let Backend::Wgpu(gpu) = &mut state.backend else {
+            return Err(Error::BackendNotEnabled("gpu-wgpu"));
+        };
+        gpu.configure_ivf(lists, nprobe);
+        state.prepared_generation = None;
+        state.preparation_reason = PreparationReason::Mutation;
+        Ok(())
+    }
+
+    /// Enable SQ8 coarse-centroid scoring plus exact FP32 GPU re-ranking.
+    #[cfg(feature = "gpu-wgpu")]
+    pub fn set_gpu_ivf_sq8(&self, lists: usize, nprobe: usize) -> Result<(), Error> {
+        if lists == 0 || lists > 64 || nprobe == 0 || nprobe > lists {
+            return Err(Error::InvalidIvfConfig);
+        }
+        let mut state = self.inner.write_blocking();
+        state.ensure_open()?;
+        let Backend::Wgpu(gpu) = &mut state.backend else {
+            return Err(Error::BackendNotEnabled("gpu-wgpu"));
+        };
+        gpu.configure_ivf_sq8(lists, nprobe);
+        state.prepared_generation = None;
+        state.preparation_reason = PreparationReason::Mutation;
+        Ok(())
     }
 
     fn operation_span(&self, operation: &'static str, operation_id: u64) -> tracing::Span {
@@ -768,7 +860,7 @@ impl CollectionState {
             BackendSelection::WgpuRequired(mode) => {
                 gpu::GpuBackend::new(config.dimension, mode, config.gpu_allocation_budget_bytes)
                     .await
-                    .map(|gpu| (Backend::Wgpu(gpu), None))
+                    .map(|gpu| (Backend::Wgpu(Box::new(gpu)), None))
                     .map_err(|error| Error::Preparation(error.to_string()))
             }
             #[cfg(feature = "gpu-wgpu")]
@@ -779,7 +871,7 @@ impl CollectionState {
             )
             .await
             {
-                Ok(gpu) => Ok((Backend::Wgpu(gpu), None)),
+                Ok(gpu) => Ok((Backend::Wgpu(Box::new(gpu)), None)),
                 Err(error) => Ok((Backend::Cpu, Some(error.to_string()))),
             },
         }
@@ -831,22 +923,39 @@ impl CollectionState {
         let persistence = if mutations.is_empty() {
             Measurement::unavailable("empty transaction")
         } else {
-            // ponytail: copy-on-commit costs one extra canonical store and O(n)
-            // snapshot I/O; add a WAL only when measured write workloads need it.
-            let mut staged = self.store.clone();
-            for mutation in mutations {
-                match mutation {
-                    Mutation::Add(row) => {
-                        staged.add(row.id, row.user_id, row.timestamp, &row.vector)?;
-                    }
-                    Mutation::Delete(id) => staged.delete(*id)?,
-                }
-            }
+            let core_mutations = mutations
+                .iter()
+                .map(|mutation| match mutation {
+                    Mutation::Add(row) => CoreMutation::Add {
+                        id: row.id,
+                        user_id: row.user_id,
+                        timestamp: row.timestamp,
+                        vector: &row.vector,
+                    },
+                    Mutation::Delete(id) => CoreMutation::Delete(*id),
+                })
+                .collect::<Vec<_>>();
+            self.store.validate_batch(&core_mutations)?;
+            let added = core_mutations
+                .iter()
+                .filter(|mutation| matches!(mutation, CoreMutation::Add { .. }))
+                .count();
+            storage::check_store_admission(
+                self.store.dimension(),
+                self.store
+                    .len()
+                    .checked_add(added)
+                    .ok_or_else(|| Error::Storage("record capacity exceeded".into()))?,
+                self.storage_options.max_load_bytes,
+            )
+            .map_err(|error| Error::Storage(error.to_string()))?;
             let persistence = if let Some(path) = &self.path {
                 let writing = Instant::now();
-                if let Err(error) = storage::write_snapshot_with_limit(
+                if let Err(error) = storage::append_wal(
                     path,
-                    &staged,
+                    self.store.dimension(),
+                    self.store.generation(),
+                    &core_mutations,
                     self.storage_options.max_load_bytes,
                 ) {
                     if matches!(error, storage::StorageError::CommitUncertain(_)) {
@@ -856,12 +965,14 @@ impl CollectionState {
                     }
                     return Err(Error::Storage(error.to_string()));
                 }
-                self.durable_generation = Some(staged.generation());
                 Measurement::Available(writing.elapsed())
             } else {
                 Measurement::unavailable("in-memory collection")
             };
-            self.store = staged;
+            self.store.apply_batch(&core_mutations)?;
+            if self.path.is_some() {
+                self.durable_generation = Some(self.store.generation());
+            }
             self.prepared_generation = None;
             self.preparation_reason = PreparationReason::Mutation;
             persistence
@@ -989,6 +1100,8 @@ impl CollectionState {
         let execution_started = Instant::now();
         #[allow(unused_mut)]
         let mut fallback_reason = self.fallback_reason.clone();
+        #[allow(unused_mut)]
+        let mut routing_reason = None;
         let output = match &self.backend {
             Backend::Cpu => {
                 let exact = self.store.search(query, filter, k)?;
@@ -1001,33 +1114,160 @@ impl CollectionState {
             #[cfg(feature = "usearch")]
             Backend::Usearch(index) => index.search(&self.store, query, filter, k)?,
             #[cfg(feature = "gpu-wgpu")]
-            Backend::Wgpu(gpu) => match gpu.search(&self.store, query, filter, k).await {
-                Ok(output) => output,
-                Err(error) if matches!(self.config.backend, BackendSelection::Automatic(_)) => {
-                    fallback_reason = Some(error.to_string());
+            Backend::Wgpu(gpu) => {
+                let automatic_eligible_rows =
+                    matches!(self.config.backend, BackendSelection::Automatic(_)).then(|| {
+                        if *filter == Filter::ALL {
+                            self.store.live_len()
+                        } else {
+                            self.store.filter(filter).len()
+                        }
+                    });
+                if automatic_eligible_rows.is_some_and(route_automatic_to_cpu) {
+                    let eligible_rows = automatic_eligible_rows.expect("checked as present");
+                    routing_reason = Some(format!(
+                        "automatic CPU route: {eligible_rows} eligible rows below GPU crossover {AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS}"
+                    ));
                     let exact = self.store.search(query, filter, k)?;
-                    let mut output = BackendOutput::cpu(
+                    BackendOutput::cpu(
                         exact.hits,
                         exact.evaluated_rows as u64,
                         execution_started.elapsed(),
-                    );
-                    output.upload_bytes = Measurement::unavailable(
-                        "failed GPU attempt: partial transfers unavailable",
-                    );
-                    output.readback_bytes = Measurement::unavailable(
-                        "failed GPU attempt: partial readback unavailable",
-                    );
-                    output.dispatch_count = Measurement::unavailable(
-                        "failed GPU attempt: partial dispatch count unavailable",
-                    );
-                    output.allocation_bytes = Measurement::unavailable(
-                        "failed GPU attempt may retain resident allocations",
-                    );
-                    output
+                    )
+                } else {
+                    if let Some(eligible_rows) = automatic_eligible_rows {
+                        routing_reason = Some(format!(
+                            "automatic GPU route: {eligible_rows} eligible rows meet GPU crossover {AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS}"
+                        ));
+                    }
+                    match gpu.search(&self.store, query, filter, k).await {
+                        Ok(output) => output,
+                        Err(error)
+                            if matches!(self.config.backend, BackendSelection::Automatic(_)) =>
+                        {
+                            fallback_reason = Some(error.to_string());
+                            let exact = self.store.search(query, filter, k)?;
+                            let mut output = BackendOutput::cpu(
+                                exact.hits,
+                                exact.evaluated_rows as u64,
+                                execution_started.elapsed(),
+                            );
+                            output.upload_bytes = Measurement::unavailable(
+                                "failed GPU attempt: partial transfers unavailable",
+                            );
+                            output.readback_bytes = Measurement::unavailable(
+                                "failed GPU attempt: partial readback unavailable",
+                            );
+                            output.dispatch_count = Measurement::unavailable(
+                                "failed GPU attempt: partial dispatch count unavailable",
+                            );
+                            output.allocation_bytes = Measurement::unavailable(
+                                "failed GPU attempt may retain resident allocations",
+                            );
+                            output
+                        }
+                        Err(error) => return Err(Error::Search(error.to_string())),
+                    }
                 }
-                Err(error) => return Err(Error::Search(error.to_string())),
-            },
+            }
         };
+        Ok(self.response_from_output(
+            output,
+            rebuilt,
+            preparation,
+            routing_reason,
+            fallback_reason,
+            started.elapsed(),
+        ))
+    }
+
+    async fn search_batch_inner(
+        &self,
+        queries: &[&[f32]],
+        filter: &Filter,
+        k: usize,
+        rebuilt: bool,
+        preparation: Measurement<Duration>,
+    ) -> Result<Vec<SearchResponse>, Error> {
+        #[cfg(feature = "gpu-wgpu")]
+        if let Backend::Wgpu(gpu) = &self.backend {
+            let eligible_rows = if *filter == Filter::ALL {
+                self.store.live_len()
+            } else {
+                self.store.filter(filter).len()
+            };
+            let automatic = matches!(self.config.backend, BackendSelection::Automatic(_));
+            let use_cpu = automatic && route_automatic_to_cpu_batch(eligible_rows, queries.len());
+            if !use_cpu {
+                let routing_reason = automatic.then(|| {
+                    format!(
+                        "automatic GPU route: {eligible_rows} eligible rows across {} queries",
+                        queries.len()
+                    )
+                });
+                let started = Instant::now();
+                match gpu.search_batch(&self.store, queries, filter, k).await {
+                    Ok(outputs) => {
+                        let elapsed = started.elapsed();
+                        return Ok(outputs
+                            .into_iter()
+                            .map(|output| {
+                                self.response_from_output(
+                                    output,
+                                    rebuilt,
+                                    preparation.clone(),
+                                    routing_reason.clone(),
+                                    self.fallback_reason.clone(),
+                                    elapsed,
+                                )
+                            })
+                            .collect());
+                    }
+                    Err(error) if automatic => {
+                        let fallback = Some(error.to_string());
+                        let elapsed = started.elapsed();
+                        return queries
+                            .iter()
+                            .map(|query| {
+                                let exact = self.store.search(query, filter, k)?;
+                                Ok(self.response_from_output(
+                                    BackendOutput::cpu(
+                                        exact.hits,
+                                        exact.evaluated_rows as u64,
+                                        elapsed,
+                                    ),
+                                    rebuilt,
+                                    preparation.clone(),
+                                    Some("automatic CPU fallback after batched GPU failure".into()),
+                                    fallback.clone(),
+                                    elapsed,
+                                ))
+                            })
+                            .collect();
+                    }
+                    Err(error) => return Err(Error::Search(error.to_string())),
+                }
+            }
+        }
+        let mut responses = Vec::with_capacity(queries.len());
+        for query in queries {
+            responses.push(
+                self.search_inner(query, filter, k, rebuilt, preparation.clone())
+                    .await?,
+            );
+        }
+        Ok(responses)
+    }
+
+    fn response_from_output(
+        &self,
+        output: BackendOutput,
+        rebuilt: bool,
+        preparation: Measurement<Duration>,
+        routing_reason: Option<String>,
+        fallback_reason: Option<String>,
+        total_duration: Duration,
+    ) -> SearchResponse {
         let results = output
             .hits
             .into_iter()
@@ -1055,8 +1295,9 @@ impl CollectionState {
             filter_execution: output.filter_execution,
             index_generation: self.store.generation(),
             rebuilt,
+            routing_reason,
             fallback_reason,
-            total_duration: started.elapsed(),
+            total_duration,
             phases: output.phases.with_preparation(preparation),
             upload_bytes: output.upload_bytes,
             readback_bytes: output.readback_bytes,
@@ -1064,8 +1305,9 @@ impl CollectionState {
             qenlo_allocation_bytes: output.allocation_bytes,
             candidates: output.candidates,
             results: results.len(),
+            batch_size: 1,
         };
-        Ok(SearchResponse { results, report })
+        SearchResponse { results, report }
     }
 
     pub fn stats(&self) -> CollectionStats {
@@ -1117,6 +1359,17 @@ impl CollectionState {
             Ok(())
         }
     }
+}
+
+#[cfg(feature = "gpu-wgpu")]
+fn route_automatic_to_cpu(eligible_rows: usize) -> bool {
+    // ponytail: static crossover; replace with the persisted per-device autotune profile.
+    eligible_rows < AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS
+}
+
+#[cfg(feature = "gpu-wgpu")]
+fn route_automatic_to_cpu_batch(eligible_rows: usize, batch_size: usize) -> bool {
+    route_automatic_to_cpu(eligible_rows) && batch_size < 8
 }
 
 fn backend_tag(backend: &Backend) -> u8 {
@@ -1183,6 +1436,14 @@ mod tests {
         task::{Context, Poll, Waker},
         time::{SystemTime, UNIX_EPOCH},
     };
+
+    #[cfg(feature = "gpu-wgpu")]
+    #[test]
+    fn automatic_router_keeps_selective_work_on_cpu() {
+        assert!(route_automatic_to_cpu(0));
+        assert!(route_automatic_to_cpu(AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS - 1));
+        assert!(!route_automatic_to_cpu(AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS));
+    }
 
     use super::*;
 
@@ -1333,7 +1594,7 @@ mod tests {
                 .await
                 .unwrap();
             // A directory at the precise staging file path deterministically fails writing.
-            let obstruction = path.join("canonical-00000000000000000001.pending");
+            let obstruction = path.join("wal-00000000000000000001.pending");
             std::fs::create_dir(&obstruction).unwrap();
             assert!(collection.add(1, 2, 3, &[1.0, 0.0]).is_err());
             assert_eq!(collection.stats().live_rows, 0);
@@ -1343,6 +1604,28 @@ mod tests {
                 .unwrap();
             assert_eq!(collection.stats().generation, 0);
             drop(collection);
+            std::fs::remove_dir_all(path).unwrap();
+        });
+    }
+
+    #[test]
+    fn manifest_publication_failure_is_uncertain_and_reopen_resolves_wal() {
+        block_on(async {
+            let path = temp_dir("manifest-uncertain");
+            let config = CollectionConfig::cpu_exact(2);
+            let collection = Collection::create(&path, config.clone()).await.unwrap();
+            let obstruction = path.join("MANIFEST.pending");
+            std::fs::create_dir(&obstruction).unwrap();
+            assert!(matches!(
+                collection.add(1, 2, 3, &[1.0, 0.0]),
+                Err(Error::CommitUncertain(_))
+            ));
+            assert!(collection.stats().closed);
+            std::fs::remove_dir(&obstruction).unwrap();
+            let reopened = Collection::open(&path, config).await.unwrap();
+            assert_eq!(reopened.filter(&Filter::ALL), [1]);
+            assert!(reopened.stats().recovered_interrupted_write);
+            reopened.close().unwrap();
             std::fs::remove_dir_all(path).unwrap();
         });
     }
@@ -1448,7 +1731,7 @@ mod tests {
     }
 
     #[test]
-    fn custom_storage_budget_rejects_unreopenable_writes_and_uncertain_commits_close() {
+    fn custom_storage_budget_rejects_unreopenable_and_unpublished_writes() {
         block_on(async {
             let path = temp_dir("options");
             let config = CollectionConfig::cpu_exact(2);
@@ -1465,11 +1748,14 @@ mod tests {
                 .await
                 .unwrap();
             assert_eq!(reopened.stats().live_rows, 1);
-            let obstruction = path.join("HEAD.pending");
+            let obstruction = path.join("wal-00000000000000000002.qwal");
             std::fs::create_dir(&obstruction).unwrap();
-            assert!(matches!(reopened.delete(1), Err(Error::CommitUncertain(_))));
-            assert!(reopened.stats().closed);
+            assert!(matches!(reopened.delete(1), Err(Error::Storage(_))));
+            assert!(!reopened.stats().closed);
+            assert_eq!(reopened.stats().live_rows, 1);
             std::fs::remove_dir(&obstruction).unwrap();
+            reopened.delete(1).unwrap();
+            drop(reopened);
             let resolved = Collection::open(&path, config).await.unwrap();
             assert_eq!(resolved.stats().live_rows, 0);
             resolved.close().unwrap();
@@ -1583,7 +1869,15 @@ mod tests {
                     }
                     Err(error) => panic!("GPU required: {error}"),
                 };
-                collection.add(1, 1, i64::MIN, &[1.0, 0.0]).unwrap();
+                let rows = (1..=AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS as u64)
+                    .map(|id| NewRecord {
+                        id,
+                        user_id: 1,
+                        timestamp: i64::MIN,
+                        vector: vec![1.0, 0.0],
+                    })
+                    .collect::<Vec<_>>();
+                collection.add_batch(&rows).unwrap();
                 collection.prepare().await.unwrap();
                 match &collection.inner.read_blocking().backend {
                     Backend::Wgpu(gpu) => gpu.destroy_device_for_test(),

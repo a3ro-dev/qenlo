@@ -1,5 +1,12 @@
 [workspace]
-members = ["crates/qenlo-core", "crates/qenlo", "crates/qenlo-bench"]
+members = [
+    "crates/qenlo-core",
+    "crates/qenlo",
+    "crates/qenlo-bench",
+    "crates/qenlo-testkit",
+    "crates/qenlo-telemetry",
+    "crates/qenlo-mobile",
+]
 resolver = "3"
 
 [workspace.package]
@@ -11,7 +18,10 @@ repository = "https://github.com/a3ro-dev/qenlo"
 
 [workspace.dependencies]
 crc32fast = "1"
+memmap2 = "0.9"
 qenlo-core = { path = "crates/qenlo-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 thiserror = "2"
 tracing = "0.1.44"
 web-time = "1"

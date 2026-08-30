@@ -622,7 +622,7 @@ async fn run_cell(
     let mut samples = BufWriter::new(File::create_new(output.join("samples.csv"))?);
     writeln!(
         samples,
-        "run,batch_index,query_indices,query_count,batch_latency_ns,recall_at_10,result_count,eligible_count,upload_bytes,readback_bytes,max_qenlo_allocation_bytes,actual_backend,backend_counts,lock_wait_ns,cpu_distance_path,fallback"
+        "run,batch_index,query_indices,query_count,batch_latency_ns,recall_at_10,result_count,eligible_count,upload_bytes,readback_bytes,max_qenlo_allocation_bytes,actual_backend,backend_counts,lock_wait_ns,cpu_distance_path,routing_reasons,fallback"
     )?;
     let mut runs = BufWriter::new(File::create_new(output.join("runs.csv"))?);
     writeln!(
@@ -658,6 +658,7 @@ async fn run_cell(
             let mut backend_counts = BTreeMap::<String, usize>::new();
             let mut lock_wait_ns = 0;
             let mut cpu_distance_path = String::from("not-applicable");
+            let mut routing_reasons = BTreeMap::<String, usize>::new();
             let mut fallback = false;
             for (&index, response) in indices.iter().zip(responses) {
                 let ids: Vec<_> = response.results.iter().map(|hit| hit.id).collect();
@@ -698,6 +699,9 @@ async fn run_cell(
                 if let Some(path) = response.report.cpu_distance_path {
                     cpu_distance_path = format!("{path:?}");
                 }
+                if let Some(reason) = response.report.routing_reason {
+                    *routing_reasons.entry(reason).or_default() += 1;
+                }
                 fallback |= response.report.fallback_reason.is_some();
             }
             run_recall += recall;
@@ -711,6 +715,11 @@ async fn run_cell(
                 .map(|(name, count)| format!("{name}:{count}"))
                 .collect::<Vec<_>>()
                 .join(";");
+            let routing_reasons = routing_reasons
+                .iter()
+                .map(|(reason, count)| format!("{reason} ({count})"))
+                .collect::<Vec<_>>()
+                .join(";");
             let indices = indices
                 .iter()
                 .map(|i| i.to_string())
@@ -718,7 +727,7 @@ async fn run_cell(
                 .join(";");
             writeln!(
                 samples,
-                "{run},{batch_index},{indices},{},{},{},{results},{eligible},{},{},{},{actual_backend},{counts},{lock_wait_ns},{cpu_distance_path},{fallback}",
+                "{run},{batch_index},{indices},{},{},{},{results},{eligible},{},{},{},{actual_backend},{counts},{lock_wait_ns},{cpu_distance_path},{routing_reasons},{fallback}",
                 queries.len(),
                 latency.as_nanos(),
                 recall / queries.len() as f64,

@@ -11,6 +11,10 @@ struct Params {
     upper_hi: u32,
     predicate_flags: u32,
     k: u32,
+    batch_size: u32,
+    _padding0: u32,
+    _padding1: u32,
+    _padding2: u32,
 }
 
 struct Candidate {
@@ -59,6 +63,7 @@ var<workgroup> partial_dot: array<f32, 256>;
 @compute @workgroup_size(256)
 fn score(@builtin(workgroup_id) group: vec3<u32>,
          @builtin(local_invocation_index) tid: u32) {
+    let query_index = group.y;
     let item = group.x * 8u + tid / 32u;
     let lane = tid % 32u;
     var row = item;
@@ -79,7 +84,7 @@ fn score(@builtin(workgroup_id) group: vec3<u32>,
     if (eligible) {
         let offset = row * params.dimension;
         for (var d = lane; d < params.dimension; d += 32u) {
-            dot += vectors[offset + d] * query[d];
+            dot += vectors[offset + d] * query[query_index * params.dimension + d];
         }
     }
     partial_dot[tid] = dot;
@@ -90,7 +95,11 @@ fn score(@builtin(workgroup_id) group: vec3<u32>,
     }
     let count = select(params.rows, params.eligible_count, params.mode == 1u);
     if (lane == 0u && item < count) {
-        scores[item] = select(3.402823466e+38, 1.0 - partial_dot[tid], eligible);
+        scores[query_index * params.rows + item] = select(
+            3.402823466e+38,
+            1.0 - partial_dot[tid],
+            eligible,
+        );
     }
 }
 
@@ -106,7 +115,10 @@ var<workgroup> best: array<Candidate, 256>;
 // Each lane scans 1/256 of the rows, then a tree reduction elects the exact minimum.
 // Consuming that score and repeating k times keeps readback at k candidates per chunk.
 @compute @workgroup_size(256)
-fn select_topk(@builtin(local_invocation_index) tid: u32) {
+fn select_topk(@builtin(workgroup_id) group: vec3<u32>,
+               @builtin(local_invocation_index) tid: u32) {
+    let query_index = group.x;
+    let score_base = query_index * params.rows;
     let count = select(params.rows, params.eligible_count, params.mode == 1u);
     for (var out = 0u; out < params.k; out += 1u) {
         var local_best = Candidate(3.402823466e+38, 0xffffffffu, 0xffffffffu, 0xffffffffu);
@@ -114,7 +126,7 @@ fn select_topk(@builtin(local_invocation_index) tid: u32) {
             var row = item;
             if (params.mode == 1u) { row = eligibility[item]; }
             let id = ids[row];
-            let candidate = Candidate(scores[item], item, id.x, id.y);
+            let candidate = Candidate(scores[score_base + item], item, id.x, id.y);
             if (better(candidate, local_best)) { local_best = candidate; }
         }
         best[tid] = local_best;
@@ -130,9 +142,9 @@ fn select_topk(@builtin(local_invocation_index) tid: u32) {
             if (winner.distance == 3.402823466e+38) {
                 winner.row = 0xffffffffu;
             } else {
-                scores[winner.row] = 3.402823466e+38;
+                scores[score_base + winner.row] = 3.402823466e+38;
             }
-            selected[out] = winner;
+            selected[query_index * params.k + out] = winner;
         }
         storageBarrier();
         workgroupBarrier();

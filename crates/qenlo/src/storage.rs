@@ -1,12 +1,13 @@
 use std::{
     ffi::OsStr,
     fs::{self, File, OpenOptions},
-    io::{self, BufReader, BufWriter, Read, Write},
+    io::{self, BufReader, BufWriter, Cursor, Read, Write},
     path::{Path, PathBuf},
 };
 
 use crc32fast::Hasher;
-use qenlo_core::{CoreStore, RestoredRecord};
+use memmap2::MmapOptions;
+use qenlo_core::{CoreStore, Mutation as CoreMutation, RestoredRecord};
 use thiserror::Error;
 
 const MAGIC: &[u8; 8] = b"QENLODB\0";
@@ -14,7 +15,23 @@ const FORMAT_VERSION: u32 = 1;
 const HEADER_BYTES: u64 = 8 + 4 + 4 + 8 + 8 + 8;
 const CHECKSUM_BYTES: u64 = 4;
 const HEAD_MAGIC: &[u8; 8] = b"QENLOHD\0";
+const MANIFEST_MAGIC: &[u8; 8] = b"QENLOMF\0";
+const MANIFEST_VERSION: u32 = 1;
+const MANIFEST_BYTES: u64 = 8 + 4 + 4 + 8 + 8 + 4;
+const WAL_MAGIC: &[u8; 8] = b"QENLOWL\0";
+const WAL_VERSION: u32 = 1;
+const WAL_HEADER_BYTES: u64 = 8 + 4 + 4 + 8 + 8 + 8;
 pub(crate) const MAX_LOAD_BYTES: u64 = 512 * 1024 * 1024;
+
+enum WalMutation {
+    Add {
+        id: u64,
+        user_id: u64,
+        timestamp: i64,
+        vector: Vec<f32>,
+    },
+    Delete(u64),
+}
 
 #[derive(Debug, Error)]
 pub(crate) enum StorageError {
@@ -110,6 +127,14 @@ pub(crate) fn open_with_limit(
 
     let lock = lock_directory(path)?;
     let acknowledged = read_head(path)?;
+    let manifest = read_manifest(path)?;
+    if let Some((_, base_generation, durable_generation)) = manifest
+        && base_generation > durable_generation
+    {
+        return Err(StorageError::Corrupt(
+            "manifest names an invalid or missing canonical snapshot".into(),
+        ));
+    }
     if let Some(generation) = acknowledged
         && !snapshot_path(path, generation, ".qdb").is_file()
     {
@@ -117,7 +142,8 @@ pub(crate) fn open_with_limit(
             "acknowledged generation {generation} is missing"
         )));
     }
-    let mut interrupted = path.join("HEAD.pending").exists();
+    let mut interrupted =
+        path.join("HEAD.pending").exists() || path.join("MANIFEST.pending").exists();
     let mut latest_committed: Option<(u64, PathBuf)> = None;
     let mut latest_temporary: Option<(u64, PathBuf)> = None;
     for entry in fs::read_dir(path)? {
@@ -142,6 +168,8 @@ pub(crate) fn open_with_limit(
             // New writers publish only by rename. A staged transaction is never
             // promoted on restart; v1 .tmp recovery below remains compatible.
             interrupted = true;
+        } else if wal_generation_from_name(&file_name, ".pending").is_some() {
+            interrupted = true;
         }
     }
     let committed_generation = latest_committed
@@ -161,6 +189,8 @@ pub(crate) fn open_with_limit(
         fs::rename(&temp, &final_path)?;
         sync_directory(path).map_err(StorageError::CommitUncertain)?;
         write_head(path, generation).map_err(StorageError::CommitUncertain)?;
+        write_manifest(path, store.dimension(), generation, generation)
+            .map_err(StorageError::CommitUncertain)?;
         prune_snapshots(path, generation);
         return Ok(OpenedStore {
             store,
@@ -169,20 +199,231 @@ pub(crate) fn open_with_limit(
         });
     }
 
+    if let Some((_, base_generation, _)) = manifest
+        && !snapshot_path(path, base_generation, ".qdb").is_file()
+    {
+        return Err(StorageError::Corrupt(
+            "manifest names a missing canonical snapshot".into(),
+        ));
+    }
+
     let Some((generation, snapshot)) = latest_committed else {
         return Err(StorageError::NoSnapshot(path.to_path_buf()));
     };
-    let store = read_snapshot(&snapshot, generation, max_load_bytes)?;
+    let mut store = read_snapshot(&snapshot, generation, max_load_bytes)?;
+    if manifest.is_some_and(|(dimension, _, _)| dimension as usize != store.dimension()) {
+        return Err(StorageError::Corrupt(
+            "manifest dimension does not match canonical snapshot".into(),
+        ));
+    }
     if acknowledged != Some(generation) {
         // Reopening resolves an uncertain publication (or upgrades a legacy
         // snapshot) only after its validated generation is acknowledged too.
         write_head(path, generation).map_err(StorageError::CommitUncertain)?;
+    }
+    let mut wal_files = fs::read_dir(path)?
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            wal_generation_from_name(&entry.file_name(), ".qwal")
+                .map(|generation| (generation, entry.path()))
+        })
+        .filter(|(end_generation, _)| *end_generation > store.generation())
+        .collect::<Vec<_>>();
+    wal_files.sort_unstable_by_key(|(generation, _)| *generation);
+    for (end_generation, wal) in wal_files {
+        replay_wal(&wal, &mut store, end_generation, max_load_bytes)?;
+    }
+    if manifest.is_some_and(|(_, _, durable_generation)| durable_generation > store.generation()) {
+        return Err(StorageError::Corrupt(
+            "manifest durable generation is missing WAL data".into(),
+        ));
+    }
+    if manifest != Some((store.dimension() as u32, generation, store.generation())) {
+        interrupted |= manifest.is_some();
+        write_manifest(path, store.dimension(), generation, store.generation())
+            .map_err(StorageError::CommitUncertain)?;
     }
     Ok(OpenedStore {
         store,
         recovered_interrupted_write: interrupted,
         lock,
     })
+}
+
+pub(crate) fn append_wal(
+    path: &Path,
+    dimension: usize,
+    start_generation: u64,
+    mutations: &[CoreMutation<'_>],
+    max_load_bytes: u64,
+) -> Result<u64, StorageError> {
+    let count = u64::try_from(mutations.len()).map_err(|_| StorageError::LoadLimitExceeded)?;
+    let end_generation = start_generation
+        .checked_add(count)
+        .ok_or(StorageError::LoadLimitExceeded)?;
+    let dimension = u32::try_from(dimension).map_err(|_| StorageError::LoadLimitExceeded)?;
+    let final_path = wal_path(path, end_generation, ".qwal");
+    if final_path.exists() {
+        return Err(StorageError::AlreadyExists(final_path));
+    }
+    let pending = wal_path(path, end_generation, ".pending");
+    let file = OpenOptions::new()
+        .create(true)
+        .truncate(true)
+        .write(true)
+        .open(&pending)?;
+    let mut writer = CheckedWriter::new(BufWriter::new(file));
+    writer.write_all(WAL_MAGIC)?;
+    writer.write_all(&WAL_VERSION.to_le_bytes())?;
+    writer.write_all(&dimension.to_le_bytes())?;
+    writer.write_all(&start_generation.to_le_bytes())?;
+    writer.write_all(&end_generation.to_le_bytes())?;
+    writer.write_all(&count.to_le_bytes())?;
+    let mut bytes = WAL_HEADER_BYTES + CHECKSUM_BYTES;
+    for mutation in mutations {
+        match mutation {
+            CoreMutation::Add {
+                id,
+                user_id,
+                timestamp,
+                vector,
+            } => {
+                writer.write_all(&[1, 0, 0, 0, 0, 0, 0, 0])?;
+                writer.write_all(&id.to_le_bytes())?;
+                writer.write_all(&user_id.to_le_bytes())?;
+                writer.write_all(&timestamp.to_le_bytes())?;
+                for value in *vector {
+                    writer.write_all(&value.to_bits().to_le_bytes())?;
+                }
+                bytes = bytes
+                    .checked_add(32 + u64::from(dimension) * 4)
+                    .ok_or(StorageError::LoadLimitExceeded)?;
+            }
+            CoreMutation::Delete(id) => {
+                writer.write_all(&[2, 0, 0, 0, 0, 0, 0, 0])?;
+                writer.write_all(&id.to_le_bytes())?;
+                bytes = bytes
+                    .checked_add(16)
+                    .ok_or(StorageError::LoadLimitExceeded)?;
+            }
+        }
+        if bytes > max_load_bytes {
+            return Err(StorageError::LoadLimitExceeded);
+        }
+    }
+    let (mut writer, checksum) = writer.finish();
+    writer.write_all(&checksum.to_le_bytes())?;
+    writer.flush()?;
+    writer.get_ref().sync_all()?;
+    drop(writer);
+    fs::rename(&pending, &final_path)?;
+    sync_directory(path).map_err(StorageError::CommitUncertain)?;
+    let base_generation = read_head(path)?.ok_or_else(|| {
+        StorageError::Corrupt("cannot publish WAL without a canonical HEAD".into())
+    })?;
+    write_manifest(path, dimension as usize, base_generation, end_generation)
+        .map_err(StorageError::CommitUncertain)?;
+    Ok(end_generation)
+}
+
+fn replay_wal(
+    path: &Path,
+    store: &mut CoreStore,
+    expected_end_generation: u64,
+    max_load_bytes: u64,
+) -> Result<(), StorageError> {
+    let file = File::open(path)?;
+    let file_len = file.metadata()?.len();
+    if file_len > max_load_bytes || file_len < WAL_HEADER_BYTES + CHECKSUM_BYTES {
+        return Err(if file_len > max_load_bytes {
+            StorageError::LoadLimitExceeded
+        } else {
+            StorageError::Corrupt("WAL is shorter than its header".into())
+        });
+    }
+    let mut reader = CheckedReader::new(BufReader::new(file));
+    if &reader.array::<8>()? != WAL_MAGIC {
+        return Err(StorageError::Corrupt("invalid WAL magic bytes".into()));
+    }
+    let version = reader.u32()?;
+    if version != WAL_VERSION {
+        return Err(StorageError::UnsupportedVersion {
+            found: version,
+            supported: WAL_VERSION,
+        });
+    }
+    let dimension = reader.u32()? as usize;
+    if dimension != store.dimension() {
+        return Err(StorageError::Corrupt("WAL dimension mismatch".into()));
+    }
+    let start_generation = reader.u64()?;
+    let end_generation = reader.u64()?;
+    let count = reader.u64()?;
+    if start_generation != store.generation()
+        || end_generation != expected_end_generation
+        || start_generation.checked_add(count) != Some(end_generation)
+    {
+        return Err(StorageError::Corrupt(
+            "non-contiguous WAL generation range".into(),
+        ));
+    }
+    let count = usize::try_from(count).map_err(|_| StorageError::LoadLimitExceeded)?;
+    let mut mutations = Vec::with_capacity(count);
+    for _ in 0..count {
+        let tag = reader.array::<8>()?;
+        if tag[1..].iter().any(|byte| *byte != 0) {
+            return Err(StorageError::Corrupt("invalid WAL mutation tag".into()));
+        }
+        match tag[0] {
+            1 => {
+                let id = reader.u64()?;
+                let user_id = reader.u64()?;
+                let timestamp = reader.i64()?;
+                let mut vector = Vec::with_capacity(dimension);
+                for _ in 0..dimension {
+                    vector.push(f32::from_bits(reader.u32()?));
+                }
+                mutations.push(WalMutation::Add {
+                    id,
+                    user_id,
+                    timestamp,
+                    vector,
+                });
+            }
+            2 => mutations.push(WalMutation::Delete(reader.u64()?)),
+            _ => return Err(StorageError::Corrupt("unknown WAL mutation tag".into())),
+        }
+    }
+    let (mut reader, calculated) = reader.finish();
+    let stored = read_u32_unchecked(&mut reader)?;
+    if calculated != stored {
+        return Err(StorageError::Corrupt("WAL checksum mismatch".into()));
+    }
+    let mut trailing = [0_u8; 1];
+    if reader.read(&mut trailing)? != 0 {
+        return Err(StorageError::Corrupt(
+            "trailing bytes after WAL checksum".into(),
+        ));
+    }
+    let borrowed = mutations
+        .iter()
+        .map(|mutation| match mutation {
+            WalMutation::Add {
+                id,
+                user_id,
+                timestamp,
+                vector,
+            } => CoreMutation::Add {
+                id: *id,
+                user_id: *user_id,
+                timestamp: *timestamp,
+                vector,
+            },
+            WalMutation::Delete(id) => CoreMutation::Delete(*id),
+        })
+        .collect::<Vec<_>>();
+    store.apply_batch(&borrowed)?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -235,7 +476,10 @@ pub(crate) fn write_snapshot_with_limit(
     fs::rename(&temp_path, &final_path)?;
     sync_directory(path).map_err(StorageError::CommitUncertain)?;
     write_head(path, generation).map_err(StorageError::CommitUncertain)?;
+    write_manifest(path, store.dimension(), generation, generation)
+        .map_err(StorageError::CommitUncertain)?;
     prune_snapshots(path, generation);
+    prune_wals(path, generation);
     Ok(())
 }
 
@@ -253,7 +497,10 @@ fn read_snapshot(
             StorageError::Corrupt("snapshot is shorter than its header".into())
         });
     }
-    let mut reader = CheckedReader::new(BufReader::new(file));
+    // SAFETY: canonical snapshots are immutable after atomic publication and
+    // the collection holds the directory's exclusive cooperative lock.
+    let mapped = unsafe { MmapOptions::new().map(&file)? };
+    let mut reader = CheckedReader::new(Cursor::new(&mapped[..]));
     let magic = reader.array::<8>()?;
     if &magic != MAGIC {
         return Err(StorageError::Corrupt("invalid magic bytes".into()));
@@ -344,6 +591,10 @@ fn snapshot_path(path: &Path, generation: u64, extension: &str) -> PathBuf {
     path.join(format!("canonical-{generation:020}{extension}"))
 }
 
+fn wal_path(path: &Path, generation: u64, extension: &str) -> PathBuf {
+    path.join(format!("wal-{generation:020}{extension}"))
+}
+
 fn check_admission(dimension: usize, rows: u64, max_load_bytes: u64) -> Result<(), StorageError> {
     let dimension = u32::try_from(dimension).map_err(|_| StorageError::LoadLimitExceeded)?;
     let row_bytes = u64::from(dimension)
@@ -363,6 +614,18 @@ fn check_admission(dimension: usize, rows: u64, max_load_bytes: u64) -> Result<(
         return Err(StorageError::LoadLimitExceeded);
     }
     Ok(())
+}
+
+pub(crate) fn check_store_admission(
+    dimension: usize,
+    rows: usize,
+    max_load_bytes: u64,
+) -> Result<(), StorageError> {
+    check_admission(
+        dimension,
+        u64::try_from(rows).map_err(|_| StorageError::LoadLimitExceeded)?,
+        max_load_bytes,
+    )
 }
 
 // HEAD is a durable lower bound on acknowledged generations, not permission to
@@ -403,6 +666,53 @@ fn write_head(path: &Path, generation: u64) -> io::Result<()> {
     sync_directory(path)
 }
 
+fn read_manifest(path: &Path) -> Result<Option<(u32, u64, u64)>, StorageError> {
+    let bytes = match fs::read(path.join("MANIFEST")) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error.into()),
+    };
+    if bytes.len() as u64 != MANIFEST_BYTES
+        || &bytes[..8] != MANIFEST_MAGIC
+        || u32::from_le_bytes(bytes[8..12].try_into().unwrap()) != MANIFEST_VERSION
+        || crc32fast::hash(&bytes[..32]) != u32::from_le_bytes(bytes[32..36].try_into().unwrap())
+    {
+        return Err(StorageError::Corrupt(
+            "invalid MANIFEST length, version, magic, or checksum".into(),
+        ));
+    }
+    Ok(Some((
+        u32::from_le_bytes(bytes[12..16].try_into().unwrap()),
+        u64::from_le_bytes(bytes[16..24].try_into().unwrap()),
+        u64::from_le_bytes(bytes[24..32].try_into().unwrap()),
+    )))
+}
+
+fn write_manifest(
+    path: &Path,
+    dimension: usize,
+    base_generation: u64,
+    durable_generation: u64,
+) -> io::Result<()> {
+    let dimension = u32::try_from(dimension)
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "dimension exceeds u32"))?;
+    let mut bytes = [0_u8; MANIFEST_BYTES as usize];
+    bytes[..8].copy_from_slice(MANIFEST_MAGIC);
+    bytes[8..12].copy_from_slice(&MANIFEST_VERSION.to_le_bytes());
+    bytes[12..16].copy_from_slice(&dimension.to_le_bytes());
+    bytes[16..24].copy_from_slice(&base_generation.to_le_bytes());
+    bytes[24..32].copy_from_slice(&durable_generation.to_le_bytes());
+    let checksum = crc32fast::hash(&bytes[..32]);
+    bytes[32..36].copy_from_slice(&checksum.to_le_bytes());
+    let pending = path.join("MANIFEST.pending");
+    let mut file = File::create(&pending)?;
+    file.write_all(&bytes)?;
+    file.sync_all()?;
+    drop(file);
+    fs::rename(pending, path.join("MANIFEST"))?;
+    sync_directory(path)
+}
+
 fn create_directory(path: &Path) -> io::Result<()> {
     let mut missing = Vec::new();
     let mut cursor = path;
@@ -430,6 +740,12 @@ fn generation_from_name(name: &OsStr, extension: &str) -> Option<u64> {
     (digits.len() == 20).then(|| digits.parse().ok()).flatten()
 }
 
+fn wal_generation_from_name(name: &OsStr, extension: &str) -> Option<u64> {
+    let name = name.to_str()?;
+    let digits = name.strip_prefix("wal-")?.strip_suffix(extension)?;
+    (digits.len() == 20).then(|| digits.parse().ok()).flatten()
+}
+
 fn prune_snapshots(path: &Path, current_generation: u64) {
     let previous = match fs::read_dir(path) {
         Ok(entries) => entries
@@ -446,6 +762,19 @@ fn prune_snapshots(path: &Path, current_generation: u64) {
     for entry in entries.filter_map(Result::ok) {
         if generation_from_name(&entry.file_name(), ".qdb")
             .is_some_and(|generation| generation < previous)
+        {
+            let _ = fs::remove_file(entry.path());
+        }
+    }
+}
+
+fn prune_wals(path: &Path, current_generation: u64) {
+    let Ok(entries) = fs::read_dir(path) else {
+        return;
+    };
+    for entry in entries.filter_map(Result::ok) {
+        if wal_generation_from_name(&entry.file_name(), ".qwal")
+            .is_some_and(|generation| generation <= current_generation)
         {
             let _ = fs::remove_file(entry.path());
         }
@@ -649,6 +978,7 @@ mod tests {
         write_snapshot(&path, &store).unwrap();
         // Simulate staging before publication, not loss of an acknowledged file.
         write_head(&path, previous).unwrap();
+        write_manifest(&path, store.dimension(), previous, previous).unwrap();
         fs::rename(
             snapshot_path(&path, store.generation(), ".qdb"),
             snapshot_path(&path, store.generation(), ".pending"),
@@ -793,5 +1123,70 @@ mod tests {
         drop(create(&path, &populated_store()).unwrap());
         assert_eq!(open(&path).unwrap().store.live_len(), 1);
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn wal_replays_ordered_transactions_and_compacts_on_snapshot() {
+        let path = temp_dir("wal-replay");
+        let mut store = populated_store();
+        drop(create(&path, &store).unwrap());
+        let mutations = [
+            CoreMutation::Add {
+                id: 3,
+                user_id: 7,
+                timestamp: 0,
+                vector: &[1.0, 1.0],
+            },
+            CoreMutation::Delete(2),
+        ];
+        store.validate_batch(&mutations).unwrap();
+        append_wal(
+            &path,
+            store.dimension(),
+            store.generation(),
+            &mutations,
+            MAX_LOAD_BYTES,
+        )
+        .unwrap();
+        store.apply_batch(&mutations).unwrap();
+        let opened = open(&path).unwrap();
+        assert_eq!(opened.store.generation(), store.generation());
+        assert_eq!(opened.store.live_len(), 1);
+        assert_eq!(opened.store.record(2).unwrap().id(), 3);
+        drop(opened);
+
+        write_snapshot(&path, &store).unwrap();
+        assert!(!wal_path(&path, store.generation(), ".qwal").exists());
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn manifest_corruption_and_wal_generation_gaps_fail_closed() {
+        let corrupt = temp_dir("manifest-corrupt");
+        drop(create(&corrupt, &populated_store()).unwrap());
+        let mut manifest = fs::read(corrupt.join("MANIFEST")).unwrap();
+        manifest[16] ^= 1;
+        fs::write(corrupt.join("MANIFEST"), manifest).unwrap();
+        assert!(matches!(open(&corrupt), Err(StorageError::Corrupt(_))));
+        fs::remove_dir_all(corrupt).unwrap();
+
+        let gap = temp_dir("wal-gap");
+        let store = populated_store();
+        drop(create(&gap, &store).unwrap());
+        append_wal(
+            &gap,
+            store.dimension(),
+            store.generation() + 1,
+            &[CoreMutation::Add {
+                id: 3,
+                user_id: 1,
+                timestamp: 0,
+                vector: &[1.0, 0.0],
+            }],
+            MAX_LOAD_BYTES,
+        )
+        .unwrap();
+        assert!(matches!(open(&gap), Err(StorageError::Corrupt(_))));
+        fs::remove_dir_all(gap).unwrap();
     }
 }

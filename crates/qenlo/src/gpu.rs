@@ -1,7 +1,7 @@
 //! Experimental exact filtered search implemented with portable wgpu compute.
 //!
 //! The selector uses a parallel workgroup reduction for exact top-k. Vector and
-//! metadata buffers stay resident; query scratch is allocated and released per chunk so the
+//! metadata buffers and a grow-on-demand query scratch arena stay resident so the
 //! configured budget is a hard bound on Qenlo-owned allocations.
 
 use std::{
@@ -12,7 +12,8 @@ use std::{
 
 const DEFAULT_BUDGET: u64 = 512 * 1024 * 1024;
 const CANDIDATE_BYTES: u64 = 16;
-const PARAM_BYTES: u64 = 48;
+const PARAM_BYTES: u64 = 64;
+const MAX_BATCH: usize = 128;
 const WORKGROUP_SIZE: u64 = 256;
 const SCORE_ROWS_PER_WORKGROUP: u64 = 8;
 // ponytail: one workgroup selects each chunk's top-k; hierarchical selection if this dominates.
@@ -141,6 +142,17 @@ struct Chunk {
     live: Vec<u32>,
 }
 
+struct Scratch {
+    batch_capacity: usize,
+    query: wgpu::Buffer,
+    eligibility: wgpu::Buffer,
+    params: wgpu::Buffer,
+    scores: wgpu::Buffer,
+    selected: wgpu::Buffer,
+    staging: wgpu::Buffer,
+    candidates_group: wgpu::BindGroup,
+}
+
 pub(crate) struct GpuExact {
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -153,6 +165,8 @@ pub(crate) struct GpuExact {
     rows: u32,
     budget: u64,
     resident_bytes: u64,
+    max_chunk_rows: u32,
+    scratch: Mutex<Scratch>,
     health: DeviceHealth,
     capabilities: GpuCapabilities,
 }
@@ -199,15 +213,7 @@ impl GpuExact {
             .ok_or_else(|| GpuError::InvalidInput("allocation size overflow".into()))?;
         ensure_budget(minimum, budget)?;
         let instance = gpu_instance();
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::HighPerformance,
-                force_fallback_adapter: false,
-                compatible_surface: None,
-                ..Default::default()
-            })
-            .await
-            .map_err(|e| GpuError::Unavailable(e.to_string()))?;
+        let adapter = select_adapter(&instance).await?;
         let adapter_limits = adapter.limits();
         validate_limits(&adapter_limits, dimension)?;
         let capabilities = adapter_capabilities(&adapter, budget);
@@ -326,6 +332,17 @@ impl GpuExact {
             health.check()?;
         }
 
+        let scratch_bytes = scratch_bytes(dimension, rows_per_chunk, 1)?;
+        ensure_budget(resident_bytes + scratch_bytes, budget)?;
+        let scratch = create_scratch(
+            &device,
+            &group1_layout,
+            dimension,
+            rows_per_chunk,
+            1,
+            &health,
+        )?;
+
         Ok(Self {
             device,
             queue,
@@ -338,6 +355,8 @@ impl GpuExact {
             rows: rows as u32,
             budget,
             resident_bytes,
+            max_chunk_rows: rows_per_chunk as u32,
+            scratch: Mutex::new(scratch),
             health,
             capabilities,
         })
@@ -349,12 +368,31 @@ impl GpuExact {
         k: usize,
         filter: FilterMode<'_>,
     ) -> Result<(Vec<GpuHit>, GpuExecution), GpuError> {
+        let (mut hits, execution) = self.search_batch(&[query], k, filter).await?;
+        Ok((
+            hits.pop().expect("single query produces one result"),
+            execution,
+        ))
+    }
+
+    pub(crate) async fn search_batch(
+        &self,
+        queries: &[&[f32]],
+        k: usize,
+        filter: FilterMode<'_>,
+    ) -> Result<(Vec<Vec<GpuHit>>, GpuExecution), GpuError> {
         self.health.check()?;
-        if query.len() != self.dimension as usize {
-            return Err(GpuError::InvalidInput("query dimension mismatch".into()));
+        if queries.is_empty() || queries.len() > MAX_BATCH {
+            return Err(GpuError::InvalidInput(format!(
+                "GPU batch size must be in 1..={MAX_BATCH}"
+            )));
         }
-        if query.iter().any(|value| !value.is_finite()) {
-            return Err(GpuError::InvalidInput("query must be finite".into()));
+        if queries.iter().any(|query| {
+            query.len() != self.dimension as usize || query.iter().any(|value| !value.is_finite())
+        }) {
+            return Err(GpuError::InvalidInput(
+                "query dimension mismatch or non-finite value".into(),
+            ));
         }
         if !(1..=64).contains(&k) {
             return Err(GpuError::InvalidInput("k must be in 1..=64".into()));
@@ -374,12 +412,51 @@ impl GpuExact {
             ));
         }
 
+        let mut scratch = self
+            .scratch
+            .lock()
+            .map_err(|_| GpuError::Device("GPU scratch arena lock poisoned".into()))?;
+        if queries.len() > scratch.batch_capacity {
+            let capacity = queries.len().next_power_of_two().min(MAX_BATCH);
+            let bytes = scratch_bytes(
+                self.dimension as usize,
+                self.max_chunk_rows as usize,
+                capacity,
+            )?;
+            ensure_budget(self.resident_bytes + bytes, self.budget)?;
+            *scratch = create_scratch(
+                &self.device,
+                &self.group1_layout,
+                self.dimension as usize,
+                self.max_chunk_rows as usize,
+                capacity,
+                &self.health,
+            )?;
+        }
+        let allocation_bytes = self.resident_bytes
+            + scratch_bytes(
+                self.dimension as usize,
+                self.max_chunk_rows as usize,
+                scratch.batch_capacity,
+            )?;
+        ensure_budget(allocation_bytes, self.budget)?;
+        let flattened = queries
+            .iter()
+            .flat_map(|query| query.iter().copied())
+            .collect::<Vec<_>>();
+        self.queue
+            .write_buffer(&scratch.query, 0, bytes_of(&flattened));
+        self.health.check()?;
         let mut execution = GpuExecution {
-            allocation_bytes: self.resident_bytes,
+            allocation_bytes,
+            upload_bytes: flattened.len() as u64 * 4,
             chunks: self.chunks.len() as u32,
             ..Default::default()
         };
-        let mut merged = Vec::with_capacity(k * 2);
+        let mut merged = (0..queries.len())
+            .map(|_| Vec::with_capacity(k * 2))
+            .collect::<Vec<_>>();
+        let result_bytes = queries.len() as u64 * k as u64 * CANDIDATE_BYTES;
 
         for chunk in &self.chunks {
             let (mode, eligibility) = chunk_eligibility(filter, chunk);
@@ -399,63 +476,16 @@ impl GpuExact {
                 self.dimension,
                 k as u32,
                 dispatch_items,
+                queries.len() as u32,
                 filter,
             );
-            let scratch = query.len() as u64 * 8
-                + eligibility.len() as u64 * 8
-                + chunk.rows as u64 * 4
-                + k as u64 * CANDIDATE_BYTES * 2
-                + PARAM_BYTES * 2;
-            ensure_budget(self.resident_bytes + scratch, self.budget)?;
-            execution.allocation_bytes = execution
-                .allocation_bytes
-                .max(self.resident_bytes + scratch);
-            execution.upload_bytes +=
-                query.len() as u64 * 4 + eligibility.len() as u64 * 4 + PARAM_BYTES;
-            execution.readback_bytes += k as u64 * CANDIDATE_BYTES;
-
-            let query_buffer = uploaded(
-                &self.device,
-                &self.queue,
-                "qenlo query",
-                query,
-                &self.health,
-            )?;
-            let eligibility_buffer = uploaded(
-                &self.device,
-                &self.queue,
-                "qenlo eligibility",
-                &eligibility,
-                &self.health,
-            )?;
-            let params_buffer = uploaded_uniform(
-                &self.device,
-                &self.queue,
-                "qenlo params",
-                &params,
-                &self.health,
-            )?;
-            let scores = buffer(
-                &self.device,
-                "qenlo scores",
-                chunk.rows as u64 * 4,
-                wgpu::BufferUsages::STORAGE,
-                &self.health,
-            )?;
-            let selected = buffer(
-                &self.device,
-                "qenlo candidates",
-                k as u64 * CANDIDATE_BYTES,
-                wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
-                &self.health,
-            )?;
-            let staging = buffer(
-                &self.device,
-                "qenlo readback",
-                k as u64 * CANDIDATE_BYTES,
-                wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
-                &self.health,
-            )?;
+            execution.upload_bytes += eligibility.len() as u64 * 4 + PARAM_BYTES;
+            execution.readback_bytes += result_bytes;
+            self.queue
+                .write_buffer(&scratch.eligibility, 0, bytes_of(&eligibility));
+            self.queue
+                .write_buffer(&scratch.params, 0, bytes_of(&params));
+            self.health.check()?;
 
             let group0 = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some("qenlo exact resources"),
@@ -465,80 +495,72 @@ impl GpuExact {
                     binding(1, &chunk.users),
                     binding(2, &chunk.timestamps),
                     binding(3, &chunk.ids),
-                    binding(4, &query_buffer),
-                    binding(5, &eligibility_buffer),
-                    binding(6, &scores),
-                    binding(7, &params_buffer),
+                    binding(4, &scratch.query),
+                    binding(5, &scratch.eligibility),
+                    binding(6, &scratch.scores),
+                    binding(7, &scratch.params),
                 ],
-            });
-            let group1 = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("qenlo candidate output"),
-                layout: &self.group1_layout,
-                entries: &[binding(0, &selected)],
             });
             let mut encoder = self
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                    label: Some("qenlo exact commands"),
+                    label: Some("qenlo exact batch commands"),
                 });
             {
                 let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                    label: Some("qenlo exact search"),
+                    label: Some("qenlo exact batch search"),
                     timestamp_writes: None,
                 });
                 pass.set_bind_group(0, &group0, &[]);
-                pass.set_bind_group(1, &group1, &[]);
+                pass.set_bind_group(1, &scratch.candidates_group, &[]);
                 if dispatch_items != 0 {
                     pass.set_pipeline(&self.score_pipeline);
                     pass.dispatch_workgroups(
                         dispatch_items.div_ceil(SCORE_ROWS_PER_WORKGROUP as u32),
-                        1,
+                        queries.len() as u32,
                         1,
                     );
                 }
                 pass.set_pipeline(&self.select_pipeline);
-                pass.dispatch_workgroups(1, 1, 1);
+                pass.dispatch_workgroups(queries.len() as u32, 1, 1);
             }
-            encoder.copy_buffer_to_buffer(&selected, 0, &staging, 0, k as u64 * CANDIDATE_BYTES);
+            encoder.copy_buffer_to_buffer(&scratch.selected, 0, &scratch.staging, 0, result_bytes);
             self.queue.submit([encoder.finish()]);
             self.health.check()?;
             execution.dispatch_count += if dispatch_items == 0 { 1 } else { 2 };
 
-            map_wait(&self.device, &staging).inspect_err(|error| {
+            map_wait_range(&self.device, &scratch.staging, result_bytes).inspect_err(|error| {
                 self.health.fail(error.to_string());
                 self.device.destroy();
             })?;
             self.health.check()?;
-            let mapped = staging
-                .slice(..)
+            let mapped = scratch
+                .staging
+                .slice(..result_bytes)
                 .get_mapped_range()
                 .map_err(|error| GpuError::Device(error.to_string()))?;
-            for bytes in mapped.as_chunks::<16>().0 {
-                let distance = f32::from_le_bytes(bytes[0..4].try_into().unwrap());
-                let row = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
-                let id = u64::from_le_bytes(bytes[8..16].try_into().unwrap());
-                if row != u32::MAX && distance.is_finite() {
-                    merged.push(GpuHit { id, distance });
+            for (query_index, query_hits) in merged.iter_mut().enumerate() {
+                let start = query_index * k * CANDIDATE_BYTES as usize;
+                let end = start + k * CANDIDATE_BYTES as usize;
+                for bytes in mapped[start..end].as_chunks::<16>().0 {
+                    let distance = f32::from_le_bytes(bytes[0..4].try_into().unwrap());
+                    let row = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
+                    let id = u64::from_le_bytes(bytes[8..16].try_into().unwrap());
+                    if row != u32::MAX && distance.is_finite() {
+                        query_hits.push(GpuHit { id, distance });
+                    }
                 }
+                query_hits.sort_by(|a, b| {
+                    a.distance
+                        .total_cmp(&b.distance)
+                        .then_with(|| a.id.cmp(&b.id))
+                });
+                query_hits.dedup_by_key(|hit| hit.id);
+                query_hits.truncate(k);
             }
             drop(mapped);
-            staging.unmap();
-            merged.sort_by(|a, b| {
-                a.distance
-                    .total_cmp(&b.distance)
-                    .then_with(|| a.id.cmp(&b.id))
-            });
-            merged.dedup_by_key(|hit| hit.id);
-            merged.truncate(k);
+            scratch.staging.unmap();
         }
-
-        merged.sort_by(|a, b| {
-            a.distance
-                .total_cmp(&b.distance)
-                .then_with(|| a.id.cmp(&b.id))
-        });
-        merged.dedup_by_key(|hit| hit.id);
-        merged.truncate(k);
         Ok((merged, execution))
     }
 }
@@ -550,6 +572,172 @@ pub(crate) struct GpuBackend {
     budget: u64,
     exact: Option<Box<GpuExact>>,
     capabilities: GpuCapabilities,
+    ivf_config: Option<(usize, usize, bool)>,
+    ivf: Option<IvfIndex>,
+}
+
+struct IvfIndex {
+    dimension: usize,
+    nprobe: usize,
+    centroids: Vec<f32>,
+    sq8_vectors: Option<Vec<qenlo_core::Sq8Vector>>,
+    postings: Vec<Vec<u32>>,
+}
+
+impl IvfIndex {
+    fn build(vectors: &[f32], dimension: usize, lists: usize, nprobe: usize, sq8: bool) -> Self {
+        let rows = vectors.len() / dimension;
+        let lists = lists.min(rows);
+        let sample_rows = rows.min(2_048);
+        let sample = (0..sample_rows)
+            .map(|index| index * rows / sample_rows)
+            .collect::<Vec<_>>();
+        let mut centroids = Vec::with_capacity(lists * dimension);
+        for list in 0..lists {
+            let row = sample[list * sample.len() / lists];
+            centroids.extend_from_slice(&vectors[row * dimension..(row + 1) * dimension]);
+        }
+        for _ in 0..4 {
+            let mut sums = vec![0.0f32; centroids.len()];
+            let mut counts = vec![0usize; lists];
+            for &row in &sample {
+                let vector = &vectors[row * dimension..(row + 1) * dimension];
+                let list = nearest_centroid(vector, &centroids, dimension);
+                counts[list] += 1;
+                for (sum, &value) in sums[list * dimension..(list + 1) * dimension]
+                    .iter_mut()
+                    .zip(vector)
+                {
+                    *sum += value;
+                }
+            }
+            for list in 0..lists {
+                if counts[list] == 0 {
+                    continue;
+                }
+                let centroid = &mut sums[list * dimension..(list + 1) * dimension];
+                let norm = centroid
+                    .iter()
+                    .map(|value| f64::from(*value) * f64::from(*value))
+                    .sum::<f64>()
+                    .sqrt() as f32;
+                for value in centroid {
+                    *value /= norm;
+                }
+            }
+            for list in 0..lists {
+                if counts[list] != 0 {
+                    centroids[list * dimension..(list + 1) * dimension]
+                        .copy_from_slice(&sums[list * dimension..(list + 1) * dimension]);
+                }
+            }
+        }
+        let mut postings = vec![Vec::new(); lists];
+        for (row, vector) in vectors.chunks_exact(dimension).enumerate() {
+            postings[nearest_centroid(vector, &centroids, dimension)].push(row as u32);
+        }
+        let sq8_vectors = sq8.then(|| {
+            vectors
+                .chunks_exact(dimension)
+                .map(|vector| qenlo_core::Sq8Vector::quantize(vector).expect("vector valid"))
+                .collect()
+        });
+        Self {
+            dimension,
+            nprobe: nprobe.min(lists),
+            centroids,
+            sq8_vectors,
+            postings,
+        }
+    }
+
+    fn filtered_candidates(
+        &self,
+        store: &qenlo_core::CoreStore,
+        query: &[f32],
+        predicate: &qenlo_core::Predicate,
+        rerank: usize,
+    ) -> Vec<u32> {
+        let mut lists = self
+            .centroids
+            .chunks_exact(self.dimension)
+            .enumerate()
+            .map(|(list, centroid)| (list, dot(query, centroid)))
+            .collect::<Vec<_>>();
+        lists.sort_unstable_by(|a, b| b.1.total_cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+        let mut rows = lists
+            .iter()
+            .take(self.nprobe)
+            .flat_map(|(list, _)| self.postings[*list].iter().copied())
+            .filter(|&row| {
+                store.record(row).is_some_and(|record| {
+                    record.is_live()
+                        && predicate
+                            .user_id
+                            .is_none_or(|user| record.user_id() == user)
+                        && predicate
+                            .timestamp
+                            .lower
+                            .is_none_or(|lower| record.timestamp() >= lower)
+                        && predicate
+                            .timestamp
+                            .upper
+                            .is_none_or(|upper| record.timestamp() < upper)
+                })
+            })
+            .collect::<Vec<_>>();
+        if let Some(vectors) = &self.sq8_vectors {
+            let mut scored = rows
+                .into_iter()
+                .map(|row| {
+                    (
+                        row,
+                        vectors[row as usize]
+                            .approximate_dot(query)
+                            .expect("validated query dimension"),
+                    )
+                })
+                .collect::<Vec<_>>();
+            scored.sort_unstable_by(|left, right| {
+                right
+                    .1
+                    .total_cmp(&left.1)
+                    .then_with(|| left.0.cmp(&right.0))
+            });
+            rows = scored
+                .into_iter()
+                .take(rerank)
+                .map(|(row, _)| row)
+                .collect();
+        }
+        rows.sort_unstable();
+        rows.dedup();
+        rows
+    }
+
+    fn algorithm(&self) -> super::Algorithm {
+        if self.sq8_vectors.is_some() {
+            super::Algorithm::IvfSq8
+        } else {
+            super::Algorithm::IvfFlat
+        }
+    }
+}
+
+fn nearest_centroid(vector: &[f32], centroids: &[f32], dimension: usize) -> usize {
+    centroids
+        .chunks_exact(dimension)
+        .enumerate()
+        .max_by(|(left_index, left), (right_index, right)| {
+            dot(vector, left)
+                .total_cmp(&dot(vector, right))
+                .then_with(|| right_index.cmp(left_index))
+        })
+        .map_or(0, |(index, _)| index)
+}
+
+fn dot(left: &[f32], right: &[f32]) -> f32 {
+    left.iter().zip(right).map(|(&a, &b)| a * b).sum()
 }
 
 impl GpuBackend {
@@ -564,15 +752,7 @@ impl GpuBackend {
             ));
         }
         // Probe now so `WgpuRequired` fails at collection construction rather than first search.
-        let adapter = gpu_instance()
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::HighPerformance,
-                force_fallback_adapter: false,
-                compatible_surface: None,
-                ..Default::default()
-            })
-            .await
-            .map_err(|error| GpuError::Unavailable(error.to_string()))?;
+        let adapter = select_adapter(&gpu_instance()).await?;
         validate_limits(&adapter.limits(), dimension)?;
         let capabilities = adapter_capabilities(&adapter, budget);
         Ok(Self {
@@ -581,7 +761,19 @@ impl GpuBackend {
             budget,
             exact: None,
             capabilities,
+            ivf_config: None,
+            ivf: None,
         })
+    }
+
+    pub(crate) fn configure_ivf(&mut self, lists: usize, nprobe: usize) {
+        self.ivf_config = Some((lists, nprobe, false));
+        self.ivf = None;
+    }
+
+    pub(crate) fn configure_ivf_sq8(&mut self, lists: usize, nprobe: usize) {
+        self.ivf_config = Some((lists, nprobe, true));
+        self.ivf = None;
     }
 
     pub(crate) fn capabilities(&self) -> &GpuCapabilities {
@@ -610,6 +802,7 @@ impl GpuBackend {
             old.device.destroy();
             drop(old);
         }
+        self.ivf = None;
         if store.is_empty() {
             self.exact = None;
             return Ok(());
@@ -638,6 +831,15 @@ impl GpuBackend {
             )
             .await?,
         ));
+        if let Some((lists, nprobe, sq8)) = self.ivf_config {
+            self.ivf = Some(IvfIndex::build(
+                &vectors,
+                self.dimension,
+                lists,
+                nprobe,
+                sq8,
+            ));
+        }
         Ok(())
     }
 
@@ -651,6 +853,19 @@ impl GpuBackend {
         let started = web_time::Instant::now();
         let normalized = qenlo_core::normalize_vector(query, self.dimension)
             .map_err(|error| GpuError::InvalidInput(error.to_string()))?;
+        if let Some(ivf) = &self.ivf {
+            let rows = ivf.filtered_candidates(store, &normalized, predicate, k * 32);
+            return self
+                .finish_search(
+                    &normalized,
+                    k,
+                    FilterMode::EligibleRows(&rows),
+                    Some(rows.len() as u64),
+                    started,
+                    ivf.algorithm(),
+                )
+                .await;
+        }
         let filter = match self.mode {
             super::GpuFilterMode::CpuMask => {
                 let eligible = store.filter(predicate);
@@ -689,8 +904,90 @@ impl GpuBackend {
                 upper: predicate.timestamp.upper,
             },
         };
-        self.finish_search(&normalized, k, filter, None, started)
-            .await
+        self.finish_search(
+            &normalized,
+            k,
+            filter,
+            None,
+            started,
+            super::Algorithm::Exact,
+        )
+        .await
+    }
+
+    pub(crate) async fn search_batch(
+        &self,
+        store: &qenlo_core::CoreStore,
+        queries: &[&[f32]],
+        predicate: &qenlo_core::Predicate,
+        k: usize,
+    ) -> Result<Vec<super::BackendOutput>, GpuError> {
+        let started = web_time::Instant::now();
+        let normalized = queries
+            .iter()
+            .map(|query| {
+                qenlo_core::normalize_vector(query, self.dimension)
+                    .map_err(|error| GpuError::InvalidInput(error.to_string()))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let borrowed = normalized.iter().map(Vec::as_slice).collect::<Vec<_>>();
+        let ivf_rows = self.ivf.as_ref().map(|ivf| {
+            let mut rows = normalized
+                .iter()
+                .flat_map(|query| ivf.filtered_candidates(store, query, predicate, k * 32))
+                .collect::<Vec<_>>();
+            rows.sort_unstable();
+            rows.dedup();
+            rows
+        });
+        let rows = match self.mode {
+            super::GpuFilterMode::CpuMask | super::GpuFilterMode::CpuEligibleRows => {
+                Some(store.filter(predicate))
+            }
+            super::GpuFilterMode::GpuPredicate => None,
+        };
+        let mut mask = Vec::new();
+        let (filter, candidates) = if let Some(rows) = ivf_rows.as_deref() {
+            (FilterMode::EligibleRows(rows), Some(rows.len() as u64))
+        } else {
+            match self.mode {
+                super::GpuFilterMode::CpuMask => {
+                    let rows = rows.as_deref().expect("CPU mode has filtered rows");
+                    mask.resize(store.len(), false);
+                    for &row in rows {
+                        mask[row as usize] = true;
+                    }
+                    (FilterMode::Mask(&mask), Some(rows.len() as u64))
+                }
+                super::GpuFilterMode::CpuEligibleRows => {
+                    let rows = rows.as_deref().expect("CPU mode has filtered rows");
+                    (FilterMode::EligibleRows(rows), Some(rows.len() as u64))
+                }
+                super::GpuFilterMode::GpuPredicate => (
+                    FilterMode::Predicate {
+                        user: predicate.user_id,
+                        lower: predicate.timestamp.lower,
+                        upper: predicate.timestamp.upper,
+                    },
+                    None,
+                ),
+            }
+        };
+        let algorithm = self
+            .ivf
+            .as_ref()
+            .map_or(super::Algorithm::Exact, IvfIndex::algorithm);
+        let Some(exact) = &self.exact else {
+            return Ok((0..queries.len())
+                .map(|_| empty_output(self.mode, started.elapsed(), algorithm))
+                .collect());
+        };
+        let (batches, execution) = exact.search_batch(&borrowed, k, filter).await?;
+        let elapsed = started.elapsed();
+        Ok(batches
+            .into_iter()
+            .map(|hits| gpu_output(hits, self.mode, candidates, elapsed, &execution, algorithm))
+            .collect())
     }
 
     async fn search_owned(
@@ -706,8 +1003,15 @@ impl GpuBackend {
             OwnedFilter::Mask(mask) => FilterMode::Mask(mask),
             OwnedFilter::Rows(rows) => FilterMode::EligibleRows(rows),
         };
-        self.finish_search(query, k, borrowed, Some(candidates as u64), started)
-            .await
+        self.finish_search(
+            query,
+            k,
+            borrowed,
+            Some(candidates as u64),
+            started,
+            super::Algorithm::Exact,
+        )
+        .await
     }
 
     async fn finish_search(
@@ -717,39 +1021,72 @@ impl GpuBackend {
         filter: FilterMode<'_>,
         candidates: Option<u64>,
         started: web_time::Instant,
+        algorithm: super::Algorithm,
     ) -> Result<super::BackendOutput, GpuError> {
         let Some(exact) = &self.exact else {
-            return Ok(super::BackendOutput {
-                hits: Vec::new(),
-                actual_backend: super::BackendKind::Wgpu,
-                algorithm: super::Algorithm::Exact,
-                filter_execution: super::FilterExecution::Gpu(self.mode),
-                phases: gpu_phases(started.elapsed()),
-                upload_bytes: super::Measurement::Available(0),
-                readback_bytes: super::Measurement::Available(0),
-                dispatch_count: super::Measurement::Available(0),
-                allocation_bytes: super::Measurement::Available(0),
-                candidates: super::Measurement::Available(0),
-            });
+            return Ok(empty_output(self.mode, started.elapsed(), algorithm));
         };
         let (hits, execution) = exact.search(query, k, filter).await?;
-        Ok(super::BackendOutput {
-            hits: hits.into_iter().map(|hit| qenlo_core::SearchHit { id: hit.id, distance: hit.distance }).collect(),
-            actual_backend: super::BackendKind::Wgpu,
-            algorithm: super::Algorithm::Exact,
-            filter_execution: super::FilterExecution::Gpu(self.mode),
-            phases: gpu_phases(started.elapsed()),
-            upload_bytes: super::Measurement::Available(execution.upload_bytes),
-            readback_bytes: super::Measurement::Available(execution.readback_bytes),
-            dispatch_count: super::Measurement::Available(execution.dispatch_count),
-            allocation_bytes: super::Measurement::Available(execution.allocation_bytes),
-            candidates: candidates.map_or_else(
-                || super::Measurement::Unavailable(super::Unavailable {
-                    reason: "basic diagnostics do not scan the GPU predicate result to count candidates".into(),
-                }),
-                super::Measurement::Available,
-            ),
-        })
+        Ok(gpu_output(
+            hits,
+            self.mode,
+            candidates,
+            started.elapsed(),
+            &execution,
+            algorithm,
+        ))
+    }
+}
+
+fn empty_output(
+    mode: super::GpuFilterMode,
+    elapsed: web_time::Duration,
+    algorithm: super::Algorithm,
+) -> super::BackendOutput {
+    gpu_output(
+        Vec::new(),
+        mode,
+        Some(0),
+        elapsed,
+        &GpuExecution::default(),
+        algorithm,
+    )
+}
+
+fn gpu_output(
+    hits: Vec<GpuHit>,
+    mode: super::GpuFilterMode,
+    candidates: Option<u64>,
+    elapsed: web_time::Duration,
+    execution: &GpuExecution,
+    algorithm: super::Algorithm,
+) -> super::BackendOutput {
+    super::BackendOutput {
+        hits: hits
+            .into_iter()
+            .map(|hit| qenlo_core::SearchHit {
+                id: hit.id,
+                distance: hit.distance,
+            })
+            .collect(),
+        actual_backend: super::BackendKind::Wgpu,
+        algorithm,
+        filter_execution: super::FilterExecution::Gpu(mode),
+        phases: gpu_phases(elapsed),
+        upload_bytes: super::Measurement::Available(execution.upload_bytes),
+        readback_bytes: super::Measurement::Available(execution.readback_bytes),
+        dispatch_count: super::Measurement::Available(execution.dispatch_count),
+        allocation_bytes: super::Measurement::Available(execution.allocation_bytes),
+        candidates: candidates.map_or_else(
+            || {
+                super::Measurement::Unavailable(super::Unavailable {
+                    reason:
+                        "basic diagnostics do not scan the GPU predicate result to count candidates"
+                            .into(),
+                })
+            },
+            super::Measurement::Available,
+        ),
     }
 }
 
@@ -817,6 +1154,93 @@ fn buffer(
     Ok(result)
 }
 
+fn scratch_bytes(
+    dimension: usize,
+    rows_per_chunk: usize,
+    batch_capacity: usize,
+) -> Result<u64, GpuError> {
+    let batch = batch_capacity as u64;
+    let query = dimension as u64 * 4 * batch;
+    let eligibility = rows_per_chunk as u64 * 4;
+    let scores = rows_per_chunk as u64 * 4 * batch;
+    let candidates = 64 * CANDIDATE_BYTES * 2 * batch;
+    query
+        .checked_add(eligibility)
+        .and_then(|bytes| bytes.checked_add(scores))
+        .and_then(|bytes| bytes.checked_add(candidates))
+        .and_then(|bytes| bytes.checked_add(PARAM_BYTES))
+        .ok_or_else(|| GpuError::InvalidInput("scratch allocation size overflow".into()))
+}
+
+fn create_scratch(
+    device: &wgpu::Device,
+    candidates_layout: &wgpu::BindGroupLayout,
+    dimension: usize,
+    rows_per_chunk: usize,
+    batch_capacity: usize,
+    health: &DeviceHealth,
+) -> Result<Scratch, GpuError> {
+    let batch = batch_capacity as u64;
+    let query = buffer(
+        device,
+        "qenlo query arena",
+        dimension as u64 * 4 * batch,
+        wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+        health,
+    )?;
+    let eligibility = buffer(
+        device,
+        "qenlo eligibility arena",
+        rows_per_chunk as u64 * 4,
+        wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+        health,
+    )?;
+    let params = buffer(
+        device,
+        "qenlo params arena",
+        PARAM_BYTES,
+        wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        health,
+    )?;
+    let scores = buffer(
+        device,
+        "qenlo scores arena",
+        rows_per_chunk as u64 * 4 * batch,
+        wgpu::BufferUsages::STORAGE,
+        health,
+    )?;
+    let selected = buffer(
+        device,
+        "qenlo candidates arena",
+        64 * CANDIDATE_BYTES * batch,
+        wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+        health,
+    )?;
+    let staging = buffer(
+        device,
+        "qenlo readback arena",
+        64 * CANDIDATE_BYTES * batch,
+        wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+        health,
+    )?;
+    let candidates_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("qenlo candidate output arena"),
+        layout: candidates_layout,
+        entries: &[binding(0, &selected)],
+    });
+    health.check()?;
+    Ok(Scratch {
+        batch_capacity,
+        query,
+        eligibility,
+        params,
+        scores,
+        selected,
+        staging,
+        candidates_group,
+    })
+}
+
 fn uploaded<T: Copy>(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
@@ -830,26 +1254,6 @@ fn uploaded<T: Copy>(
         label,
         bytes.len() as u64,
         wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
-        health,
-    )?;
-    queue.write_buffer(&result, 0, bytes);
-    health.check()?;
-    Ok(result)
-}
-
-fn uploaded_uniform(
-    device: &wgpu::Device,
-    queue: &wgpu::Queue,
-    label: &str,
-    value: &[u32; 12],
-    health: &DeviceHealth,
-) -> Result<wgpu::Buffer, GpuError> {
-    let bytes = bytes_of(value);
-    let result = buffer(
-        device,
-        label,
-        PARAM_BYTES,
-        wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         health,
     )?;
     queue.write_buffer(&result, 0, bytes);
@@ -918,8 +1322,9 @@ fn params(
     dimension: u32,
     k: u32,
     eligible_count: u32,
+    batch_size: u32,
     filter: FilterMode<'_>,
-) -> [u32; 12] {
+) -> [u32; 16] {
     let (user, lower, upper, flags) = match filter {
         FilterMode::Predicate { user, lower, upper } => (
             user.unwrap_or(0),
@@ -947,6 +1352,10 @@ fn params(
         xh,
         flags,
         k,
+        batch_size,
+        0,
+        0,
+        0,
     ]
 }
 
@@ -961,6 +1370,32 @@ fn ensure_budget(required: u64, budget: u64) -> Result<(), GpuError> {
 fn gpu_instance() -> wgpu::Instance {
     // Honor WGPU_BACKEND for reproducible DX12/Vulkan runtime verification.
     wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle_from_env())
+}
+
+async fn select_adapter(instance: &wgpu::Instance) -> Result<wgpu::Adapter, GpuError> {
+    if let Ok(requested) = std::env::var("WGPU_ADAPTER_NAME") {
+        let requested = requested.to_lowercase();
+        return instance
+            .enumerate_adapters(wgpu::Backends::all())
+            .await
+            .into_iter()
+            .find(|adapter| adapter.get_info().name.to_lowercase().contains(&requested))
+            .ok_or_else(|| {
+                GpuError::Unavailable(format!(
+                    "WGPU_ADAPTER_NAME did not match an available adapter: {requested}"
+                ))
+            });
+    }
+    instance
+        .request_adapter(&wgpu::RequestAdapterOptions {
+            power_preference: wgpu::PowerPreference::from_env()
+                .unwrap_or(wgpu::PowerPreference::HighPerformance),
+            force_fallback_adapter: false,
+            compatible_surface: None,
+            ..Default::default()
+        })
+        .await
+        .map_err(|error| GpuError::Unavailable(error.to_string()))
 }
 
 fn validate_limits(limits: &wgpu::Limits, dimension: usize) -> Result<(), GpuError> {
@@ -1012,11 +1447,15 @@ fn poll_wait(device: &wgpu::Device) -> Result<(), GpuError> {
         .map_err(|error| GpuError::Device(error.to_string()))
 }
 
-fn map_wait(device: &wgpu::Device, buffer: &wgpu::Buffer) -> Result<(), GpuError> {
+fn map_wait_range(
+    device: &wgpu::Device,
+    buffer: &wgpu::Buffer,
+    bytes: u64,
+) -> Result<(), GpuError> {
     let started = web_time::Instant::now();
     let (sender, receiver) = mpsc::sync_channel(1);
     buffer
-        .slice(..)
+        .slice(..bytes)
         .map_async(wgpu::MapMode::Read, move |result| {
             let _ = sender.send(result);
         });
@@ -1115,6 +1554,40 @@ mod tests {
     }
 
     #[test]
+    fn ivf_builds_deterministic_lists_and_applies_metadata() {
+        let vectors = [
+            1.0, 0.0, 0.99, 0.1, 0.98, -0.1, 0.97, 0.2, 0.0, 1.0, 0.1, 0.99, -0.1, 0.98, 0.2, 0.97,
+        ];
+        let index = IvfIndex::build(&vectors, 2, 2, 1, true);
+        let mut store = qenlo_core::CoreStore::new(2).expect("dimension");
+        for row in 0..8 {
+            store
+                .add(
+                    row + 1,
+                    row % 2,
+                    row as i64,
+                    &vectors[row as usize * 2..row as usize * 2 + 2],
+                )
+                .expect("valid row");
+        }
+        let rows = index.filtered_candidates(
+            &store,
+            &[1.0, 0.0],
+            &qenlo_core::Predicate {
+                user_id: Some(0),
+                timestamp: qenlo_core::TimestampRange::ALL,
+            },
+            1,
+        );
+        assert_eq!(rows, [0]);
+        assert!(
+            rows.iter()
+                .all(|row| store.record(*row).unwrap().user_id() == 0)
+        );
+        assert!(rows.iter().all(|row| *row < 4));
+    }
+
+    #[test]
     fn gpu_exact_mask_smoke_if_adapter_is_available() {
         let Some(exact) = available(block_on(GpuExact::new(
             2,
@@ -1132,6 +1605,22 @@ mod tests {
                 .expect("available adapter completes exact search");
         assert_eq!(hits.iter().map(|hit| hit.id).collect::<Vec<_>>(), [20, 10]);
         assert_eq!(report.readback_bytes, 32);
+
+        let (batch, report) = block_on(exact.search_batch(
+            &[&[1.0, 0.0], &[0.0, 1.0]],
+            2,
+            FilterMode::Mask(&[true, true]),
+        ))
+        .expect("native batch completes");
+        assert_eq!(
+            batch[0].iter().map(|hit| hit.id).collect::<Vec<_>>(),
+            [20, 10]
+        );
+        assert_eq!(
+            batch[1].iter().map(|hit| hit.id).collect::<Vec<_>>(),
+            [10, 20]
+        );
+        assert_eq!(report.readback_bytes, 64);
 
         let (hits, _) = block_on(exact.search(&[1.0, 0.0], 2, FilterMode::EligibleRows(&[1])))
             .expect("eligible-list search completes");
@@ -1462,6 +1951,8 @@ mod tests {
             budget: 1,
             capabilities: exact.capabilities.clone(),
             exact: Some(Box::new(exact)),
+            ivf_config: None,
+            ivf: None,
         };
         let mut store = qenlo_core::CoreStore::new(2).unwrap();
         store.add(2, 1, 0, [1.0, 0.0]).unwrap();
