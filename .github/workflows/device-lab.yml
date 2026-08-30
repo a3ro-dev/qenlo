@@ -120,7 +120,7 @@ jobs:
             name="$(basename "$directory")"
             (cd "$directory" && zip -qr "../../release/$name.zip" .)
           done
-          sha256sum release/*.zip > release/SHA256SUMS
+          (cd release && sha256sum *.zip > SHA256SUMS)
       - name: Publish GitHub release
         run: |
           gh release create "$GITHUB_REF_NAME" release/* \
