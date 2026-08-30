@@ -17,9 +17,6 @@ jobs:
           - os: windows-2025
             artifact: qenlo-lab-windows-x86_64
             binary: target/release/qenlo-lab.exe
-          - os: macos-15
-            artifact: qenlo-lab-macos-arm64
-            binary: target/release/qenlo-lab
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -63,11 +60,23 @@ jobs:
             apps/android/app/build/outputs/apk/debug/app-debug.apk.sha256
           if-no-files-found: error
 
-  ios-unsigned-validation:
+  apple:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v6
       - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - run: cargo build --locked --release -p qenlo-testkit --bin qenlo-lab
+      - run: |
+          mkdir -p package
+          cp target/release/qenlo-lab package/
+          cp docs/device-lab.md package/README.md
+          cd package
+          shasum -a 256 * > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qenlo-lab-macos-arm64
+          path: package
+          if-no-files-found: error
       - run: brew install xcodegen
       - working-directory: apps/ios
         run: xcodegen generate
@@ -93,3 +102,32 @@ jobs:
             target/release/qenlo-telemetry
             target/release/qenlo-telemetry.sha256
           if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/lab-v')
+    needs: [desktop, android, apple, telemetry]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: artifacts
+      - name: Pack release assets
+        run: |
+          mkdir release
+          for directory in artifacts/*; do
+            name="$(basename "$directory")"
+            (cd "$directory" && zip -qr "../../release/$name.zip" .)
+          done
+          sha256sum release/*.zip > release/SHA256SUMS
+      - name: Publish GitHub release
+        run: |
+          gh release create "$GITHUB_REF_NAME" release/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --generate-notes \
+            --title "Qenlo device lab $GITHUB_REF_NAME" \
+            --notes "Desktop and Android packages are tester builds. The iOS archive is unsigned validation output and is not installable until signed with an Apple Developer identity. Verify downloads against SHA256SUMS."
+        env:
+          GH_TOKEN: ${{ github.token }}
