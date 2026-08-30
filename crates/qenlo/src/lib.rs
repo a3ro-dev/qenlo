@@ -1919,7 +1919,9 @@ mod tests {
             else {
                 return;
             };
-            collection.add(1, 7, 0, &[1.0, 0.0]).unwrap();
+            for id in 1..=AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS as u64 {
+                collection.add(id, 7, 0, &[1.0, 0.0]).unwrap();
+            }
             let response = collection
                 .search(&[1.0, 0.0], &Filter::ALL, 1)
                 .await
