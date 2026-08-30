@@ -1,0 +1,37 @@
+name: Device lab report
+description: Submit a retained Qenlo hardware test result
+title: "[device-lab] "
+labels: ["device-lab-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Paste the JSON copied by Qenlo Lab or the contents of `qenlo-lab-run.json` below. Reports contain device class and aggregate measurements, not vectors or source data. This repository and its issues are public.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Linux
+        - Windows
+        - macOS Apple silicon
+        - Android Snapdragon
+        - Android MediaTek
+        - iPhone A-series
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Retained report
+      description: Paste the complete, unchanged JSON report.
+      render: json
+    validations:
+      required: true
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Public telemetry consent
+      options:
+        - label: I understand that this report will be publicly visible in this GitHub issue.
+          required: true

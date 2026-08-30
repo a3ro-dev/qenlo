@@ -4,6 +4,7 @@ import android.app.*;
 import android.os.*;
 import android.content.*;
 import android.graphics.Color;
+import android.net.Uri;
 import android.view.*;
 import android.widget.*;
 import org.json.JSONObject;
@@ -15,7 +16,7 @@ import java.util.concurrent.*;
 
 public final class MainActivity extends Activity {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
-    private Button run, upload;
+    private Button run, upload, github;
     private ProgressBar progress;
     private TextView status, result;
     private Spinner profile;
@@ -39,6 +40,7 @@ public final class MainActivity extends Activity {
         progress = new ProgressBar(this); progress.setVisibility(View.GONE); body.addView(progress);
         status = text("Ready. Keep the phone connected to power for full or soak runs.", 14, false); body.addView(status);
         result = text("No retained result yet.", 13, false); result.setTextIsSelectable(true); body.addView(result);
+        github = button("Copy report and open GitHub"); github.setEnabled(false); body.addView(github); github.setOnClickListener(v -> openGitHub());
         endpoint = input("https://your-lab.example/api/v1/runs", false); body.addView(endpoint);
         token = input("Bearer token", true); body.addView(token);
         upload = button("Submit retained result"); upload.setEnabled(false); body.addView(upload); upload.setOnClickListener(v -> upload());
@@ -83,8 +85,16 @@ public final class MainActivity extends Activity {
         });
     }
 
-    private void showSummary() { try { JSONObject json=new JSONObject(report); result.setText("run "+json.getString("run_id")+"\n"+json.getJSONArray("cells").length()+" workload cells · "+json.getJSONArray("failures").length()+" failures"); upload.setEnabled(true); } catch(Exception e){result.setText("Retained result is unreadable.");} }
-    private void setBusy(boolean busy,String message){run.setEnabled(!busy);upload.setEnabled(!busy&&report!=null);progress.setVisibility(busy?View.VISIBLE:View.GONE);status.setText(message);}
+    private void openGitHub() {
+        if (report == null) return;
+        ClipboardManager clipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+        clipboard.setPrimaryClip(ClipData.newPlainText("Qenlo device lab report", report));
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/a3ro-dev/qenlo/issues/new?template=device-lab-report.yml")));
+        status.setText("Report copied. Paste it into the GitHub report field and submit.");
+    }
+
+    private void showSummary() { try { JSONObject json=new JSONObject(report); result.setText("run "+json.getString("run_id")+"\n"+json.getJSONArray("cells").length()+" workload cells · "+json.getJSONArray("failures").length()+" failures"); upload.setEnabled(true); github.setEnabled(true); } catch(Exception e){result.setText("Retained result is unreadable.");} }
+    private void setBusy(boolean busy,String message){run.setEnabled(!busy);upload.setEnabled(!busy&&report!=null);github.setEnabled(!busy&&report!=null);progress.setVisibility(busy?View.VISIBLE:View.GONE);status.setText(message);}
     private String soc(){return Build.VERSION.SDK_INT>=31?Build.SOC_MANUFACTURER+" "+Build.SOC_MODEL:Build.MANUFACTURER+" "+Build.HARDWARE;}
     private String device(){return Build.MANUFACTURER+" "+Build.MODEL+"\n"+soc()+" · "+(Build.SUPPORTED_ABIS.length==0?"unknown":Build.SUPPORTED_ABIS[0]);}
     private String installId(){android.content.SharedPreferences p=getSharedPreferences("lab",MODE_PRIVATE);String id=p.getString("install_id",null);if(id==null){id=UUID.randomUUID().toString();p.edit().putString("install_id",id).apply();}return id;}

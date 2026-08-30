@@ -54,6 +54,13 @@ import UIKit
         }
     }
 
+    func openGitHub() {
+        guard let report, let url = URL(string: "https://github.com/a3ro-dev/qenlo/issues/new?template=device-lab-report.yml") else { return }
+        UIPasteboard.general.setData(report, forPasteboardType: "public.json")
+        UIApplication.shared.open(url)
+        status = "Report copied. Paste it into the GitHub report field and submit."
+    }
+
     private func accept(_ data: Data) {
         report = data; busy = false; status = "Suite complete. Result retained locally."
         if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let cells = json["cells"] as? [Any], let failures = json["failures"] as? [Any] { summary = "\(cells.count) workload cells · \(failures.count) failures" }
@@ -77,7 +84,7 @@ struct LabView: View {
             Form {
                 Section("Device") { LabeledContent("model", value: LabModel.machine()); LabeledContent("system", value: UIDevice.current.systemVersion); LabeledContent("thermal", value: String(ProcessInfo.processInfo.thermalState.rawValue)) }
                 Section("Suite") { Picker("profile", selection: $model.profile) { Text("quick").tag("quick"); Text("full").tag("full"); Text("soak").tag("soak") }.pickerStyle(.segmented); Button("Run local suite", action: model.run).disabled(model.busy); if model.busy { ProgressView() }; Text(model.status).foregroundStyle(.secondary) }
-                Section("Retained result") { Text(model.summary).font(.system(.body, design: .monospaced)).textSelection(.enabled) }
+                Section("Retained result") { Text(model.summary).font(.system(.body, design: .monospaced)).textSelection(.enabled); Button("Copy report and open GitHub", action: model.openGitHub).disabled(model.busy || model.report == nil) }
                 Section("Submit") { TextField("https://lab.example/api/v1/runs", text: $model.endpoint).textInputAutocapitalization(.never).keyboardType(.URL); SecureField("Bearer token", text: $model.token); Button("Submit retained result", action: model.submit).disabled(model.busy || model.report == nil); Text("Telemetry contains device class and aggregate test measurements. It never contains vectors or source data.").font(.footnote).foregroundStyle(.secondary) }
             }.navigationTitle("Qenlo device lab")
         }.tint(Color(red: 0.71, green: 0.24, blue: 0.18))

@@ -57,6 +57,19 @@ Open `/` for the results viewer. `POST /api/v1/runs`, `GET /api/v1/runs`, and `G
 
 Reports exclude vectors, queries, raw filter values, source data, hostnames, serial numbers, IP addresses, and credentials. The collector logs server errors without echoing submitted payloads.
 
+## GitHub-only telemetry inbox
+
+For a zero-server test round, submit retained reports through the repository's
+[device lab report form](https://github.com/a3ro-dev/qenlo/issues/new?template=device-lab-report.yml).
+Android and iOS provide **Copy report and open GitHub**; desktop testers paste the
+contents of `qenlo-lab-run.json`. Reports remain visible and searchable as GitHub
+issues. Because the repository is public, the form requires explicit consent.
+
+This path needs a GitHub account and a final paste/submit action. GitHub Pages is
+static hosting and cannot accept telemetry POSTs. Fully automatic background
+submission still requires the HTTPS collector above; do not embed a repository
+token in a tester binary.
+
 ## Build outputs
 
 | Output | Intended devices | Installability |
@@ -70,6 +83,8 @@ Reports exclude vectors, queries, raw filter values, source data, hostnames, ser
 
 ## Distribution status
 
-The `device lab packages` GitHub workflow produces all outputs above with SHA-256 manifests for desktop, Android, and server artifacts. Production distribution still requires your code-signing identities: Authenticode for Windows, Developer ID/notarization for macOS, an Android release keystore, and Apple Developer provisioning/TestFlight for iOS. Those identities cannot safely be manufactured or committed by this repository. Do not send unsigned production packages as if they were trusted releases.
+The `device lab packages` GitHub workflow produces all outputs above with SHA-256 manifests for desktop, Android, and server artifacts. Push a `lab-v*` tag, such as `lab-v0.1.0`, to build the packages and publish them as a GitHub Release automatically. Manual workflow runs build downloadable Actions artifacts without publishing a release. The Apple desktop and iOS builds share one macOS runner to control runner cost.
+
+Production distribution still requires your code-signing identities: Authenticode for Windows, Developer ID/notarization for macOS, an Android release keystore, and Apple Developer provisioning/TestFlight for iOS. Those identities cannot safely be manufactured or committed by this repository. Do not send unsigned production packages as if they were trusted releases.
 
 GitHub-hosted debug APKs may be signed with a different ephemeral debug key on a later workflow run. If Android refuses an update because signatures differ, uninstall the older tester (its retained local report will be removed) or use a stable release keystore. Upload the retained result before uninstalling.
