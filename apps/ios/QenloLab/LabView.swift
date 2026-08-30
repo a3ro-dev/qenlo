@@ -15,10 +15,11 @@ import UIKit
     func run() {
         busy = true; status = "Running native suite. Keep Qenlo Lab in the foreground."
         let selected = profile
+        let reportURL = Self.reportURL
         let work = Task.detached(priority: .userInitiated) { () throws -> Data in
             guard let pointer = selected.withCString({ qenlo_lab_run($0) }) else { throw LabError.bridge("native runner returned null") }
             defer { qenlo_lab_free(pointer) }
-            guard let raw = String(validatingUTF8: pointer), var json = try JSONSerialization.jsonObject(with: Data(raw.utf8)) as? [String: Any] else { throw LabError.bridge("native runner returned invalid JSON") }
+            guard let raw = String(validatingCString: pointer), var json = try JSONSerialization.jsonObject(with: Data(raw.utf8)) as? [String: Any] else { throw LabError.bridge("native runner returned invalid JSON") }
             if let error = json["bridge_error"] as? String { throw LabError.bridge(error) }
             json["install_id"] = await Self.installID()
             json["target"] = "ios-arm64"; json["os"] = "ios"
@@ -26,8 +27,8 @@ import UIKit
             json["cpu_arch"] = "arm64"; json["cpu_name"] = Self.machine()
             json["thermal_state"] = String(ProcessInfo.processInfo.thermalState.rawValue)
             let data = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
-            try FileManager.default.createDirectory(at: Self.reportURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try data.write(to: Self.reportURL, options: .atomic)
+            try FileManager.default.createDirectory(at: reportURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try data.write(to: reportURL, options: .atomic)
             return data
         }
         Task {
@@ -60,7 +61,7 @@ import UIKit
     private func loadRetained() { if let data = try? Data(contentsOf: Self.reportURL) { accept(data) } }
     private static var reportURL: URL { FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("qenlo-last-run.json") }
     private static func installID() -> String { let key="qenlo.install-id"; if let id=UserDefaults.standard.string(forKey:key){return id};let id=UUID().uuidString;UserDefaults.standard.set(id,forKey:key);return id }
-    nonisolated static func machine() -> String { var size=0;sysctlbyname("hw.machine",nil,&size,nil,0);var value=[CChar](repeating:0,count:size);sysctlbyname("hw.machine",&value,&size,nil,0);return String(cString:value) }
+    nonisolated static func machine() -> String { var size=0;sysctlbyname("hw.machine",nil,&size,nil,0);var value=[CChar](repeating:0,count:size);sysctlbyname("hw.machine",&value,&size,nil,0);return String(decoding:value.prefix{$0 != 0}.map{UInt8(bitPattern:$0)},as:UTF8.self) }
 }
 
 enum LabError: LocalizedError { case bridge(String); var errorDescription: String? { if case .bridge(let value)=self{return value};return nil } }

@@ -50,7 +50,7 @@ jobs:
       - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
       - run: rustup target add aarch64-linux-android --toolchain 1.98.0
       - run: cargo install cargo-ndk --locked
-      - run: sdkmanager "platforms;android-37" "build-tools;36.0.0" "ndk;28.2.13676358"
+      - run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
       - run: cargo ndk -t arm64-v8a -o apps/android/app/src/main/jniLibs build --locked --release -p qenlo-mobile
       - working-directory: apps/android
         run: gradle --no-daemon assembleDebug
