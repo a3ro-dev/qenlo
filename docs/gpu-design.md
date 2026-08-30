@@ -12,7 +12,9 @@ CPU HNSW implementation; its graph does not run on the GPU.
 ```mermaid
 flowchart LR
     A[Canonical normalized vectors and metadata] -->|prepare after mutation| B[Resident GPU chunks]
-    Q[Normalized query and eligibility] --> C[Parallel dot products]
+    Q[Normalized query batch and eligibility] --> C[Parallel dot products]
+    A -->|optional derived index| I[IVF lists / SQ8 codes]
+    I -->|candidate rows| C
     B --> C
     C --> D[Parallel exact top-k per chunk]
     D -->|16 bytes per candidate| E[Bounded readback]
@@ -55,19 +57,29 @@ the manifest records the actual adapter and API. Each chunk uses a scoring dispa
 an empty compact eligible list needs only the selection dispatch. Every chunk
 currently completes readback before the next starts.
 
-Vectors, IDs and metadata stay resident between queries. Query, eligibility and
-scratch buffers are created for each chunk. Allocation admission includes
+Vectors, IDs and metadata stay resident between queries. Query, eligibility,
+score, candidate, selection, and staging buffers live in a persistent scratch arena
+that grows when a larger batch requires it. Allocation admission includes
 resident buffers, scores, candidates, readback and conservative transfer staging;
 the default budget is 512 MiB. This is tracked buffer allocation, not physical
 VRAM residency. Canonical CPU storage and the temporary flattened preparation
 copy also need host RAM. Increasing the GPU budget does not solve host memory
 pressure.
 
+`search_batch` normalizes and uploads up to 128 queries and dispatches them as one
+GPU workload. Every response observes the same canonical generation. An optional
+deterministic spherical k-means index probes configured posting lists before the
+exact kernel. IVF-Flat reranks all probed eligible rows. IVF-SQ8 scores those rows
+with per-vector symmetric scalar codes, retains up to `32 × k`, then performs the
+same exact FP32 GPU rerank. Canonical vectors remain FP32 and authoritative.
+
 The benchmark times completed API calls, including CPU eligibility, transfer,
 dispatch, synchronization, readback and CPU merging. Preparation is separately
 reported. No isolated GPU timestamp measurement is claimed. GPU-required mode
-returns errors; automatic mode only falls back on availability/execution failure,
-not on a prediction that the CPU will be faster.
+returns errors. Automatic mode routes fewer than 4,096 eligible rows to exact CPU,
+uses GPU above that initial crossover, and still falls back on availability or
+execution failure. Reports and benchmark samples retain the routing reason. The
+static crossover is intentionally replaced by per-device autotuning later.
 
 ## What the experiment establishes
 
@@ -83,10 +95,11 @@ the benchmark additionally requires exact paths to return the same IDs except fo
 a documented boundary tie within `1e-5`; score, filter, count, and uniqueness
 checks remain strict. A non-tie mismatch fails explicitly.
 
-This is exact brute-force search with bounded top-k output. It is not GPU ANN,
-does not establish novelty for GPU filtering, and does not promise a gain at
+The exact mode is brute-force search with bounded top-k output. IVF-Flat and
+IVF-SQ8 are approximate candidate generators with explicit recall gates; neither
+is a GPU graph index. This does not establish novelty and does not promise a gain at
 every selectivity. Physical runtime tests cover this Windows RTX 4050 through
 DX12 and Vulkan only. The [real-data result record](results-2026-08-28.md)
 shows a 5.14× all-row P95 reduction versus Qenlo exact CPU at 100k × 384, but
-also a slower GPU result at 1% selectivity. Metal, mobile and browser execution
-remain untested.
+also a slower GPU result at 1% selectivity. Linux AMD/Intel/NVIDIA, Metal, mobile,
+and browser execution remain package-built but not physically validated here.

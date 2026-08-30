@@ -84,11 +84,12 @@ selection and pruning retain only the generation candidates they need. no second
 full decoded snapshot is staged, but canonical rows and all metadata indexes
 remain resident. allocation can still fail.
 
-transactions pay for a full clone and full snapshot. a one-row durable mutation
-is O(n) in collection size. input and normalized batch vectors may coexist with
-old and staged stores. staging and retained snapshots need disk space too. the
-admission estimate is not a transaction peak-memory bound. use batches, measure
-the workload, and add a WAL when these costs justify its recovery complexity.
+transactions validate the complete ordered batch before publishing a checksummed
+immutable WAL file and atomic manifest, then apply it to the resident store. commit
+work is O(batch), not O(collection). reopen maps and validates the latest immutable
+canonical snapshot, then replays contiguous WAL generations. `flush` and `close`
+synchronously compact the current store into a new full snapshot and prune covered
+WAL files. background compaction and zero-copy row ownership are not implemented yet.
 
 ## visibility and locks
 
@@ -98,10 +99,10 @@ generation. search-triggered preparation drops its initial read lock, obtains a
 write lock, prepares the then-current generation, and downgrades before search.
 no stale graph is served during that transition.
 
-GPU queries also take a per-collection gate so simultaneous query and selection
-scratch allocations cannot multiply the budget. mutation waits for readers. there are no collection background
-workers or speculative MVCC versions. `search_batch` is an ordered convenience
-loop, not a multi-query snapshot.
+GPU queries also take a per-collection gate so simultaneous use of the persistent
+scratch arena cannot multiply the budget. mutation waits for readers. there are no collection background
+workers or speculative MVCC versions. `search_batch` holds one canonical generation
+and becomes one GPU workload when GPU routing is selected.
 
 synchronous methods block. do not block a single-thread executor on mutation
 while an earlier GPU future needs that executor to finish. put contended
@@ -130,11 +131,12 @@ the adapter sorts returned ties, but cannot promise globally smallest IDs among
 equal-distance candidates the graph did not visit. recall must be measured for
 each workload and parameter claim.
 
-wgpu remains an exact-search experiment: CPU-mask, eligible-row, or GPU-predicate
-filtering; signed timestamps; bounded chunks and candidate readback; resident and
-scratch admission; capability and device-loss reporting. required failures and
-automatic fallback are explicit. there is no custom GPU ANN graph or established
-scale-performance advantage. On a hybrid machine, the high-performance adapter
+wgpu supplies exact search plus deterministic IVF-Flat and IVF-SQ8 candidate
+generation with exact FP32 GPU reranking: CPU-mask, eligible-row, or GPU-predicate
+filtering; signed timestamps; bounded chunks and candidate readback; persistent
+scratch admission; true query batches; capability and device-loss reporting.
+required failures and automatic fallback are explicit. IVF configuration is derived
+state and is rebuilt after mutation; there is no custom GPU ANN graph. On a hybrid machine, the high-performance adapter
 request is observable in the returned capabilities and benchmark manifest; the
 2026-08-28 Windows measurements used the discrete NVIDIA GeForce RTX 4050 rather
 than the integrated Intel UHD adapter. Callers should treat the reported actual

@@ -105,6 +105,36 @@ predeclared 1m × 768 investment gate remains untested because this host lacks
 the required memory. host RSS/allocator totals and GPU kernel timestamps remain
 explicitly unavailable for the library reports.
 
+## device-lab verification (2026-08-30)
+
+The release `quick` profile ran on the NVIDIA RTX 4050 through Vulkan with a
+10,000 × 384 deterministic clustered corpus and 16 timed queries. Every cell
+passed with Recall@10 1.0:
+
+| cell | P95 per query | upload bytes |
+| --- | ---: | ---: |
+| CPU exact | 1,099 µs | 0 |
+| GPU exact | 464 µs | 41,600 |
+| native GPU batch-8 | 99 µs | 52,352 |
+| IVF-Flat | 356 µs | 15,352 |
+| IVF-SQ8 | 2,153 µs | 2,880 |
+| automatic selective CPU | 28 µs | 0 |
+| automatic selective batch-8 GPU | 414 µs | 52,352 |
+
+These are compatibility/profile observations, not a production embedding claim.
+SQ8 reduced transfer relative to IVF-Flat but did not reduce latency on this cell.
+The same runner also completed on Intel UHD through Vulkan. AMD, Linux, Metal,
+Android, and iOS still require physical tester devices.
+
+`cargo test --workspace --features gpu-wgpu --no-fail-fast` passed 74 unit and
+integration tests plus doctests. The all-features run with the documented
+`clang-cl` workaround passed 78 unit/integration tests plus doctests, including
+USearch and the bounded OTLP test. Strict workspace Clippy, format, diff, and
+workflow YAML validation passed. The packaged telemetry executable accepted the
+seven-cell report, listed it, and returned its detail with zero retained failures.
+The dashboard was visually checked at 1280 × 720 and 390 × 844 with no document
+overflow; empty, loaded, detail, pass, and no-failure states were exercised.
+
 ## toolchain and remaining release limits
 
 - the existing MSVC 14.29 native-dependency crash was not repaired or re-tested;
@@ -116,8 +146,9 @@ explicitly unavailable for the library reports.
   fixed it. the final stalled-collector/privacy/overflow/shutdown check passed.
 - full Windows power-loss durability is not guaranteed: files are synced, but
   directory publication is not synced with a Windows-specific primitive.
-- commits clone the canonical store and write full snapshots. O(n) writes and
-  peak transaction memory are deliberate limits, not a high-throughput claim.
+- commits append checksummed immutable WAL transactions after O(batch) atomic
+  validation. reopen replays contiguous generations; flush/close synchronously
+  compact to a full snapshot. background compaction is not claimed.
 - only derived readiness metadata is persisted; ANN graphs and resident GPU
   buffers rebuild after restart. no persisted graph cache is claimed.
 - interrupted initial creation may require manual handling of confirmed staging

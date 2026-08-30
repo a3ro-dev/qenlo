@@ -19,6 +19,9 @@ neither gets to decide whether a deleted row is still alive.
 | `qenlo-core` | rows, tombstones, metadata indexes, exact eligible-set search |
 | `qenlo` | durable collections, atomic batches, shared access, reports, optional backends |
 | `qenlo-bench` | independent float64 oracle, checksummed datasets, workload cells, host-owned OTLP |
+| `qenlo-testkit` | cross-platform conformance/performance suite and privacy-safe report schema |
+| `qenlo-mobile` | C/JNI bridge used by the Android and iOS tester shells |
+| `qenlo-telemetry` | authenticated ingestion, SQLite retention, and results viewer |
 
 the exact CPU path uses runtime-detected AVX2 on supported x86 CPUs and a scalar
 fallback elsewhere. it evaluates every eligible live row and retains the best k
@@ -94,8 +97,8 @@ async fn example() -> Result<(), qenlo::Error> {
 `Collection::new` remains the in-memory option. public operations include `add`,
 `add_batch`, `delete`, `delete_batch`, mixed `commit(&[Mutation])`, `search`,
 `search_batch`, `filter`, `prepare`, `stats`, `flush`, and `close`. a search sees
-one committed generation. `search_batch` is an ordered loop, not a transaction-wide
-snapshot. `close` is explicit and idempotent. for compatibility, `filter`
+one committed generation. `search_batch` executes one native GPU batch when GPU routing is selected,
+and all responses observe the same committed generation. `close` is explicit and idempotent. for compatibility, `filter`
 returns an empty list after close; searches and mutations return `Error::Closed`.
 
 ## persistence and recovery
@@ -144,15 +147,17 @@ async fn open_larger_collection() -> Result<Collection, qenlo::Error> {
 
 `create_with_options` accepts the same options. keep them in host configuration.
 loading decodes one row at a time, but the full canonical store and metadata
-indexes remain resident. a transaction clones that store and writes a complete
-snapshot: O(n) work per commit, plus temporary memory and disk space. batch input
-vectors also remain allocated. this is not a high-write-throughput engine.
+indexes remain resident. canonical snapshots are decoded from validated read-only
+memory maps. durable transactions validate O(batch) state and append checksummed
+immutable WAL files under an atomic manifest; `flush`/`close` compact them into a
+full canonical snapshot. batch input and normalized vectors coexist during validation.
+compaction and restart replay remain synchronous.
 
 ## concurrency and derived indexes
 
 share one `Arc<Collection>` across threads. ready CPU and USearch searches share
-a read lock; mutations and rebuilds take a write lock. GPU queries additionally
-serialize scratch allocation and execution. one OS lock permits only one cooperating
+a read lock; mutations and rebuilds take a write lock. GPU queries serialize access
+to a persistent, grow-on-demand scratch arena. one OS lock permits only one cooperating
 handle or process to open a durable directory, including for reads.
 
 mutations, `filter`, `stats`, `flush`, and `close` block. do not call them from a
@@ -170,7 +175,7 @@ metadata cannot remove canonical rows.
 ## backends and diagnostics
 
 `qenlo` has no default features. `usearch` enables the C++ HNSW adapter;
-`gpu-wgpu` enables exact GPU experiments. the benchmark crate forwards both and
+`gpu-wgpu` enables portable GPU exact, IVF-Flat, and IVF-SQ8 search. the benchmark crate forwards both and
 separately provides `otlp` for its host-owned exporter example.
 
 USearch applies canonical eligibility during graph traversal. initial parameters
@@ -180,9 +185,14 @@ rebuilds. results remain approximate, even though returned ties are sorted.
 
 GPU modes are CPU mask, CPU eligible rows, and GPU predicate. allocation admission
 includes scratch, execution is chunked, and candidate readback is bounded.
-required mode reports failures; automatic mode reports a CPU fallback. capability
-reporting and device-loss handling exist. GPU ANN does not. kernel timestamps are
-not measured; host-observed execution durations are not isolated kernel timings.
+required mode reports failures; automatic mode routes selective searches below
+the initial 4,096-row crossover to CPU and reports routing/fallback reasons.
+true batches contain up to 128 queries in one GPU workload. `set_gpu_ivf` enables
+deterministic IVF-Flat candidate generation; `set_gpu_ivf_sq8` adds an SQ8 coarse
+stage. both retain canonical FP32 vectors and perform an exact FP32 GPU rerank.
+capability reporting and device-loss handling exist. kernel
+timestamps are not measured; host-observed execution durations are not isolated
+kernel timings.
 
 reports include operation IDs, actual backend, generation, preparation reason,
 lock wait, CPU path, ANN parameters, transfer counts, and commit context. missing
@@ -223,8 +233,11 @@ $env:CXX = 'clang-cl'
 cargo test -p qenlo --features usearch
 ```
 
-see [contributing](CONTRIBUTING.md) for full commands and
-[verification](docs/verification.md) for recorded results and platform limits.
+see [contributing](CONTRIBUTING.md) for full commands,
+[the device lab](docs/device-lab.md) for the Linux, Windows, macOS, Android,
+iOS, and telemetry packages, [roadmap status](docs/implementation-status.md) for
+implemented versus research-only milestones, and [verification](docs/verification.md)
+for recorded results and platform limits.
 [Measured 2026-08-28 results](docs/results-2026-08-28.md) contains the real-data
 CPU, RTX 4050 GPU, USearch, and native Chroma cells with their recall gates and
 limits.
