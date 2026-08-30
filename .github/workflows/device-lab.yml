@@ -1,0 +1,95 @@
+name: device lab packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["lab-v*"]
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            artifact: qenlo-lab-linux-x86_64
+            binary: target/release/qenlo-lab
+          - os: windows-2025
+            artifact: qenlo-lab-windows-x86_64
+            binary: target/release/qenlo-lab.exe
+          - os: macos-15
+            artifact: qenlo-lab-macos-arm64
+            binary: target/release/qenlo-lab
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - run: cargo build --locked --release -p qenlo-testkit --bin qenlo-lab
+      - shell: bash
+        run: |
+          mkdir -p package
+          cp "${{ matrix.binary }}" package/
+          cp docs/device-lab.md package/README.md
+          cd package
+          if command -v sha256sum >/dev/null; then sha256sum * > SHA256SUMS; else shasum -a 256 * > SHA256SUMS; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: package
+          if-no-files-found: error
+
+  android:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: "17" }
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v5
+        with: { gradle-version: "9.5.0" }
+      - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - run: rustup target add aarch64-linux-android --toolchain 1.98.0
+      - run: cargo install cargo-ndk --locked
+      - run: sdkmanager "platforms;android-37" "build-tools;36.0.0" "ndk;28.2.13676358"
+      - run: cargo ndk -t arm64-v8a -o apps/android/app/src/main/jniLibs build --locked --release -p qenlo-mobile
+      - working-directory: apps/android
+        run: gradle --no-daemon assembleDebug
+      - run: sha256sum apps/android/app/build/outputs/apk/debug/app-debug.apk > apps/android/app/build/outputs/apk/debug/app-debug.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qenlo-lab-android-arm64
+          path: |
+            apps/android/app/build/outputs/apk/debug/app-debug.apk
+            apps/android/app/build/outputs/apk/debug/app-debug.apk.sha256
+          if-no-files-found: error
+
+  ios-unsigned-validation:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - run: brew install xcodegen
+      - working-directory: apps/ios
+        run: xcodegen generate
+      - working-directory: apps/ios
+        run: xcodebuild -project QenloLab.xcodeproj -scheme QenloLab -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qenlo-lab-ios-unsigned-validation
+          path: ~/Library/Developer/Xcode/DerivedData/QenloLab-*/Build/Products/Release-iphoneos/Qenlo Lab.app
+          if-no-files-found: error
+
+  telemetry:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - run: cargo build --locked --release -p qenlo-telemetry
+      - run: sha256sum target/release/qenlo-telemetry > target/release/qenlo-telemetry.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qenlo-telemetry-linux-x86_64
+          path: |
+            target/release/qenlo-telemetry
+            target/release/qenlo-telemetry.sha256
+          if-no-files-found: error

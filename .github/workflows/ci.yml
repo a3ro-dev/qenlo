@@ -1,0 +1,32 @@
+name: portable correctness
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  portable:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - name: Record host
+        run: rustc -vV
+      - name: Test canonical format, WAL recovery, and exact oracle
+        run: cargo test --workspace
+
+  windows-arm64-compile:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install pinned Rust and ARM64 target
+        run: |
+          rustup toolchain install 1.98.0 --profile minimal --no-self-update
+          rustup target add aarch64-pc-windows-msvc --toolchain 1.98.0
+      - name: Check AArch64 NEON and storage
+        run: cargo check -p qenlo --target aarch64-pc-windows-msvc
