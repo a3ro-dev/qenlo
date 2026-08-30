@@ -121,13 +121,45 @@ jobs:
             (cd "$directory" && zip -qr "../../release/$name.zip" .)
           done
           (cd release && sha256sum *.zip > SHA256SUMS)
+          cat > release-notes.md <<EOF
+          ## Qenlo device lab $GITHUB_REF_NAME
+
+          A cross-platform conformance and performance suite for comparing Qenlo on real hardware. Each run checks exact CPU/GPU correctness, filtering, durable reopen, IVF recall gates, routing decisions, latency percentiles, transfers, allocations, dispatches, and failures.
+
+          ### Downloads
+
+          | Asset | Use |
+          | --- | --- |
+          | `qenlo-lab-linux-x86_64.zip` | Linux x86_64 with NVIDIA, AMD, or Intel adapters |
+          | `qenlo-lab-windows-x86_64.zip` | Windows x86_64 with NVIDIA, AMD, or Intel adapters |
+          | `qenlo-lab-macos-arm64.zip` | Apple-silicon macOS |
+          | `qenlo-lab-android-arm64.zip` | Android arm64, including Snapdragon and MediaTek |
+          | `qenlo-lab-ios-unsigned-validation.zip` | A-series iOS build validation; unsigned and not installable yet |
+          | `qenlo-telemetry-linux-x86_64.zip` | Self-hosted HTTPS telemetry collector and viewer |
+
+          ### Quick start
+
+          1. Download the package for the device and verify it with `SHA256SUMS`.
+          2. Run the quick profile first; keep the device foregrounded and on power for full or soak profiles.
+          3. Keep the retained JSON report. Mobile builds can copy it and open the GitHub report form; desktop builds save `qenlo-lab-run.json` beside the executable.
+
+          ### Telemetry
+
+          For automatic authenticated ingestion, deploy the telemetry binary behind HTTPS. For a zero-server round, use the [public GitHub report form](https://github.com/a3ro-dev/qenlo/issues/new?template=device-lab-report.yml). Reports contain aggregate measurements and device class only; the form makes their public visibility explicit.
+
+          ### Important limits
+
+          Windows and macOS archives are tester builds and are not Authenticode/Developer ID notarized. The Android APK is a debug build. The iOS archive is unsigned validation output and requires your Apple Developer provisioning identity before it can be installed. Do not treat these archives as production-signed software.
+
+          Build provenance: [$GITHUB_SHA](https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA) · [Actions run](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)
+          EOF
       - name: Publish GitHub release
         run: |
-          gh release create "$GITHUB_REF_NAME" release/* \
+          gh release create "$GITHUB_REF_NAME" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
-            --generate-notes \
             --title "Qenlo device lab $GITHUB_REF_NAME" \
-            --notes "Desktop and Android packages are tester builds. The iOS archive is unsigned validation output and is not installable until signed with an Apple Developer identity. Verify downloads against SHA256SUMS."
+            --notes-file release-notes.md \
+            release/*.zip release/SHA256SUMS
         env:
           GH_TOKEN: ${{ github.token }}
