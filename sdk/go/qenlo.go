@@ -2,7 +2,7 @@
 package qenlo
 
 /*
-#cgo CFLAGS: -I${SRCDIR}/../../crates/qenlo-ffi
+#cgo CFLAGS: -I${SRCDIR}/native
 #cgo windows,amd64 LDFLAGS: -L${SRCDIR}/native/windows-amd64 -lqenlo_ffi
 #cgo linux,amd64 LDFLAGS: -L${SRCDIR}/native/linux-amd64 -lqenlo_ffi -Wl,-rpath,${SRCDIR}/native/linux-amd64
 #cgo linux,arm64 LDFLAGS: -L${SRCDIR}/native/linux-arm64 -lqenlo_ffi -Wl,-rpath,${SRCDIR}/native/linux-arm64
@@ -144,6 +144,16 @@ func Open(path string, dimension int) (*Collection, error) {
 	value := C.CString(path)
 	defer C.free(unsafe.Pointer(value))
 	return newCollection(C.qenlo_collection_open(value, C.size_t(dimension)), dimension)
+}
+
+// ImportQN imports a checksummed .qn snapshot into a mutable in-memory collection.
+func ImportQN(path string, dimension int) (*Collection, error) {
+	if err := validateDimension(dimension); err != nil {
+		return nil, err
+	}
+	value := C.CString(path)
+	defer C.free(unsafe.Pointer(value))
+	return newCollection(C.qenlo_collection_import_qn(value, C.size_t(dimension)), dimension)
 }
 
 func nativeError() error {
@@ -332,6 +342,15 @@ func (db *Collection) Stats() (CollectionStats, error) {
 // Flush compacts durable WAL state into a canonical snapshot.
 func (db *Collection) Flush() error {
 	return db.withHandle(func(handle *C.QenloCollection) error { return check(C.qenlo_flush(handle)) })
+}
+
+// ExportQN atomically exports the current generation to a new portable .qn file.
+func (db *Collection) ExportQN(path string) error {
+	value := C.CString(path)
+	defer C.free(unsafe.Pointer(value))
+	return db.withHandle(func(handle *C.QenloCollection) error {
+		return check(C.qenlo_export_qn(handle, value))
+	})
 }
 
 // Close releases the native collection. It is idempotent.

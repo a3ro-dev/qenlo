@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Qenlo documentation for embedded filtered vector search, portable storage, SDKs, and reproducible benchmarks.">
+  <meta name="theme-color" content="#171c19">
+  <title>Qenlo documentation</title>
+  <link rel="icon" href="../assets/brand/logo/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to documentation</a>
+  <header class="topbar">
+    <button class="icon-button mobile-only" id="menu-button" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">☰</button>
+    <a class="brand" href="../" aria-label="Qenlo home">
+      <picture>
+        <source srcset="../assets/brand/logo/lockup-reversed.svg" media="(prefers-color-scheme: dark)">
+        <img src="../assets/brand/logo/lockup.svg" alt="Qenlo" width="112" height="30">
+      </picture>
+      <span>docs</span>
+    </a>
+    <label class="search" for="doc-search">
+      <span aria-hidden="true">⌕</span>
+      <input id="doc-search" type="search" placeholder="Search documentation" autocomplete="off" aria-controls="search-results">
+      <kbd>/</kbd>
+    </label>
+    <div class="top-actions">
+      <span class="version">v0.1.0</span>
+      <button class="icon-button mobile-only" id="mobile-search-button" type="button" aria-label="Open search" aria-controls="doc-search" aria-expanded="false">⌕</button>
+      <button class="icon-button" id="theme-button" type="button" aria-label="Toggle color theme">◐</button>
+      <a class="github-link" href="https://github.com/a3ro-dev/qenlo">GitHub ↗</a>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <nav aria-label="Documentation">
+        <div class="nav-group">
+          <p>Start</p>
+          <a href="#overview" data-route="overview">Overview</a>
+          <a href="#quickstart" data-route="quickstart">Quickstart</a>
+          <a href="#concepts" data-route="concepts">Core concepts</a>
+        </div>
+        <div class="nav-group">
+          <p>SDKs</p>
+          <a href="#rust" data-route="rust">Rust</a>
+          <a href="#python" data-route="python">Python</a>
+          <a href="#typescript" data-route="typescript">TypeScript</a>
+          <a href="#go" data-route="go">Go</a>
+          <a href="#kotlin" data-route="kotlin">Kotlin</a>
+          <a href="#apple" data-route="apple">macOS and iOS</a>
+        </div>
+        <div class="nav-group">
+          <p>Operate</p>
+          <a href="#storage" data-route="storage">Storage and .qn</a>
+          <a href="#recovery" data-route="recovery">Recovery</a>
+          <a href="#telemetry" data-route="telemetry">Execution reports</a>
+        </div>
+        <div class="nav-group">
+          <p>Research</p>
+          <a href="#benchmarks" data-route="benchmarks">Benchmarks</a>
+          <a href="#device-lab" data-route="device-lab">Device lab</a>
+          <a href="#release-status" data-route="release-status">Release status</a>
+        </div>
+      </nav>
+      <footer>
+        <a href="architecture.md">Architecture source</a>
+        <a href="verification.md">Verification record</a>
+      </footer>
+    </aside>
+
+    <main id="content" tabindex="-1">
+      <div class="search-results" id="search-results" hidden aria-live="polite"></div>
+
+      <article data-page="overview" data-summary="What Qenlo is, what it guarantees, and where the research boundary sits.">
+        <p class="eyebrow">Qenlo documentation</p>
+        <h1>Embedded vector search that explains its work.</h1>
+        <p class="lede">Qenlo is a Rust vector database for native applications. It keeps canonical vectors and metadata local, applies filters before ranking, and returns an execution report with every search.</p>
+        <div class="article-actions" data-ai-actions></div>
+        <div class="truth-line" role="note">
+          <strong>Current truth:</strong> the exact CPU path, durable storage, portable <code>.qn</code> files, multi-language SDK boundary, and Windows GPU paths are implemented. The predeclared 1M × 768 research gate remains untested.
+        </div>
+        <h2>Choose the shortest path</h2>
+        <div class="path-list">
+          <a href="#quickstart"><span>01</span><strong>Run a local collection</strong><small>Five minutes, no server</small></a>
+          <a href="#storage"><span>02</span><strong>Persist and move data</strong><small>Durable directories and .qn exports</small></a>
+          <a href="#benchmarks"><span>03</span><strong>Inspect the evidence</strong><small>Protocol, devices, and open gates</small></a>
+        </div>
+        <h2>System boundary</h2>
+        <table>
+          <thead><tr><th>Qenlo owns</th><th>Your application owns</th></tr></thead>
+          <tbody>
+            <tr><td>Normalized FP32 vectors, metadata, tombstones, generations</td><td>Embedding generation and model lifecycle</td></tr>
+            <tr><td>Exact filtered search and optional derived indexes</td><td>Product ranking policy beyond cosine distance</td></tr>
+            <tr><td>Checksummed persistence and explicit recovery state</td><td>Backups, distribution, and platform signing</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article data-page="quickstart" data-summary="Create a collection, add records, search with filters, and inspect execution telemetry.">
+        <p class="eyebrow">Start</p>
+        <h1>Quickstart</h1>
+        <p class="lede">The API shape stays consistent across every binding: create, add, search, inspect, close.</p>
+        <div class="article-actions" data-ai-actions></div>
+        <div class="language-tabs" role="tablist" aria-label="SDK language">
+          <button role="tab" aria-selected="true" data-language="rust">Rust</button>
+          <button role="tab" aria-selected="false" data-language="python">Python</button>
+          <button role="tab" aria-selected="false" data-language="typescript">TypeScript</button>
+          <button role="tab" aria-selected="false" data-language="go">Go</button>
+          <button role="tab" aria-selected="false" data-language="kotlin">Kotlin</button>
+          <button role="tab" aria-selected="false" data-language="swift">Swift</button>
+        </div>
+        <div class="code-panel" data-code-language="rust"><button class="copy-code" type="button">Copy</button><pre><code>let db = Collection::new(CollectionConfig::cpu_exact(3)).await?;
+db.add(1, 7, 10, &[1.0, 0.0, 0.0])?;
+let response = db.search(&[1.0, 0.0, 0.0], &Filter {
+    user_id: Some(7), ..Filter::ALL
+}, 10).await?;
+assert_eq!(response.results[0].id, 1);</code></pre></div>
+        <div class="code-panel" data-code-language="python" hidden><button class="copy-code" type="button">Copy</button><pre><code>from qenlo import Collection, Filter, Record
+
+with Collection.memory(3) as db:
+    db.add(Record(1, 7, 10, (1.0, 0.0, 0.0)))
+    response = db.search((1.0, 0.0, 0.0), Filter(user_id=7))
+    assert response.results[0].id == 1</code></pre></div>
+        <div class="code-panel" data-code-language="typescript" hidden><button class="copy-code" type="button">Copy</button><pre><code>import { Collection } from "@qenlo/qenlo";
+
+using db = Collection.memory(3);
+db.add({ id: 1n, userId: 7n, timestamp: 10n, vector: [1, 0, 0] });
+const response = db.search([1, 0, 0], { userId: 7n });</code></pre></div>
+        <div class="code-panel" data-code-language="go" hidden><button class="copy-code" type="button">Copy</button><pre><code>db, err := qenlo.New(3)
+if err != nil { log.Fatal(err) }
+defer db.Close()
+err = db.Add(qenlo.Record{ID: 1, UserID: 7, Timestamp: 10,
+    Vector: []float32{1, 0, 0}})</code></pre></div>
+        <div class="code-panel" data-code-language="kotlin" hidden><button class="copy-code" type="button">Copy</button><pre><code>QenloCollection.memory(3).use { db ->
+    db.add(Record(1u, 7u, 10, floatArrayOf(1f, 0f, 0f)))
+    val response = db.search(floatArrayOf(1f, 0f, 0f), Filter(userId = 7u))
+}</code></pre></div>
+        <div class="code-panel" data-code-language="swift" hidden><button class="copy-code" type="button">Copy</button><pre><code>let db = try QenloCollection(memoryDimension: 3)
+defer { try? db.close() }
+try db.add(.init(id: 1, userID: 7, timestamp: 10, vector: [1, 0, 0]))
+let response = try db.search([1, 0, 0], filter: .init(userID: 7))</code></pre></div>
+        <h2>Ordering and filter rules</h2>
+        <ul>
+          <li>Cosine distance is ascending. Equal distances are ordered by public ID.</li>
+          <li><code>user_id</code> is optional equality. Timestamp lower bounds are inclusive; upper bounds are exclusive.</li>
+          <li>Public IDs are unique and never reusable, including after deletion.</li>
+        </ul>
+      </article>
+
+      <article data-page="concepts" data-summary="Canonical generations, filters, exact and approximate paths, and deterministic results.">
+        <p class="eyebrow">Concepts</p><h1>Core concepts</h1><div class="article-actions" data-ai-actions></div>
+        <h2>Canonical first</h2><p>Vectors, metadata, tombstones, and generation are canonical. CPU and GPU indexes are replaceable views. A stale derived index is rebuilt or rejected; it never becomes the source of truth.</p>
+        <h2>One committed generation</h2><p>A search observes one complete generation. Batch mutations validate atomically before publication, so readers do not see partial batches.</p>
+        <h2>Backend selection is visible</h2><p><code>Automatic</code> may use exact CPU search or a GPU path. The execution report names the requested backend, actual backend, algorithm, routing reason, fallback reason, bytes moved, and measured timing.</p>
+      </article>
+
+      <article data-page="rust" data-summary="Native async Rust API, feature flags, and durable collection lifecycle.">
+        <p class="eyebrow">SDK</p><h1>Rust</h1><p class="lede">The native crate exposes the complete collection, backend, diagnostics, and tuning surface.</p><div class="article-actions" data-ai-actions></div>
+        <pre><code>[dependencies]
+qenlo = "0.1"</code></pre>
+        <h2>Optional features</h2><table><thead><tr><th>Feature</th><th>Purpose</th></tr></thead><tbody><tr><td><code>gpu-wgpu</code></td><td>Exact GPU and IVF research paths through wgpu</td></tr><tr><td><code>usearch</code></td><td>Filtered HNSW comparison path with a C++ toolchain</td></tr></tbody></table>
+        <p class="callout">The repository crate is the current source of truth. Registry publication remains a release step, not an implied availability claim.</p>
+      </article>
+
+      <article data-page="python" data-summary="Typed Python bindings, native wheel behavior, persistence, and portable file APIs.">
+        <p class="eyebrow">SDK</p><h1>Python</h1><div class="article-actions" data-ai-actions></div>
+        <pre><code>python -m pip install qenlo</code></pre>
+        <p>Use <code>Collection.memory</code>, <code>create</code>, <code>open</code>, or <code>import_qn</code>. Context manager exit closes the native handle. IDs are validated as unsigned 64-bit values and timestamps as signed 64-bit values.</p>
+        <pre><code>db.export_qn("vectors.qn")
+portable = Collection.import_qn("vectors.qn", dimension=384)</code></pre>
+      </article>
+
+      <article data-page="typescript" data-summary="Node.js TypeScript bindings with bigint-safe identifiers and explicit disposal.">
+        <p class="eyebrow">SDK</p><h1>TypeScript</h1><div class="article-actions" data-ai-actions></div>
+        <pre><code>npm install @qenlo/qenlo</code></pre>
+        <p>IDs and timestamps use <code>bigint</code>, preserving the full native 64-bit range. The package is ESM and supports explicit resource management through <code>using</code>.</p>
+        <pre><code>using db = Collection.importQn("vectors.qn", 384);
+db.exportQn("copy.qn");</code></pre>
+      </article>
+
+      <article data-page="go" data-summary="cgo bindings, typed filters, lifecycle, and native library requirements.">
+        <p class="eyebrow">SDK</p><h1>Go</h1><div class="article-actions" data-ai-actions></div>
+        <pre><code>go get github.com/a3ro-dev/qenlo/sdk/go</code></pre>
+        <p>The binding uses cgo. Keep the matching native library beside the package or in the platform loader path. <code>Close</code> is idempotent; use <code>errors.As</code> with <code>*qenlo.Error</code> for native failures.</p>
+      </article>
+
+      <article data-page="kotlin" data-summary="Kotlin JVM bindings through JNA, unsigned identifiers, and AutoCloseable lifecycle.">
+        <p class="eyebrow">SDK</p><h1>Kotlin</h1><div class="article-actions" data-ai-actions></div>
+        <pre><code>implementation("dev.qenlo:qenlo:0.1.0")</code></pre>
+        <p>The API uses Kotlin unsigned types for IDs and <code>AutoCloseable</code> for deterministic cleanup. JNA loads <code>qenlo_ffi</code> from <code>QENLO_LIBRARY_PATH</code> or the system library path.</p>
+      </article>
+
+      <article data-page="apple" data-summary="Swift bindings for macOS and iOS, Sendable values, and XCFramework distribution boundary.">
+        <p class="eyebrow">SDK</p><h1>macOS and iOS</h1><div class="article-actions" data-ai-actions></div>
+        <p>The Swift API uses <code>UInt64</code>, <code>Int64</code>, typed value objects, and explicit close semantics. Source checkouts link a compiled <code>libqenlo_ffi</code>; release packages require an XCFramework containing the matching Apple slices.</p>
+        <pre><code>let db = try QenloCollection(importQN: fileURL, dimension: 384)
+try db.exportQN(to: destinationURL)</code></pre>
+      </article>
+
+      <article data-page="storage" data-summary="Durable directory format, portable .qn snapshots, checksums, and publication rules.">
+        <p class="eyebrow">Operate</p><h1>Storage and portable files</h1><div class="article-actions" data-ai-actions></div>
+        <h2>Durable collection directory</h2><p>Use <code>create</code> and <code>open</code> for writable state across restarts. Commits append checksummed WAL transactions. Flush and close compact to a canonical snapshot.</p>
+        <h2>Portable <code>.qn</code></h2><p>A <code>.qn</code> file is a create-only, checksummed interchange snapshot. It retains tombstones and generation but excludes derived indexes, telemetry, locks, and embedding models.</p>
+        <ol><li>Write a sibling <code>.qn.pending</code> file with exclusive creation.</li><li>Flush and sync the complete payload.</li><li>Publish without replacing an existing target.</li><li>Sync the parent directory where the platform supports it.</li></ol>
+        <p><a href="qn-format-v1.md">Read the byte-level v1 format →</a></p>
+      </article>
+
+      <article data-page="recovery" data-summary="What Qenlo self-heals, what it preserves, and which failures remain operator decisions.">
+        <p class="eyebrow">Operate</p><h1>Recovery</h1><p class="lede">Self-healing is bounded and visible. Canonical corruption always fails closed.</p><div class="article-actions" data-ai-actions></div>
+        <table><thead><tr><th>State</th><th>Automatic action</th><th>Boundary</th></tr></thead><tbody>
+          <tr><td>Valid interrupted <code>.qn.pending</code></td><td>Validate, publish, report recovery</td><td>Target must be absent</td></tr>
+          <tr><td>Stale derived index</td><td>Discard and rebuild</td><td>Canonical vectors are never inferred</td></tr>
+          <tr><td>Lost GPU device in Automatic mode</td><td>Route later work to exact CPU</td><td>Required GPU returns an error</td></tr>
+          <tr><td>Checksum or generation ambiguity</td><td>Preserve evidence</td><td>No guessed repair</td></tr>
+        </tbody></table>
+        <p><a href="recovery-policy.md">Read the complete recovery policy →</a></p>
+      </article>
+
+      <article data-page="telemetry" data-summary="Read requested and actual backends, routing, fallback, timings, and memory movement.">
+        <p class="eyebrow">Operate</p><h1>Execution reports</h1><div class="article-actions" data-ai-actions></div>
+        <p>Every search response includes results plus an execution report. Optional measurements are explicitly unavailable when the backend cannot provide them.</p>
+        <pre><code>{
+  "requested_backend": "Automatic(GpuPredicate)",
+  "actual_backend": "Cpu",
+  "algorithm": "Exact",
+  "routing_reason": "100 eligible rows below GPU crossover 4096",
+  "fallback_reason": null
+}</code></pre>
+      </article>
+
+      <article data-page="benchmarks" data-summary="Reproducible benchmark protocol, independent correctness oracle, and the open investment gate.">
+        <p class="eyebrow">Research</p><h1>Benchmarks and gate</h1><div class="article-actions" data-ai-actions></div>
+        <div class="gate"><span>Predeclared investment gate</span><strong>1M × 768, 1% eligible, batch 1, k = 10</strong><em>Untested</em></div>
+        <p>Existing 100k × 384 measurements are evidence for their exact devices and cells. They do not close the larger gate and are never generalized into a universal performance claim.</p>
+        <h2>Comparison contract</h2><ul><li>Independent float64 exact oracle.</li><li>Every attempt retained, including failures and fallbacks.</li><li>P95 uses nearest-rank calculation with declared warmups and repetitions.</li><li>Dataset selection, checksums, hardware, drivers, and build inputs recorded.</li></ul>
+        <p><a href="benchmark-protocol.md">Read the complete protocol →</a> · <a href="results-2026-08-28.md">Inspect retained results →</a></p>
+      </article>
+
+      <article data-page="device-lab" data-summary="Run quick and soak suites on real devices, retain local reports, and submit telemetry explicitly.">
+        <p class="eyebrow">Research</p><h1>Device lab</h1><div class="article-actions" data-ai-actions></div>
+        <p>The lab turns trusted tester hardware into a reproducible station. Reports name the real adapter and API, keep failures, and remain local until the tester explicitly submits them.</p>
+        <div class="truth-line" role="note"><strong>Latest retained device:</strong> an Intel Arc Vulkan soak run passed all seven cells at Recall@10 = 1.0. Exact GPU P95 was 4,444 µs versus exact CPU P95 16,486 µs. This is device evidence, not the 1M × 768 gate.</div>
+        <pre><code>qenlo-lab --suite quick
+qenlo-lab --suite soak</code></pre>
+        <p><a href="device-lab.md">Packaging, privacy, and submission guide →</a> · <a href="../benchmarks/2026-08-31/device-lab/intel-arc/README.md">Intel Arc evidence →</a></p>
+      </article>
+
+      <article data-page="release-status" data-summary="What is implemented, what CI proves, and what still needs credentials or physical hardware.">
+        <p class="eyebrow">Release</p><h1>Release status</h1><div class="article-actions" data-ai-actions></div>
+        <table><thead><tr><th>Surface</th><th>Current state</th></tr></thead><tbody>
+          <tr><td>Rust core and C ABI</td><td><span class="status pass">Tested</span> Workspace and ABI conformance</td></tr>
+          <tr><td>Python and TypeScript</td><td><span class="status pass">Tested</span> Static types, runtime, package contents</td></tr>
+          <tr><td>Go and Kotlin</td><td><span class="status pass">CI tested</span> Windows, Linux, macOS matrix</td></tr>
+          <tr><td>Swift</td><td><span class="status pass">CI tested</span> macOS runtime conformance</td></tr>
+          <tr><td>Registry and signed Apple distribution</td><td><span class="status open">Open</span> Requires publisher configuration and signing identities</td></tr>
+          <tr><td>1M × 768 research gate</td><td><span class="status open">Open</span> Requires a qualifying physical device</td></tr>
+        </tbody></table>
+        <p><a href="implementation-status.md">Implementation ledger →</a> · <a href="verification.md">Verification record →</a></p>
+      </article>
+
+      <nav class="page-nav" aria-label="Adjacent documentation">
+        <a id="previous-page" href="#overview"></a><a id="next-page" href="#quickstart"></a>
+      </nav>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

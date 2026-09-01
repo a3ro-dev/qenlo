@@ -45,6 +45,16 @@ Keep the app foregrounded during a suite. Android configuration changes do not r
 
 The suite covers invalid inputs, filter semantics, durable reopen, exact CPU search, exact GPU search, true batch-8 GPU execution, IVF-Flat and IVF-SQ8 at a Recall@10 ≥ 0.95 gate, an independent float64 truth calculation, P50/P95/P99 latency, transfer bytes, allocation bytes, dispatch count, routing, fallback, device/API identity, and retained failures. It precomputes truth and runs CPU, required-GPU, and automatic collections sequentially so full/soak profiles do not keep three corpora resident on a phone. Its deterministic clustered corpus makes the IVF cells repeatable; it is a device-comparison workload, not evidence of recall on arbitrary production embeddings.
 
+## Retained device submissions
+
+The [Intel Arc submission](../benchmarks/2026-08-31/device-lab/intel-arc/README.md)
+retains two embedded `quick` reports and one `soak` report from an Intel Arc
+Vulkan adapter. All 21 cells passed with Recall@10 = 1.0 and no fallback. The
+soak result recorded exact GPU P95 of 4,444 µs versus exact CPU P95 of 16,486 µs.
+One report was supplied under a “full” label but identifies itself as `quick`;
+Qenlo preserves the embedded suite value and does not represent it as full.
+These device-lab results do not satisfy the separate 1M × 768 investment gate.
+
 ## Telemetry server
 
 Set a random token of at least 24 characters and place the server behind an HTTPS reverse proxy:

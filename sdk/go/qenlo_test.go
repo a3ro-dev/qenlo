@@ -16,39 +16,132 @@ func fixture() []Record {
 }
 
 func TestTypedFilterOrderingAndTelemetry(t *testing.T) {
-	db, err := New(3); if err != nil { t.Fatal(err) }; defer db.Close()
-	if err := db.AddBatch(fixture()); err != nil { t.Fatal(err) }
+	db, err := New(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	if err := db.AddBatch(fixture()); err != nil {
+		t.Fatal(err)
+	}
 	response, err := db.Search([]float32{1, 0, 0}, Filter{UserID: Uint64(7), TimestampLower: Int64(-5), TimestampUpper: Int64(20)}, 10)
-	if err != nil { t.Fatal(err) }
-	if len(response.Results) != 2 || response.Results[0].ID != 2 || response.Results[1].ID != 9 { t.Fatalf("unexpected results: %#v", response.Results) }
-	if response.Report.ActualBackend != "Cpu" || response.Report.Algorithm != "Exact" || response.Report.OperationID == 0 { t.Fatalf("unexpected report: %#v", response.Report) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(response.Results) != 2 || response.Results[0].ID != 2 || response.Results[1].ID != 9 {
+		t.Fatalf("unexpected results: %#v", response.Results)
+	}
+	if response.Report.ActualBackend != "Cpu" || response.Report.Algorithm != "Exact" || response.Report.OperationID == 0 {
+		t.Fatalf("unexpected report: %#v", response.Report)
+	}
 }
 
 func TestAtomicBatchAndNonReusableIDs(t *testing.T) {
-	db, _ := New(3); defer db.Close()
-	rows := fixture(); if err := db.Add(rows[0]); err != nil { t.Fatal(err) }
-	if err := db.AddBatch([]Record{rows[1], rows[0]}); err == nil { t.Fatal("expected atomic batch failure") }
-	stats, _ := db.Stats(); if stats.Rows != 1 { t.Fatalf("partial batch committed: %#v", stats) }
-	if err := db.Delete(9); err != nil { t.Fatal(err) }
-	if err := db.Add(rows[0]); err == nil { t.Fatal("deleted ID was reused") }
+	db, _ := New(3)
+	defer db.Close()
+	rows := fixture()
+	if err := db.Add(rows[0]); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AddBatch([]Record{rows[1], rows[0]}); err == nil {
+		t.Fatal("expected atomic batch failure")
+	}
+	stats, _ := db.Stats()
+	if stats.Rows != 1 {
+		t.Fatalf("partial batch committed: %#v", stats)
+	}
+	if err := db.Delete(9); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Add(rows[0]); err == nil {
+		t.Fatal("deleted ID was reused")
+	}
 }
 
 func TestDurableReopen(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "vectors.qenlo")
-	db, err := Create(path, 3); if err != nil { t.Fatal(err) }
-	if err := db.AddBatch(fixture()); err != nil { t.Fatal(err) }
-	if err := db.DeleteBatch([]uint64{2, 4}); err != nil { t.Fatal(err) }
-	if err := db.Flush(); err != nil { t.Fatal(err) }
-	if err := db.Close(); err != nil { t.Fatal(err) }
-	db, err = Open(path, 3); if err != nil { t.Fatal(err) }; defer db.Close()
-	stats, _ := db.Stats(); if stats.LiveRows != 2 { t.Fatalf("unexpected stats: %#v", stats) }
+	db, err := Create(path, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AddBatch(fixture()); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.DeleteBatch([]uint64{2, 4}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Flush(); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	db, err = Open(path, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	stats, _ := db.Stats()
+	if stats.LiveRows != 2 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+}
+
+func TestPortableQNRoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "vectors.qn")
+	db, err := New(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AddBatch(fixture()); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Delete(9); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.ExportQN(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.ExportQN(path); err == nil {
+		t.Fatal("expected non-overwrite failure")
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	imported, err := ImportQN(path, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer imported.Close()
+	stats, err := imported.Stats()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.Generation != 5 || stats.LiveRows != 3 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
 }
 
 func TestValidationAndLifecycle(t *testing.T) {
 	db, _ := New(3)
-	if err := db.Add(Record{ID: 1, UserID: 1, Vector: []float32{1}}); err == nil { t.Fatal("expected dimension error") }
-	if _, err := db.Search([]float32{1, 0, 0}, Filter{}, 0); err == nil { t.Fatal("expected k error") }
-	if err := db.Add(Record{ID: 1, UserID: 1, Vector: []float32{0, 0, 0}}); err == nil { t.Fatal("expected native vector error") }
-	if err := db.Close(); err != nil { t.Fatal(err) }; if err := db.Close(); err != nil { t.Fatal(err) }
-	_, err := db.Stats(); var native *Error; if !errors.As(err, &native) { t.Fatalf("expected typed closed error: %v", err) }
+	if err := db.Add(Record{ID: 1, UserID: 1, Vector: []float32{1}}); err == nil {
+		t.Fatal("expected dimension error")
+	}
+	if _, err := db.Search([]float32{1, 0, 0}, Filter{}, 0); err == nil {
+		t.Fatal("expected k error")
+	}
+	if err := db.Add(Record{ID: 1, UserID: 1, Vector: []float32{0, 0, 0}}); err == nil {
+		t.Fatal("expected native vector error")
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	_, err := db.Stats()
+	var native *Error
+	if !errors.As(err, &native) {
+		t.Fatalf("expected typed closed error: %v", err)
+	}
 }

@@ -42,6 +42,18 @@ class QenloTest {
         QenloCollection.open(path, 3).use { db -> assertEquals(2, db.stats().liveRows) }
     }
 
+    @Test fun `portable qn round trip`(@TempDir root: Path) {
+        val path = root.resolve("vectors.qn")
+        QenloCollection.memory(3).use { db ->
+            db.addBatch(fixture()); db.delete(9u); db.exportQn(path)
+            assertFailsWith<QenloException> { db.exportQn(path) }
+        }
+        QenloCollection.importQn(path, 3).use { db ->
+            assertEquals(5uL, db.stats().generation)
+            assertEquals(3, db.stats().liveRows)
+        }
+    }
+
     @Test fun `validation and lifecycle`() {
         val db = QenloCollection.memory(3)
         assertFailsWith<IllegalArgumentException> { db.add(Record(1u, 1u, 0, floatArrayOf(1f))) }

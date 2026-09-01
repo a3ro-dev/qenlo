@@ -49,6 +49,8 @@ pub(crate) enum StorageError {
     Corrupt(String),
     #[error("collection snapshot exceeds the configured load budget or format capacity")]
     LoadLimitExceeded,
+    #[error("portable collection paths must use the .qn extension: {0}")]
+    InvalidPortableExtension(PathBuf),
     #[error("collection is already open by another handle or process")]
     Locked,
     #[error(
@@ -66,6 +68,11 @@ pub(crate) struct OpenedStore {
     pub store: CoreStore,
     pub recovered_interrupted_write: bool,
     pub lock: File,
+}
+
+pub(crate) struct OpenedPortable {
+    pub store: CoreStore,
+    pub recovered_interrupted_write: bool,
 }
 
 pub(crate) fn create(path: &Path, store: &CoreStore) -> Result<File, StorageError> {
@@ -444,11 +451,44 @@ pub(crate) fn write_snapshot_with_limit(
         return Err(StorageError::AlreadyExists(final_path));
     }
     let temp_path = snapshot_path(path, generation, ".pending");
+    write_snapshot_file(&temp_path, store)?;
+
+    fs::rename(&temp_path, &final_path)?;
+    sync_directory(path).map_err(StorageError::CommitUncertain)?;
+    write_head(path, generation).map_err(StorageError::CommitUncertain)?;
+    write_manifest(path, store.dimension(), generation, generation)
+        .map_err(StorageError::CommitUncertain)?;
+    prune_snapshots(path, generation);
+    prune_wals(path, generation);
+    Ok(())
+}
+
+fn write_snapshot_file(path: &Path, store: &CoreStore) -> Result<(), StorageError> {
     let file = OpenOptions::new()
         .create(true)
         .truncate(true)
         .write(true)
-        .open(&temp_path)?;
+        .open(path)?;
+    write_snapshot_to(file, store)
+}
+
+fn write_portable_pending(path: &Path, store: &CoreStore) -> Result<(), StorageError> {
+    let file = OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(path)
+        .map_err(|error| {
+            if error.kind() == io::ErrorKind::AlreadyExists {
+                StorageError::AlreadyExists(path.to_path_buf())
+            } else {
+                StorageError::Io(error)
+            }
+        })?;
+    write_snapshot_to(file, store)
+}
+
+fn write_snapshot_to(file: File, store: &CoreStore) -> Result<(), StorageError> {
+    let generation = store.generation();
     let mut writer = CheckedWriter::new(BufWriter::new(file));
     writer.write_all(MAGIC)?;
     writer.write_all(&FORMAT_VERSION.to_le_bytes())?;
@@ -472,15 +512,109 @@ pub(crate) fn write_snapshot_with_limit(
     writer.flush()?;
     writer.get_ref().sync_all()?;
     drop(writer);
-
-    fs::rename(&temp_path, &final_path)?;
-    sync_directory(path).map_err(StorageError::CommitUncertain)?;
-    write_head(path, generation).map_err(StorageError::CommitUncertain)?;
-    write_manifest(path, store.dimension(), generation, generation)
-        .map_err(StorageError::CommitUncertain)?;
-    prune_snapshots(path, generation);
-    prune_wals(path, generation);
     Ok(())
+}
+
+pub(crate) fn write_portable_with_limit(
+    path: &Path,
+    store: &CoreStore,
+    max_load_bytes: u64,
+) -> Result<(), StorageError> {
+    validate_portable_extension(path)?;
+    check_admission(store.dimension(), store.len() as u64, max_load_bytes)?;
+    if path.exists() {
+        return Err(StorageError::AlreadyExists(path.to_path_buf()));
+    }
+    let parent = portable_parent(path);
+    create_directory(parent)?;
+    let pending = path.with_extension("qn.pending");
+    if let Err(error) = write_portable_pending(&pending, store) {
+        let _ = fs::remove_file(&pending);
+        return Err(error);
+    }
+    if let Err(error) = publish_portable(&pending, path) {
+        if matches!(error, StorageError::AlreadyExists(_) | StorageError::Io(_)) {
+            let _ = fs::remove_file(&pending);
+        }
+        return Err(error);
+    }
+    Ok(())
+}
+
+pub(crate) fn read_portable_with_limit(
+    path: &Path,
+    max_load_bytes: u64,
+) -> Result<OpenedPortable, StorageError> {
+    validate_portable_extension(path)?;
+    if path.is_file() {
+        return Ok(OpenedPortable {
+            store: read_snapshot_discover_generation(path, max_load_bytes)?,
+            recovered_interrupted_write: false,
+        });
+    }
+    let pending = path.with_extension("qn.pending");
+    if !pending.is_file() {
+        return Err(StorageError::NotFound(path.to_path_buf()));
+    }
+    let store = read_snapshot_discover_generation(&pending, max_load_bytes)?;
+    if let Err(error) = publish_portable(&pending, path) {
+        if matches!(error, StorageError::AlreadyExists(_)) {
+            return Ok(OpenedPortable {
+                store: read_snapshot_discover_generation(path, max_load_bytes)?,
+                recovered_interrupted_write: false,
+            });
+        }
+        return Err(error);
+    }
+    Ok(OpenedPortable {
+        store,
+        recovered_interrupted_write: true,
+    })
+}
+
+fn publish_portable(pending: &Path, path: &Path) -> Result<(), StorageError> {
+    fs::hard_link(pending, path).map_err(|error| {
+        if error.kind() == io::ErrorKind::AlreadyExists {
+            StorageError::AlreadyExists(path.to_path_buf())
+        } else {
+            StorageError::Io(error)
+        }
+    })?;
+    fs::remove_file(pending).map_err(StorageError::CommitUncertain)?;
+    sync_directory(portable_parent(path)).map_err(StorageError::CommitUncertain)
+}
+
+fn read_snapshot_discover_generation(
+    path: &Path,
+    max_load_bytes: u64,
+) -> Result<CoreStore, StorageError> {
+    let mut header = [0_u8; 24];
+    File::open(path)?.read_exact(&mut header).map_err(|error| {
+        if error.kind() == io::ErrorKind::UnexpectedEof {
+            StorageError::Corrupt("portable file is shorter than its header".into())
+        } else {
+            StorageError::Io(error)
+        }
+    })?;
+    let generation = u64::from_le_bytes(header[16..24].try_into().expect("fixed header slice"));
+    read_snapshot(path, generation, max_load_bytes)
+}
+
+fn validate_portable_extension(path: &Path) -> Result<(), StorageError> {
+    if path
+        .extension()
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("qn"))
+    {
+        Ok(())
+    } else {
+        Err(StorageError::InvalidPortableExtension(path.to_path_buf()))
+    }
+}
+
+fn portable_parent(path: &Path) -> &Path {
+    path.parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."))
 }
 
 fn read_snapshot(
@@ -497,8 +631,7 @@ fn read_snapshot(
             StorageError::Corrupt("snapshot is shorter than its header".into())
         });
     }
-    // SAFETY: canonical snapshots are immutable after atomic publication and
-    // the collection holds the directory's exclusive cooperative lock.
+    // SAFETY: canonical snapshots and portable imports are immutable while mapped.
     let mapped = unsafe { MmapOptions::new().map(&file)? };
     let mut reader = CheckedReader::new(Cursor::new(&mapped[..]));
     let magic = reader.array::<8>()?;
@@ -907,6 +1040,24 @@ mod tests {
         assert!(!opened.store.record(0).unwrap().is_live());
         assert_eq!(opened.store.record(0).unwrap().vector(), &[0.6, 0.8]);
         fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn portable_publication_never_replaces_a_racing_target() {
+        let root = temp_dir("portable-no-clobber");
+        fs::create_dir_all(&root).unwrap();
+        let pending = root.join("vectors.qn.pending");
+        let path = root.join("vectors.qn");
+        fs::write(&pending, b"candidate").unwrap();
+        fs::write(&path, b"winner").unwrap();
+
+        assert!(matches!(
+            publish_portable(&pending, &path),
+            Err(StorageError::AlreadyExists(existing)) if existing == path
+        ));
+        assert_eq!(fs::read(&path).unwrap(), b"winner");
+        assert_eq!(fs::read(&pending).unwrap(), b"candidate");
+        fs::remove_dir_all(root).unwrap();
     }
 
     #[test]

@@ -94,6 +94,7 @@ const library = koffi.load(libraryPath());
 const collectionNew = library.func("void *qenlo_collection_new(size_t)") as (dimension: number) => Pointer | null;
 const collectionCreate = library.func("void *qenlo_collection_create(const char *, size_t)") as (path: string, dimension: number) => Pointer | null;
 const collectionOpen = library.func("void *qenlo_collection_open(const char *, size_t)") as (path: string, dimension: number) => Pointer | null;
+const collectionImportQn = library.func("void *qenlo_collection_import_qn(const char *, size_t)") as (path: string, dimension: number) => Pointer | null;
 const nativeAdd = library.func("int32_t qenlo_add(void *, uint64_t, uint64_t, int64_t, const float *, size_t)") as (handle: Pointer, id: bigint, userId: bigint, timestamp: bigint, vector: Float32Array, length: number) => number;
 const nativeAddBatch = library.func("int32_t qenlo_add_batch(void *, const uint64_t *, const uint64_t *, const int64_t *, const float *, size_t, size_t)") as (handle: Pointer, ids: BigUint64Array, users: BigUint64Array, timestamps: BigInt64Array, vectors: Float32Array, rows: number, dimension: number) => number;
 const nativeDelete = library.func("int32_t qenlo_delete(void *, uint64_t)") as (handle: Pointer, id: bigint) => number;
@@ -105,6 +106,7 @@ const nativeStringFree = library.func("void qenlo_string_free(void *)") as (valu
 const QenloString = koffi.disposable("QenloString", "str", nativeStringFree);
 const nativeSearch = library.func("qenlo_search", QenloString, ["void *", "const float *", "size_t", "bool", "uint64_t", "bool", "int64_t", "bool", "int64_t", "size_t"]) as (handle: Pointer, query: Float32Array, length: number, hasUser: boolean, user: bigint, hasLower: boolean, lower: bigint, hasUpper: boolean, upper: bigint, k: number) => string | null;
 const nativeStats = library.func("qenlo_stats", QenloString, ["void *"]) as (handle: Pointer) => string | null;
+const nativeExportQn = library.func("int32_t qenlo_export_qn(void *, const char *)") as (handle: Pointer, path: string) => number;
 const nativeLastError = library.func("qenlo_last_error", QenloString, []) as () => string | null;
 
 function takeString(value: string | null): string {
@@ -166,6 +168,11 @@ export class Collection implements Disposable {
   static open(path: string, dimension: number): Collection {
     Collection.validateDimension(dimension);
     return new Collection(collectionOpen(path, dimension), dimension);
+  }
+
+  static importQn(path: string, dimension: number): Collection {
+    Collection.validateDimension(dimension);
+    return new Collection(collectionImportQn(path, dimension), dimension);
   }
 
   private static validateDimension(dimension: number): void {
@@ -246,6 +253,8 @@ export class Collection implements Disposable {
   }
 
   flush(): void { this.#check(nativeFlush(this.#openHandle())); }
+
+  exportQn(path: string): void { this.#check(nativeExportQn(this.#openHandle(), path)); }
 
   close(): void {
     if (this.#handle !== null) {

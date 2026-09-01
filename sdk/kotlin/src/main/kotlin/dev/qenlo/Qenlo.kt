@@ -8,6 +8,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.nio.file.Path
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -73,12 +75,14 @@ private interface QenloNative : Library {
     fun qenlo_collection_new(dimension: Long): Pointer?
     fun qenlo_collection_create(path: String, dimension: Long): Pointer?
     fun qenlo_collection_open(path: String, dimension: Long): Pointer?
+    fun qenlo_collection_import_qn(path: String, dimension: Long): Pointer?
     fun qenlo_add(handle: Pointer, id: Long, userId: Long, timestamp: Long, vector: FloatArray, vectorLen: Long): Int
     fun qenlo_add_batch(handle: Pointer, ids: LongArray, userIds: LongArray, timestamps: LongArray, vectors: FloatArray, rows: Long, dimension: Long): Int
     fun qenlo_delete(handle: Pointer, id: Long): Int
     fun qenlo_delete_batch(handle: Pointer, ids: LongArray, rows: Long): Int
     fun qenlo_search(handle: Pointer, query: FloatArray, queryLen: Long, hasUserId: Byte, userId: Long, hasLower: Byte, lower: Long, hasUpper: Byte, upper: Long, k: Long): Pointer?
     fun qenlo_stats(handle: Pointer): Pointer?
+    fun qenlo_export_qn(handle: Pointer, path: String): Int
     fun qenlo_flush(handle: Pointer): Int
     fun qenlo_close(handle: Pointer): Int
     fun qenlo_collection_free(handle: Pointer)
@@ -88,11 +92,39 @@ private interface QenloNative : Library {
 
 private object NativeApi {
     val value: QenloNative by lazy {
-        System.getenv("QENLO_LIBRARY_PATH")?.let { explicit ->
-            val path = Path.of(explicit).toAbsolutePath()
-            NativeLibrary.addSearchPath("qenlo_ffi", path.parent.toString())
+        val explicit = System.getenv("QENLO_LIBRARY_PATH")?.let { Path.of(it) }
+        val library = when {
+            explicit?.toFile()?.isFile == true -> explicit.toAbsolutePath().toString()
+            explicit != null -> {
+                NativeLibrary.addSearchPath("qenlo_ffi", explicit.toAbsolutePath().toString())
+                "qenlo_ffi"
+            }
+            else -> bundledLibrary()?.toString() ?: "qenlo_ffi"
         }
-        Native.load("qenlo_ffi", QenloNative::class.java)
+        Native.load(library, QenloNative::class.java)
+    }
+
+    private fun bundledLibrary(): Path? {
+        val os = System.getProperty("os.name").lowercase()
+        val arch = System.getProperty("os.arch").lowercase()
+        val platform = when {
+            os.contains("win") && arch in setOf("amd64", "x86_64") -> "windows-x64"
+            os.contains("linux") && arch in setOf("amd64", "x86_64") -> "linux-x64"
+            os.contains("mac") && arch in setOf("aarch64", "arm64") -> "darwin-arm64"
+            else -> return null
+        }
+        val file = when {
+            os.contains("win") -> "qenlo_ffi.dll"
+            os.contains("mac") -> "libqenlo_ffi.dylib"
+            else -> "libqenlo_ffi.so"
+        }
+        val resource = "/qenlo/$platform/$file"
+        val input = NativeApi::class.java.getResourceAsStream(resource) ?: return null
+        val directory = Files.createTempDirectory("qenlo-native-").also { it.toFile().deleteOnExit() }
+        val target = directory.resolve(file)
+        input.use { Files.copy(it, target, StandardCopyOption.REPLACE_EXISTING) }
+        target.toFile().deleteOnExit()
+        return target
     }
 }
 
@@ -157,6 +189,11 @@ public class QenloCollection private constructor(handle: Pointer?, public val di
             return QenloCollection(NativeApi.value.qenlo_collection_open(path.toString(), dimension.toLong()), dimension)
         }
 
+        public fun importQn(path: Path, dimension: Int): QenloCollection {
+            require(dimension > 0) { "dimension must be positive" }
+            return QenloCollection(NativeApi.value.qenlo_collection_import_qn(path.toString(), dimension.toLong()), dimension)
+        }
+
         private fun lastError(): String = takeString(NativeApi.value.qenlo_last_error(), false)
 
         private fun takeString(pointer: Pointer?, failOnNull: Boolean = true): String {
@@ -213,6 +250,10 @@ public class QenloCollection private constructor(handle: Pointer?, public val di
     }
 
     public fun flush(): Unit = lock.read { check(NativeApi.value.qenlo_flush(openHandle())) }
+
+    public fun exportQn(path: Path): Unit = lock.read {
+        check(NativeApi.value.qenlo_export_qn(openHandle(), path.toString()))
+    }
 
     override fun close(): Unit = lock.write {
         handle?.let { value ->

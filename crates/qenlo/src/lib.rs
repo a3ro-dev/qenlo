@@ -364,6 +364,19 @@ impl Collection {
         Ok(Self::from_state(CollectionState::open(path, config).await?))
     }
 
+    /// Import a checksummed portable `.qn` file into a mutable in-memory collection.
+    ///
+    /// The imported file is not modified. Call [`Self::export_qn`] to persist later changes.
+    pub async fn import_qn(
+        path: impl AsRef<Path>,
+        config: CollectionConfig,
+    ) -> Result<Self, Error> {
+        Ok(Self::from_state(
+            CollectionState::import_qn_with_options(path, config, StorageOptions::default())
+                .await?,
+        ))
+    }
+
     /// Create with an explicit canonical-memory admission budget.
     pub async fn create_with_options(
         path: impl AsRef<Path>,
@@ -383,6 +396,17 @@ impl Collection {
     ) -> Result<Self, Error> {
         Ok(Self::from_state(
             CollectionState::open_with_options(path, config, options).await?,
+        ))
+    }
+
+    /// Import a portable `.qn` file with an explicit canonical-memory admission budget.
+    pub async fn import_qn_with_options(
+        path: impl AsRef<Path>,
+        config: CollectionConfig,
+        options: StorageOptions,
+    ) -> Result<Self, Error> {
+        Ok(Self::from_state(
+            CollectionState::import_qn_with_options(path, config, options).await?,
         ))
     }
 
@@ -682,6 +706,21 @@ impl Collection {
         self.inner.write_blocking().flush()
     }
 
+    /// Atomically export the current canonical generation as one portable `.qn` file.
+    ///
+    /// Existing targets are never overwritten. The portable file includes tombstones,
+    /// generation, normalized vectors, fixed-width metadata, and a CRC32 checksum.
+    pub fn export_qn(&self, path: impl AsRef<Path>) -> Result<(), Error> {
+        let state = self.inner.read_blocking();
+        state.ensure_open()?;
+        storage::write_portable_with_limit(
+            path.as_ref(),
+            &state.store,
+            state.storage_options.max_load_bytes,
+        )
+        .map_err(|error| Error::Storage(error.to_string()))
+    }
+
     /// Flush, mark closed, and release the exclusive filesystem lock. Idempotent.
     pub fn close(&self) -> Result<(), Error> {
         self.inner.write_blocking().close()
@@ -747,6 +786,43 @@ impl CollectionState {
             path: None,
             durable_generation: None,
             recovered_interrupted_write: false,
+            closed: false,
+            storage_lock: None,
+        })
+    }
+
+    #[tracing::instrument(name = "qenlo.import_qn", skip_all, fields(backend = ?config.backend))]
+    async fn import_qn_with_options(
+        path: impl AsRef<Path>,
+        config: CollectionConfig,
+        options: StorageOptions,
+    ) -> Result<Self, Error> {
+        let opened = storage::read_portable_with_limit(path.as_ref(), options.max_load_bytes)
+            .map_err(|error| Error::Storage(error.to_string()))?;
+        let store = opened.store;
+        if store.dimension() != config.dimension {
+            return Err(Error::Storage(format!(
+                "portable dimension mismatch: file has {}, config requests {}",
+                store.dimension(),
+                config.dimension
+            )));
+        }
+        let (backend, fallback_reason) = Self::initialize_backend(&config).await?;
+        Ok(Self {
+            storage_options: options,
+            last_commit: None,
+            rebuild_policy: RebuildPolicy::OnSearch,
+            preparation_reason: PreparationReason::Initial,
+            persisted_index_generation: None,
+            index_persistence: Measurement::unavailable("portable indexes are rebuilt locally"),
+            config,
+            store,
+            backend,
+            prepared_generation: None,
+            fallback_reason,
+            path: None,
+            durable_generation: None,
+            recovered_interrupted_write: opened.recovered_interrupted_write,
             closed: false,
             storage_lock: None,
         })
@@ -1541,6 +1617,78 @@ mod tests {
             );
             reopened.close().unwrap();
             std::fs::remove_dir_all(path).unwrap();
+        });
+    }
+
+    #[test]
+    fn portable_qn_round_trip_is_single_file_exact_and_non_overwriting() {
+        block_on(async {
+            let root = temp_dir("portable-qn");
+            std::fs::create_dir_all(&root).unwrap();
+            let path = root.join("vectors.qn");
+            let collection = Collection::new(CollectionConfig::cpu_exact(2))
+                .await
+                .unwrap();
+            collection.add(9, 7, -5, &[1.0, 0.0]).unwrap();
+            collection.add(2, 8, 10, &[0.0, 1.0]).unwrap();
+            collection.delete(9).unwrap();
+            collection.export_qn(&path).unwrap();
+
+            assert!(path.is_file());
+            assert_eq!(&std::fs::read(&path).unwrap()[..8], b"QENLODB\0");
+            assert!(matches!(
+                collection.export_qn(&path),
+                Err(Error::Storage(message)) if message.contains("already exists")
+            ));
+
+            let imported = Collection::import_qn(&path, CollectionConfig::cpu_exact(2))
+                .await
+                .unwrap();
+            assert_eq!(imported.stats().rows, 2);
+            assert_eq!(imported.stats().live_rows, 1);
+            assert_eq!(imported.stats().generation, 3);
+            assert_eq!(imported.stats().durable_generation, None);
+            assert_eq!(
+                imported
+                    .search(&[0.0, 1.0], &Filter::ALL, 10)
+                    .await
+                    .unwrap()
+                    .results
+                    .iter()
+                    .map(|hit| hit.id)
+                    .collect::<Vec<_>>(),
+                [2]
+            );
+            assert!(matches!(
+                Collection::import_qn(&path, CollectionConfig::cpu_exact(3)).await,
+                Err(Error::Storage(message)) if message.contains("dimension mismatch")
+            ));
+            assert!(matches!(
+                collection.export_qn(root.join("vectors.qenlo")),
+                Err(Error::Storage(message)) if message.contains(".qn extension")
+            ));
+
+            let recovered_path = root.join("recovered.qn");
+            collection.export_qn(&recovered_path).unwrap();
+            let pending_path = recovered_path.with_extension("qn.pending");
+            std::fs::rename(&recovered_path, &pending_path).unwrap();
+            let recovered = Collection::import_qn(&recovered_path, CollectionConfig::cpu_exact(2))
+                .await
+                .unwrap();
+            assert!(recovered_path.is_file());
+            assert!(!pending_path.exists());
+            assert!(recovered.stats().recovered_interrupted_write);
+
+            let corrupt_path = root.join("corrupt.qn");
+            let corrupt_pending = corrupt_path.with_extension("qn.pending");
+            std::fs::write(&corrupt_pending, b"incomplete").unwrap();
+            assert!(matches!(
+                Collection::import_qn(&corrupt_path, CollectionConfig::cpu_exact(2)).await,
+                Err(Error::Storage(message)) if message.contains("shorter than its header")
+            ));
+            assert!(!corrupt_path.exists());
+            assert!(corrupt_pending.is_file());
+            std::fs::remove_dir_all(root).unwrap();
         });
     }
 

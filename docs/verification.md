@@ -135,6 +135,20 @@ seven-cell report, listed it, and returned its detail with zero retained failure
 The dashboard was visually checked at 1280 × 720 and 390 × 844 with no document
 overflow; empty, loaded, detail, pass, and no-failure states were exercised.
 
+## Intel Arc device-lab evidence (2026-09-01)
+
+Three manually supplied Windows/Vulkan reports are retained under
+`benchmarks/2026-08-31/device-lab/intel-arc/`: two reports whose embedded suite
+is `quick`, and one `soak` report with 100,000 × 384 rows and 512 samples per
+cell. All 21 cells passed with Recall@10 = 1.0 and no reported fallback.
+
+On the soak run, exact GPU P95 was 4,444 µs versus exact CPU P95 16,486 µs
+(3.71× lower). IVF-Flat P95 was 2,704 µs (6.10× lower than exact CPU), while
+IVF-SQ8 P95 was 22,797 µs and therefore slower than exact CPU on this cell.
+The report supplied under a “full” label identifies itself as `quick`; the
+retained record and public summary use the embedded value. These observations
+are evidence for one Intel Arc adapter and do not close the 1M × 768 gate.
+
 ## toolchain and remaining release limits
 
 - the existing MSVC 14.29 native-dependency crash was not repaired or re-tested;

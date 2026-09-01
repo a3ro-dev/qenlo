@@ -53,6 +53,21 @@ def test_durable_reopen_and_delete_batch(tmp_path) -> None:
         assert [hit.id for hit in db.search((1.0, 0.0, 0.0)).results] == [9, 6]
 
 
+def test_portable_qn_round_trip(tmp_path) -> None:
+    path = tmp_path / "vectors.qn"
+    with Collection.memory(3) as db:
+        db.add_batch(fixture())
+        db.delete(9)
+        db.export_qn(path)
+        with pytest.raises(QenloError, match="already exists"):
+            db.export_qn(path)
+    assert path.is_file()
+    with Collection.import_qn(path, 3) as imported:
+        assert imported.stats().generation == 5
+        assert imported.stats().live_rows == 3
+        assert [hit.id for hit in imported.search((1.0, 0.0, 0.0)).results] == [2, 4, 6]
+
+
 @pytest.mark.parametrize(
     "vector",
     [(), (1.0,), (1.0, 0.0), (1.0, 0.0, 0.0, 0.0)],

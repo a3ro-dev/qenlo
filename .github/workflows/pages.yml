@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'index.html'
+      - 'docs/**'
       - 'assets/**'
       - '.nojekyll'
       - '.github/workflows/pages.yml'

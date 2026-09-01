@@ -5,6 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -26,5 +27,7 @@
   },
   "keywords": ["vector-database", "embedded", "semantic-search", "typescript"],
   "license": "MIT OR Apache-2.0",
-  "repository": { "type": "git", "url": "git+https://github.com/a3ro-dev/qenlo.git" }
+  "repository": { "type": "git", "url": "git+https://github.com/a3ro-dev/qenlo.git" },
+  "homepage": "https://a3ro-dev.github.io/qenlo/docs/",
+  "bugs": { "url": "https://github.com/a3ro-dev/qenlo/issues" }
 }

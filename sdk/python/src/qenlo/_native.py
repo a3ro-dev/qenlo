@@ -40,6 +40,8 @@ LIB.qenlo_collection_create.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
 LIB.qenlo_collection_create.restype = Handle
 LIB.qenlo_collection_open.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
 LIB.qenlo_collection_open.restype = Handle
+LIB.qenlo_collection_import_qn.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
+LIB.qenlo_collection_import_qn.restype = Handle
 LIB.qenlo_add.argtypes = [
     Handle,
     ctypes.c_uint64,
@@ -78,6 +80,8 @@ LIB.qenlo_search.argtypes = [
 LIB.qenlo_search.restype = ctypes.c_void_p
 LIB.qenlo_stats.argtypes = [Handle]
 LIB.qenlo_stats.restype = ctypes.c_void_p
+LIB.qenlo_export_qn.argtypes = [Handle, ctypes.c_char_p]
+LIB.qenlo_export_qn.restype = ctypes.c_int32
 LIB.qenlo_flush.argtypes = [Handle]
 LIB.qenlo_flush.restype = ctypes.c_int32
 LIB.qenlo_close.argtypes = [Handle]

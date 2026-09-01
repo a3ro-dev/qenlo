@@ -128,6 +128,12 @@ class Collection:
         cls._validate_dimension(dimension)
         return cls(LIB.qenlo_collection_open(str(path).encode(), dimension), dimension)
 
+    @classmethod
+    def import_qn(cls, path: str | PathLike[str], dimension: int) -> Collection:
+        """Import a checksummed `.qn` snapshot into a mutable in-memory collection."""
+        cls._validate_dimension(dimension)
+        return cls(LIB.qenlo_collection_import_qn(str(path).encode(), dimension), dimension)
+
     @staticmethod
     def _validate_dimension(dimension: int) -> None:
         if dimension <= 0:
@@ -255,6 +261,10 @@ class Collection:
     def flush(self) -> None:
         """Compact durable WAL state into a canonical snapshot."""
         self._check(LIB.qenlo_flush(self._require_open()))
+
+    def export_qn(self, path: str | PathLike[str]) -> None:
+        """Atomically export the current generation to a new portable `.qn` file."""
+        self._check(LIB.qenlo_export_qn(self._require_open(), str(path).encode()))
 
     def close(self) -> None:
         """Close and release the native collection. Idempotent."""

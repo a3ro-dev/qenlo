@@ -123,6 +123,13 @@ public final class QenloCollection: @unchecked Sendable {
         guard handle != nil else { throw QenloError(Self.lastError()) }
     }
 
+    public init(importQN path: URL, dimension: Int) throws {
+        guard dimension > 0 else { throw QenloError("dimension must be positive") }
+        self.dimension = dimension
+        self.handle = path.path.withCString { qenlo_collection_import_qn($0, dimension) }
+        guard handle != nil else { throw QenloError(Self.lastError()) }
+    }
+
     deinit { try? close() }
 
     private static func take(_ pointer: UnsafeMutablePointer<CChar>?) throws -> String {
@@ -196,6 +203,12 @@ public final class QenloCollection: @unchecked Sendable {
     }
 
     public func flush() throws { try withHandle { try checked(qenlo_flush($0)) } }
+
+    public func exportQN(to path: URL) throws {
+        try withHandle { handle in
+            try path.path.withCString { try checked(qenlo_export_qn(handle, $0)) }
+        }
+    }
 
     public func close() throws {
         lock.lock(); defer { lock.unlock() }

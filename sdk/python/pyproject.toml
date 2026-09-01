@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Type-safe Python SDK for the embedded Qenlo vector database"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT OR Apache-2.0" }
+license = "MIT OR Apache-2.0"
 authors = [{ name = "Qenlo" }]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -19,6 +19,7 @@ classifiers = [
 [project.urls]
 Documentation = "https://a3ro-dev.github.io/qenlo/docs/"
 Repository = "https://github.com/a3ro-dev/qenlo"
+Issues = "https://github.com/a3ro-dev/qenlo/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/qenlo"]

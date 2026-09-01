@@ -37,6 +37,18 @@ private let records = [
     #expect(try opened.stats().liveRows == 2)
 }
 
+@Test func portableQNRoundTrip() throws {
+    let path = FileManager.default.temporaryDirectory.appending(path: "qenlo-swift-\(UUID()).qn")
+    defer { try? FileManager.default.removeItem(at: path) }
+    let db = try QenloCollection(memoryDimension: 3)
+    try db.addBatch(records); try db.delete(9); try db.exportQN(to: path)
+    #expect(throws: QenloError.self) { try db.exportQN(to: path) }
+    try db.close()
+    let imported = try QenloCollection(importQN: path, dimension: 3); defer { try? imported.close() }
+    #expect(try imported.stats().generation == 5)
+    #expect(try imported.stats().liveRows == 3)
+}
+
 @Test func validationAndLifecycle() throws {
     let db = try QenloCollection(memoryDimension: 3)
     #expect(throws: QenloError.self) { try db.add(.init(id: 1, userID: 1, timestamp: 0, vector: [1])) }

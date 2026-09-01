@@ -1,0 +1,8 @@
+datasets==5.0.1
+chromadb==1.5.9
+faiss-cpu==1.15.0
+lancedb==0.38.0
+milvus-lite==3.2.1
+pymilvus==3.0.1
+qdrant-client==1.19.0
+sentence-transformers==6.0.1

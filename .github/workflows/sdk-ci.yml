@@ -105,6 +105,7 @@ jobs:
       - name: Go vet and runtime conformance
         working-directory: sdk/go
         run: |
+          test -z "$(gofmt -l .)"
           go vet ./...
           go test -race ./...
 

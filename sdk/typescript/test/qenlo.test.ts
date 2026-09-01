@@ -50,6 +50,25 @@ test("durable reopen", () => {
   }
 });
 
+test("portable .qn round trip", () => {
+  const root = mkdtempSync(join(tmpdir(), "qenlo-ts-qn-"));
+  const path = join(root, "vectors.qn");
+  try {
+    {
+      using db = Collection.memory(3);
+      db.addBatch(records);
+      db.delete(9n);
+      db.exportQn(path);
+      assert.throws(() => db.exportQn(path), QenloError);
+    }
+    using imported = Collection.importQn(path, 3);
+    assert.equal(imported.stats().generation, 5n);
+    assert.deepEqual(imported.search([1, 0, 0]).results.map((hit) => hit.id), [2n, 4n, 6n]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("validation and lifecycle failures are typed", () => {
   const db = Collection.memory(3);
   assert.throws(() => db.add({ id: 1n, userId: 1n, timestamp: 0n, vector: [1] }), RangeError);

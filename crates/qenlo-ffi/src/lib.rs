@@ -247,6 +247,30 @@ pub unsafe extern "C" fn qenlo_collection_open(
 }
 
 #[unsafe(no_mangle)]
+/// Import a portable `.qn` file into a mutable in-memory collection.
+///
+/// # Safety
+/// `path_ptr` must point to a readable NUL-terminated string for this call.
+pub unsafe extern "C" fn qenlo_collection_import_qn(
+    path_ptr: *const c_char,
+    dimension: usize,
+) -> *mut QenloCollection {
+    ffi_pointer(|| {
+        // SAFETY: forwarded caller contract.
+        let path = unsafe { path(path_ptr) }?;
+        let collection = pollster::block_on(Collection::import_qn(
+            path,
+            CollectionConfig::cpu_exact(dimension),
+        ))
+        .map_err(|error| error.to_string())?;
+        Ok(QenloCollection {
+            collection,
+            dimension,
+        })
+    })
+}
+
+#[unsafe(no_mangle)]
 /// Add one vector and its metadata.
 ///
 /// # Safety
@@ -435,6 +459,24 @@ pub unsafe extern "C" fn qenlo_stats(handle: *mut QenloCollection) -> *mut c_cha
 }
 
 #[unsafe(no_mangle)]
+/// Export the current canonical generation to a new portable `.qn` file.
+///
+/// # Safety
+/// `handle` must be live and `path_ptr` must point to a readable
+/// NUL-terminated string for this call.
+pub unsafe extern "C" fn qenlo_export_qn(
+    handle: *mut QenloCollection,
+    path_ptr: *const c_char,
+) -> i32 {
+    ffi_status(|| {
+        // SAFETY: forwarded caller contracts.
+        let handle = unsafe { collection(handle) }.map_err(qenlo::Error::Storage)?;
+        let path = unsafe { path(path_ptr) }.map_err(qenlo::Error::Storage)?;
+        handle.collection.export_qn(path)
+    })
+}
+
+#[unsafe(no_mangle)]
 /// Flush a durable collection.
 ///
 /// # Safety
@@ -559,6 +601,39 @@ mod tests {
             assert_eq!(stats["live_rows"], 0);
             qenlo_collection_free(handle);
         }
+    }
+
+    #[test]
+    fn native_boundary_round_trips_portable_qn() {
+        let root = std::env::temp_dir().join(format!(
+            "qenlo-ffi-qn-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&root).unwrap();
+        let file = root.join("vectors.qn");
+        let file = CString::new(file.to_string_lossy().as_bytes()).unwrap();
+        let handle = qenlo_collection_new(2);
+        assert!(!handle.is_null());
+        let vector = [1.0, 0.0];
+        // SAFETY: handles and pointers are live for every call and are transferred once.
+        unsafe {
+            assert_eq!(qenlo_add(handle, 4, 9, -2, vector.as_ptr(), 2), 0);
+            assert_eq!(qenlo_export_qn(handle, file.as_ptr()), 0);
+            qenlo_collection_free(handle);
+
+            let imported = qenlo_collection_import_qn(file.as_ptr(), 2);
+            assert!(!imported.is_null());
+            let stats: serde_json::Value =
+                serde_json::from_str(&take_string(qenlo_stats(imported))).unwrap();
+            assert_eq!(stats["rows"], 1);
+            assert_eq!(stats["live_rows"], 1);
+            qenlo_collection_free(imported);
+        }
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]

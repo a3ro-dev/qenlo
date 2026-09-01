@@ -861,6 +861,7 @@
       </a>
 
       <nav class="header-nav" aria-label="Main Navigation" id="nav-menu">
+        <a href="docs/">docs</a>
         <a href="#the-question" class="active">the question</a>
         <a href="#whats-in-here">what's in here</a>
         <a href="#execution-paths">execution paths</a>
@@ -1151,14 +1152,14 @@
               <tr>
                 <td>Native runtime acceptance</td>
                 <td><span class="status-tag done">Windows DX12/Vulkan</span></td>
-                <td>Hybrid host: Intel UHD integrated plus NVIDIA GeForce RTX 4050 Laptop GPU discrete; measured runs used NVIDIA</td>
+                <td>RTX 4050 plus Intel UHD hybrid host, and a separate Intel Arc Vulkan quick/soak submission</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <div class="callout-box">
-          <strong>Measured snapshot:</strong> On the real 100k × 384 all-row cell, the NVIDIA GeForce RTX 4050 Laptop GPU exact predicate path recorded 3.2404 ms P95 versus 16.6567 ms for Qenlo exact CPU, with 0.99998 recall and zero filter violations. At 1% selectivity, the GPU predicate path was slower than CPU. This is evidence for one workload on one laptop, not a universal speed claim. The 1m × 768 gate remains untested because the host does not have enough memory.
+          <strong>Measured snapshot:</strong> On the real 100k × 384 all-row cell, the NVIDIA GeForce RTX 4050 Laptop GPU exact predicate path recorded 3.2404 ms P95 versus 16.6567 ms for Qenlo exact CPU, with 0.99998 recall and zero filter violations. A separate Intel Arc Vulkan soak run recorded exact GPU P95 of 4.444 ms versus exact CPU P95 of 16.486 ms, with Recall@10 = 1.0. These are device-specific observations, not universal claims. The 1m × 768 gate remains untested.
         </div>
       </div>
     </section>
@@ -1243,6 +1244,7 @@ cargo test -p qenlo --features usearch</code></pre>
 
       <div class="footer-links">
         <a href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noopener noreferrer">github</a>
+        <a href="docs/">documentation</a>
         <a href="#the-question">the question</a>
         <a href="#execution-paths">execution paths</a>
         <a href="#get-running">get running</a>

@@ -20,7 +20,7 @@ repository = "https://github.com/a3ro-dev/qenlo"
 [workspace.dependencies]
 crc32fast = "1"
 memmap2 = "0.9"
-qenlo-core = { path = "crates/qenlo-core" }
+qenlo-core = { path = "crates/qenlo-core", version = "0.1.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"

@@ -1,0 +1,193 @@
+name: SDK release artifacts
+
+on:
+  push:
+    tags: ["sdk-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: ${{ matrix.key }} native and Python
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            key: linux-x64
+            native: libqenlo_ffi.so
+            wheel_tag: py3-none-linux_x86_64
+          - os: windows-2025
+            key: windows-x64
+            native: qenlo_ffi.dll
+            wheel_tag: py3-none-win_amd64
+          - os: macos-15
+            key: darwin-arm64
+            native: libqenlo_ffi.dylib
+            wheel_tag: py3-none-macosx_14_0_arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.13" }
+      - name: Build and test native ABI
+        run: |
+          cargo test --locked -p qenlo-ffi
+          cargo build --locked --release -p qenlo-ffi
+      - name: Build platform wheel
+        shell: bash
+        run: |
+          cp "target/release/${{ matrix.native }}" sdk/python/native/
+          cp LICENSE-MIT LICENSE-APACHE sdk/python/
+          python -m pip install --disable-pip-version-check build
+          QENLO_WHEEL_TAG=${{ matrix.wheel_tag }} python -m build sdk/python --wheel
+          mkdir -p native
+          cp "target/release/${{ matrix.native }}" native/
+          cp crates/qenlo-ffi/qenlo.h native/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qenlo-native-${{ matrix.key }}
+          path: native/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qenlo-wheel-${{ matrix.key }}
+          path: sdk/python/dist/*.whl
+          if-no-files-found: error
+
+  packages:
+    needs: native
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - uses: actions/setup-node@v5
+        with: { node-version: "24", cache: npm, cache-dependency-path: sdk/typescript/package-lock.json }
+      - uses: actions/setup-go@v6
+        with: { go-version: "1.24.x", cache-dependency-path: sdk/go/go.mod }
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v5
+        with: { gradle-version: "9.7.0" }
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: qenlo-native-*
+          path: artifacts/native
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: qenlo-wheel-*
+          path: artifacts/wheels
+          merge-multiple: true
+      - name: Assemble package-native layouts
+        shell: bash
+        run: |
+          mkdir -p sdk/typescript/native/{linux-x64,windows-x64,darwin-arm64}
+          cp artifacts/native/qenlo-native-linux-x64/libqenlo_ffi.so sdk/typescript/native/linux-x64/
+          cp artifacts/native/qenlo-native-windows-x64/qenlo_ffi.dll sdk/typescript/native/windows-x64/
+          cp artifacts/native/qenlo-native-darwin-arm64/libqenlo_ffi.dylib sdk/typescript/native/darwin-arm64/
+
+          mkdir -p sdk/go/native/{linux-amd64,windows-amd64,darwin-arm64}
+          cp artifacts/native/qenlo-native-linux-x64/libqenlo_ffi.so sdk/go/native/linux-amd64/
+          cp artifacts/native/qenlo-native-windows-x64/qenlo_ffi.dll sdk/go/native/windows-amd64/
+          cp artifacts/native/qenlo-native-darwin-arm64/libqenlo_ffi.dylib sdk/go/native/darwin-arm64/
+
+          mkdir -p sdk/kotlin/src/main/resources/qenlo/{linux-x64,windows-x64,darwin-arm64}
+          cp artifacts/native/qenlo-native-linux-x64/libqenlo_ffi.so sdk/kotlin/src/main/resources/qenlo/linux-x64/
+          cp artifacts/native/qenlo-native-windows-x64/qenlo_ffi.dll sdk/kotlin/src/main/resources/qenlo/windows-x64/
+          cp artifacts/native/qenlo-native-darwin-arm64/libqenlo_ffi.dylib sdk/kotlin/src/main/resources/qenlo/darwin-arm64/
+          cp LICENSE-MIT LICENSE-APACHE sdk/typescript/
+      - name: Verify and pack TypeScript
+        working-directory: sdk/typescript
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build
+          mkdir -p ../../dist/sdk
+          npm pack --pack-destination ../../dist/sdk
+      - name: Verify and pack Go
+        shell: bash
+        run: |
+          cd sdk/go
+          test -z "$(gofmt -l .)"
+          go vet ./...
+          go test -race ./...
+          cd ../..
+          zip -qr dist/sdk/qenlo-go-0.1.0.zip sdk/go LICENSE-MIT LICENSE-APACHE
+      - name: Verify and pack Kotlin
+        working-directory: sdk/kotlin
+        run: |
+          gradle --no-daemon build
+          cp build/libs/qenlo-0.1.0.jar ../../dist/sdk/qenlo-kotlin-0.1.0.jar
+          cp build/libs/qenlo-0.1.0-sources.jar ../../dist/sdk/qenlo-kotlin-0.1.0-sources.jar
+      - name: Pack Rust sources and collect wheels
+        shell: bash
+        run: |
+          cargo package --locked --allow-dirty --no-verify -p qenlo-core
+          cp target/package/qenlo-core-0.1.0.crate dist/sdk/
+          git archive --format=tar.gz --prefix=qenlo-rust-0.1.0/ -o dist/sdk/qenlo-rust-0.1.0.tar.gz HEAD Cargo.toml Cargo.lock rust-toolchain.toml crates/qenlo-core crates/qenlo LICENSE-MIT LICENSE-APACHE
+          cp artifacts/wheels/*.whl dist/sdk/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qenlo-sdk-release
+          path: dist/sdk/
+          if-no-files-found: error
+
+  apple-xcframework:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - run: |
+          rustup toolchain install 1.98.0 --profile minimal --no-self-update
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+      - name: Build Apple static libraries
+        run: |
+          for target in aarch64-apple-darwin x86_64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+            cargo build --locked --release -p qenlo-ffi --target "$target"
+          done
+          mkdir -p target/apple/{macos,ios,simulator}
+          lipo -create target/aarch64-apple-darwin/release/libqenlo_ffi.a target/x86_64-apple-darwin/release/libqenlo_ffi.a -output target/apple/macos/libqenlo_ffi.a
+          cp target/aarch64-apple-ios/release/libqenlo_ffi.a target/apple/ios/
+          lipo -create target/aarch64-apple-ios-sim/release/libqenlo_ffi.a target/x86_64-apple-ios/release/libqenlo_ffi.a -output target/apple/simulator/libqenlo_ffi.a
+      - name: Assemble XCFramework
+        run: |
+          xcodebuild -create-xcframework \
+            -library target/apple/macos/libqenlo_ffi.a -headers sdk/apple/Sources/CQenlo/include \
+            -library target/apple/ios/libqenlo_ffi.a -headers sdk/apple/Sources/CQenlo/include \
+            -library target/apple/simulator/libqenlo_ffi.a -headers sdk/apple/Sources/CQenlo/include \
+            -output target/apple/QenloFFI.xcframework
+          ditto -c -k --sequesterRsrc --keepParent target/apple/QenloFFI.xcframework target/apple/QenloFFI-0.1.0.xcframework.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qenlo-apple-xcframework
+          path: target/apple/QenloFFI-0.1.0.xcframework.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/sdk-v')
+    needs: [packages, apple-xcframework]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: qenlo-*-release
+          path: release-assets
+          merge-multiple: true
+      - uses: actions/download-artifact@v5
+        with:
+          name: qenlo-apple-xcframework
+          path: release-assets
+      - name: Publish immutable GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          cd release-assets
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+          find . -type f -print0 | xargs -0 gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY"

@@ -30,3 +30,12 @@ jobs:
           rustup target add aarch64-pc-windows-msvc --toolchain 1.98.0
       - name: Check AArch64 NEON and storage
         run: cargo check -p qenlo --target aarch64-pc-windows-msvc
+
+  research-evidence:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.13" }
+      - name: Test comparison, replay, and immutable gate rules
+        run: python -m unittest discover -s scripts -p "test_*.py"

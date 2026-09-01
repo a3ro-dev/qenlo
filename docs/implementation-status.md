@@ -12,7 +12,7 @@ This ledger separates implemented code from research directions and distribution
 | portable IVF-Flat | implemented | Recall@10 ≥ 0.95 tester gate and exact FP32 GPU rerank |
 | IVF-SQ8 | implemented | symmetric scalar candidate stage, bounded top-R, exact FP32 GPU rerank |
 | Linux NVIDIA/AMD/Intel tester | built, awaiting hardware matrix | Vulkan package workflow |
-| Windows NVIDIA/Intel tester | physically validated | RTX 4050 and Intel UHD Vulkan; AMD package awaits hardware |
+| Windows NVIDIA/Intel tester | physically validated | RTX 4050, Intel UHD, and Intel Arc Vulkan; AMD package awaits hardware |
 | Apple-silicon macOS tester | built, awaiting signed hardware run | Metal package workflow |
 | Snapdragon/MediaTek Android tester | built, awaiting hardware | arm64 APK records SoC and thermal state |
 | A-series iOS tester | source/build validation, signing required | arm64 SwiftUI shell; Apple provisioning/TestFlight is external |

@@ -33,6 +33,20 @@ java {
 
 publishing {
     publications {
-        create<MavenPublication>("maven") { from(components["java"]) }
+        create<MavenPublication>("maven") {
+            from(components["java"])
+            pom {
+                name.set("Qenlo Kotlin SDK")
+                description.set("Typed Kotlin/JVM bindings for the embedded Qenlo vector database")
+                url.set("https://a3ro-dev.github.io/qenlo/docs/")
+                licenses {
+                    license {
+                        name.set("MIT OR Apache-2.0")
+                        url.set("https://github.com/a3ro-dev/qenlo")
+                    }
+                }
+                scm { url.set("https://github.com/a3ro-dev/qenlo") }
+            }
+        }
     }
 }
