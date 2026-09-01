@@ -1,0 +1,30 @@
+{
+  "name": "@qenlo/qenlo",
+  "version": "0.1.0",
+  "description": "Type-safe TypeScript SDK for the embedded Qenlo vector database",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "native", "README.md", "LICENSE-MIT", "LICENSE-APACHE"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": { "koffi": "^2.14.1" },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  },
+  "keywords": ["vector-database", "embedded", "semantic-search", "typescript"],
+  "license": "MIT OR Apache-2.0",
+  "repository": { "type": "git", "url": "git+https://github.com/a3ro-dev/qenlo.git" }
+}

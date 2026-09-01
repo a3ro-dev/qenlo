@@ -1919,10 +1919,7 @@ mod tests {
             else {
                 return;
             };
-            if !matches!(
-                &collection.inner.read_blocking().backend,
-                &Backend::Wgpu(_)
-            ) {
+            if !matches!(&collection.inner.read_blocking().backend, &Backend::Wgpu(_)) {
                 return;
             }
             for id in 1..=AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS as u64 {

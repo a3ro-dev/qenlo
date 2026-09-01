@@ -1,0 +1,137 @@
+name: SDK conformance
+
+on:
+  push:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/qenlo-core/**"
+      - "crates/qenlo/**"
+      - "crates/qenlo-ffi/**"
+      - "sdk/**"
+      - ".github/workflows/sdk-ci.yml"
+  pull_request:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/qenlo-core/**"
+      - "crates/qenlo/**"
+      - "crates/qenlo-ffi/**"
+      - "sdk/**"
+      - ".github/workflows/sdk-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  native-and-sdks:
+    name: ${{ matrix.os }} SDKs
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            native: libqenlo_ffi.so
+            go_native: linux-amd64
+            npm_native: linux-x64
+            wheel_tag: py3-none-linux_x86_64
+          - os: windows-2025
+            native: qenlo_ffi.dll
+            go_native: windows-amd64
+            npm_native: win32-x64
+            wheel_tag: py3-none-win_amd64
+          - os: macos-15
+            native: libqenlo_ffi.dylib
+            go_native: darwin-arm64
+            npm_native: darwin-arm64
+            wheel_tag: py3-none-macosx_14_0_arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.13" }
+      - uses: actions/setup-node@v5
+        with: { node-version: "24", cache: npm, cache-dependency-path: sdk/typescript/package-lock.json }
+      - uses: actions/setup-go@v6
+        with: { go-version: "1.24.x", cache-dependency-path: sdk/go/go.mod }
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v5
+        with: { gradle-version: "9.7.0" }
+
+      - name: Build and test the shared ABI
+        run: |
+          cargo test --locked -p qenlo-ffi
+          cargo build --locked --release -p qenlo-ffi
+
+      - name: Export native library paths
+        shell: bash
+        run: |
+          native="$GITHUB_WORKSPACE/target/release/${{ matrix.native }}"
+          echo "QENLO_LIBRARY_PATH=$native" >> "$GITHUB_ENV"
+          echo "QENLO_LIBRARY_DIR=$GITHUB_WORKSPACE/target/release" >> "$GITHUB_ENV"
+          mkdir -p "sdk/go/native/${{ matrix.go_native }}"
+          cp "$native" "sdk/go/native/${{ matrix.go_native }}/"
+          mkdir -p "sdk/python/native"
+          cp "$native" "sdk/python/native/"
+          mkdir -p "sdk/typescript/native/${{ matrix.npm_native }}"
+          cp "$native" "sdk/typescript/native/${{ matrix.npm_native }}/"
+          cp LICENSE-MIT LICENSE-APACHE sdk/typescript/
+          case "${{ runner.os }}" in
+            Linux) echo "LD_LIBRARY_PATH=$GITHUB_WORKSPACE/target/release" >> "$GITHUB_ENV" ;;
+            macOS) echo "DYLD_LIBRARY_PATH=$GITHUB_WORKSPACE/target/release" >> "$GITHUB_ENV" ;;
+            Windows) echo "$GITHUB_WORKSPACE/target/release" >> "$GITHUB_PATH" ;;
+          esac
+
+      - name: Python static and runtime conformance
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check pytest pyright
+          export PYTHONPATH="$GITHUB_WORKSPACE/sdk/python/src"
+          python -m pyright sdk/python/src
+          python -m pytest sdk/python/tests -q
+          python -m pip install --disable-pip-version-check build
+          QENLO_WHEEL_TAG=${{ matrix.wheel_tag }} python -m build sdk/python --wheel
+          python -c "import zipfile,glob; p=glob.glob('sdk/python/dist/*.whl')[0]; z=zipfile.ZipFile(p); assert any(n.endswith('${{ matrix.native }}') for n in z.namelist()), z.namelist()"
+
+      - name: TypeScript type and runtime conformance
+        working-directory: sdk/typescript
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build
+          npm pack --dry-run
+
+      - name: Go vet and runtime conformance
+        working-directory: sdk/go
+        run: |
+          go vet ./...
+          go test -race ./...
+
+      - name: Kotlin explicit API and runtime conformance
+        working-directory: sdk/kotlin
+        run: gradle --no-daemon build
+
+      - name: Swift API and runtime conformance
+        if: runner.os == 'macOS'
+        working-directory: sdk/apple
+        env:
+          LIBRARY_PATH: ${{ github.workspace }}/target/release
+        run: swift test --parallel
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qenlo-native-${{ matrix.go_native }}
+          path: target/release/${{ matrix.native }}
+          if-no-files-found: error
+
+  rust-public-api:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace --all-features
+          cargo doc --workspace --all-features --no-deps

@@ -6,6 +6,7 @@ members = [
     "crates/qenlo-testkit",
     "crates/qenlo-telemetry",
     "crates/qenlo-mobile",
+    "crates/qenlo-ffi",
 ]
 resolver = "3"
 

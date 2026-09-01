@@ -14,7 +14,9 @@ use std::{
     time::Instant,
 };
 
-use qenlo::{BackendSelection, Collection, CollectionConfig, Filter, Measurement, TimestampRange};
+use qenlo::{
+    BackendSelection, Collection, CollectionConfig, Filter, Measurement, NewRecord, TimestampRange,
+};
 use qenlo_bench::{
     MetadataDistribution, OracleFilter, OracleRecord, PreparedOracle,
     dataset::{self, DatasetSpec},
@@ -481,8 +483,18 @@ async fn run_cell(
     if backend_name == "usearch" {
         collection.set_ann_search_expansion(expansion)?;
     }
-    for row in &data.corpus {
-        collection.add(row.id, row.user_id, row.timestamp_micros, &row.vector)?;
+    // Bound the temporary normalized copy while avoiding one million lock acquisitions.
+    for chunk in data.corpus.chunks(4_096) {
+        let records = chunk
+            .iter()
+            .map(|row| NewRecord {
+                id: row.id,
+                user_id: row.user_id,
+                timestamp: row.timestamp_micros,
+                vector: row.vector.clone(),
+            })
+            .collect::<Vec<_>>();
+        collection.add_batch(&records)?;
     }
     let build_time = build_started.elapsed();
     let readiness = Instant::now();

@@ -1,0 +1,19 @@
+[package]
+name = "qenlo-ffi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "Stable C ABI for Qenlo language SDKs"
+
+[lib]
+crate-type = ["rlib", "staticlib", "cdylib"]
+
+[dependencies]
+pollster = "0.4"
+qenlo = { path = "../qenlo" }
+serde.workspace = true
+serde_json.workspace = true
+web-time.workspace = true
