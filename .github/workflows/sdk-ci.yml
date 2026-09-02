@@ -51,7 +51,7 @@ jobs:
         with: { python-version: "3.13" }
       - uses: pnpm/action-setup@v4
         with:
-          version: 11
+          version: 9
       - uses: actions/setup-node@v5
         with: { node-version: "24", cache: pnpm, cache-dependency-path: sdk/typescript/pnpm-lock.yaml }
       - uses: actions/setup-go@v6

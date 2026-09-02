@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,75 +12,84 @@
 </head>
 <body>
   <a class="skip-link" href="#content">Skip to documentation</a>
-  <header class="topbar">
-    <div class="topbar-left">
-      <button class="icon-btn mobile-toggle" id="menu-button" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">☰</button>
-      <a class="brand" href="../" aria-label="Qenlo Home">
+  
+  <header class="site-header">
+    <div class="header-left">
+      <button class="btn-icon mobile-menu-btn" id="menu-button" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">☰</button>
+      <a class="brand-logo" href="../" aria-label="Qenlo Home">
         <picture>
           <source srcset="../assets/brand/logo/lockup-reversed.svg" media="(prefers-color-scheme: dark)">
           <img src="../assets/brand/logo/lockup.svg" alt="Qenlo" width="104" height="26">
         </picture>
         <span class="brand-badge">docs</span>
       </a>
+      <span class="version-tag">v0.1.0-alpha.1</span>
     </div>
 
-    <div class="search-box">
-      <span class="search-icon" aria-hidden="true">⌕</span>
-      <input class="search-input" id="doc-search" type="search" placeholder="Search documentation... (/ or Ctrl+K)" autocomplete="off">
-      <kbd class="search-kbd">/</kbd>
+    <div class="header-search">
+      <div class="search-trigger">
+        <span aria-hidden="true">⌕</span>
+        <input id="doc-search" type="search" placeholder="Search documentation... (/ or Ctrl+K)" autocomplete="off">
+        <kbd>/</kbd>
+      </div>
     </div>
 
-    <div class="topbar-right">
-      <span class="version-pill">v0.1.0-alpha.1</span>
-      <button class="icon-btn" id="theme-button" type="button" aria-label="Toggle dark/light theme">◐</button>
-      <a class="github-btn" href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noreferrer">
-        GitHub ↗
+    <div class="header-right">
+      <button class="btn-icon" id="theme-button" type="button" aria-label="Toggle dark/light theme">◐</button>
+      <a class="btn-github" href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noreferrer">
+        <span>GitHub</span> ↗
       </a>
     </div>
   </header>
 
-  <div class="search-modal" id="search-modal" hidden></div>
+  <div class="search-modal-backdrop" id="search-modal" hidden>
+    <div class="search-modal">
+      <div class="search-modal-header">
+        <span aria-hidden="true">⌕</span>
+        <input id="modal-search-input" type="search" placeholder="Type to search documentation...">
+        <kbd>ESC</kbd>
+      </div>
+      <div class="search-results-list" id="search-results-list"></div>
+    </div>
+  </div>
+  
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
-  <div class="docs-shell">
-    <aside class="docs-sidebar" id="sidebar">
+  <div class="docs-layout">
+    <aside class="docs-nav-sidebar" id="sidebar">
       <nav aria-label="Documentation Navigation">
-        <div class="nav-section">
-          <div class="nav-section-title">Getting Started</div>
-          <a class="nav-link" href="#overview" data-route="overview">Overview</a>
-          <a class="nav-link" href="#quickstart" data-route="quickstart">Quickstart</a>
-          <a class="nav-link" href="#concepts" data-route="concepts">Core Concepts</a>
+        <div class="nav-group">
+          <div class="nav-group-title">Getting Started</div>
+          <a class="nav-item active" href="#overview" data-route="overview">Overview</a>
+          <a class="nav-item" href="#quickstart" data-route="quickstart">Quickstart <span class="nav-badge">5m</span></a>
+          <a class="nav-item" href="#concepts" data-route="concepts">Core Concepts</a>
         </div>
-        <div class="nav-section">
-          <div class="nav-section-title">SDKs</div>
-          <a class="nav-link" href="#rust" data-route="rust">Rust</a>
-          <a class="nav-link" href="#python" data-route="python">Python</a>
-          <a class="nav-link" href="#typescript" data-route="typescript">TypeScript</a>
-          <a class="nav-link" href="#go" data-route="go">Go</a>
-          <a class="nav-link" href="#kotlin" data-route="kotlin">Kotlin &amp; Android</a>
-          <a class="nav-link" href="#apple" data-route="apple">macOS &amp; iOS</a>
+        <div class="nav-group">
+          <div class="nav-group-title">SDKs &amp; Languages</div>
+          <a class="nav-item" href="#rust" data-route="rust">Rust</a>
+          <a class="nav-item" href="#python" data-route="python">Python <span class="nav-badge">v0.1.0a1</span></a>
+          <a class="nav-item" href="#typescript" data-route="typescript">TypeScript &amp; Node</a>
+          <a class="nav-item" href="#go" data-route="go">Go</a>
+          <a class="nav-item" href="#kotlin" data-route="kotlin">Kotlin &amp; JVM</a>
+          <a class="nav-item" href="#apple" data-route="apple">Swift &amp; Apple</a>
         </div>
-        <div class="nav-section">
-          <div class="nav-section-title">Operate</div>
-          <a class="nav-link" href="#storage" data-route="storage">Storage &amp; .qn</a>
-          <a class="nav-link" href="#recovery" data-route="recovery">Recovery Policy</a>
-          <a class="nav-link" href="#telemetry" data-route="telemetry">Execution Reports</a>
+        <div class="nav-group">
+          <div class="nav-group-title">Operate</div>
+          <a class="nav-item" href="#storage" data-route="storage">Storage &amp; .qn</a>
+          <a class="nav-item" href="#recovery" data-route="recovery">Recovery Policy</a>
+          <a class="nav-item" href="#telemetry" data-route="telemetry">Execution Reports</a>
         </div>
-        <div class="nav-section">
-          <div class="nav-section-title">Research &amp; Release</div>
-          <a class="nav-link" href="#benchmarks" data-route="benchmarks">Benchmarks &amp; Gates</a>
-          <a class="nav-link" href="#device-lab" data-route="device-lab">Device Lab</a>
-          <a class="nav-link" href="#release-status" data-route="release-status">Release Status</a>
-          <a class="nav-link" href="#publishing" data-route="publishing">Package Publishing</a>
+        <div class="nav-group">
+          <div class="nav-group-title">Research &amp; Release</div>
+          <a class="nav-item" href="#benchmarks" data-route="benchmarks">Benchmarks &amp; Gates</a>
+          <a class="nav-item" href="#device-lab" data-route="device-lab">Device Lab</a>
+          <a class="nav-item" href="#release-status" data-route="release-status">Release Status</a>
+          <a class="nav-item" href="#publishing" data-route="publishing">Package Publishing</a>
         </div>
       </nav>
-      <div class="sidebar-footer">
-        <a href="architecture.md">Architecture Specification ↗</a>
-        <a href="verification.md">Verification Record ↗</a>
-      </div>
     </aside>
 
-    <main class="docs-main" id="content" tabindex="-1">
+    <main class="docs-main-container" id="content" tabindex="-1">
       <div class="search-results" id="search-results" hidden aria-live="polite"></div>
 
       <article class="docs-article" data-page="overview" data-summary="What Qenlo is, what it guarantees, and where the research boundary sits.">
