@@ -1,0 +1,8 @@
+workload,system,p95_ms,recall_at_10,qualification
+100k x 384 E=100k,Qenlo CPU exact,16.6567,0.99998,native controlled
+100k x 384 E=100k,Qenlo WGPU predicate,3.2404,0.99998,native controlled
+100k x 384 E=100k,USearch ef=128,3.6245,0.99224,native controlled ANN
+100k x 384 E=1k,Qenlo CPU exact,0.2304,1.0,native controlled
+100k x 384 E=1k,Qenlo WGPU rows,0.6766,1.0,native controlled
+1M x 768 E=10026,FAISS GPU Flat,0.1322215,1.0,real TopK
+1M x 768 E=10026,Qenlo CUDA prototype,0.17072245,1.0,not shipped Qenlo

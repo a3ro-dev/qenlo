@@ -1,0 +1,101 @@
+{
+  "timestamp_utc": "2026-09-02T13:07:03.097657+00:00",
+  "qualification": "synthetic implementation-development experiment; not shipped Qenlo",
+  "workload": {
+    "output": "/workspace/qenlo-cuda-matrix",
+    "rows": 1000000,
+    "dimensions": 768,
+    "queries": 100,
+    "warmups": 50,
+    "repetitions": 5,
+    "eligible": [
+      1000,
+      10000,
+      100000,
+      1000000
+    ],
+    "seed": 20260902,
+    "batch": 1,
+    "k": 10,
+    "metric": "cosine"
+  },
+  "timing": "host-call wall time including H2D query, GPU work, synchronization, and D2H IDs; excludes setup",
+  "correctness": {
+    "check": "unordered top-10 agreement between two exact implementations",
+    "minimum_agreement": 1.0
+  },
+  "environment": {
+    "python": "3.12.3",
+    "torch": "2.9.1+cu128",
+    "torch_cuda": "12.8",
+    "faiss": "1.14.1",
+    "gpu": "NVIDIA RTX A6000",
+    "nvidia_smi": "NVIDIA RTX A6000, 570.195.03, 49140 MiB, 300.00 W"
+  },
+  "summary": [
+    {
+      "system": "faiss_gpu_flat_ip",
+      "eligible": 1000,
+      "samples": 500,
+      "p50_ms": 0.064394,
+      "p95_ms": 0.07661950000000001,
+      "p99_ms": 0.08666639999999988
+    },
+    {
+      "system": "qenlo_cuda_buffered_prototype",
+      "eligible": 1000,
+      "samples": 500,
+      "p50_ms": 0.073753,
+      "p95_ms": 0.08940055,
+      "p99_ms": 0.09611597
+    },
+    {
+      "system": "faiss_gpu_flat_ip",
+      "eligible": 10000,
+      "samples": 500,
+      "p50_ms": 0.125366,
+      "p95_ms": 0.13481939999999998,
+      "p99_ms": 0.14248607
+    },
+    {
+      "system": "qenlo_cuda_buffered_prototype",
+      "eligible": 10000,
+      "samples": 500,
+      "p50_ms": 0.14048650000000001,
+      "p95_ms": 0.14760294999999998,
+      "p99_ms": 0.1584717
+    },
+    {
+      "system": "faiss_gpu_flat_ip",
+      "eligible": 100000,
+      "samples": 500,
+      "p50_ms": 0.7763585,
+      "p95_ms": 0.78783395,
+      "p99_ms": 0.7953741599999999
+    },
+    {
+      "system": "qenlo_cuda_buffered_prototype",
+      "eligible": 100000,
+      "samples": 500,
+      "p50_ms": 0.554961,
+      "p95_ms": 0.56872,
+      "p99_ms": 0.57544734
+    },
+    {
+      "system": "faiss_gpu_flat_ip",
+      "eligible": 1000000,
+      "samples": 500,
+      "p50_ms": 6.268281,
+      "p95_ms": 6.353113400000001,
+      "p99_ms": 6.4377596
+    },
+    {
+      "system": "qenlo_cuda_buffered_prototype",
+      "eligible": 1000000,
+      "samples": 500,
+      "p50_ms": 4.650261,
+      "p95_ms": 4.66970145,
+      "p99_ms": 4.73746226
+    }
+  ]
+}

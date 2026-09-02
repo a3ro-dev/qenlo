@@ -68,6 +68,26 @@ class QenloPrototype:
         values, pos = torch.topk(torch.mv(self.vectors, q), K, largest=True, sorted=False)
         return pos.cpu().numpy(), values.cpu().numpy()
 
+class QenloBufferedPrototype:
+    name = "qenlo_cuda_buffered_prototype"
+    def __init__(self, vectors):
+        self.vectors = torch.as_tensor(vectors, device="cuda", dtype=torch.float32)
+        self.query = torch.empty(D, device="cuda", dtype=torch.float32)
+        self.scores = torch.empty(len(vectors), device="cuda", dtype=torch.float32)
+        self.values = torch.empty(K, device="cuda", dtype=torch.float32)
+        self.positions = torch.empty(K, device="cuda", dtype=torch.int64)
+    def search(self, query):
+        self.query.copy_(torch.from_numpy(query))
+        torch.mv(self.vectors, self.query, out=self.scores)
+        torch.topk(
+            self.scores,
+            K,
+            largest=True,
+            sorted=False,
+            out=(self.values, self.positions),
+        )
+        return self.positions.cpu().numpy(), self.values.cpu().numpy()
+
 class FaissFlat:
     name = "faiss_gpu_flat_ip"
     def __init__(self, vectors):
@@ -116,7 +136,7 @@ def stats(rows):
 
 def main():
     import argparse
-    p=argparse.ArgumentParser(); p.add_argument("--docs",default="/workspace/topk/docs-1m.parquet"); p.add_argument("--queries",default="/workspace/topk/queries-1m.parquet"); p.add_argument("--out",default="/workspace/strict-gate"); p.add_argument("--systems", nargs="+", choices=["cpu", "qenlo", "faiss", "cuvs"], default=["cpu", "qenlo", "faiss", "cuvs"]); args=p.parse_args()
+    p=argparse.ArgumentParser(); p.add_argument("--docs",default="/workspace/topk/docs-1m.parquet"); p.add_argument("--queries",default="/workspace/topk/queries-1m.parquet"); p.add_argument("--out",default="/workspace/strict-gate"); p.add_argument("--systems", nargs="+", choices=["cpu", "qenlo", "qenlo-buffered", "faiss", "cuvs"], default=["cpu", "qenlo", "qenlo-buffered", "faiss", "cuvs"]); args=p.parse_args()
     cpu_count = os.cpu_count() or 1
     pinned_cpus = set(range(min(8, cpu_count)))
     try: os.sched_setaffinity(0, pinned_cpus)
@@ -131,7 +151,7 @@ def main():
     manifest={"timestamp_utc":dt.datetime.now(dt.timezone.utc).isoformat(),"workload":{"N":N,"D":D,"k":K,"batch":1,"queries":NQ,"warmup":WARMUP,"repetitions":REPS,"strict_filter":"int_filter < 100","eligible_rows":int(len(selected)),"metric":"cosine via FP32-normalized temporary working copies","measurement":"host call through host result; H2D/GPU/D2H/synchronization included; index/filter preparation excluded","oracle":"separate CPU float64 exhaustive ranking over the same FP32 working vectors","topk_supplied_oracle_full_query_agreement":topk_agreement},"environment":{"python":platform.python_version(),"torch":torch.__version__,"cuda":torch.version.cuda,"gpu":torch.cuda.get_device_name(0),"nvidia_smi":command(["nvidia-smi","--query-gpu=name,driver_version,memory.total","--format=csv,noheader"]),"cpu":command(["lscpu"]),"threads":{"cpu_affinity":sorted(pinned_cpus),"OMP_NUM_THREADS":os.environ.get("OMP_NUM_THREADS"),"OPENBLAS_NUM_THREADS":os.environ.get("OPENBLAS_NUM_THREADS"),"MKL_NUM_THREADS":os.environ.get("MKL_NUM_THREADS")}},"transfer_bytes_per_query":{"cpu":0,"gpu_query_h2d":D*4,"gpu_result_d2h":K*8},"energy":"not available"}
     (out/"environment.json").write_text(json.dumps(manifest,indent=2))
     rows=[]; failures=[]
-    adapters = {"cpu": CpuExact, "qenlo": QenloPrototype, "faiss": FaissFlat, "cuvs": CuvsBruteForce}
+    adapters = {"cpu": CpuExact, "qenlo": QenloPrototype, "qenlo-buffered": QenloBufferedPrototype, "faiss": FaissFlat, "cuvs": CuvsBruteForce}
     for key in args.systems:
         cls = adapters[key]
         adapter=None

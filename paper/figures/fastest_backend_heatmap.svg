@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430"><rect width="100%" height="100%" fill="white"/>
+<text x="380" y="30" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="bold">Observed fastest backend by region</text>
+<text x="40" y="85" font-family="sans-serif" font-size="13">E=1k, D=384, B=1</text>
+<rect x="430" y="65" width="270" height="28" rx="5" fill="#d69224"/>
+<text x="565" y="84" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">measured: CPU</text>
+<text x="40" y="127" font-family="sans-serif" font-size="13">E=100k, D=384, B=1</text>
+<rect x="430" y="107" width="270" height="28" rx="5" fill="#d69224"/>
+<text x="565" y="126" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">measured: WGPU</text>
+<text x="40" y="169" font-family="sans-serif" font-size="13">E&lt;=10k, D=768, B=1</text>
+<rect x="430" y="149" width="270" height="28" rx="5" fill="#d69224"/>
+<text x="565" y="168" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">measured: FAISS</text>
+<text x="40" y="211" font-family="sans-serif" font-size="13">E&gt;=100k, D=768, B=1</text>
+<rect x="430" y="191" width="270" height="28" rx="5" fill="#d69224"/>
+<text x="565" y="210" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">measured: CUDA prototype</text>
+</svg>

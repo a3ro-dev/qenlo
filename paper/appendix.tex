@@ -1,0 +1,51 @@
+\section{Artifact inventory}
+Raw A6000 and native-crossover samples are under \path{research/data/raw}; processed tables are under \path{research/data/processed}. The repository's benchmark-results directory contains the independently-oracled TopK cohort and retained multi-backend archive. Exact leaf names and commands are listed in \path{paper/REPRODUCE.md}.
+
+\section{Native crossover values}
+\begin{center}\small
+\begin{tabular}{rrrr}
+\toprule $E$ & CPU P95 & WGPU-row P95 & CPU/WGPU\\\midrule
+2,000 & .520 & .634 & .82\\
+3,000 & .956 & .814 & 1.17\\
+4,000 & 1.331 & 1.074 & 1.24\\
+6,000 & 1.974 & 1.603 & 1.23\\
+8,000 & 2.500 & 2.151 & 1.16\\
+10,000 & 2.810 & 2.604 & 1.08\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Complete held-out CUDA percentiles}
+\begin{center}\small
+\begin{tabular}{lrrrr}
+\toprule System & $E$ & P50 & P95 & P99 (ms)\\\midrule
+FAISS & 1,000 & .067 & .086 & .095\\
+Prototype & 1,000 & .078 & .098 & .115\\
+FAISS & 10,000 & .127 & .137 & .151\\
+Prototype & 10,000 & .144 & .156 & .174\\
+FAISS & 100,000 & .775 & .789 & .800\\
+Prototype & 100,000 & .556 & .567 & .576\\
+FAISS & 1,000,000 & 6.274 & 6.347 & 6.436\\
+Prototype & 1,000,000 & 4.651 & 4.668 & 4.736\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Failure record}
+Three pod/image attempts failed to provide usable WGPU: a PyTorch image exposed CUDA but Vulkan selected software or could not load the NVIDIA ICD; NVIDIA Vulkan images either lacked SSH or used an obsolete unsigned package repository. A 5.56 GiB public dataset transfer was aborted after throughput made it economically inappropriate. cuVS retained attempts failed or returned recall 0.9. These cells were not replaced with successful samples.
+
+\section{Android soak cell inventory}
+All cells use 100k$\times$384, $k=10$, 512 samples, and report recall@10=1.0.
+\begin{center}\small
+\begin{tabular}{lrrrr}
+\toprule Cell & Batch & P50 & P95 & P99 (ms)\\\midrule
+CPU exact & 1 & 25.799 & 27.019 & 27.572\\
+WGPU exact & 1 & 14.274 & 17.678 & 25.769\\
+WGPU exact & 8 & 10.290 & 11.131 & 12.388\\
+IVF-Flat & 1 & 13.977 & 21.453 & 24.549\\
+IVF-SQ8 & 1 & 27.359 & 37.090 & 40.581\\
+auto CPU, 1\% & 1 & .357 & .544 & .743\\
+auto WGPU, 1\% & 8 & 8.174 & 9.890 & 12.441\\
+\bottomrule
+\end{tabular}
+\end{center}

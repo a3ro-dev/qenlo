@@ -1,0 +1,14 @@
+cohort,system,eligible,dimension,batch,p95_ms,recall
+windows-rtx4050,cpu-exact,1000,384,1,0.2304,1.0
+windows-rtx4050,gpu-rows,1000,384,1,0.6766,1.0
+windows-rtx4050,gpu-predicate,1000,384,1,2.8832,1.0
+windows-rtx4050,cpu-exact,100000,384,1,16.6567,0.99998
+windows-rtx4050,gpu-predicate,100000,384,1,3.2404,0.99998
+windows-rtx4050,gpu-rows,100000,384,1,4.2428,0.99998
+windows-rtx4050,gpu-mask,100000,384,1,4.4591,0.99998
+windows-rtx4050,usearch-hnsw-ef128,100000,384,1,3.6245,0.99224
+intel-arc-soak,cpu-exact,100000,384,1,16.486,1.0
+intel-arc-soak,gpu-predicate,100000,384,1,4.444,1.0
+intel-arc-soak,gpu-predicate,100000,384,8,1.245,1.0
+intel-arc-soak,automatic-cpu,1000,384,1,0.273,1.0
+intel-arc-soak,automatic-gpu,1000,384,8,0.555,1.0

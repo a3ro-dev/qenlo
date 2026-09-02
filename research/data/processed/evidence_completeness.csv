@@ -1,0 +1,9 @@
+question,status
+architecture,measured/verified
+eligible-set crossover,bounded
+dimension effect,unmeasured
+batch effect,device-lab only
+HNSW tradeoff,one controlled point
+routing regret,unmeasured
+matched corpus size,unmeasured
+metadata correlation,unmeasured

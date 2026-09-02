@@ -1,0 +1,7 @@
+hypothesis,verdict,evidence
+H1,partially supported,exact GPU beats CPU dense and is competitive with HNSW; not universal
+H2,suggestive,eligible work tracks latency but no matched-N experiment
+H3,supported,CPU wins E=1k and WGPU wins E=100k on same native cohort
+H4,suggestive,Intel Arc batch-8 device-lab result amortizes GPU work
+H5,one-cell support,exact WGPU 3.2404 ms vs HNSW 3.6245 ms at recall 0.99224; interval crosses parity
+H6,inconclusive,router decisions observed but fixed-policy counterfactuals incomplete

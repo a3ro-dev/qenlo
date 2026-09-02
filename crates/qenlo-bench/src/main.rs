@@ -34,6 +34,7 @@ run     --dataset PATH --output NEW_DIRECTORY [--dimensions 16|384|768]
         [--backend cpu|usearch|gpu-mask|gpu-rows|gpu-predicate|automatic]
         [--distribution independent|positive|negative|skewed]
         [--fraction 1|0.1|0.01|0.001|0.0001|empty|fewer]
+        [--eligible-count ROWS]
         [--user-id U64]
         [--batch 1|8|32] [--warmups 8] [--repetitions 3]
         [--recall-target 0.95|0.99] [--expansion-search 128]
@@ -225,6 +226,7 @@ fn workload_filter(
     records: &[OracleRecord],
     fraction: &str,
     user_id: Option<u64>,
+    eligible_count: Option<usize>,
 ) -> Result<(OracleFilter, usize)> {
     let mut timestamps: Vec<_> = records
         .iter()
@@ -233,7 +235,7 @@ fn workload_filter(
         .collect();
     timestamps.sort_unstable();
     let population = timestamps.len();
-    let count = match fraction {
+    let count = eligible_count.unwrap_or(match fraction {
         "1" => population,
         "0.1" => population / 10,
         "0.01" => population / 100,
@@ -242,7 +244,10 @@ fn workload_filter(
         "empty" => 0,
         "fewer" => population.min(5),
         _ => return Err("unsupported --fraction".into()),
-    };
+    });
+    if count > population {
+        return Err("--eligible-count exceeds the filtered population".into());
+    }
     let upper = timestamps
         .get(count)
         .copied()
@@ -325,6 +330,10 @@ async fn run_cell(
         _ => return Err("unknown --distribution".into()),
     };
     let fraction = take(&mut options, "--fraction", "0.1");
+    let eligible_count = options
+        .remove("--eligible-count")
+        .map(|value| count(&value))
+        .transpose()?;
     let user_id = options
         .remove("--user-id")
         .map(|value| value.parse::<u64>())
@@ -369,7 +378,8 @@ async fn run_cell(
     let load_started = Instant::now();
     let mut data = dataset::load(&path, dimension, vector_budget)?;
     metadata(&mut data.corpus, distribution, data.spec.seed);
-    let (oracle_filter, eligible) = workload_filter(&data.corpus, &fraction, user_id)?;
+    let (oracle_filter, eligible) =
+        workload_filter(&data.corpus, &fraction, user_id, eligible_count)?;
     let filter = Filter {
         user_id: oracle_filter.user_id,
         timestamp: TimestampRange {
@@ -878,7 +888,7 @@ mod tests {
         );
         metadata(&mut skewed, MetadataDistribution::Skewed, 42);
         let selected = |records: &[OracleRecord]| {
-            let (filter, _) = workload_filter(records, "0.1", None).unwrap();
+            let (filter, _) = workload_filter(records, "0.1", None, None).unwrap();
             records
                 .iter()
                 .filter(|row| row.timestamp_micros < filter.timestamp_to.unwrap())
@@ -944,7 +954,7 @@ mod tests {
         ] {
             metadata(&mut records, distribution, 42);
             for fraction in ["1", "0.1", "0.01", "0.001", "0.0001", "empty", "fewer"] {
-                let (filter, expected) = workload_filter(&records, fraction, None).unwrap();
+                let (filter, expected) = workload_filter(&records, fraction, None, None).unwrap();
                 let actual = records
                     .iter()
                     .filter(|row| {
@@ -956,7 +966,7 @@ mod tests {
                 assert_eq!(actual, expected);
                 for user_id in [0, 99, u64::MAX] {
                     let (compound, expected) =
-                        workload_filter(&records, fraction, Some(user_id)).unwrap();
+                        workload_filter(&records, fraction, Some(user_id), None).unwrap();
                     let actual = records
                         .iter()
                         .filter(|row| {
@@ -978,5 +988,10 @@ mod tests {
                 }
             }
         }
+        assert_eq!(
+            workload_filter(&records, "1", None, Some(37)).unwrap().1,
+            37
+        );
+        assert!(workload_filter(&records, "1", None, Some(101)).is_err());
     }
 }

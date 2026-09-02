@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430"><rect width="100%" height="100%" fill="white"/>
+<text x="380.0" y="25" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="bold">Android device-lab soak</text>
+<line x1="85" y1="340" x2="735" y2="340" stroke="#222"/><line x1="85" y1="55" x2="85" y2="340" stroke="#222"/>
+<rect x="103.3" y="159.5" width="56.7" height="180.5" fill="#1b6ca8"/>
+<text x="131.6" y="153.5" text-anchor="middle" font-family="sans-serif" font-size="12">27</text>
+<text x="131.6" y="358" transform="rotate(28 131.6 358)" text-anchor="start" font-family="sans-serif" font-size="11">CPU exact</text>
+<rect x="194.7" y="221.9" width="56.7" height="118.1" fill="#d95f02"/>
+<text x="223.1" y="215.9" text-anchor="middle" font-family="sans-serif" font-size="12">17.7</text>
+<text x="223.1" y="358" transform="rotate(28 223.1 358)" text-anchor="start" font-family="sans-serif" font-size="11">WGPU exact</text>
+<rect x="286.1" y="265.6" width="56.7" height="74.4" fill="#1b6ca8"/>
+<text x="314.5" y="259.6" text-anchor="middle" font-family="sans-serif" font-size="12">11.1</text>
+<text x="314.5" y="358" transform="rotate(28 314.5 358)" text-anchor="start" font-family="sans-serif" font-size="11">WGPU B=8</text>
+<rect x="377.6" y="196.7" width="56.7" height="143.3" fill="#d95f02"/>
+<text x="405.9" y="190.7" text-anchor="middle" font-family="sans-serif" font-size="12">21.5</text>
+<text x="405.9" y="358" transform="rotate(28 405.9 358)" text-anchor="start" font-family="sans-serif" font-size="11">IVF-Flat</text>
+<rect x="469.0" y="92.2" width="56.7" height="247.8" fill="#1b6ca8"/>
+<text x="497.3" y="86.2" text-anchor="middle" font-family="sans-serif" font-size="12">37.1</text>
+<text x="497.3" y="358" transform="rotate(28 497.3 358)" text-anchor="start" font-family="sans-serif" font-size="11">IVF-SQ8</text>
+<rect x="560.4" y="336.4" width="56.7" height="3.6" fill="#d95f02"/>
+<text x="588.8" y="330.4" text-anchor="middle" font-family="sans-serif" font-size="12">0.544</text>
+<text x="588.8" y="358" transform="rotate(28 588.8 358)" text-anchor="start" font-family="sans-serif" font-size="11">auto CPU 1%</text>
+<rect x="651.9" y="273.9" width="56.7" height="66.1" fill="#1b6ca8"/>
+<text x="680.2" y="267.9" text-anchor="middle" font-family="sans-serif" font-size="12">9.89</text>
+<text x="680.2" y="358" transform="rotate(28 680.2 358)" text-anchor="start" font-family="sans-serif" font-size="11">auto GPU 1% B=8</text>
+<text x="18" y="215.0" transform="rotate(-90 18 215.0)" text-anchor="middle" font-family="sans-serif" font-size="13">reported P95 (ms)</text>
+<text x="380.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">MT6897 / Mali-G615 MC6 / Vulkan; 100k x 384; 512 samples; batch statistics are not normalized</text></svg>

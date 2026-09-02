@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430"><rect width="100%" height="100%" fill="white"/>
+<text x="380.0" y="25" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="bold">Native exact latency versus selectivity</text>
+<line x1="85" y1="340" x2="735" y2="340" stroke="#222"/><line x1="85" y1="55" x2="85" y2="340" stroke="#222"/>
+<rect x="110.6" y="336.6" width="79.4" height="3.4" fill="#1b6ca8"/>
+<text x="150.3" y="330.6" text-anchor="middle" font-family="sans-serif" font-size="12">0.23</text>
+<text x="150.3" y="358" transform="rotate(28 150.3 358)" text-anchor="start" font-family="sans-serif" font-size="11">CPU 1%</text>
+<rect x="238.6" y="329.9" width="79.4" height="10.1" fill="#d95f02"/>
+<text x="278.3" y="323.9" text-anchor="middle" font-family="sans-serif" font-size="12">0.677</text>
+<text x="278.3" y="358" transform="rotate(28 278.3 358)" text-anchor="start" font-family="sans-serif" font-size="11">GPU rows 1%</text>
+<rect x="366.6" y="297.1" width="79.4" height="42.9" fill="#1b6ca8"/>
+<text x="406.3" y="291.1" text-anchor="middle" font-family="sans-serif" font-size="12">2.88</text>
+<text x="406.3" y="358" transform="rotate(28 406.3 358)" text-anchor="start" font-family="sans-serif" font-size="11">GPU predicate 1%</text>
+<rect x="494.6" y="92.2" width="79.4" height="247.8" fill="#d95f02"/>
+<text x="534.3" y="86.2" text-anchor="middle" font-family="sans-serif" font-size="12">16.7</text>
+<text x="534.3" y="358" transform="rotate(28 534.3 358)" text-anchor="start" font-family="sans-serif" font-size="11">CPU 100%</text>
+<rect x="622.6" y="291.8" width="79.4" height="48.2" fill="#1b6ca8"/>
+<text x="662.3" y="285.8" text-anchor="middle" font-family="sans-serif" font-size="12">3.24</text>
+<text x="662.3" y="358" transform="rotate(28 662.3 358)" text-anchor="start" font-family="sans-serif" font-size="11">GPU predicate 100%</text>
+<text x="18" y="215.0" transform="rotate(-90 18 215.0)" text-anchor="middle" font-family="sans-serif" font-size="13">P95 latency (ms)</text>
+<text x="380.0" y="422" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">100k x 384 RTX 4050; batch 1; real embeddings</text></svg>

@@ -1,0 +1,5 @@
+cohort,gpu,driver,runtime,software
+heldout CUDA,NVIDIA RTX A6000 49140 MiB,570.195.03,CUDA 12.8,PyTorch 2.9.1; FAISS 1.14.1
+strict TopK,NVIDIA RTX A6000 49140 MiB,570.133.07,CUDA 12.8,PyTorch 2.8.0
+native Windows,NVIDIA RTX 4050 Laptop GPU,see benchmarks/2026-08-28/system.json,DX12,wgpu 30.0.1
+device lab,Intel Arc Graphics,retained report,Vulkan,wgpu
