@@ -120,19 +120,21 @@ jobs:
           go vet ./...
           go test -race ./...
           cd ../..
-          zip -qr dist/sdk/qenlo-go-0.1.0.zip sdk/go LICENSE-MIT LICENSE-APACHE
+          mkdir -p dist/sdk
+          zip -qr dist/sdk/qenlo-go.zip sdk/go LICENSE
       - name: Verify and pack Kotlin
         working-directory: sdk/kotlin
         run: |
           gradle --no-daemon build
-          cp build/libs/qenlo-0.1.0.jar ../../dist/sdk/qenlo-kotlin-0.1.0.jar
-          cp build/libs/qenlo-0.1.0-sources.jar ../../dist/sdk/qenlo-kotlin-0.1.0-sources.jar
+          mkdir -p ../../dist/sdk
+          cp build/libs/*.jar ../../dist/sdk/
       - name: Pack Rust sources and collect wheels
         shell: bash
         run: |
           cargo package --locked --allow-dirty --no-verify -p qenlo-core
-          cp target/package/qenlo-core-0.1.0.crate dist/sdk/
-          git archive --format=tar.gz --prefix=qenlo-rust-0.1.0/ -o dist/sdk/qenlo-rust-0.1.0.tar.gz HEAD Cargo.toml Cargo.lock rust-toolchain.toml crates/qenlo-core crates/qenlo LICENSE-MIT LICENSE-APACHE
+          mkdir -p dist/sdk
+          cp target/package/*.crate dist/sdk/
+          git archive --format=tar.gz -o dist/sdk/qenlo-rust-source.tar.gz HEAD Cargo.toml Cargo.lock rust-toolchain.toml crates/qenlo-core crates/qenlo LICENSE
           cp artifacts/wheels/*.whl dist/sdk/
       - uses: actions/upload-artifact@v4
         with:
@@ -163,11 +165,11 @@ jobs:
             -library target/apple/ios/libqenlo_ffi.a -headers sdk/apple/Sources/CQenlo/include \
             -library target/apple/simulator/libqenlo_ffi.a -headers sdk/apple/Sources/CQenlo/include \
             -output target/apple/QenloFFI.xcframework
-          ditto -c -k --sequesterRsrc --keepParent target/apple/QenloFFI.xcframework target/apple/QenloFFI-0.1.0.xcframework.zip
+          ditto -c -k --sequesterRsrc --keepParent target/apple/QenloFFI.xcframework target/apple/QenloFFI.xcframework.zip
       - uses: actions/upload-artifact@v4
         with:
           name: qenlo-apple-xcframework
-          path: target/apple/QenloFFI-0.1.0.xcframework.zip
+          path: target/apple/QenloFFI.xcframework.zip
           if-no-files-found: error
 
   release:
