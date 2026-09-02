@@ -55,9 +55,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.verify.outputs.tag }}
-        run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'qenlo-*.whl' --dir dist
+        run: |
+          mkdir -p dist
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'qenlo-*.whl' --dir dist
       - uses: pypa/gh-action-pypi-publish@release/v1
-        with: { packages-dir: dist }
+        with:
+          packages-dir: dist
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
 
   npm:
     needs: verify
@@ -75,8 +80,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           RELEASE_TAG: ${{ needs.verify.outputs.tag }}
         run: |
+          mkdir -p dist
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'qenlo-qenlo-*.tgz' --dir dist
-          npm publish dist/qenlo-qenlo-*.tgz --access public --provenance
+          npm publish ./dist/qenlo-qenlo-*.tgz --access public
 
   maven-central:
     needs: verify
