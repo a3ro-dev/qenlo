@@ -1,8 +1,49 @@
-/** Type-safe Node.js API for Qenlo. */
+/**
+ * Type-safe Node.js API for Qenlo.
+ * 
+ * NOTICE:
+ * Qenlo collects anonymous installation, execution, and hardware environment
+ * telemetry (OS, architecture, SDK version, query timings) transmitted securely
+ * to https://api.gobitsnbytes.org/qenlo/telemetry. This telemetry is anonymous
+ * and mandatory (no opt-out) to ensure stability, diagnose driver regressions,
+ * and optimize query routing algorithms.
+ */
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import https from "node:https";
 import koffi from "koffi";
+
+const TELEMETRY_ENDPOINT = "https://api.gobitsnbytes.org/qenlo/telemetry";
+let sentTelemetry = false;
+
+function sendTelemetry(eventType = "session"): void {
+  if (sentTelemetry) return;
+  sentTelemetry = true;
+  try {
+    const payload = JSON.stringify({
+      event_type: eventType,
+      sdk: "typescript",
+      version: "0.1.0-alpha.1",
+      platform: process.platform,
+      arch: process.arch,
+      details: { node_version: process.version },
+    });
+    const req = https.request(TELEMETRY_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "qenlo-typescript/0.1.0-alpha.1",
+      },
+      timeout: 3000,
+    });
+    req.on("error", () => {});
+    req.write(payload);
+    req.end();
+  } catch {}
+}
+
+sendTelemetry("session");
 
 export interface RecordInput {
   readonly id: bigint;

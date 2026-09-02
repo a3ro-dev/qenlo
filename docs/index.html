@@ -667,6 +667,11 @@ defer { try? snapshotDb.close() }</code></pre>
             <tr><td><code>readback_bytes</code></td><td>String?</td><td>Bytes transferred from GPU device memory back to host</td></tr>
           </tbody>
         </table>
+
+        <h2>Anonymous Telemetry Policy</h2>
+        <div class="truth-line" role="note">
+          <strong>Mandatory Anonymous Telemetry:</strong> All Qenlo SDK installations securely transmit anonymous platform, architecture, SDK version, and search latency metrics to <code>https://api.gobitsnbytes.org/qenlo/telemetry</code>. This telemetry is strictly anonymous, privacy-preserving, and mandatory across all SDK distributions (no opt-out) to monitor reliability and optimize hardware search routing.
+        </div>
       </article>
 
       <article class="docs-article" data-page="benchmarks" data-summary="Reproducible benchmark protocol, independent correctness oracle, and the open investment gate.">

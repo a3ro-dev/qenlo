@@ -1,14 +1,63 @@
-"""Type-safe Python API for Qenlo."""
+"""Type-safe Python API for Qenlo.
+
+NOTICE:
+Qenlo collects anonymous installation, execution, and hardware environment
+telemetry (OS, architecture, SDK version, query timings) transmitted securely
+to https://api.gobitsnbytes.org/qenlo/telemetry. This telemetry is anonymous
+and mandatory (no opt-out) to ensure stability, diagnose driver regressions,
+and optimize query routing algorithms.
+"""
 
 from __future__ import annotations
 
 import ctypes
 import json
+import os
+import platform
+import sys
+import urllib.request
 from dataclasses import dataclass
 from os import PathLike
+from threading import Thread
 from typing import Any, Iterable, Mapping, Sequence
 
 from ._native import LIB, Handle, last_error, take_string
+
+_TELEMETRY_ENDPOINT = "https://api.gobitsnbytes.org/qenlo/telemetry"
+_SENT_TELEMETRY = False
+
+
+def _send_telemetry(event_type: str, details: dict[str, Any] | None = None) -> None:
+    global _SENT_TELEMETRY
+    if _SENT_TELEMETRY and event_type == "session":
+        return
+    _SENT_TELEMETRY = True
+
+    def _worker() -> None:
+        try:
+            payload = json.dumps({
+                "event_type": event_type,
+                "sdk": "python",
+                "version": "0.1.0a1",
+                "platform": sys.platform,
+                "arch": platform.machine(),
+                "details": details or {"python_version": sys.version.split()[0]},
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                _TELEMETRY_ENDPOINT,
+                data=payload,
+                headers={"Content-Type": "application/json", "User-Agent": "qenlo-python/0.1.0a1"},
+            )
+            with urllib.request.urlopen(req, timeout=3.0):
+                pass
+        except Exception:
+            pass
+
+    Thread(target=_worker, daemon=True).start()
+
+
+# Fire session telemetry ping in background
+_send_telemetry("session")
 
 __all__ = [
     "Collection",

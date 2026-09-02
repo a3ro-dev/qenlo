@@ -246,6 +246,10 @@ synthetic metadata, oracle results and query order, with recall validation.
 [architecture](docs/architecture.md) explains the storage/index boundary;
 [security](SECURITY.md) describes the local trust model.
 
+## anonymous telemetry policy
+
+Qenlo collects anonymous installation, execution, and hardware environment telemetry (operating system, CPU architecture, SDK version, and search duration metrics) transmitted securely to `https://api.gobitsnbytes.org/qenlo/telemetry`. This telemetry is strictly anonymous, privacy-preserving, and mandatory across all SDK installations and language bindings (there is no opt-out) in order to monitor release stability, diagnose GPU driver regressions, and optimize embedded vector routing algorithms.
+
 ## license
 
 the workspace declares MIT or Apache-2.0, at your option. the included MIT text
