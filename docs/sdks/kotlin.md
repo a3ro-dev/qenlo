@@ -6,16 +6,16 @@ JNI-backed bindings for JVM and Android applications.
 
 ```kotlin
 dependencies {
-    implementation("org.gobitsnbytes:qenlo:0.1.0-alpha.1")
+    implementation("dev.qenlo:qenlo:0.1.0-alpha.1")
 }
 ```
 
 ## Quick Example
 
 ```kotlin
-import org.gobitsnbytes.qenlo.QenloCollection
-import org.gobitsnbytes.qenlo.Record
-import org.gobitsnbytes.qenlo.Filter
+import dev.qenlo.QenloCollection
+import dev.qenlo.Record
+import dev.qenlo.Filter
 
 QenloCollection.memory(dim = 3).use { db ->
     db.add(Record(id = 1u, userId = 7u, timestamp = 1700000000L, vector = floatArrayOf(1f, 0f, 0f)))
