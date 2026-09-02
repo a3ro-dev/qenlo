@@ -1,0 +1,32 @@
+{
+  "format": "qenlo-research-campaign-v1",
+  "campaign_date": "2026-09-02",
+  "preregistered_gate": {
+    "rows": 1000000,
+    "dimensions": 768,
+    "eligible_fraction": 0.01,
+    "batch": 1,
+    "k": 10,
+    "measured_repetitions_minimum": 5,
+    "required_speedup": "at least 2x lower P95 than fastest recall-qualified CPU baseline"
+  },
+  "status": "incomplete",
+  "verdict": "no demonstrated advantage",
+  "claim_allowed": false,
+  "reason": "No retained or newly executed run matches the preregistered 1M x 768 cell. The retained RunPod artifact is 100k x 384 with three repetitions and its GPU execution failed. New GPU scheduling attempts failed before allocation.",
+  "local_execution": {
+    "status": "not-run",
+    "reason": "Safety exclusion: 16.87 GB physical RAM with roughly 4 GB free; the documented runner requires multiple resident 1M x 768 copies plus oracle/index state."
+  },
+  "cloud_execution": {
+    "status": "not-run",
+    "new_pod_runtime_cost_usd": 0.0,
+    "new_resources_remaining": 0,
+    "evidence": "raw/runpod-scheduler-attempts.json"
+  },
+  "retained_evidence": {
+    "archive": "../../benchmarks/runpod/2026-09-02-bb51987/qenlo-runpod-artifacts.tar.gz",
+    "archive_sha256": "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3",
+    "scope": "100k x 384 local-embedding RunPod cohort; CPU, USearch, Chroma, FAISS, Milvus, and LanceDB completed; Qenlo GPU failed before measurement"
+  }
+}

@@ -1,0 +1,23 @@
+category,cell,status,evidence_or_reason
+hard-gate,1000000x768 selectivity=1% batch=1 k=10,not-run,No qualifying hardware allocation; local execution safety-excluded
+hardware,local RTX 4050,prior-100kx384-only,benchmarks/2026-08-28/real
+hardware,RunPod RTX 3070,retained-failed-100kx384,retained-archive/artifacts/logs/qenlo-gpu.stderr.log
+hardware,RunPod RTX A4000,failed-before-allocation,raw/runpod-scheduler-attempts.json
+hardware,RunPod RTX 3090,failed-before-allocation,raw/runpod-scheduler-attempts.json
+hardware,non-NVIDIA Intel Arc,prior-100kx384-only,benchmarks/2026-08-31/device-lab/intel-arc/reports.json
+baseline,FAISS HNSW,prior-100kx384-all-completed,retained-archive/artifacts/faiss-hnsw/summary.json
+baseline,FAISS IVF,not-run,No qualifying 1Mx768 cloud cell
+baseline,USearch,prior-100kx384-all-completed,retained-archive/artifacts/qenlo-usearch/summary.txt
+baseline,hnswlib,not-run,No adapter or pinned result artifact
+baseline,Chroma,prior-100kx384-all-completed,retained-archive/artifacts/chroma/summary.json
+baseline,Qdrant,excluded-prior-100kx384,retained-archive/artifacts/qdrant-excluded.json
+baseline,Milvus,prior-100kx384-all-completed,retained-archive/artifacts/milvus/summary.json
+baseline,exact brute-force CPU,prior-100kx384-all-completed,retained-archive/artifacts/qenlo-cpu/summary.txt
+ablation,Qenlo exact CPU,prior-100kx384-only,benchmarks/2026-08-28/real
+ablation,GPU predicate/rows/mask,prior-100kx384-only,benchmarks/2026-08-28/real
+ablation,GPU reranking/router/fallback,implementation-or-small-device-only,docs/implementation-status.md
+ablation,IVF nlist/nprobe/candidates and SQ8-vs-FP32,not-run-at-gate,No qualifying 1Mx768 cloud cell
+ablation,batches 1/8/32/128,prior-batch-1-and-8-only,benchmarks/2026-08-31/device-lab/intel-arc/reports.json
+ablation,selectivities 0.1/1/10/100%,prior-1-and-100-only,benchmarks/2026-08-28/real
+ablation,dimensions 384/768,prior-384-only,benchmarks/2026-08-28/real
+ablation,three random seeds,not-run-at-gate,Retained large runs use seed 42

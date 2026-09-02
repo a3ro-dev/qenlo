@@ -1,0 +1,182 @@
+{
+  "format": "qenlo-run-comparison-v1",
+  "baseline": {
+    "directory": "D:\\qenloDB\\benchmarks\\2026-08-28\\real\\cpu-384-all-v4",
+    "backend_requested": "cpu",
+    "api_boundary": "Rust in-memory Collection search_batch call, including completed backend execution",
+    "recorded_query_latency": "batch-call-completion",
+    "platform": "windows-x86_64",
+    "diagnostics": "basic",
+    "workload": {
+      "dataset_crc32": "beb3c848",
+      "dimensions": 384,
+      "rows": 100000,
+      "eligible_count": 100000,
+      "batch": 1,
+      "metadata": "synthetic-independent",
+      "filter_user_id": null,
+      "filter_timestamp_from": null,
+      "filter_timestamp_to": null,
+      "filter_mode": "shared",
+      "corpus_range": [
+        0,
+        100000
+      ],
+      "tuning_range": [
+        100000,
+        101000
+      ],
+      "evaluation_range": [
+        101000,
+        106000
+      ],
+      "seed": 42,
+      "k": 10,
+      "warmup_queries": 200,
+      "repetitions": 5,
+      "recall_target": 0.95
+    },
+    "runs": [
+      {
+        "run": 0,
+        "p95_batch_ns": 21953400,
+        "recall_at_10": 0.99998
+      },
+      {
+        "run": 1,
+        "p95_batch_ns": 13989600,
+        "recall_at_10": 0.99998
+      },
+      {
+        "run": 2,
+        "p95_batch_ns": 17917800,
+        "recall_at_10": 0.99998
+      },
+      {
+        "run": 3,
+        "p95_batch_ns": 15356400,
+        "recall_at_10": 0.99998
+      },
+      {
+        "run": 4,
+        "p95_batch_ns": 16656700,
+        "recall_at_10": 0.99998
+      }
+    ],
+    "median_run_p95_batch_ns": 16656700,
+    "min_evaluation_recall_at_10": 0.99998,
+    "mean_evaluation_recall_at_10": 0.9999800000000001,
+    "tuning_recall_at_10": 1.0,
+    "recall_gate": {
+      "target": 0.95,
+      "absolute_tolerance": 1e-12,
+      "tuning_passed": true,
+      "every_evaluation_run_passed": true,
+      "reported_passed": true,
+      "passed": true
+    },
+    "artifact_sha256": {
+      "configuration.txt": "58415a2db09d166a421ec642643b6a3ade853cade7a0aaa6f4d83c1f491c2023",
+      "summary.txt": "96735ccce2a9bdac40671b54cdead496a89b28a611e44b40b0b5246f56de7af2",
+      "runs.csv": "fb55de824282dbe755784f6132e380e3445ef5babaefaaa0c70aa246d7f51449"
+    }
+  },
+  "candidate": {
+    "directory": "D:\\qenloDB\\benchmarks\\2026-08-28\\real\\gpu-predicate-384-all-v5",
+    "backend_requested": "gpu-predicate",
+    "api_boundary": "Rust in-memory Collection search_batch call, including completed backend execution",
+    "recorded_query_latency": "batch-call-completion",
+    "platform": "windows-x86_64",
+    "diagnostics": "basic",
+    "workload": {
+      "dataset_crc32": "beb3c848",
+      "dimensions": 384,
+      "rows": 100000,
+      "eligible_count": 100000,
+      "batch": 1,
+      "metadata": "synthetic-independent",
+      "filter_user_id": null,
+      "filter_timestamp_from": null,
+      "filter_timestamp_to": null,
+      "filter_mode": "shared",
+      "corpus_range": [
+        0,
+        100000
+      ],
+      "tuning_range": [
+        100000,
+        101000
+      ],
+      "evaluation_range": [
+        101000,
+        106000
+      ],
+      "seed": 42,
+      "k": 10,
+      "warmup_queries": 200,
+      "repetitions": 5,
+      "recall_target": 0.95
+    },
+    "runs": [
+      {
+        "run": 0,
+        "p95_batch_ns": 3240400,
+        "recall_at_10": 0.99998
+      },
+      {
+        "run": 1,
+        "p95_batch_ns": 4689300,
+        "recall_at_10": 0.99998
+      },
+      {
+        "run": 2,
+        "p95_batch_ns": 3314000,
+        "recall_at_10": 0.99998
+      },
+      {
+        "run": 3,
+        "p95_batch_ns": 3181100,
+        "recall_at_10": 0.99998
+      },
+      {
+        "run": 4,
+        "p95_batch_ns": 3163300,
+        "recall_at_10": 0.99998
+      }
+    ],
+    "median_run_p95_batch_ns": 3240400,
+    "min_evaluation_recall_at_10": 0.99998,
+    "mean_evaluation_recall_at_10": 0.9999800000000001,
+    "tuning_recall_at_10": 1.0,
+    "recall_gate": {
+      "target": 0.95,
+      "absolute_tolerance": 1e-12,
+      "tuning_passed": true,
+      "every_evaluation_run_passed": true,
+      "reported_passed": true,
+      "passed": true
+    },
+    "artifact_sha256": {
+      "configuration.txt": "ee12a84bae86eb11ad7db4485c823e589169ca60367cfc64ee9b3b1406758db1",
+      "summary.txt": "6d673c52e813c323c21e14723b724e840d62cd7045e210e654cdf361d3914085",
+      "runs.csv": "81be4d1ae75a67df5a754972c6e4bf88c3bf7382094d6f1a874c025e21b2a37d"
+    }
+  },
+  "latency_comparison_valid": true,
+  "withheld_reason": null,
+  "baseline_over_candidate_median_p95_ratio": 5.140322182446612,
+  "bootstrap_95_percent_interval": [
+    3.55206534024268,
+    6.77490433279842
+  ],
+  "bootstrap": {
+    "seed": 20260828,
+    "draws": 10000,
+    "baseline_runs": 5,
+    "candidate_runs": 5,
+    "method": "independent whole-run resampling; ratio of lower-middle medians; percentile interval",
+    "warning": "five runs give a coarse interval; this does not cover workload, hardware, thermal or scheduling changes"
+  },
+  "api_boundaries_differ": false,
+  "interpretation": "A ratio above 1 means lower candidate API latency for this cell. Different API boundaries can dominate; this is not proof of a better ANN algorithm, GPU execution, or the scale gate."
+}

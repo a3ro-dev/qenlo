@@ -1,0 +1,36 @@
+{
+  "format": "qenlo-runpod-scheduler-attempts-v1",
+  "observed_utc": "2026-09-02T06:27:04.4517552Z",
+  "cli": {
+    "version": "2.12.0-51ca7f0",
+    "sha256": "f434915e19632097c0ec89d48fac3e25af187e14ee3d172dc37e4d5b2154a7f3"
+  },
+  "budget_ceiling_usd": 5.0,
+  "attempts": [
+    {
+      "name": "qenlo-wgpu-compat-20260902",
+      "gpu": "NVIDIA RTX A4000",
+      "memory_gb": 16,
+      "cloud": "COMMUNITY",
+      "advertised_hourly_usd": 0.17,
+      "data_center": "EUR-IS-1",
+      "purpose": "WGPU/Vulkan compatibility check only; no corpus or benchmark launched",
+      "result": "failed-before-allocation",
+      "error_code": "graphql_error",
+      "error": "There are no longer any instances available with the requested specifications."
+    },
+    {
+      "name": "qenlo-wgpu-compat-3090-20260902",
+      "gpu": "NVIDIA GeForce RTX 3090",
+      "memory_gb": 24,
+      "cloud": "COMMUNITY",
+      "advertised_hourly_usd": 0.22,
+      "data_center": "EU-CZ-1",
+      "purpose": "WGPU/Vulkan compatibility check only; no corpus or benchmark launched",
+      "result": "failed-before-allocation",
+      "error_code": "graphql_error",
+      "error": "There are no longer any instances available with the requested specifications."
+    }
+  ],
+  "resources_remaining_after_attempts": []
+}

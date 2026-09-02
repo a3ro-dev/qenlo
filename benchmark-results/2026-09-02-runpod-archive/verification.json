@@ -1,0 +1,25 @@
+{
+  "format": "qenlo-independent-artifact-verification-v1",
+  "archive": "benchmarks\\runpod\\2026-09-02-bb51987\\qenlo-runpod-artifacts.tar.gz",
+  "archive_sha256_expected": "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3",
+  "archive_sha256_actual": "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3",
+  "archive_checksum_passed": true,
+  "qenlo_run_checks": [
+    {
+      "directory": "benchmark-results\\2026-09-02-runpod-archive\\retained-archive\\artifacts\\qenlo-cpu",
+      "samples": 1500,
+      "runs": 3,
+      "errors": []
+    },
+    {
+      "directory": "benchmark-results\\2026-09-02-runpod-archive\\retained-archive\\artifacts\\qenlo-usearch",
+      "samples": 1500,
+      "runs": 3,
+      "errors": []
+    }
+  ],
+  "retained_gpu_exit_code": "1",
+  "retained_gpu_status": "failed",
+  "passed": true,
+  "scope": "archive integrity and recomputed nearest-rank statistics only; no benchmark was executed"
+}
