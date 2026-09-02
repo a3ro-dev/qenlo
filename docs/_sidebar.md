@@ -2,6 +2,8 @@
   * [Overview](README.md)
   * [Quickstart](quickstart.md)
   * [Core Concepts](concepts.md)
+  * [Suggested Use Cases](use-cases.md)
+  * [When to Use Qenlo (Pros & Cons)](trade-offs.md)
 
 * **SDKs & Bindings**
   * [Rust API](sdks/rust.md)
