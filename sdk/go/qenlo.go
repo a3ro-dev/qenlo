@@ -57,24 +57,24 @@ type SearchResult struct {
 
 // ExecutionReport explains the work that completed the search.
 type ExecutionReport struct {
-	OperationID        uint64
-	RequestedBackend   string
-	ActualBackend      string
-	Algorithm          string
-	FilterExecution    string
-	IndexGeneration    uint64
-	Rebuilt            bool
-	RoutingReason      *string
-	FallbackReason     *string
-	TotalDurationNS    uint64
-	LockWaitNS         uint64
-	EligibleRows       *uint64
-	UploadBytes        *uint64
-	ReadbackBytes      *uint64
-	AllocationBytes    *uint64
-	DispatchCount      *uint32
-	Candidates         *uint64
-	BatchSize          int
+	OperationID      uint64
+	RequestedBackend string
+	ActualBackend    string
+	Algorithm        string
+	FilterExecution  string
+	IndexGeneration  uint64
+	Rebuilt          bool
+	RoutingReason    *string
+	FallbackReason   *string
+	TotalDurationNS  uint64
+	LockWaitNS       uint64
+	EligibleRows     *uint64
+	UploadBytes      *uint64
+	ReadbackBytes    *uint64
+	AllocationBytes  *uint64
+	DispatchCount    *uint32
+	Candidates       *uint64
+	BatchSize        int
 }
 
 // SearchResponse contains ordered hits and telemetry from one committed generation.
@@ -293,31 +293,70 @@ func (db *Collection) Search(query []float32, filter Filter, k int) (SearchRespo
 	err := db.withHandle(func(handle *C.QenloCollection) error {
 		var user uint64
 		var lower, upper int64
-		if filter.UserID != nil { user = *filter.UserID }
-		if filter.TimestampLower != nil { lower = *filter.TimestampLower }
-		if filter.TimestampUpper != nil { upper = *filter.TimestampUpper }
+		if filter.UserID != nil {
+			user = *filter.UserID
+		}
+		if filter.TimestampLower != nil {
+			lower = *filter.TimestampLower
+		}
+		if filter.TimestampUpper != nil {
+			upper = *filter.TimestampUpper
+		}
 		value, err := takeString(C.qenlo_search(handle, (*C.float)(unsafe.Pointer(&query[0])), C.size_t(len(query)), C.bool(filter.UserID != nil), C.uint64_t(user), C.bool(filter.TimestampLower != nil), C.int64_t(lower), C.bool(filter.TimestampUpper != nil), C.int64_t(upper), C.size_t(k)))
 		raw = value
 		return err
 	})
-	if err != nil { return SearchResponse{}, err }
+	if err != nil {
+		return SearchResponse{}, err
+	}
 	var wire wireSearch
-	if err := json.Unmarshal([]byte(raw), &wire); err != nil { return SearchResponse{}, err }
+	if err := json.Unmarshal([]byte(raw), &wire); err != nil {
+		return SearchResponse{}, err
+	}
 	response := SearchResponse{Results: make([]SearchResult, len(wire.Results))}
 	for index, hit := range wire.Results {
 		id, err := parseUint(hit.ID)
-		if err != nil { return SearchResponse{}, err }
+		if err != nil {
+			return SearchResponse{}, err
+		}
 		response.Results[index] = SearchResult{ID: id, Distance: hit.Distance}
 	}
-	operationID, err := parseUint(wire.Report.OperationID); if err != nil { return SearchResponse{}, err }
-	indexGeneration, err := parseUint(wire.Report.IndexGeneration); if err != nil { return SearchResponse{}, err }
-	total, err := parseUint(wire.Report.TotalDurationNS); if err != nil { return SearchResponse{}, err }
-	lock, err := parseUint(wire.Report.LockWaitNS); if err != nil { return SearchResponse{}, err }
-	eligible, err := parseOptional(wire.Report.EligibleRows); if err != nil { return SearchResponse{}, err }
-	upload, err := parseOptional(wire.Report.UploadBytes); if err != nil { return SearchResponse{}, err }
-	readback, err := parseOptional(wire.Report.ReadbackBytes); if err != nil { return SearchResponse{}, err }
-	allocation, err := parseOptional(wire.Report.AllocationBytes); if err != nil { return SearchResponse{}, err }
-	candidates, err := parseOptional(wire.Report.Candidates); if err != nil { return SearchResponse{}, err }
+	operationID, err := parseUint(wire.Report.OperationID)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+	indexGeneration, err := parseUint(wire.Report.IndexGeneration)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+	total, err := parseUint(wire.Report.TotalDurationNS)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+	lock, err := parseUint(wire.Report.LockWaitNS)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+	eligible, err := parseOptional(wire.Report.EligibleRows)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+	upload, err := parseOptional(wire.Report.UploadBytes)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+	readback, err := parseOptional(wire.Report.ReadbackBytes)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+	allocation, err := parseOptional(wire.Report.AllocationBytes)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+	candidates, err := parseOptional(wire.Report.Candidates)
+	if err != nil {
+		return SearchResponse{}, err
+	}
 	response.Report = ExecutionReport{OperationID: operationID, RequestedBackend: wire.Report.RequestedBackend, ActualBackend: wire.Report.ActualBackend, Algorithm: wire.Report.Algorithm, FilterExecution: wire.Report.FilterExecution, IndexGeneration: indexGeneration, Rebuilt: wire.Report.Rebuilt, RoutingReason: wire.Report.RoutingReason, FallbackReason: wire.Report.FallbackReason, TotalDurationNS: total, LockWaitNS: lock, EligibleRows: eligible, UploadBytes: upload, ReadbackBytes: readback, AllocationBytes: allocation, DispatchCount: wire.Report.DispatchCount, Candidates: candidates, BatchSize: wire.Report.BatchSize}
 	return response, nil
 }
@@ -325,17 +364,39 @@ func (db *Collection) Search(query []float32, filter Filter, k int) (SearchRespo
 // Stats returns canonical, durable, and lifecycle state without row payloads.
 func (db *Collection) Stats() (CollectionStats, error) {
 	var raw string
-	err := db.withHandle(func(handle *C.QenloCollection) error { value, err := takeString(C.qenlo_stats(handle)); raw = value; return err })
-	if err != nil { return CollectionStats{}, err }
-	var wire struct {
-		Dimension int `json:"dimension"`; Rows int `json:"rows"`; LiveRows int `json:"live_rows"`
-		Generation string `json:"generation"`; PreparedGeneration *string `json:"prepared_generation"`; DurableGeneration *string `json:"durable_generation"`
-		RecoveredInterruptedWrite bool `json:"recovered_interrupted_write"`; Closed bool `json:"closed"`
+	err := db.withHandle(func(handle *C.QenloCollection) error {
+		value, err := takeString(C.qenlo_stats(handle))
+		raw = value
+		return err
+	})
+	if err != nil {
+		return CollectionStats{}, err
 	}
-	if err := json.Unmarshal([]byte(raw), &wire); err != nil { return CollectionStats{}, err }
-	generation, err := parseUint(wire.Generation); if err != nil { return CollectionStats{}, err }
-	prepared, err := parseOptional(wire.PreparedGeneration); if err != nil { return CollectionStats{}, err }
-	durable, err := parseOptional(wire.DurableGeneration); if err != nil { return CollectionStats{}, err }
+	var wire struct {
+		Dimension                 int     `json:"dimension"`
+		Rows                      int     `json:"rows"`
+		LiveRows                  int     `json:"live_rows"`
+		Generation                string  `json:"generation"`
+		PreparedGeneration        *string `json:"prepared_generation"`
+		DurableGeneration         *string `json:"durable_generation"`
+		RecoveredInterruptedWrite bool    `json:"recovered_interrupted_write"`
+		Closed                    bool    `json:"closed"`
+	}
+	if err := json.Unmarshal([]byte(raw), &wire); err != nil {
+		return CollectionStats{}, err
+	}
+	generation, err := parseUint(wire.Generation)
+	if err != nil {
+		return CollectionStats{}, err
+	}
+	prepared, err := parseOptional(wire.PreparedGeneration)
+	if err != nil {
+		return CollectionStats{}, err
+	}
+	durable, err := parseOptional(wire.DurableGeneration)
+	if err != nil {
+		return CollectionStats{}, err
+	}
 	return CollectionStats{Dimension: wire.Dimension, Rows: wire.Rows, LiveRows: wire.LiveRows, Generation: generation, PreparedGeneration: prepared, DurableGeneration: durable, RecoveredInterruptedWrite: wire.RecoveredInterruptedWrite, Closed: wire.Closed}, nil
 }
 
@@ -357,7 +418,9 @@ func (db *Collection) ExportQN(path string) error {
 func (db *Collection) Close() error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	if db.handle == nil { return nil }
+	if db.handle == nil {
+		return nil
+	}
 	handle := db.handle
 	db.handle = nil
 	runtime.SetFinalizer(db, nil)

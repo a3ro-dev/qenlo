@@ -107,7 +107,7 @@ class Lance:
 
     def query(self, vector):
         rows = (self.table.search(vector).metric("cosine").limit(10)
-                .bypass_vector_index().select(["id"]).to_list())
+                .bypass_vector_index().select(["id", "_distance"]).to_list())
         return [int(row["id"]) for row in rows], [float(row.get("_distance", 0)) for row in rows]
 
 
@@ -123,6 +123,8 @@ def main():
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--warmups", type=int, default=50)
+    parser.add_argument("--threads", type=int, default=1,
+                        help="native query threads; FAISS defaults to one for batch-1 fairness")
     args = parser.parse_args()
     if args.output.exists():
         parser.error("output already exists")
@@ -139,8 +141,14 @@ def main():
     grouped = {}
     for row in reference_samples:
         grouped.setdefault(int(row["run"]), []).append(int(row["query_indices"]))
+    if args.threads < 1:
+        parser.error("threads must be positive")
+    if args.backend.startswith("faiss"):
+        import faiss
+        faiss.omp_set_num_threads(args.threads)
     cls, exact = BACKENDS[args.backend]
     db_path = args.output / "database"
+    db_path.mkdir(parents=True)
     build_started = time.perf_counter_ns()
     adapter = cls(corpus, db_path, exact)
     build_ns = time.perf_counter_ns() - build_started
@@ -193,6 +201,7 @@ def main():
         "median_run_p95_ns": percentile(p95s, .5), "min_run_p95_ns": min(p95s),
         "max_run_p95_ns": max(p95s), "latency_boundary": "in-process single-query API completion",
         "filter_semantics": "no filter; reference fraction=1 includes all corpus rows",
+        "native_query_threads": args.threads if args.backend.startswith("faiss") else None,
         "dataset_sha256": digest(args.dataset), "reference_revision": config.get("git_revision"),
         "python": sys.version, "platform": platform.platform()}
     (args.output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")

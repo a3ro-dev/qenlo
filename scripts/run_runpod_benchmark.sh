@@ -61,10 +61,18 @@ capture qenlo-gpu "$BENCH" run "${COMMON[@]}" --output "$OUT/qenlo-gpu-predicate
 
 capture chroma "$PY" "$REPO/scripts/chroma_replay.py" --reference "$OUT/qenlo-cpu" \
   --dataset "$DATA/ag-news-local-100k-384.qnb" --output "$OUT/chroma" --ef-search 256 || true
-for backend in faiss-flat faiss-hnsw qdrant milvus lancedb-flat; do
+cat > "$OUT/qdrant-excluded.json" <<'JSON'
+{
+  "backend": "qdrant",
+  "status": "excluded",
+  "reason": "qdrant-client local mode warns that collections above 20000 points use exact brute-force search; this is not a representative ANN comparison for the 100000-point corpus",
+  "next_step": "run Qdrant server as a separate HTTP-boundary cohort"
+}
+JSON
+for backend in faiss-flat faiss-hnsw milvus lancedb-flat; do
   capture "$backend" "$PY" "$REPO/scripts/oss_replay.py" --backend "$backend" \
     --reference "$OUT/qenlo-cpu" --dataset "$DATA/ag-news-local-100k-384.qnb" \
-    --output "$OUT/$backend" --warmups 50 || true
+    --output "$OUT/$backend" --warmups 50 --threads 1 || true
 done
 
 {
