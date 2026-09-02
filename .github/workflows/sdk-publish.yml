@@ -86,6 +86,7 @@ jobs:
 
   maven-central:
     needs: verify
+    if: "${{ secrets.MAVEN_CENTRAL_USERNAME != '' }}"
     runs-on: ubuntu-24.04
     environment: package-registries
     steps:
