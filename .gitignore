@@ -24,8 +24,7 @@ sdk/python/native/
 sdk/python/dist/
 sdk/typescript/native/
 sdk/typescript/dist/
-sdk/typescript/LICENSE-MIT
-sdk/typescript/LICENSE-APACHE
+*.qenlo/
 *.aux
 *.bbl
 *.blg

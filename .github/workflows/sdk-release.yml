@@ -40,8 +40,9 @@ jobs:
       - name: Build platform wheel
         shell: bash
         run: |
+          mkdir -p sdk/python/native
           cp "target/release/${{ matrix.native }}" sdk/python/native/
-          cp LICENSE-MIT LICENSE-APACHE sdk/python/
+          cp LICENSE sdk/python/
           python -m pip install --disable-pip-version-check build
           QENLO_WHEEL_TAG=${{ matrix.wheel_tag }} python -m build sdk/python --wheel
           mkdir -p native
@@ -101,7 +102,7 @@ jobs:
           cp artifacts/native/qenlo-native-linux-x64/libqenlo_ffi.so sdk/kotlin/src/main/resources/qenlo/linux-x64/
           cp artifacts/native/qenlo-native-windows-x64/qenlo_ffi.dll sdk/kotlin/src/main/resources/qenlo/windows-x64/
           cp artifacts/native/qenlo-native-darwin-arm64/libqenlo_ffi.dylib sdk/kotlin/src/main/resources/qenlo/darwin-arm64/
-          cp LICENSE-MIT LICENSE-APACHE sdk/typescript/
+          cp LICENSE sdk/typescript/
       - name: Verify and pack TypeScript
         working-directory: sdk/typescript
         run: |

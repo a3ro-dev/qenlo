@@ -78,7 +78,7 @@ jobs:
           cp "$native" "sdk/python/native/"
           mkdir -p "sdk/typescript/native/${{ matrix.npm_native }}"
           cp "$native" "sdk/typescript/native/${{ matrix.npm_native }}/"
-          cp LICENSE-MIT LICENSE-APACHE sdk/typescript/
+          cp LICENSE sdk/typescript/
           case "${{ runner.os }}" in
             Linux) echo "LD_LIBRARY_PATH=$GITHUB_WORKSPACE/target/release" >> "$GITHUB_ENV" ;;
             macOS) echo "DYLD_LIBRARY_PATH=$GITHUB_WORKSPACE/target/release" >> "$GITHUB_ENV" ;;
