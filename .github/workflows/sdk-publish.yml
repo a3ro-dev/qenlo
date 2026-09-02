@@ -82,7 +82,7 @@ jobs:
         run: |
           mkdir -p dist
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'qenlo-qenlo-*.tgz' --dir dist
-          npm publish ./dist/qenlo-qenlo-*.tgz --access public
+          npm publish ./dist/qenlo-qenlo-*.tgz --access public --tag alpha
 
   maven-central:
     needs: verify

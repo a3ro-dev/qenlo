@@ -18,7 +18,7 @@ jobs:
           - os: ubuntu-24.04
             key: linux-x64
             native: libqenlo_ffi.so
-            wheel_tag: py3-none-linux_x86_64
+            wheel_tag: py3-none-manylinux_2_28_x86_64
           - os: windows-2025
             key: windows-x64
             native: qenlo_ffi.dll

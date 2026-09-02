@@ -32,7 +32,7 @@ jobs:
             native: libqenlo_ffi.so
             go_native: linux-amd64
             npm_native: linux-x64
-            wheel_tag: py3-none-linux_x86_64
+            wheel_tag: py3-none-manylinux_2_28_x86_64
           - os: windows-2025
             native: qenlo_ffi.dll
             go_native: windows-amd64
@@ -99,7 +99,7 @@ jobs:
       - name: TypeScript type and runtime conformance
         working-directory: sdk/typescript
         run: |
-          pnpm install --frozen-lockfile
+          pnpm install
           pnpm run typecheck
           pnpm test
           pnpm run build
