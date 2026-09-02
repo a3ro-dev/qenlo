@@ -22,6 +22,7 @@ neither gets to decide whether a deleted row is still alive.
 | `qenlo-testkit` | cross-platform conformance/performance suite and privacy-safe report schema |
 | `qenlo-mobile` | C/JNI bridge used by the Android and iOS tester shells |
 | `qenlo-telemetry` | authenticated ingestion, SQLite retention, and results viewer |
+| `qenlo-browser` | Claude Code-style TUI and embedded Web UI collection browser |
 
 the exact CPU path uses runtime-detected AVX2 on supported x86 CPUs and a scalar
 fallback elsewhere. it evaluates every eligible live row and retains the best k
@@ -57,6 +58,23 @@ GeForce RTX 4050 Laptop GPU (discrete). The measured GPU runs requested the high
 performance adapter and record `NVIDIA GeForce RTX 4050 Laptop GPU`,
 `DiscreteGpu`, and DX12 in their manifests. Always inspect the reported adapter
 when reproducing a result on a machine with more than one GPU.
+
+## inspect with qenloDB browser
+
+Just like *DB Browser for SQLite* allows developers to inspect `.sqlite` files, **QenloDB Browser** brings radical transparency to embedded vector search: inspect stored unit vectors, observe tombstones and uncompacted WAL segments, run live cosine queries, and view SIMD execution timings without black-box servers.
+
+```powershell
+# Claude Code-style interactive Terminal UI (TUI)
+cargo run -p qenlo-browser -- ./demo.qenlo
+
+# Zero-bloat local Web UI (http://127.0.0.1:3456)
+cargo run -p qenlo-browser -- --web ./demo.qenlo --port 3456
+
+# Native Desktop App (Tauri v2)
+cd apps/desktop && pnpm install && cargo run -p qenlo-browser-desktop
+```
+
+See the [QenloDB Browser Guide](docs/browser.md) for full keyboard shortcuts and REST API docs.
 
 ## a small durable example
 

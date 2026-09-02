@@ -58,7 +58,7 @@ with Collection.memory(dim=3) as db:
 ### TypeScript / Node.js
 
 ```typescript
-import { Collection } from "@a3ro-dev/qenlo";
+import { Collection } from "@a3ro.dev/qenlo";
 
 // Open in-memory collection
 using db = Collection.memory(3);

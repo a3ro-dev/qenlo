@@ -1,0 +1,96 @@
+name: browser & desktop ci/cd
+
+on:
+  push:
+    paths:
+      - "crates/qenlo-browser/**"
+      - "crates/qenlo/**"
+      - "crates/qenlo-core/**"
+      - "apps/desktop/**"
+      - ".github/workflows/browser-release.yml"
+    tags:
+      - "v*"
+  pull_request:
+    paths:
+      - "crates/qenlo-browser/**"
+      - "crates/qenlo/**"
+      - "crates/qenlo-core/**"
+      - "apps/desktop/**"
+      - ".github/workflows/browser-release.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: test browser engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust 1.98.0
+        run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - name: Test qenlo-browser and server
+        run: cargo test -p qenlo-browser
+
+  build-binaries:
+    name: build browser binary (${{ matrix.target }})
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary_name: qenlo-browser
+            artifact_name: qenlo-browser-linux-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_name: qenlo-browser.exe
+            artifact_name: qenlo-browser-windows-x86_64.exe
+          - os: macos-15
+            target: aarch64-apple-darwin
+            binary_name: qenlo-browser
+            artifact_name: qenlo-browser-macos-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust
+        run: |
+          rustup toolchain install 1.98.0 --profile minimal --no-self-update
+          rustup target add ${{ matrix.target }}
+      - name: Build qenlo-browser release binary
+        run: cargo build --release -p qenlo-browser --target ${{ matrix.target }}
+      - name: Upload Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.binary_name }}
+
+  build-desktop:
+    name: build desktop app (tauri)
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust
+        run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+          cache-dependency-path: apps/desktop/pnpm-lock.yaml
+      - name: Install Linux dependencies (if Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: Install Desktop dependencies
+        working-directory: apps/desktop
+        run: pnpm install
+      - name: Check Desktop App compilation
+        run: cargo check -p qenlo-browser-desktop

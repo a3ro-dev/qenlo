@@ -34,7 +34,7 @@ You run a B2B SaaS platform where thousands of customers upload embeddings. Secu
 - **Separate `.qn` Containers or Partition Filters**: Host one `.qn` file per tenant or query partitioned spaces using `Filter(user_id=tenant_id)`.
 
 ```typescript
-import { Collection } from "@a3ro-dev/qenlo";
+import { Collection } from "@a3ro.dev/qenlo";
 
 const db = Collection.open("saas_vectors.qn", 768);
 const results = db.search(queryVector, { userId: tenantId }, 10);

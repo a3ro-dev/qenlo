@@ -1,9 +1,11 @@
 * **Getting Started**
   * [Overview](README.md)
   * [Quickstart](quickstart.md)
+  * [QenloDB Browser (Web, TUI, Desktop)](browser.md)
   * [Core Concepts](concepts.md)
   * [Suggested Use Cases](use-cases.md)
   * [When to Use Qenlo (Pros & Cons)](trade-offs.md)
+  * [Feature Comparison Matrix](feature-matrix.md)
 
 * **SDKs & Bindings**
   * [Rust API](sdks/rust.md)

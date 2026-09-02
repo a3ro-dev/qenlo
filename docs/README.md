@@ -40,7 +40,9 @@ Qenlo is a lightweight, embeddable vector database built in Rust for native appl
 ## Quick Navigation
 
 * [Quickstart Guide](quickstart.md) — Get running in 5 minutes
+* [QenloDB Browser](browser.md) — Web, Claude Code TUI, and Desktop collection inspector
 * [Core Concepts](concepts.md) — Data model, filters, and records
+* [Feature Comparison Matrix](feature-matrix.md) — Technical comparison vs. pgvector, Milvus/Pinecone, Chroma/SQLite-VSS
 * [Python SDK](sdks/python.md) — Prebuilt wheels and API reference
 * [TypeScript SDK](sdks/typescript.md) — Node.js and Electron bindings
 * [Architecture Specification](architecture.md) — Deep dive into engine internals

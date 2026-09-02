@@ -9,5 +9,5 @@ Automated release and publishing pipeline for Qenlo across public package manage
 3. **Release Tag**: Pushing a git tag `sdk-v*` triggers the multi-platform CI build pipeline.
 4. **Publishing**: The publication workflow publishes pre-built artifacts:
    * **PyPI**: Precompiled binary wheels (`manylinux`, `macosx`, `win_amd64`)
-   * **npm**: `@a3ro-dev/qenlo` with bundled native shared objects
+   * **npm**: `@a3ro.dev/qenlo` with bundled native shared objects
    * **crates.io**: `qenlo` and `qenlo-core` crates

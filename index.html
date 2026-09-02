@@ -864,6 +864,7 @@
         <a href="docs/">docs</a>
         <a href="#the-question" class="active">the question</a>
         <a href="#whats-in-here">what's in here</a>
+        <a href="#qenlo-browser">qenloDB browser</a>
         <a href="#execution-paths">execution paths</a>
         <a href="#research-status">research status</a>
         <a href="#get-running">get running</a>
@@ -1007,15 +1008,106 @@
               Independent float64 correctness oracle, nearest-rank P95/P99 latency calculations, synthetic metadata distributions, and OpenTelemetry HTTP/protobuf export examples.
             </p>
           </div>
+
+          <div class="crate-card">
+            <div class="crate-head">
+              <span class="crate-name">qenlo-browser</span>
+              <span class="crate-badge">developer UI &amp; TUI</span>
+            </div>
+            <p class="crate-body">
+              Claude Code-style terminal browser, embedded zero-dependency local Web UI, and Tauri v2 desktop application for visual inspection and vector query testing.
+            </p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 03. Execution Paths -->
-    <section class="section" id="execution-paths">
+    <!-- 03. QenloDB Browser -->
+    <section class="section" id="qenlo-browser">
       <div class="container">
         <div class="section-header">
           <span class="section-num">03.</span>
+          <h2 class="section-title">qenloDB browser</h2>
+          <p class="section-desc">
+            Radical transparency for vector collections. Inspect canonical rows, tombstones, and WAL compaction across TUI, Web, and Desktop interfaces.
+          </p>
+        </div>
+
+        <div class="callout-box" style="margin-bottom: 28px;">
+          <strong>Why this DB browser exists:</strong> Just as <em>DB Browser for SQLite</em> demystified local relational databases, QenloDB Browser eliminates the black-box nature of vector search. Inspect raw normalized float components, verify compound metadata filters prior to ranking, observe tombstone markers and WAL segment compaction, and evaluate SIMD/GPU latency breakdowns without external daemon infrastructure.
+        </div>
+
+        <div class="crate-grid" style="margin-bottom: 32px;">
+          <div class="crate-card">
+            <div class="crate-head">
+              <span class="crate-name">Claude Code-Style TUI</span>
+              <span class="crate-badge">terminal interface</span>
+            </div>
+            <p class="crate-body">
+              Interactive terminal application with vim navigation (<code>j</code>/<code>k</code>, <code>Enter</code>), compound filters, similarity score meters (<code>████████░░ 0.9541</code>), and Claude Code command prompt (<code>:open</code>, <code>:search</code>, <code>:flush</code>).
+            </p>
+            <div style="margin-top: auto; padding-top: 12px;">
+              <button class="copy-btn copy-code" data-code="cargo run -p qenlo-browser -- ./notes.qenlo" style="width: 100%; justify-content: center; padding: 6px 12px;">
+                <span>run TUI mode</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="crate-card">
+            <div class="crate-head">
+              <span class="crate-name">Embedded Local Web UI</span>
+              <span class="crate-badge">http://127.0.0.1:3456</span>
+            </div>
+            <p class="crate-body">
+              Zero-dependency single-page application served directly from the compiled binary. Browse records, test query vectors interactively, and inspect on-disk <code>.qdb</code>, <code>.wal</code>, and <code>HEAD</code> files.
+            </p>
+            <div style="margin-top: auto; padding-top: 12px;">
+              <button class="copy-btn copy-code" data-code="cargo run -p qenlo-browser -- --web ./notes.qenlo --port 3456" style="width: 100%; justify-content: center; padding: 6px 12px;">
+                <span>launch Web server</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="crate-card">
+            <div class="crate-head">
+              <span class="crate-name">Tauri v2 Desktop App</span>
+              <span class="crate-badge">native desktop</span>
+            </div>
+            <p class="crate-body">
+              Cross-platform native desktop GUI in <code>apps/desktop</code> with OS folder dialogs, native window chrome, and direct connection to the underlying Rust storage engine.
+            </p>
+            <div style="margin-top: auto; padding-top: 12px;">
+              <button class="copy-btn copy-code" data-code="cd apps/desktop && pnpm install && cargo run -p qenlo-browser-desktop" style="width: 100%; justify-content: center; padding: 6px 12px;">
+                <span>launch Desktop dev</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: flex-start; padding: 20px; background: var(--qenlo-surface); border: 1px solid var(--qenlo-border); border-radius: 8px;">
+          <a href="https://github.com/a3ro-dev/qenlo/releases" target="_blank" rel="noopener noreferrer" class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>download latest binary releases</span>
+          </a>
+          <a href="docs/#/browser" class="btn-secondary">
+            <span>read browser documentation</span>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2.5 7h9M7.5 2.5l4.5 4.5-4.5 4.5"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04. Execution Paths -->
+    <section class="section" id="execution-paths">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-num">04.</span>
           <h2 class="section-title">execution paths &amp; telemetry</h2>
           <p class="section-desc">
             Optional backends are explicit because a feature flag should tell the truth about the toolchain it brings along.
@@ -1103,11 +1195,11 @@
       </div>
     </section>
 
-    <!-- 04. Research Status -->
+    <!-- 05. Research Status -->
     <section class="section" id="research-status">
       <div class="container">
         <div class="section-header">
-          <span class="section-num">04.</span>
+          <span class="section-num">05.</span>
           <h2 class="section-title">research status</h2>
           <p class="section-desc">
             Current milestone records what has been built, measured, and still needs a larger machine before it can be evaluated.
@@ -1164,11 +1256,11 @@
       </div>
     </section>
 
-    <!-- 05. Get Running -->
+    <!-- 06. Get Running -->
     <section class="section" id="get-running">
       <div class="container">
         <div class="section-header">
-          <span class="section-num">05.</span>
+          <span class="section-num">06.</span>
           <h2 class="section-title">get running</h2>
           <p class="section-desc">
             You need the Rust toolchain declared in <code>rust-toolchain.toml</code>. Clone the repository and run the portable suite:
