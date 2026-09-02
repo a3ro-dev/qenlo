@@ -13,10 +13,10 @@ This ledger prevents broad claims from being inferred from narrow evidence.
 | Crossover analysis | native six-point CPU/WGPU sweep brackets reversal to (2k,3k); CUDA/FAISS bracket (10k,100k) | complete as bounded, hardware-specific crossovers |
 | Ablations | mask/rows/predicate, CPU/GPU, batch 1/8, IVF device-lab | partial; dimension and metadata correlation absent |
 | Statistical uncertainty | retained whole-run 10k-draw bootstrap comparisons | complete for native headline ratios; CUDA table descriptive only |
-| Figures | 13 generated SVGs, including native crossover and Android soak; absent evidence is visualized as unmeasured | complete without invented curves |
+| Figures | Five publication figures generated as vector PDF plus PNG: architecture, two-panel phase map, matched Windows strategies, matched Android panels, and descriptive Linux context | complete without pooled or invented curves |
 | Tables | paper tables plus CSV supplements | complete |
 | Verified bibliography | `references.bib`, primary papers/standards with DOI or official URL | complete to the scope cited |
-| LaTeX paper | `paper/paper.tex`, `appendix.tex`, compiled `paper.pdf` | complete; all ten rendered pages visually inspected, with no overflow or unresolved-reference warnings |
+| LaTeX paper | `paper/paper.tex`, `appendix.tex`, compiled `paper.pdf`, stable export under `paper/output/pdf/` | complete; all ten rendered pages visually inspected, with no overflow or unresolved-reference warnings |
 | Reproduction instructions | `paper/REPRODUCE.md`, campaign/analyze/plot scripts | complete |
 | Raw and processed evidence | `research/data/raw`, `research/data/processed`, retained benchmark trees | complete |
 | Resource cleanup/budget | Runpod API: zero pods, total spend $0.9926765 | complete |

@@ -1,51 +1,161 @@
-\section{Artifact inventory}
-Raw A6000 and native-crossover samples are under \path{research/data/raw}; processed tables are under \path{research/data/processed}. The repository's benchmark-results directory contains the independently-oracled TopK cohort and retained multi-backend archive. Exact leaf names and commands are listed in \path{paper/REPRODUCE.md}.
+\section{Complete retained result tables}
 
-\section{Native crossover values}
-\begin{center}\small
-\begin{tabular}{rrrr}
-\toprule $E$ & CPU P95 & WGPU-row P95 & CPU/WGPU\\\midrule
-2,000 & .520 & .634 & .82\\
-3,000 & .956 & .814 & 1.17\\
-4,000 & 1.331 & 1.074 & 1.24\\
-6,000 & 1.974 & 1.603 & 1.23\\
-8,000 & 2.500 & 2.151 & 1.16\\
-10,000 & 2.810 & 2.604 & 1.08\\
+\subsection{Native Windows endpoint and crossover cells}
+\begin{table}[H]
+\centering\scriptsize
+\caption{Windows 100k$\times$384 endpoint context. Each row contains five runs and 25,000 timed held-out calls; Chroma uses its own storage/API boundary.}
+\begin{tabular}{rlrrr}
+\toprule
+Eligible & System & P95 ms & Recall@10 & Search \\
+\midrule
+1,000 & CPU exhaustive & 0.2304 & 1.00000 & exhaustive \\
+1,000 & WGPU compact rows & 0.6766 & 1.00000 & exhaustive \\
+1,000 & WGPU predicate & 2.8832 & 1.00000 & exhaustive \\
+100,000 & CPU exhaustive & 16.6567 & 0.99998 & exhaustive \\
+100,000 & WGPU compact rows & 4.2428 & 0.99998 & exhaustive \\
+100,000 & WGPU mask & 4.4591 & 0.99998 & exhaustive \\
+100,000 & WGPU predicate & 3.2404 & 0.99998 & exhaustive \\
+100,000 & USearch, ef=128 & 3.6245 & 0.99224 & ANN \\
+100,000 & Chroma, ef=128 & 1.1303 & 0.99414 & ANN \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-\section{Complete held-out CUDA percentiles}
-\begin{center}\small
-\begin{tabular}{lrrrr}
-\toprule System & $E$ & P50 & P95 & P99 (ms)\\\midrule
-FAISS & 1,000 & .067 & .086 & .095\\
-Prototype & 1,000 & .078 & .098 & .115\\
-FAISS & 10,000 & .127 & .137 & .151\\
-Prototype & 10,000 & .144 & .156 & .174\\
-FAISS & 100,000 & .775 & .789 & .800\\
-Prototype & 100,000 & .556 & .567 & .576\\
-FAISS & 1,000,000 & 6.274 & 6.347 & 6.436\\
-Prototype & 1,000,000 & 4.651 & 4.668 & 4.736\\
+\begin{table}[H]
+\centering\scriptsize
+\caption{Post-hoc native crossover sweep. Each row contains five runs and 25,000 held-out calls per backend.}
+\begin{tabular}{rrrrr}
+\toprule
+Eligible & CPU P95 ms & WGPU-row P95 ms & CPU/WGPU & Recall@10 \\
+\midrule
+2,000 & 0.5198 & 0.6340 & 0.8199 & 1.0 \\
+3,000 & 0.9563 & 0.8144 & 1.1742 & 1.0 \\
+4,000 & 1.3305 & 1.0737 & 1.2392 & 1.0 \\
+6,000 & 1.9735 & 1.6033 & 1.2309 & 1.0 \\
+8,000 & 2.5003 & 2.1508 & 1.1625 & 1.0 \\
+10,000 & 2.8104 & 2.6041 & 1.0792 & 1.0 \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-\section{Failure record}
-Three pod/image attempts failed to provide usable WGPU: a PyTorch image exposed CUDA but Vulkan selected software or could not load the NVIDIA ICD; NVIDIA Vulkan images either lacked SSH or used an obsolete unsigned package repository. A 5.56 GiB public dataset transfer was aborted after throughput made it economically inappropriate. cuVS retained attempts failed or returned recall 0.9. These cells were not replaced with successful samples.
-
-\section{Android soak cell inventory}
-All cells use 100k$\times$384, $k=10$, 512 samples, and report recall@10=1.0.
-\begin{center}\small
-\begin{tabular}{lrrrr}
-\toprule Cell & Batch & P50 & P95 & P99 (ms)\\\midrule
-CPU exact & 1 & 25.799 & 27.019 & 27.572\\
-WGPU exact & 1 & 14.274 & 17.678 & 25.769\\
-WGPU exact & 8 & 10.290 & 11.131 & 12.388\\
-IVF-Flat & 1 & 13.977 & 21.453 & 24.549\\
-IVF-SQ8 & 1 & 27.359 & 37.090 & 40.581\\
-auto CPU, 1\% & 1 & .357 & .544 & .743\\
-auto WGPU, 1\% & 8 & 8.174 & 9.890 & 12.441\\
+\subsection{Android device-lab aggregates}
+\begin{table}[H]
+\centering\scriptsize
+\caption{All 21 Android cells. B is batch size; n is the reported sample count. Every cell reports recall@10=1.0 and no fallback.}
+\begin{tabular}{llrrrrrr}
+\toprule
+Suite & Cell & Rows & B & n & P50 & P95 & P99 ms \\
+\midrule
+quick & CPU exhaustive & 10k & 1 & 16 & 1.841 & 5.767 & 5.767 \\
+quick & WGPU exhaustive & 10k & 1 & 16 & 8.707 & 12.487 & 12.487 \\
+quick & WGPU exhaustive & 10k & 8 & 16 & 5.886 & 5.886 & 5.886 \\
+quick & IVF-Flat & 10k & 1 & 16 & 3.616 & 8.056 & 8.056 \\
+quick & IVF-SQ8 & 10k & 1 & 16 & 4.746 & 7.316 & 7.316 \\
+quick & auto selective CPU & 10k & 1 & 16 & 0.023 & 0.025 & 0.025 \\
+quick & auto selective WGPU & 10k & 8 & 16 & 2.310 & 2.310 & 2.310 \\
+\midrule
+full & CPU exhaustive & 100k & 1 & 64 & 18.308 & 29.436 & 41.559 \\
+full & WGPU exhaustive & 100k & 1 & 64 & 13.806 & 16.975 & 48.375 \\
+full & WGPU exhaustive & 100k & 8 & 64 & 10.608 & 11.101 & 11.101 \\
+full & IVF-Flat & 100k & 1 & 64 & 8.851 & 21.617 & 32.431 \\
+full & IVF-SQ8 & 100k & 1 & 64 & 20.394 & 26.578 & 29.126 \\
+full & auto selective CPU & 100k & 1 & 64 & 0.256 & 0.311 & 0.323 \\
+full & auto selective WGPU & 100k & 8 & 64 & 10.039 & 15.571 & 15.571 \\
+\midrule
+soak & CPU exhaustive & 100k & 1 & 512 & 25.799 & 27.019 & 27.572 \\
+soak & WGPU exhaustive & 100k & 1 & 512 & 14.274 & 17.678 & 25.769 \\
+soak & WGPU exhaustive & 100k & 8 & 512 & 10.290 & 11.131 & 12.388 \\
+soak & IVF-Flat & 100k & 1 & 512 & 13.977 & 21.453 & 24.549 \\
+soak & IVF-SQ8 & 100k & 1 & 512 & 27.359 & 37.090 & 40.581 \\
+soak & auto selective CPU & 100k & 1 & 512 & 0.357 & 0.544 & 0.743 \\
+soak & auto selective WGPU & 100k & 8 & 512 & 8.174 & 9.890 & 12.441 \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
+
+The automatic rows use a selective predicate and cannot be compared with dense rows. Their fixed-policy counterfactuals were not retained, so routing regret is not computable. Upload/readback/allocation diagnostics remain in \texttt{android\_device\_lab.csv}.
+
+\subsection{A6000 result distributions}
+\begin{table}[H]
+\centering\scriptsize
+\caption{Real TopK strict-filter cell, \(N=1M\), \(D=768\), \(E=10{,}026\), 5,000 calls/system.}
+\begin{tabular}{lrrrrl}
+\toprule
+System & P50 & P95 & P99 ms & Recall@10 & Gate \\
+\midrule
+NumPy CPU exhaustive & 0.1217 & 0.1973 & 0.2283 & 1.0 & pass \\
+FAISS GPU Flat & 0.1261 & 0.1322 & 0.1458 & 1.0 & pass \\
+research CUDA exhaustive prototype & 0.1600 & 0.1707 & 0.1809 & 1.0 & pass \\
+cuVS brute force & 0.3615 & 0.3846 & 0.4131 & 0.9 & fail \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering\scriptsize
+\caption{Held-out synthetic A6000 completed-call distribution, 500 calls/system/cell. QPS is derived from mean latency.}
+\begin{tabular}{rlrrrr}
+\toprule
+Eligible & System & P50 & P95 & P99 ms & QPS \\
+\midrule
+1k & FAISS Flat & 0.0672 & 0.0857 & 0.0952 & 14,446 \\
+1k & research CUDA prototype & 0.0775 & 0.0975 & 0.1155 & 12,303 \\
+10k & FAISS Flat & 0.1272 & 0.1373 & 0.1505 & 7,854 \\
+10k & research CUDA prototype & 0.1438 & 0.1557 & 0.1741 & 6,911 \\
+100k & FAISS Flat & 0.7755 & 0.7887 & 0.8001 & 1,286 \\
+100k & research CUDA prototype & 0.5559 & 0.5673 & 0.5763 & 1,797 \\
+1M & FAISS Flat & 6.2736 & 6.3475 & 6.4357 & 159 \\
+1M & research CUDA prototype & 4.6508 & 4.6683 & 4.7364 & 214 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Descriptive Linux library cohort}
+\begin{figure}[H]
+\centering
+\includegraphics[width=.68\linewidth]{figures/linux_library_context.pdf}
+\caption{Descriptive Linux cohort. Latency and recall are comparable within this host, but service and persistence semantics differ.}
+\label{fig:linux}
+\end{figure}
+
+\begin{table}[H]
+\centering\scriptsize
+\caption{All-row Linux 100k$\times$384 cohort, three runs and 1,500 calls/system.}
+\begin{tabular}{llrr}
+\toprule
+System & Search & P95 ms & Recall@10 \\
+\midrule
+FAISS HNSW & ANN & 1.4939 & 0.9994 \\
+Chroma HNSW & ANN & 3.7767 & 0.9984 \\
+USearch & ANN & 5.0933 & 0.9914 \\
+FAISS Flat & exhaustive & 10.2171 & 1.0000 \\
+Qenlo CPU & exhaustive & 12.9014 & 1.0000 \\
+Milvus Lite AUTOINDEX & ANN & 76.2294 & 0.9988 \\
+LanceDB Flat & exhaustive & 242.2557 & 1.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Artifact map}\label{sec:artifact}
+\begin{table}[H]
+\centering\scriptsize
+\caption{Claim-to-artifact map. Paths are relative to the repository root.}
+\begin{tabular}{p{.30\linewidth}p{.61\linewidth}}
+\toprule
+Claim family & Authoritative artifact \\
+\midrule
+Native Windows endpoints & \texttt{benchmarks/2026-08-28/real/*/samples.csv}, \texttt{runs.csv}, \texttt{summary.*} \\
+Native 2k--10k crossover & \texttt{research/data/raw/2026-09-02-native-crossover/} \\
+Android aggregates & Processed CSV under \texttt{research/data/processed/}; raw provenance note under \texttt{research/data/raw/2026-09-02-android/} \\
+Linux libraries & \texttt{benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/} \\
+Real A6000 strict gate & \texttt{benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/} \\
+Synthetic A6000 sweep & \texttt{research/data/raw/2026-09-02-a6000-cuda/heldout/} \\
+Processed tables & \texttt{research/data/processed/} \\
+Analysis and figures & \texttt{research/scripts/analyze\_results.py}, \texttt{generate\_plots.py} \\
+Failures and exclusions & \texttt{research/methodology-audit.md}, \texttt{completion-audit.md} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Minimum next experiment}
+{\small The missing experiment is a same-machine phase diagram with fixed data and query order. It should test eligible counts of 500, 1k, 2k, 3k, 5k, 10k, 25k, 50k, and 100k; dimensions 384 and 768; and batches 1, 8, and 32. Every cell should compare optimized CPU exhaustive, shipped WGPU exhaustive, FAISS GPU Flat, a tuned HNSW recall--latency curve, and at least one filter-aware ANN method. The six headline cells---CPU and WGPU at 2k and 3k, dense WGPU, and dense USearch---should use at least 20 independent complete runs. A compact-row ablation should compare the tested per-call materialization path with a cached or resident eligible list, while retaining identical scoring and completed-call boundaries. Matched fixed-policy runs would make routing regret measurable. Repeating identical \(E\) at different \(N\) would test H2; correlated and anti-correlated metadata would test whether selectivity alone predicts ANN difficulty.}

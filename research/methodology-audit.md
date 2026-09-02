@@ -15,6 +15,7 @@ The repository harness has unusually strong oracle, predicate, failure-retention
 - Runs write configuration before samples and only become complete when a summary exists. Failed systems remain in `failures.json` or logs.
 - USearch expansion candidates are evaluated on the tuning range; the evaluation range is disjoint.
 - Per-query benchmark latency is the completed batch call. WGPU reports host-observed time, not kernel time.
+- In the native compact-row sweep, the outer timer encloses all route work. Each call first traverses the predicate to count eligible rows in `search_batch_inner`, then traverses it again in the WGPU path to materialize a fresh row-ID list. The query and row IDs are uploaded per call; vectors and scratch allocations remain resident. No cached eligible list is measured.
 
 ## Changes in this worktree
 
@@ -25,6 +26,7 @@ The repository harness has unusually strong oracle, predicate, failure-retention
 - The retained TopK cuVS result has recall 0.9 and is excluded from exact comparisons.
 - The often-repeated 0.1196 ms number is CUDA-event kernel time from a synthetic prototype. It excludes query upload and result readback and is not the protocol's end-to-end metric.
 - The real TopK strict run uses a prefiltered 10,026-row matrix. It compares equivalent exact scoring after filtering, but excludes predicate evaluation/materialization from query latency.
+- The native compact-row bracket includes a duplicated predicate traversal in the tested revision. Removing the route-count pass or caching row IDs may move the boundary, so the paper does not present 2k--3k as an optimized compact-row frontier.
 - WGPU initialization failed on Runpod even after requesting full driver capabilities. No performance sample was fabricated or substituted.
 - The new synthetic matrix checks Qenlo/FAISS top-10 set agreement, not an independent FP64 oracle. The independently-oracled retained TopK cohort supplies the correctness evidence for the equivalent exact formulation.
 - Local full-workspace formatting has unrelated pre-existing failures; package-local formatting for `qenlo-bench` passes.

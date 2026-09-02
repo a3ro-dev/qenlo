@@ -49,4 +49,4 @@ pdflatex paper.tex
 pdflatex paper.tex
 ```
 
-The retained PDF was compiled with Tectonic 0.15.0. Recompile with `tectonic paper.tex --keep-logs` from the `paper` directory.
+The validated revision was compiled with MiKTeX pdfTeX 1.40.28 and visually checked from Poppler page renders. Tectonic remains an alternative: run `tectonic paper.tex --keep-logs` from the `paper` directory.

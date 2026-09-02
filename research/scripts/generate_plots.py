@@ -1,123 +1,221 @@
 #!/usr/bin/env python3
-"""Generate dependency-free SVG figures from processed benchmark results."""
-import csv
-import html
-import math
+"""Generate publication figures from processed benchmark tables."""
+
 from pathlib import Path
 
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "research/data/processed/a6000_exact_summary.csv"
+DATA = ROOT / "research/data/processed"
 FIG = ROOT / "paper/figures"
 
-
-def bar_svg(title, labels, values, ylabel, note=""):
-    w,h,left,top,bottom=760,430,85,55,90
-    ymax=max(values)*1.15 if max(values)>0 else 1
-    bw=(w-left-35)/len(values)*0.62
-    gap=(w-left-35)/len(values)
-    out=[f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><rect width="100%" height="100%" fill="white"/>',
-         f'<text x="{w/2}" y="25" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="bold">{html.escape(title)}</text>',
-         f'<line x1="{left}" y1="{h-bottom}" x2="{w-25}" y2="{h-bottom}" stroke="#222"/><line x1="{left}" y1="{top}" x2="{left}" y2="{h-bottom}" stroke="#222"/>']
-    for i,(label,val) in enumerate(zip(labels,values)):
-        x=left+gap*(i+.2); bh=(h-top-bottom)*val/ymax; y=h-bottom-bh
-        color="#1b6ca8" if i%2==0 else "#d95f02"
-        out += [f'<rect x="{x:.1f}" y="{y:.1f}" width="{bw:.1f}" height="{bh:.1f}" fill="{color}"/>',
-                f'<text x="{x+bw/2:.1f}" y="{y-6:.1f}" text-anchor="middle" font-family="sans-serif" font-size="12">{val:.3g}</text>',
-                f'<text x="{x+bw/2:.1f}" y="{h-bottom+18}" transform="rotate(28 {x+bw/2:.1f} {h-bottom+18})" text-anchor="start" font-family="sans-serif" font-size="11">{html.escape(label)}</text>']
-    out += [f'<text x="18" y="{h/2}" transform="rotate(-90 18 {h/2})" text-anchor="middle" font-family="sans-serif" font-size="13">{html.escape(ylabel)}</text>',
-            f'<text x="{w/2}" y="{h-8}" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">{html.escape(note)}</text></svg>']
-    return '\n'.join(out)+"\n"
+BLUE = "#176B87"
+ORANGE = "#D95F02"
+GREEN = "#4C956C"
+PURPLE = "#7B61A8"
+GREY = "#667085"
+RED = "#B42318"
 
 
-def status_svg(title, rows):
-    colors={"measured":"#3a923a","bounded":"#76a83b","partial":"#d69224","unmeasured":"#b83b3b"}
-    out=['<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430"><rect width="100%" height="100%" fill="white"/>',
-         f'<text x="380" y="30" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="bold">{html.escape(title)}</text>']
-    for i,(name,status) in enumerate(rows):
-        y=65+i*42; key=status if status in colors else "partial"
-        out += [f'<text x="40" y="{y+20}" font-family="sans-serif" font-size="13">{html.escape(name)}</text>',
-                f'<rect x="430" y="{y}" width="270" height="28" rx="5" fill="{colors[key]}"/>',
-                f'<text x="565" y="{y+19}" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">{html.escape(status)}</text>']
-    out.append('</svg>'); return '\n'.join(out)+"\n"
+def style() -> None:
+    mpl.rcParams.update({
+        "font.family": "DejaVu Sans",
+        "font.size": 8.5,
+        "axes.titlesize": 9.5,
+        "axes.labelsize": 8.5,
+        "legend.fontsize": 7.5,
+        "xtick.labelsize": 7.5,
+        "ytick.labelsize": 7.5,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.grid": True,
+        "axes.grid.axis": "y",
+        "grid.color": "#D9DEE7",
+        "grid.linewidth": 0.55,
+        "figure.dpi": 180,
+        "savefig.dpi": 300,
+        "pdf.fonttype": 42,
+    })
 
 
-def native_crossover_svg():
-    rows = list(csv.DictReader((ROOT / "research/data/processed/native_crossover_summary.csv").open(newline="")))
-    w,h,left,top,right,bottom=760,430,80,45,25,70
-    xs=[int(r["eligible"]) for r in rows]
-    ymax=max(max(float(r["cpu_p95_ms"]),float(r["gpu_rows_p95_ms"])) for r in rows)*1.12
-    def xc(x): return left+(x-min(xs))/(max(xs)-min(xs))*(w-left-right)
-    def yc(y): return top+(1-y/ymax)*(h-top-bottom)
-    series=[("cpu_p95_ms","CPU exact","#d95f02"),("gpu_rows_p95_ms","WGPU compact rows","#1b6ca8")]
-    out=[f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><rect width="100%" height="100%" fill="white"/>',
-         '<text x="380" y="25" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="bold">Native CPU/WGPU crossover</text>',
-         f'<line x1="{left}" y1="{h-bottom}" x2="{w-right}" y2="{h-bottom}" stroke="#222"/><line x1="{left}" y1="{top}" x2="{left}" y2="{h-bottom}" stroke="#222"/>']
-    for i in range(5):
-        val=ymax*i/4; y=yc(val)
-        out += [f'<line x1="{left}" y1="{y:.1f}" x2="{w-right}" y2="{y:.1f}" stroke="#ddd"/>',f'<text x="{left-9}" y="{y+4:.1f}" text-anchor="end" font-family="sans-serif" font-size="12">{val:.1f}</text>']
-    for x in xs:
-        out.append(f'<text x="{xc(x):.1f}" y="{h-bottom+22}" text-anchor="middle" font-family="sans-serif" font-size="12">{x//1000}k</text>')
-    for key,label,color in series:
-        pts=[(xc(int(r["eligible"])),yc(float(r[key]))) for r in rows]
-        path=' '.join(("M" if i==0 else "L")+f" {x:.1f} {y:.1f}" for i,(x,y) in enumerate(pts))
-        out.append(f'<path d="{path}" fill="none" stroke="{color}" stroke-width="3"/>')
-        out += [f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="{color}"/>' for x,y in pts]
-    out += [f'<text x="{w/2}" y="{h-12}" text-anchor="middle" font-family="sans-serif" font-size="14">eligible vectors E</text>',
-            f'<text x="18" y="{h/2}" transform="rotate(-90 18 {h/2})" text-anchor="middle" font-family="sans-serif" font-size="14">P95 completed-call latency (ms)</text>',
-            '<text x="430" y="62" font-family="sans-serif" font-size="12" fill="#555">winner reverses between E=2k and E=3k</text>']
-    for i,(_,label,color) in enumerate(series):
-        y=82+i*20; out += [f'<line x1="500" y1="{y}" x2="530" y2="{y}" stroke="{color}" stroke-width="3"/>',f'<text x="538" y="{y+4}" font-family="sans-serif" font-size="12">{label}</text>']
-    out.append('</svg>')
-    return '\n'.join(out)+"\n"
-
-
-def main():
-    rows = list(csv.DictReader(DATA.open(newline="")))
+def save(fig: plt.Figure, name: str) -> None:
     FIG.mkdir(parents=True, exist_ok=True)
-    w, h, left, top, right, bottom = 760, 430, 80, 35, 25, 65
-    xs = sorted({int(r["eligible"]) for r in rows})
-    ymax = max(float(r["p95_ms"]) for r in rows) * 1.08
-    xlog = [math.log10(x) for x in xs]
-    def xcoord(x): return left + (math.log10(x) - min(xlog)) / (max(xlog) - min(xlog)) * (w-left-right)
-    def ycoord(y): return top + (1-y/ymax) * (h-top-bottom)
-    colors = {"faiss_gpu_flat_ip":"#d95f02", "qenlo_cuda_buffered_prototype":"#1b6ca8"}
-    labels = {"faiss_gpu_flat_ip":"FAISS GPU Flat", "qenlo_cuda_buffered_prototype":"Qenlo CUDA prototype"}
-    lines = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">',
-             '<rect width="100%" height="100%" fill="white"/>',
-             f'<line x1="{left}" y1="{h-bottom}" x2="{w-right}" y2="{h-bottom}" stroke="#222"/>',
-             f'<line x1="{left}" y1="{top}" x2="{left}" y2="{h-bottom}" stroke="#222"/>']
-    for i in range(5):
-        val = ymax*i/4; y=ycoord(val)
-        lines += [f'<line x1="{left}" y1="{y:.1f}" x2="{w-right}" y2="{y:.1f}" stroke="#ddd"/>',
-                  f'<text x="{left-9}" y="{y+4:.1f}" text-anchor="end" font-family="sans-serif" font-size="12">{val:.1f}</text>']
-    for x in xs:
-        xc=xcoord(x); lines.append(f'<text x="{xc:.1f}" y="{h-bottom+22}" text-anchor="middle" font-family="sans-serif" font-size="12">{x:,}</text>')
-    for system in colors:
-        pts=[]
-        for x in xs:
-            r=next(r for r in rows if r["system"]==system and int(r["eligible"])==x)
-            pts.append((xcoord(x),ycoord(float(r["p95_ms"]))))
-        path=' '.join(("M" if i==0 else "L")+f" {x:.1f} {y:.1f}" for i,(x,y) in enumerate(pts))
-        lines.append(f'<path d="{path}" fill="none" stroke="{colors[system]}" stroke-width="3"/>')
-        lines += [f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="{colors[system]}"/>' for x,y in pts]
-    lines += [f'<text x="{w/2}" y="{h-12}" text-anchor="middle" font-family="sans-serif" font-size="14">eligible vectors (log scale)</text>',
-              f'<text x="18" y="{h/2}" transform="rotate(-90 18 {h/2})" text-anchor="middle" font-family="sans-serif" font-size="14">P95 end-to-end latency (ms)</text>']
-    for i,system in enumerate(colors):
-        y=20+i*20; lines += [f'<line x1="470" y1="{y}" x2="500" y2="{y}" stroke="{colors[system]}" stroke-width="3"/>',f'<text x="508" y="{y+4}" font-family="sans-serif" font-size="12">{html.escape(labels[system])}</text>']
-    lines.append('</svg>')
-    (FIG / "a6000_exact_crossover.svg").write_text('\n'.join(lines)+"\n")
-    (FIG / "architecture.svg").write_text('''<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300"><rect width="760" height="300" fill="white"/><style>text{font-family:sans-serif}.b{fill:#eef4fa;stroke:#1b6ca8;stroke-width:2}.d{fill:#fff4e8;stroke:#d95f02;stroke-width:2}.a{stroke:#333;stroke-width:2;marker-end:url(#m)}</style><defs><marker id="m" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#333"/></marker></defs><rect class="b" x="30" y="95" width="190" height="105" rx="8"/><text x="125" y="125" text-anchor="middle" font-size="17">Canonical CoreStore</text><text x="125" y="151" text-anchor="middle" font-size="13">vectors / metadata / tombstones</text><text x="125" y="174" text-anchor="middle" font-size="13">snapshot + WAL generation</text><rect class="d" x="300" y="25" width="190" height="60" rx="8"/><text x="395" y="60" text-anchor="middle">CPU exact (AVX2/scalar)</text><rect class="d" x="300" y="120" width="190" height="60" rx="8"/><text x="395" y="155" text-anchor="middle">USearch / HNSW</text><rect class="d" x="300" y="215" width="190" height="60" rx="8"/><text x="395" y="241" text-anchor="middle">WGPU exact / IVF</text><text x="395" y="260" text-anchor="middle" font-size="12">mask / rows / predicate</text><rect class="b" x="560" y="95" width="165" height="105" rx="8"/><text x="642" y="132" text-anchor="middle">observable router</text><text x="642" y="156" text-anchor="middle" font-size="12">actual backend</text><text x="642" y="175" text-anchor="middle" font-size="12">fallback + transfers</text><line class="a" x1="220" y1="125" x2="300" y2="60"/><line class="a" x1="220" y1="150" x2="300" y2="150"/><line class="a" x1="220" y1="175" x2="300" y2="240"/><line class="a" x1="490" y1="55" x2="560" y2="120"/><line class="a" x1="490" y1="150" x2="560" y2="150"/><line class="a" x1="490" y1="245" x2="560" y2="180"/><text x="380" y="294" text-anchor="middle" font-size="12">Canonical truth determines existence; search structures are rebuildable derived state.</text></svg>''')
-    (FIG / "selectivity_p95.svg").write_text(bar_svg("Native exact latency versus selectivity", ["CPU 1%","GPU rows 1%","GPU predicate 1%","CPU 100%","GPU predicate 100%"], [.2304,.6766,2.8832,16.6567,3.2404], "P95 latency (ms)", "100k x 384 RTX 4050; batch 1; real embeddings"))
-    (FIG / "native_cpu_gpu_crossover.svg").write_text(native_crossover_svg())
-    (FIG / "absolute_eligible_p95.svg").write_text((FIG / "a6000_exact_crossover.svg").read_text())
-    (FIG / "dimension_crossover.svg").write_text(status_svg("Dimensionality crossover evidence", [("384-dimensional native cohort","bounded"),("768-dimensional CUDA/FAISS cohort","bounded"),("matched host and E across dimensions","unmeasured")]))
-    (FIG / "batch_effect.svg").write_text(bar_svg("Batch amortization on Intel Arc", ["GPU batch 1","GPU batch 8","auto CPU: E=1k, B=1","auto GPU: E=1k, B=8"], [4.444,1.245,.273,.555], "reported P95 (ms)", "100k x 384 soak; 512 samples; do not compare bars with different E as speedups"))
-    (FIG / "android_soak_p95.svg").write_text(bar_svg("Android device-lab soak", ["CPU exact","WGPU exact","WGPU B=8","IVF-Flat","IVF-SQ8","auto CPU 1%","auto GPU 1% B=8"], [27.019,17.678,11.131,21.453,37.090,.544,9.890], "reported P95 (ms)", "MT6897 / Mali-G615 MC6 / Vulkan; 100k x 384; 512 samples; batch statistics are not normalized"))
-    (FIG / "hnsw_tradeoff.svg").write_text(bar_svg("Controlled exact versus HNSW", ["USearch ef=128","WGPU exact"], [3.6245,3.2404], "P95 latency (ms)", "recall@10: 0.99224 vs 0.99998; speedup interval crosses parity"))
-    (FIG / "fastest_backend_heatmap.svg").write_text(status_svg("Observed fastest backend by region", [("E=1k, D=384, B=1","measured: CPU"),("E=100k, D=384, B=1","measured: WGPU"),("E<=10k, D=768, B=1","measured: FAISS"),("E>=100k, D=768, B=1","measured: CUDA prototype")]))
-    (FIG / "routing_regret.svg").write_text(status_svg("Automatic routing evidence", [("E=1k, B=1 selected CPU","measured"),("E=1k, B=8 selected GPU","measured"),("matched fixed-policy counterfactuals","unmeasured"),("routing regret","unmeasured")]))
-    (FIG / "matched_corpus_size.svg").write_text(status_svg("Matched absolute eligible-count study", [("100k corpus at E=1k","measured"),("1M corpus at E about 10k","measured"),("same E and host across N","unmeasured")]))
-    (FIG / "metadata_robustness.svg").write_text(status_svg("Metadata-distribution robustness", [("independent distribution","measured"),("positive correlation","unmeasured"),("negative correlation","unmeasured"),("skewed distribution","test coverage only")]))
+    fig.savefig(FIG / f"{name}.pdf", bbox_inches="tight", pad_inches=0.03)
+    fig.savefig(FIG / f"{name}.png", bbox_inches="tight", pad_inches=0.03)
+    plt.close(fig)
 
 
-if __name__ == "__main__": main()
+def phase_map() -> None:
+    cross = pd.read_csv(DATA / "native_crossover_summary.csv")
+    win = pd.read_csv(DATA / "windows_summary.csv")
+    a6 = pd.read_csv(DATA / "a6000_exact_summary.csv")
+
+    cpu_end = win[(win.system.str.startswith("CPU")) & (win.eligible.isin([1_000, 100_000]))]
+    gpu_end = win[(win.system == "WGPU compact rows") & (win.eligible.isin([1_000, 100_000]))]
+    native_cpu = pd.concat([
+        cpu_end[["eligible", "p95_ms"]],
+        cross[["eligible", "cpu_p95_ms"]].rename(columns={"cpu_p95_ms": "p95_ms"}),
+    ]).sort_values("eligible")
+    native_gpu = pd.concat([
+        gpu_end[["eligible", "p95_ms"]],
+        cross[["eligible", "gpu_rows_p95_ms"]].rename(columns={"gpu_rows_p95_ms": "p95_ms"}),
+    ]).sort_values("eligible")
+
+    fig, axes = plt.subplots(1, 2, figsize=(7.05, 2.55))
+    ax = axes[0]
+    ax.plot(native_cpu.eligible, native_cpu.p95_ms, "o-", color=ORANGE, lw=1.8, ms=4, label="CPU exhaustive")
+    ax.plot(native_gpu.eligible, native_gpu.p95_ms, "s-", color=BLUE, lw=1.8, ms=4, label="WGPU compact rows")
+    ax.axvspan(2_000, 3_000, color="#F4C95D", alpha=.28, lw=0)
+    ax.text(2_450, 8.0, "observed\nreversal band", ha="center", va="center", fontsize=8.2, color="#765A00")
+    ax.set(xscale="log", yscale="log", xlabel="eligible vectors, E", ylabel="P95 completed-call latency (ms)",
+           title="(a) shipped CPU/WGPU, RTX 4050, D=384")
+    ax.legend(loc="lower right", frameon=False)
+    ax.grid(True, which="both", axis="both", alpha=.7)
+
+    ax = axes[1]
+    labels = {
+        "faiss_gpu_flat_ip": ("FAISS GPU Flat", ORANGE, "o"),
+        "qenlo_cuda_buffered_prototype": ("research CUDA prototype", BLUE, "s"),
+    }
+    for system, (label, color, marker) in labels.items():
+        subset = a6[a6.system == system].sort_values("eligible")
+        ax.plot(subset.eligible, subset.p95_ms, marker=marker, color=color, lw=1.8, ms=4, label=label)
+    ax.axvspan(10_000, 100_000, color="#F4C95D", alpha=.28, lw=0)
+    ax.text(31_600, .42, "observed\nreversal band", ha="center", va="center", fontsize=8.2, color="#765A00")
+    ax.set(xscale="log", yscale="log", xlabel="eligible vectors, E", title="(b) exploratory CUDA/FAISS, A6000, D=768")
+    ax.legend(loc="upper left", frameon=False)
+    ax.grid(True, which="both", axis="both", alpha=.7)
+    fig.suptitle("Two implementation-specific exhaustive-search reversals", y=1.03, fontsize=10.5)
+    fig.tight_layout(w_pad=1.2)
+    save(fig, "phase_map")
+
+
+def windows_strategies() -> None:
+    df = pd.read_csv(DATA / "windows_summary.csv")
+    fig, axes = plt.subplots(1, 2, figsize=(7.05, 2.65), sharey=True)
+    panels = [
+        (1_000, ["CPU exhaustive FP64 accum.", "WGPU compact rows", "WGPU predicate"], "(a) E=1,000 (1% eligible)"),
+        (100_000, ["CPU exhaustive FP64 accum.", "WGPU compact rows", "WGPU mask", "WGPU predicate", "USearch HNSW ef=128"], "(b) E=100,000 (all rows)"),
+    ]
+    short = {
+        "CPU exhaustive FP64 accum.": "CPU",
+        "WGPU compact rows": "WGPU\nrows",
+        "WGPU mask": "WGPU\nmask",
+        "WGPU predicate": "WGPU\npredicate",
+        "USearch HNSW ef=128": "USearch\nef=128",
+    }
+    for ax, (eligible, systems, title) in zip(axes, panels):
+        sub = df[(df.eligible == eligible) & (df.system.isin(systems))].set_index("system").loc[systems].reset_index()
+        colors = [ORANGE if name.startswith("CPU") else PURPLE if name.startswith("USearch") else BLUE for name in systems]
+        bars = ax.bar(range(len(sub)), sub.p95_ms, color=colors, width=.66)
+        ax.set_xticks(range(len(sub)), [short[name] for name in systems])
+        ax.set_yscale("log")
+        ax.set_title(title)
+        for bar, latency, recall in zip(bars, sub.p95_ms, sub.recall_at_10):
+            ax.text(bar.get_x() + bar.get_width()/2, latency*1.12, f"{latency:.3g} ms\nR={recall:.5f}",
+                    ha="center", va="bottom", fontsize=6.4)
+        ax.set_ylim(.14, 32)
+    axes[0].set_ylabel("P95 completed-call latency (ms, log scale)")
+    fig.suptitle("Matched Windows strategies; 25,000 held-out calls per bar", y=1.02, fontsize=10.5)
+    fig.tight_layout(w_pad=1.0)
+    save(fig, "windows_strategies")
+
+
+def android_matched() -> None:
+    df = pd.read_csv(DATA / "android_device_lab.csv")
+    fig, axes = plt.subplots(1, 2, figsize=(7.05, 2.7))
+
+    ax = axes[0]
+    suites = ["quick", "full", "soak"]
+    cpu = [df[(df.suite == s) & (df.cell == "cpu-exact-all")].p95_ms.iloc[0] for s in suites]
+    gpu = [df[(df.suite == s) & (df.cell == "gpu-exact-all")].p95_ms.iloc[0] for s in suites]
+    x = np.arange(3)
+    width = .34
+    ax.bar(x-width/2, cpu, width, color=ORANGE, label="CPU exhaustive")
+    ax.bar(x+width/2, gpu, width, color=BLUE, label="WGPU exhaustive")
+    ax.set_xticks(x, ["quick\n10k rows, n=16", "full\n100k rows, n=64", "soak\n100k rows, n=512"])
+    ax.set(ylabel="reported P95 latency (ms)", title="(a) dense batch-1 route")
+    ax.legend(frameon=False, loc="upper left")
+
+    ax = axes[1]
+    soak = df[(df.suite == "soak") & (df.cell.isin([
+        "cpu-exact-all", "gpu-exact-all", "gpu-ivf-flat-recall-95", "gpu-ivf-sq8-recall-95"
+    ]))]
+    order = ["cpu-exact-all", "gpu-exact-all", "gpu-ivf-flat-recall-95", "gpu-ivf-sq8-recall-95"]
+    soak = soak.set_index("cell").loc[order]
+    bars = ax.bar(range(4), soak.p95_ms, color=[ORANGE, BLUE, GREEN, PURPLE], width=.68)
+    ax.set_xticks(range(4), ["CPU\nexhaustive", "WGPU\nexhaustive", "IVF-Flat", "IVF-SQ8"])
+    ax.set_title("(b) matched 100k-row soak, batch 1, n=512")
+    for bar, latency in zip(bars, soak.p95_ms):
+        ax.text(bar.get_x()+bar.get_width()/2, latency+.8, f"{latency:.1f}", ha="center", fontsize=7)
+    ax.set_ylim(0, 43)
+    fig.suptitle("Android 16 / Mali-G615 device-lab evidence; observed recall@10 = 1.0", y=1.02, fontsize=10.2)
+    fig.tight_layout(w_pad=1.0)
+    save(fig, "android_matched")
+
+
+def linux_context() -> None:
+    df = pd.read_csv(DATA / "linux_library_summary.csv")
+    fig, ax = plt.subplots(figsize=(5.3, 2.85))
+    markers = {"exhaustive": "o", "ANN": "s"}
+    colors = {"exhaustive": BLUE, "ANN": PURPLE}
+    for kind in ["exhaustive", "ANN"]:
+        sub = df[df.search_type == kind]
+        ax.scatter(sub.recall_at_10, sub.p95_ms, s=38, marker=markers[kind], color=colors[kind], label=kind, zorder=3)
+        for _, row in sub.iterrows():
+            dx, dy = (3, 3)
+            if row.system == "FAISS HNSW":
+                dy = 5
+            if row.system == "LanceDB Flat":
+                dy = -2
+            ax.annotate(row.system, (row.recall_at_10, row.p95_ms), xytext=(dx, dy), textcoords="offset points", fontsize=6.8)
+    ax.set_yscale("log")
+    ax.set_xlim(.9908, 1.00065)
+    ax.set_ylim(1.05, 360)
+    ax.set(xlabel="recall@10", ylabel="P95 latency (ms, log scale)",
+           title="Descriptive Linux library cohort: same data and host, 1,500 calls/system")
+    ax.legend(frameon=False, loc="upper left")
+    ax.grid(True, which="both", axis="both", alpha=.7)
+    save(fig, "linux_library_context")
+
+
+def architecture() -> None:
+    fig, ax = plt.subplots(figsize=(7.05, 2.15))
+    ax.axis("off")
+    boxes = [
+        (.02, .29, .23, .46, "canonical CoreStore\nFP32 vectors + metadata\ntombstones + generation", BLUE, "#EAF4F7"),
+        (.36, .68, .25, .22, "CPU exhaustive", ORANGE, "#FFF0E6"),
+        (.36, .39, .25, .22, "filtered HNSW", PURPLE, "#F2EDF8"),
+        (.36, .10, .25, .22, "WGPU exhaustive / IVF", BLUE, "#EAF4F7"),
+        (.73, .29, .25, .46, "observable router\nrequested vs executed route\nfallback + E + transfers", GREEN, "#ECF6F0"),
+    ]
+    for x, y, w, h, text, edge, face in boxes:
+        ax.add_patch(mpl.patches.FancyBboxPatch((x, y), w, h, boxstyle="round,pad=.012", ec=edge, fc=face, lw=1.3))
+        ax.text(x+w/2, y+h/2, text, ha="center", va="center", transform=ax.transAxes, fontsize=8)
+    for y0, y1 in [(.60, .79), (.52, .50), (.44, .21)]:
+        ax.annotate("", xy=(.36, y1), xytext=(.25, y0), xycoords="axes fraction",
+                    arrowprops=dict(arrowstyle="->", color=GREY, lw=1.1))
+    for y0, y1 in [(.79, .60), (.50, .52), (.21, .44)]:
+        ax.annotate("", xy=(.73, y1), xytext=(.61, y0), xycoords="axes fraction",
+                    arrowprops=dict(arrowstyle="->", color=GREY, lw=1.1))
+    ax.text(.5, .01, "logical truth remains canonical; every search structure is rebuildable derived state",
+            ha="center", va="bottom", transform=ax.transAxes, fontsize=7.2, color=GREY)
+    save(fig, "architecture")
+
+
+def main() -> None:
+    style()
+    phase_map()
+    windows_strategies()
+    android_matched()
+    linux_context()
+    architecture()
+    print("generated phase_map, windows_strategies, android_matched, linux_library_context, architecture")
+
+
+if __name__ == "__main__":
+    main()

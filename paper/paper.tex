@@ -1,187 +1,210 @@
 \documentclass[10pt]{article}
-\usepackage[margin=0.78in]{geometry}
-\usepackage{booktabs,graphicx,url,microtype,amsmath,placeins,float}
-\usepackage[numbers]{natbib}
-\title{When Exact Search Wins---and When It Does Not:\\Evidence from Predicate-Aware Vector Retrieval}
+\usepackage[margin=0.76in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,float,graphicx,microtype,multirow,placeins,url,xcolor}
+\usepackage[colorlinks=true,allcolors=blue!55!black]{hyperref}
+\usepackage[numbers,sort&compress]{natbib}
+\newcommand{\qenlo}{Qenlo}
+\newcommand{\E}{E}
+\newcommand{\D}{D}
+\newcommand{\B}{B}
+\title{Eligible Work as a Routing Variable:\\Measuring CPU/GPU Exhaustive Crossovers in Filtered Vector Search}
 \author{Akshat Singh Kushwaha\\
 \texttt{akshatsingh14372@outlook.com}\\
-\url{https://www.linkedin.com/in/akshat-singh-kushwaha}}
+\url{https://github.com/a3ro-dev/qenlo}}
 \date{September 2026}
+
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Metadata predicates can turn a million-row nearest-neighbor query into a scan of only thousands of eligible vectors, changing the choice between exact CPU, exact GPU, and approximate search. We audit Qenlo, an embedded vector-search prototype, and synthesize three retained cohorts plus a user-supplied Android device-lab cohort rather than claiming a universal winner. On a real 100k$\times$384 Windows workload, Qenlo's shipped WGPU exact path reduced P95 from 16.657 ms on CPU to 3.240 ms when all rows were eligible, but CPU won at 1\% eligibility. A post-hoc six-point sweep placed the compact-row CPU/WGPU winner reversal between 2,000 and 3,000 eligible rows. On Android, a 512-sample 100k$\times$384 soak likewise favored WGPU exact over CPU at P95 (17.678 versus 27.019 ms), while the 10k quick cell favored CPU. On the Windows dense cell WGPU was nominally faster than tuned USearch (3.625 ms at recall 0.99224), although the bootstrap interval crossed parity. On a real 1M$\times$768 TopK workload with 10,026 eligible rows, FAISS GPU Flat, NumPy exact, and a transparent Qenlo CUDA prototype achieved P95 latencies of 0.132, 0.197, and 0.171 ms, respectively, all at recall@10=1.0. A fresh-seed synthetic A6000 experiment found that the buffered CUDA prototype lost to FAISS at 1k and 10k eligible vectors but won at 100k (0.567 versus 0.789 ms) and 1M (4.668 versus 6.347 ms), with complete top-10 agreement. Exact GPU search therefore has a measurable operating region, but missing HNSW curves, a full batch matrix, and native-WGPU A6000 cells leave the broad hypothesis only partially supported.
+Filtered vector search is usually discussed as an index problem. In an embedded system, it is also a routing problem: after a predicate has reduced a collection to \(\E\) eligible vectors, should exhaustive execution remain on the CPU or move to the GPU, and what does current evidence say about where ANN may enter that routing map? This paper measures the CPU/GPU boundary in \qenlo{}, a Rust/WGSL prototype whose canonical rows are independent of its search accelerators. The primary experiment holds data, queries, dimension, batch size, and hardware fixed. Across a post-hoc six-point sweep on an RTX 4050, shipped CPU and WGPU exhaustive search reverse order between \(\E=2{,}000\) and \(3{,}000\) for 384-dimensional vectors. At \(\E=100{,}000\), WGPU predicate evaluation reaches 3.240 ms P95 versus 16.657 ms on the CPU; at \(\E=1{,}000\), the CPU reaches 0.230 ms while the same predicate path takes 2.883 ms. Within WGPU, compact rows beat shader-side evaluation at \(\E=1{,}000\), then lose at \(\E=100{,}000\), so routing also includes representation choice. At the dense endpoint, the bootstrap interval for the latency ratio between a tuned USearch HNSW point and exhaustive WGPU crosses parity; recall@10 is 0.99224 and 0.99998, respectively, against an FP64 oracle. Android and Intel Arc records reproduce the dense CPU/GPU ordering but do not identify a controlled mobile crossover. An exploratory A6000 study finds a separate FAISS-versus-CUDA-prototype reversal between \(10{,}000\) and \(100{,}000\) eligible 768-dimensional vectors; it is not a shipped-\qenlo{} result. The artifact contains 563,644 timed observations, of which 558,644 satisfy their stated recall qualification. The evidence supports a hardware- and implementation-specific phase map, not a universal claim that exhaustive search beats ANN.
 \end{abstract}
 
 \section{Introduction}
-Approximate nearest-neighbor (ANN) indexes are commonly treated as the default response to large vector collections. A metadata predicate invalidates the simplifying premise that every stored vector is a candidate. If a predicate produces an eligible set $S_P$, exact top-$k$ cosine retrieval costs approximately $O(|S_P|D)$ rather than $O(ND)$. At sufficiently small $|S_P|$, maintaining or traversing a graph can be unnecessary; at very small $|S_P|$, GPU launch and synchronization overhead can make a CPU scan preferable.
+The practical input to a filtered nearest-neighbor query is not just collection size \(N\). A metadata predicate first defines an eligible set \(S_P\), and only \(\E=|S_P|\) vectors can enter the answer. Exhaustive scoring therefore performs \(O(\E\D)\) arithmetic for dimension \(\D\). That makes a million-row collection with a one-percent filter a different execution problem from an unfiltered million-row query, even when both live in the same database.
 
-This paper asks: \emph{when metadata predicates substantially reduce the eligible set, when is exact vector search preferable to ANN?} We use Qenlo as an experimental vehicle because it places canonical rows, exact CPU search, filtered HNSW, portable GPU exact search, and observable routing behind one in-process interface. Our starting hypothesis, H1, is that predicate-aware exact GPU search can beat CPU exact and become competitive with tuned high-recall HNSW while retaining exact recall. Secondary hypotheses concern eligible-count dominance (H2), a CPU/GPU crossover (H3), batching (H4), the high-recall ANN tradeoff (H5), and adaptive routing (H6).
+Recent filtered-ANN work already shows that selectivity, filter/query correlation, and implementation choices can change the best plan \citep{gollapudi2023filtered,patel2024acorn,iff2025fanns,shi2025unified,amanbayev2026systems}. The contribution here is narrower. This paper measures the completed-call boundary between CPU and portable-GPU exhaustive execution after filtering, including dispatch, synchronization, and bounded result readback. It also asks whether one tuned high-recall HNSW point displaces that boundary. The answer is not a new index. It is an empirical routing map with explicit gaps.
 
-The contribution is chiefly an evidence audit. First, we map implemented behavior to source and tests. Second, we distinguish three non-poolable cohorts and preserve failures. Third, we expose two reversals: CPU versus WGPU as selectivity changes, and FAISS versus a buffered CUDA formulation as eligible count grows. Fourth, we identify what the current evidence cannot answer. This is not a claim that Qenlo is production proven or that exact search universally dominates ANN.
+The study makes four contributions:
+\begin{enumerate}
+\item a controlled native CPU/WGPU sweep that brackets a winner reversal to \((2{,}000,3{,}000)\) eligible vectors on one RTX 4050 host;
+\item an ablation showing that eligible-row materialization, shader-side predicate evaluation, and mask transfer have different fixed costs, so \(\E\) alone is not a sufficient routing feature;
+\item external Android and Intel Arc observations plus a separately labeled A6000 CUDA/FAISS study, with no cross-cohort pooling; and
+\item a retained evidence ledger containing raw calls, failures, checksums, tuning/evaluation separation, and an independent FP64 oracle where claimed.
+\end{enumerate}
 
-\section{Background and motivation}
-For normalized vectors, cosine ranking is inner-product ranking. Exact search evaluates every eligible vector and returns the globally ordered top $k$. IVF reduces work by probing partitions, and product or scalar quantization reduces representation cost, potentially sacrificing recall. HNSW constructs a navigable proximity graph and exposes a search-expansion parameter governing a recall/latency tradeoff \citep{malkov2020hnsw}. FAISS provides both exact and approximate CPU/GPU implementations \citep{johnson2019billion,douze2024faiss}.
+The central research question is therefore: \emph{for a fixed implementation, device, dimension, and batch policy, where does eligible work reverse the preferred exhaustive execution route, and how does predicate representation shift that boundary?} ANN is secondary: the retained points test whether approximate search can yet be placed on the same map.
 
-Filtering complicates ANN because graph edges ignore arbitrary query predicates. Post-filtering can return too few results; pre-filtering may disconnect useful graph paths. Systems such as Filtered-DiskANN and ACORN modify graph construction or traversal to address this interaction \citep{gollapudi2023filtered,patel2024acorn}. Exact prefiltered search avoids an ANN recall parameter: its cost is driven by eligible work, but candidate materialization and device transfer remain important.
+\section{Scope and terminology}
+\paragraph{Exhaustive versus numerically exact.}
+The CPU and GPU paths score every eligible candidate. We call them \emph{exhaustive}. Their floating-point order can differ from an FP64 oracle near ties, so the paper reports oracle recall instead of using ``exact recall'' as a numerical claim. The dense native cells achieve recall@10=0.99998; the sparse native cells and qualified A6000 cells achieve 1.0.
 
-We distinguish four notions often conflated in reports: total rows $N$, eligible rows $E$, scored rows, and bytes transferred. We also distinguish GPU-event kernel time from host-observed completed-call time. Only the latter includes dispatch, synchronization, and result readback.
+\paragraph{Completed-call latency.}
+The timed boundary begins immediately before the search call and ends after ordered identifiers and distances are available on the host. It includes predicate work inside the selected route, query transfer, dispatch, synchronization, readback, and host merge. Index build, corpus loading, and oracle construction are outside timing. Kernel-event measurements are not compared with completed calls.
 
-\section{Qenlo}
-Qenlo's \texttt{CoreStore} owns normalized FP32 vectors, metadata, public IDs, permanent slots, tombstones, and the committed generation. User and timestamp indexes are reconstructed from canonical rows. A collection wraps this state with a read/write lock and owns derived CPU, HNSW, and GPU state. Figure~\ref{fig:architecture} shows the ownership boundary.
+For the native compact-row sweep, the eligible list is neither precomputed nor reused across queries. Each timed batch-one call first traverses the predicate to count eligible rows, then the current WGPU path traverses it again to materialize a fresh row-ID list. The query and row IDs are uploaded into reusable scratch buffers for that call; only the vector chunks and allocations remain resident. The reported compact-row latency therefore includes both predicate traversals, compaction, ID and query upload, scoring, synchronization, readback, and host merge. It does not measure a cached-list route. This duplicated filtering is an implementation cost of the tested revision, not a requirement of compact-row execution.
+
+\paragraph{Non-pooling.}
+The native Windows, Android, Intel Arc, Linux library, real A6000, and synthetic A6000 records differ in hardware, data, implementation, or evidence quality. Every numerical comparison stays within a cohort. Cross-cohort agreement is treated as replication of a direction, not as a pooled effect.
+
+\section{System boundary}
+\qenlo's canonical \texttt{CoreStore} owns normalized FP32 vectors, metadata, public identifiers, tombstones, and the committed generation. Exact CPU state, filtered HNSW, and WGPU buffers are derived and rebuildable (Figure~\ref{fig:architecture}). This separation matters to the research question: route changes do not alter logical existence or recovery semantics.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/architecture.png}
-\caption{Canonical rows determine logical existence. Search structures are disposable derived state.}
+\includegraphics[width=\linewidth]{figures/architecture.pdf}
+\caption{Canonical rows define logical truth. CPU, HNSW, and WGPU search structures are disposable accelerators behind an observable router.}
 \label{fig:architecture}
 \end{figure}
 
-CPU exact search first identifies eligible rows, uses AVX2/FMA when available (scalar otherwise), accumulates in FP64, and retains at most $k$ hits. USearch performs filtered HNSW with live canonical IDs. The WGPU path supports a CPU mask, a compact eligible-row list, or direct GPU predicate evaluation. It scans bounded chunks and returns per-chunk top-$k$ lists for a host merge. If an element is absent from its chunk top $k$, at least $k$ elements in that chunk precede it, so it cannot enter the global top $k$; the merge is exact under a common distance/ID ordering.
+The CPU path uses AVX2/FMA when available and accumulates dot products in FP64. The WGPU backend has three exhaustive predicate forms: upload a compact eligible-row list, upload a mask, or evaluate a supported predicate in WGSL. Vectors remain device-resident. The shader scans bounded chunks, each chunk emits at most \(k\) candidates, and the host merges those lists. If an item is outside its chunk top \(k\), at least \(k\) items in that chunk precede it under the common distance/ID order; the item cannot enter the global top \(k\). This proves the chunk merge but is not claimed as algorithmic novelty.
 
-The WGPU module also implements IVF-Flat and IVF-SQ8 candidate generation followed by exact FP32 reranking. These remain approximate when unprobed lists omit a true neighbor. Automatic routing and required-GPU modes are distinct: required mode reports failure, whereas automatic mode may fall back and records that fact.
+The automatic route reports requested and executed backends, fallback, filter strategy, eligible/scored counts, transfer bytes, owned allocations, and timing phases. Required-GPU mode fails rather than silently falling back. These diagnostics let the benchmark distinguish an intended GPU run from a CPU fallback.
 
-Durability supports the search story but is not the performance contribution. Mutations produce immutable checksummed WAL generations and an atomic checksummed \texttt{HEAD}; flush/close compact to snapshots. Tests cover tombstones, ordered WAL replay, corruption, uncertain publication, and recovery. The system claims process-crash recovery under documented filesystem behavior, not universal sudden-power-loss durability.
+\section{Experimental method}
+\subsection{Evidence inventory}
+Table~\ref{tab:inventory} summarizes the retained observations used in this revision. The Windows endpoint total includes nine completed configurations; the crossover campaign adds twelve CPU/WGPU cells. The 2,506-sample incomplete CPU development run and duplicated cloud mirrors are excluded. The real A6000 total includes a 5,000-sample cuVS run retained as a correctness-gate failure. Thus 558,644 of the 563,644 timed observations satisfy their stated recall qualification.
 
-\section{Methodology}
-\subsection{Cohorts and non-pooling rule}
-Table~\ref{tab:cohorts} lists the evidence. Cohorts differ in hardware, data, implementation, and timing boundary, so we compare within a cohort and use cross-cohort observations only as context.
-
-\begin{table}[h]
+\begin{table}[t]
 \centering\small
-\caption{Evidence cohorts. ``Native'' means repository Rust code.}
-\label{tab:cohorts}
-\begin{tabular}{lllll}
+\caption{Retained evidence used by the paper. ``Aggregate'' means raw per-call series were not supplied.}
+\label{tab:inventory}
+\begin{tabular}{lrrll}
 \toprule
-Cohort & Data & Hardware & Systems & Samples/cell\\
+Cohort & Timed obs. & \(N\times D\) & Hardware & Evidence \\
 \midrule
-Windows retained & real AG News, 100k$\times$384 & RTX 4050 & native CPU/WGPU & 5 runs\\
-Android device lab & generated, 10k/100k$\times$384 & MT6897/Mali-G615 & native CPU/WGPU/IVF & 16--512\\
-TopK retained & real MS MARCO, 1M$\times$768 & RTX A6000 & NumPy/FAISS/CUDA & 5,000\\
-New held-out & synthetic, 1M$\times$768 & RTX A6000 & FAISS/CUDA & 500\\
+Windows endpoints & 225,000 & 100k$\times$384 & RTX 4050 & raw calls \\
+Windows crossover & 300,000 & 100k$\times$384 & RTX 4050 & raw calls \\
+Linux libraries & 10,500 & 100k$\times$384 & cloud CPU & raw calls \\
+Real strict gate & 20,000 & 1M$\times$768 & RTX A6000 & raw calls \\
+Synthetic held-out & 4,000 & 1M$\times$768 & RTX A6000 & raw calls \\
+Android device lab & 4,144 & 10k/100k$\times$384 & Mali-G615 & aggregate \\
+\midrule
+Total & 563,644 & & & \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The public TopK corpus uses ModernBERT embeddings and an integer filter \citep{topkbench}. Retained checksums are \texttt{f1c9f0...275d3} for documents and \texttt{d9a34c...00870} for queries. Its independently computed FP64 oracle is outside timed search. The new matrix uses normalized random FP32 vectors, 100 queries, 50 warmups, five repetitions, and seeds 20260902 (development) and 20260903 (held out). Queries are shuffled per repetition. The measured boundary starts before the system call and ends after ten IDs return to the host; corpus/filter preparation is excluded. Qenlo and FAISS search the identical prefiltered matrix.
+\subsection{Primary native cohort}
+The Windows cohort uses 100,000 384-dimensional AG News sentence embeddings derived from a public DTU artifact \citep{nielsen2022agnews}. Corpus, tuning, and evaluation query ranges are disjoint. Synthetic metadata is independent of vector geometry. Every retained configuration uses \(k=10\), batch one, 200 warmups, 5,000 held-out queries, and five repetitions. The endpoint cells use \(\E=1{,}000\) and \(100{,}000\). The later localization sweep uses \(\E\in\{2k,3k,4k,6k,8k,10k\}\) for CPU and compact-row WGPU. It was designed after inspecting the endpoints and is descriptive.
 
-The A6000 was a 49,140 MiB RTX A6000, driver 570.195.03, CUDA 12.8, PyTorch 2.9.1, and FAISS 1.14.1. The Runpod campaign used one GPU at a time, cost \$0.9927, and left zero pods. Native WGPU attempts failed because the container had no usable NVIDIA Vulkan ICD; those attempts produced no latency samples.
+USearch expansion was selected on 1,000 tuning queries. \(ef=128\) reached tuning recall@10=0.9932 and was then frozen for the held-out range. The independent oracle scores every eligible vector in FP64 outside timing and rejects duplicate, deleted, unknown, or predicate-ineligible results.
 
-The author-supplied Android schema-v1 records identify Android 16/API 36, a Mediatek MT6897 CPU, Mali-G615 MC6 GPU, Vulkan, and app version 0.1.0. Quick, full, and soak suites contain 16, 64, and 512 samples per cell. All 21 cells report recall@10=1.0, no fallback, and no failure. We transcribed the records without pooling suites. Power source is absent and thermal state is the uninterpreted string ``0'', so the mobile evidence has no controlled power or thermal claim.
+For the primary ratios, the unit of resampling is a complete run, not an individual query. A seeded 10,000-draw bootstrap reports percentile intervals for the ratio of median run-level P95 values. Five runs produce a coarse interval; it does not model device, driver, thermal, or dataset variation.
 
-\subsection{Correctness and statistics}
-The repository oracle exhaustively scores eligible vectors in independent FP64 code outside timing. It rejects duplicate, deleted, unknown, or predicate-ineligible results. The TopK run recorded all 5,000 exact samples at recall@10=1.0. The new synthetic matrix uses unordered top-10 agreement between two exact implementations; all 400 query/cell checks agree. This is weaker than an independent oracle and is labeled accordingly.
+\subsection{External and exploratory cohorts}
+The Android schema-v1 records identify Android 16/API 36, a Mediatek MT6897 CPU, Mali-G615 MC6/Vulkan, and app version 0.1.0. Quick, full, and soak suites contain 16, 64, and 512 reported samples per cell. All 21 cells report recall@10=1.0, no fallback, and no failure. Power source is absent and thermal state is the uninterpreted string ``0''. The aggregates were transcribed without reconstructing unavailable raw distributions.
 
-We report P50/P95/P99 over raw completed calls. The retained Rust headline uses the median of five per-run P95 values and a seeded whole-run bootstrap interval, preserving run dependence. The synthetic table reports pooled descriptive percentiles; we do not call its differences statistically significant.
+The A6000 real cohort uses one million 768-dimensional ModernBERT vectors from TopK Bench \citep{topkbench}. Its strict predicate yields \(\E=10{,}026\). NumPy CPU, FAISS GPU Flat, and a PyTorch/CUDA research prototype each have 5,000 completed calls and an independent FP64 oracle. cuVS returned recall 0.9 and is disqualified. Predicate materialization is outside this cohort's latency boundary because every system receives the same prefiltered matrix.
+
+The synthetic A6000 cohort uses normalized random FP32 vectors, 100 queries, 50 warmups, five repetitions, and a fresh held-out seed. It measures \(\E\in\{1k,10k,100k,1M\}\). FAISS and the research CUDA prototype search the same matrix and have complete unordered top-10 agreement. This is cross-implementation agreement, not an independent oracle. Native WGPU produced no A6000 samples because the container exposed no usable NVIDIA Vulkan ICD.
 
 \section{Results}
-\subsection{CPU/GPU reversal under filtering}
-On the retained real 100k$\times$384 cohort, all-row Qenlo WGPU predicate search achieved 3.240 ms P95 versus 16.657 ms for exact CPU, a 5.14$\times$ ratio with bootstrap interval [3.55,6.77]. At 1\% eligibility, CPU required 0.230 ms and WGPU predicate evaluation 2.883 ms. A subsequent post-hoc sweep compared CPU with compact-row WGPU at $E\in\{2k,3k,4k,6k,8k,10k\}$. Each cell used 5,000 held-out queries, 200 warmups, five repetitions, and recall@10=1.0. Median-run P95 was 0.520 versus 0.634 ms at $E=2k$, then 0.956 versus 0.814 ms at $E=3k$; WGPU remained faster through $E=10k$. Thus the observed native winner reversal is bracketed to $(2k,3k)$ for this implementation and machine. Because the sweep followed inspection of endpoint cells, it is localization evidence rather than a preregistered confirmation.
+\subsection{A native exhaustive phase boundary}
+Figure~\ref{fig:phase} makes the two measured reversals literal while keeping them separate. On the RTX 4050, CPU wins at \(\E=2{,}000\) (0.520 versus 0.634 ms P95), while WGPU compact rows wins at \(\E=3{,}000\) (0.814 versus 0.956 ms). WGPU remains ahead through \(10{,}000\). The observed bracket is therefore \((2k,3k)\) for this host, code revision, dimension, batch size, and predicate representation.
 
-\begin{figure}[t]\centering
-\includegraphics[width=.88\linewidth]{figures/selectivity_p95.png}
-\caption{Native exact-search P95 on the controlled RTX 4050 cohort. CPU wins the selective cell; WGPU wins the dense cell.}
-\label{fig:selectivity}
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/phase_map.pdf}
+\caption{Two non-poolable implementation reversals. Lines connect measured points; shaded regions are brackets, not fitted universal thresholds. The left panel is shipped Rust/WGSL. The right panel is an exploratory PyTorch/CUDA prototype.}
+\label{fig:phase}
 \end{figure}
 
-\begin{figure}[H]\centering
-\includegraphics[width=.88\linewidth]{figures/native_cpu_gpu_crossover.png}
-\caption{Post-hoc native crossover sweep on the RTX 4050, batch 1. CPU and compact-row WGPU use identical eligible sets; every cell has recall@10=1.0.}
-\label{fig:native-crossover}
+At \(\E=100{,}000\), WGPU predicate search reaches 3.240 ms P95 versus 16.657 ms on CPU, a 5.14$\times$ ratio with whole-run bootstrap interval [3.55, 6.77]. At \(\E=1{,}000\), CPU requires 0.230 ms, compact-row WGPU 0.677 ms, and shader-side predicate WGPU 2.883 ms. The endpoint reversal rules out a device-presence-only GPU routing policy. The WGPU win at \(\E=3{,}000\) occurs despite the duplicated predicate traversal described in Section~2, so the measured bracket includes avoidable implementation overhead. It does not locate the crossover for a one-pass or cached-list path; that requires a matched ablation.
+
+The six localization points do not support a transferable fitted crossover. A useful execution model is
+\begin{align}
+T_{\mathrm{CPU}} &\approx \alpha_c + \beta_c \E\D,\\
+T_{\mathrm{GPU}} &\approx \alpha_g(\B) + \beta_g \E\D
+ + T_{\mathrm{materialize}}(P,\E) + T_{\mathrm{sync}},
+\end{align}
+but the coefficients depend on route, memory behavior, and device state. Fitting them to six post-hoc P95 points would create false precision. The measured bracket is the stronger result.
+
+\subsection{Predicate representation is a routing variable}
+Figure~\ref{fig:windows} compares matched strategies. At \(\E=1{,}000\), compact rows are 4.26$\times$ faster than shader-side predicate evaluation (0.677 versus 2.883 ms). At \(\E=100{,}000\), the direction reverses: shader-side predicate evaluation is 1.31$\times$ faster than compact rows (3.240 versus 4.243 ms) and 1.38$\times$ faster than a mask (4.459 ms). Materializing a tiny eligible set can save device work; representing a dense set explicitly can cost more than evaluating the predicate in place. Route selection therefore has at least two decisions: choose CPU, GPU, or ANN, then, for GPU, choose rows, mask, or shader-side predicate evaluation. A router that uses only \(\E\) misses this interaction.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/windows_strategies.pdf}
+\caption{Matched native Windows strategies. All exhaustive results score the same eligible set; the USearch point is approximate. Recall is measured against the same FP64 oracle.}
+\label{fig:windows}
 \end{figure}
 
-\subsection{Android device-lab evidence}
-The mobile runs reproduce the qualitative reversal on a different architecture. In the 10k-row quick suite, CPU exact beat WGPU exact at P95 (5.767 versus 12.487 ms). In the 100k-row full suite WGPU won (16.975 versus 29.436 ms), and the 512-sample soak retained that result (17.678 versus 27.019 ms), a descriptive 1.53$\times$ CPU/WGPU ratio. This is not a controlled crossover bracket because suite length and row count change together. In the soak, reported P95 values were 11.131 ms for native WGPU batch 8, 21.453 ms for IVF-Flat, and 37.090 ms for IVF-SQ8; all had recall 1.0. The batch-8 statistic is reported as emitted and is not normalized to per-query latency.
+At the dense endpoint, USearch reaches 3.625 ms P95 and recall@10=0.99224. WGPU predicate reaches 3.240 ms and 0.99998. The nominal latency ratio favors WGPU by 1.12$\times$, but its whole-run bootstrap interval [0.77, 1.54] crosses parity. The result establishes one competitive high-recall operating point, not an ANN phase boundary. No recall--latency curve is available across \(\E\).
 
-\begin{figure}[H]\centering
-\includegraphics[width=.78\linewidth]{figures/android_soak_p95.png}
-\caption{User-supplied Android soak results, 100k$\times$384 and 512 samples per cell. Batch-1, batch-8, dense, and selective cells are shown together for inventory, not treated as direct pairwise speedups.}
+A separate Chroma HNSW cell on the same Windows data reaches 1.130 ms P95 and recall@10=0.99414. It uses Chroma's own storage and API rather than a route inside \qenlo{}, so it is not placed in Figure~\ref{fig:windows}; it is retained in Appendix A. Its result matters: even at the dense endpoint where exhaustive WGPU is competitive with USearch, a different HNSW implementation is substantially faster. The evidence does not support ``exhaustive beats ANN'' as a system-independent statement.
+
+\subsection{Android and non-NVIDIA evidence}
+Figure~\ref{fig:android} replaces the previous heterogeneous seven-bar chart with matched panels. CPU wins the 10k-row quick cell at P95 (5.767 versus 12.487 ms). WGPU wins the 100k full cell (16.975 versus 29.436 ms) and the 512-sample soak (17.678 versus 27.019 ms). Because both row count and suite length change, this is a qualitative reversal, not a mobile crossover bracket.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/android_matched.pdf}
+\caption{Android device-lab aggregates. Panel (a) reports dense batch-one CPU/WGPU cells. Panel (b) holds corpus, suite, and batch fixed. The IVF rows happened to return recall@10=1.0 on this workload; they remain approximate algorithms.}
 \label{fig:android}
 \end{figure}
 
-\subsection{Real 1M$\times$768 strict-filter cell}
-At $E=10{,}026$, Table~\ref{tab:topk} shows that FAISS GPU Flat is fastest. All qualified systems are exact against the independent oracle. The CUDA prototype is 1.29$\times$ slower than FAISS at P95. The previously noted 0.1196 ms is a different, synthetic kernel-only measurement and is not used here.
+In the matched 100k soak, exhaustive WGPU also has lower P95 than IVF-Flat (21.453 ms) and IVF-SQ8 (37.090 ms). This does not prove that exhaustive search dominates IVF: only one parameterization and one generated workload were observed. Dense WGPU batch eight reports 11.131 ms versus 17.678 ms at batch one, but the emitted batch statistic is not normalized per query. It supports amortization as a route feature, not a per-query speedup claim.
 
-\begin{table}[h]
-\centering
-\caption{Real TopK 1M$\times$768, 1\% predicate, batch 1, $k=10$.}
-\label{tab:topk}
-\begin{tabular}{lrrr}
-\toprule System & P50 ms & P95 ms & Recall@10\\
-\midrule NumPy exact CPU & 0.122 & 0.197 & 1.000\\
-FAISS GPU Flat & 0.126 & 0.132 & 1.000\\
-Qenlo CUDA prototype & -- & 0.171 & 1.000\\
-\bottomrule
-\end{tabular}
-\end{table}
+An independent Intel Arc soak at 100k$\times$384 reports 4.444 ms P95 for exhaustive WGPU and 16.486 ms for CPU, both at recall@10=1.0 over 512 samples. This is a second non-NVIDIA execution result. It is not enough to estimate a device-family effect.
 
-\subsection{FAISS crossover on held-out synthetic data}
-Table~\ref{tab:cuda} and the retained SVG plot show a second boundary. FAISS wins at 1k and 10k; the buffered matrix-vector/top-k formulation wins at 100k and 1M. The observed crossover is bounded only to $(10k,100k)$ because intermediate points were not measured.
+\subsection{The exploratory A6000 reversal}
+At the real TopK point \(\E=10{,}026\), FAISS GPU Flat leads the qualified systems: 0.132 ms P95 versus 0.171 ms for the research CUDA exhaustive prototype and 0.197 ms for NumPy CPU. All three reach oracle recall@10=1.0 over 5,000 calls. The prototype is 1.29$\times$ slower than FAISS. Every manuscript occurrence now names it ``research CUDA exhaustive prototype'' because it is PyTorch code, not the shipped \qenlo{} backend.
 
-\begin{table}[h]
+The fresh-seed synthetic sweep produces a different result at larger \(\E\). FAISS is faster at 1k and 10k; the buffered prototype is faster at 100k (0.567 versus 0.789 ms) and 1M (4.668 versus 6.347 ms). The observed reversal lies in \((10k,100k)\). The relative gain is stable at the two largest points (1.39$\times$ and 1.36$\times$), but no intermediate cell localizes the boundary further. This is evidence about two GPU formulations, not a general PyTorch-versus-FAISS result.
+
+\subsection{What the broader archive adds}
+The descriptive Linux cohort holds data and host fixed for seven libraries, 1,500 calls each. FAISS HNSW is fastest at 1.494 ms P95 and recall 0.9994. Chroma HNSW reaches 3.777 ms/0.9984, USearch 5.093 ms/0.9914, FAISS Flat 10.217 ms/1.0, \qenlo{} CPU 12.901 ms/1.0, Milvus Lite AUTOINDEX 76.229 ms/0.9988, and LanceDB Flat 242.256 ms/1.0. Figure~\ref{fig:linux}, moved to Appendix~A, is context because build, persistence, and API semantics differ. The cohort shows that implementation boundaries can dominate the label ``exhaustive'' or ``ANN.'' It is not a product leaderboard.
+
+\section{Hypotheses and inference limits}
+The experiments were initially organized around six hypotheses. Table~\ref{tab:hypotheses} states their final status without converting absent cells into positive evidence.
+
+\begin{table}[t]
 \centering\small
-\caption{Held-out A6000 P95 completed-call latency (ms), 1M$\times$768 synthetic corpus.}
-\label{tab:cuda}
-\begin{tabular}{rrrr}
-\toprule Eligible $E$ & FAISS Flat & Qenlo CUDA prototype & Faster\\
-\midrule 1,000 & 0.086 & 0.098 & FAISS\\
-10,000 & 0.137 & 0.156 & FAISS\\
-100,000 & 0.789 & 0.567 & prototype (1.39$\times$)\\
-1,000,000 & 6.347 & 4.668 & prototype (1.36$\times$)\\
+\caption{Hypothesis status after the retained campaigns.}
+\label{tab:hypotheses}
+\begin{tabular}{p{.06\linewidth}p{.47\linewidth}p{.36\linewidth}}
+\toprule
+ & Hypothesis & Status \\
+\midrule
+H1 & Exhaustive GPU can beat CPU and compete with high-recall HNSW & Partial: dense native point supports it; HNSW interval crosses parity \\
+H2 & \(\E\), not \(N\), dominates exhaustive latency & Open: \(\E\) varies, but matched \(\E\) across \(N\) does not \\
+H3 & Fixed overhead creates a CPU/GPU reversal & Supported on RTX 4050; bracket is device-specific \\
+H4 & Batching shifts the reversal & Descriptive Android/Arc support; no matched native batch matrix \\
+H5 & High-recall ANN can lose its latency advantage & One controlled point only; no Pareto curve \\
+H6 & Adaptive routing reduces regret & Inconclusive: choices are plausible, counterfactual regret is unmeasured \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Latency rises monotonically and plausibly with $E$, addressing the most basic cached-answer and missing-work sanity checks. The reversal is an implementation result, not evidence that PyTorch generally outperforms FAISS or that native Qenlo does so.
+Three inferences survive this audit. First, eligible work is a better routing input than corpus size alone, but \(\D\), \(\B\), predicate representation, and device state remain necessary. Second, route selection must be calibrated to the concrete implementation. The native reversal occurs around a few thousand 384-dimensional vectors; the unrelated A6000 formulation reverses one to two orders of magnitude later at \(\D=768\). Third, an ANN choice should be made from a recall--latency frontier, not one tuned point. The current paper cannot determine when filtered ANN becomes Pareto-optimal as \(\E\) changes.
 
-\begin{figure}[t]\centering
-\includegraphics[width=.88\linewidth]{figures/a6000_exact_crossover.png}
-\caption{Held-out synthetic A6000 exact-search crossover. Both implementations return results to the host.}
-\label{fig:a6000}
-\end{figure}
+\section{Related work and novelty boundary}
+FAISS provides optimized exhaustive and approximate CPU/GPU search \citep{johnson2019billion,douze2024faiss}. HNSW exposes a recall/latency tradeoff through graph expansion \citep{malkov2020hnsw}. DiskANN and SPANN target much larger, storage-aware regimes \citep{subramanya2019diskann,chen2021spann}. Filtered-DiskANN and ACORN modify graph construction or traversal to preserve access under predicates \citep{gollapudi2023filtered,patel2024acorn}.
 
-\subsection{Exact versus ANN}
-The controlled Windows 100k$\times$384 all-row cohort used identical data, query ranges, in-process boundary, and hardware. USearch expansion 128 was selected using 1,000 tuning queries, where recall was 0.9932. On 5,000 held-out queries repeated five times, USearch achieved P95 3.625 ms at recall 0.99224; exact WGPU achieved 3.240 ms at recall 0.99998. The nominal exact-over-ANN advantage is 1.12$\times$, but its whole-run bootstrap interval [0.77,1.54] crosses parity. We therefore establish competitiveness, not a reliable latency winner. This is the strongest controlled support for H1/H5. A separate Linux cohort (USearch 5.093 ms at recall 0.9914, FAISS HNSW 1.494 ms at 0.9994) is context only because its successful Qenlo GPU cell is absent.
+Recent benchmarks make broad novelty claims about ``exact sometimes wins'' untenable. Iff et al. vary selectivity across modern FANNS methods and find that no method dominates every scenario \citep{iff2025fanns}. Shi et al. emphasize unified tuning, query difficulty, selectivity, and dataset dependence \citep{shi2025unified}. Amanbayev et al. report hybrid approximate/exhaustive execution and pgvector cases where an optimizer selects ANN despite a comparable exhaustive plan with perfect recall \citep{amanbayev2026systems}.
 
-\begin{figure}[H]\centering
-\includegraphics[width=.62\linewidth]{figures/hnsw_tradeoff.png}
-\caption{One controlled high-recall ANN operating point. The uncertainty interval for the latency ratio crosses parity.}
-\label{fig:hnsw}
-\end{figure}
+Against that literature, this paper's novelty is the measured CPU-to-portable-GPU exhaustive boundary after predicate compaction, with completed-call costs and observable fallback, not the idea that selective filters can favor a scan. The present evidence is less complete than a FANNS benchmark: it lacks filter-aware ANN methods, recall curves across selectivity, correlation regimes, and scale. It is more specific about one embedded execution boundary and its artifact trail.
 
-\FloatBarrier
-\section{Ablation and routing implications}
-The available selectivity ablation explains fixed costs. Native predicate WGPU changes little between 100\% and 1\% (3.240 versus 2.883 ms) while CPU scan cost collapses (16.657 versus 0.230 ms). At 1\%, compact eligible-row WGPU reduces P95 to 0.677 ms, a 4.26$\times$ improvement over direct GPU predicate evaluation, but CPU remains 2.94$\times$ faster. At 100\%, predicate, rows, and mask cost 3.240, 4.243, and 4.459 ms. The CUDA prefiltered formulation scales with $E$ but excludes candidate materialization, reinforcing that compaction cost and reuse determine the boundary.
+\section{Threats to validity}
+The primary crossover uses one laptop, one dimension, one batch size, one corpus, and metadata independent of vector geometry. The six-point sweep is post-hoc. The compact-row path performs two predicate traversals per call in this revision, so removing the route-count pass or caching eligible rows could move the bracket. The CPU implementation uses AVX2/FMA with FP64 accumulation; it is a valid \qenlo{} baseline, not a state-of-the-art CPU boundary. FAISS CPU Flat, optimized FP32 SIMD, and multithreaded BLAS baselines are absent from the matched Windows sweep.
 
-For batch 1 on the Windows cohort, the measured compact-row boundary suggests CPU through $E=2k$ and GPU from $E=3k$ in the sampled region; unsampled values and other hardware still require conservative handling. A retained Intel Arc soak run shows the router choosing CPU for $E=1{,}000$, batch 1 (0.273 ms P95), and GPU for the same $E$ across batch 8 (0.555 ms per reported query statistic); all samples had recall 1.0 and no fallback. Dense GPU P95 fell from 4.444 ms at batch 1 to 1.245 ms in the reported batch-8 statistic. These 512-sample device-lab cells support H4 qualitatively. They do not provide both fixed-policy counterfactuals for each cell, so routing accuracy and regret remain uncomputed rather than inferred.
+The Android evidence is author-supplied aggregate output without raw series, controlled thermal state, or power telemetry. The Intel Arc record is one device-lab soak. The A6000 prototype is unshipped and excludes predicate materialization in the real TopK cell. Process isolation between FAISS and PyTorch remains a threat despite matched data, query order, hardware, and timing boundary.
 
-\begin{figure}[H]\centering
-\includegraphics[width=.62\linewidth]{figures/batch_effect.png}
-\caption{Batch evidence from the Intel Arc soak. Bars with different eligible counts are context, not direct speedups.}
-\label{fig:batch}
-\end{figure}
-
-\FloatBarrier
-\section{Correctness and system semantics}
-Canonical existence is independent of derived indexes. A successful mutation advances a generation; rebuildable indexes may lag only through an explicit not-prepared state, not by changing logical membership. Searches hold a shared lock across a committed generation; mutation and rebuild hold the write lock. A stale HNSW graph is filtered through canonical live IDs. Exact predicate tests cover conjunction, ranges, deletion, and independently-oracled search. These properties justify using a common oracle, but tests are not a proof of every crash or concurrency schedule.
-
-\section{Discussion}
-The phrase ``exact search wins'' needs two qualifiers. First, the relevant unit is eligible scoring work, approximately $EDB$, only when the implementation actually compacts or avoids ineligible work. Second, fixed costs and library kernels matter: at small $E$, FAISS's exact GPU path beats the prototype; in native Rust, CPU beats WGPU at 1\% eligibility. At large $E$, a dense GEMV plus top-k can outperform the tested FAISS Flat call, but it remains linear and loses ANN's sublinear-work opportunity.
-
-The strongest supported system lesson is therefore adaptive rather than competitive. Exact CPU is compelling for tiny eligible sets. Exact GPU is compelling for dense eligible work where transfer and dispatch amortize. High-recall ANN can be compelling when $E$ remains large, but must be tuned on separate queries and reported with recall. Total corpus size alone is insufficient; it affects resident memory and predicate evaluation even when $E$ controls scoring.
-
-\section{Limitations and threats to validity}
-Only an RTX 4050, Mali-G615 MC6, and RTX A6000 contribute successful GPU evidence, with different OSes, drivers, APIs, CPUs, and datasets. The Android records are author-supplied device-lab output rather than independently rerun campaign data; power source and interpretable thermal state are absent, and no raw per-sample distribution is available beyond reported percentiles. The six-point Windows crossover sweep is post-hoc and reports descriptive medians of per-run P95, without an uncertainty interval for the crossing location. The principal A6000 crossover is synthetic and uses a CUDA/PyTorch prototype rather than Qenlo's shipped WGPU backend. The real TopK dataset is one embedding model and one independent integer predicate. The full requested dimensions, batch sizes, matched absolute eligible counts, and positive/negative/skewed correlations were not measured. No concurrent-client, energy, stable power, or comprehensive memory experiment was run. Build and rebuild time is outside query latency. The new experiment compares exact implementations, not ANN. The controlled Windows HNSW comparison has only one expansion point and five repetitions; its wide interval includes parity. One CUDA seed is held out, but hardware variability is not sampled across machines. Driver and WGPU overhead may dominate native results. Results concern cosine on normalized FP32 vectors and need not transfer to other metrics or precision. In-process calls exclude RPC and service scheduling. Durability tests do not include a physical power-cut campaign.
-
-\section{Related work}
-HNSW established a strong graph-based ANN design \citep{malkov2020hnsw}; DiskANN and SPANN study billion-scale memory/storage hierarchies \citep{subramanya2019diskann,chen2021spann}. FAISS systematizes exact, IVF, quantized, and GPU search \citep{johnson2019billion,douze2024faiss}. Filtered-DiskANN and ACORN directly address predicate-aware graph traversal \citep{gollapudi2023filtered,patel2024acorn}. Our narrower question is the execution boundary at which a filter makes exhaustive scoring competitive, with canonical storage and derived indexes held conceptually separate.
+The study has one controlled HNSW operating point. It does not include a genuinely filter-aware ANN system in the native selectivity sweep. Metadata correlation, \(N\) at fixed \(\E\), \(\D=768\) on the native host, concurrency, energy, memory peaks, and fixed-policy routing counterfactuals remain unmeasured. The correct next experiment is a same-host sweep over \(\E\), \(\D\), and recall that compares optimized CPU exhaustive, WGPU exhaustive, FAISS Flat, HNSW curves, and at least one filter-aware ANN method. Until then, the phase map has an ANN-shaped blank region.
 
 \section{Conclusion}
-Approximation is not universally necessary, and GPUs are not universally faster. Real native Windows evidence localizes a compact-row CPU/WGPU winner reversal to between 2,000 and 3,000 eligible vectors for 384 dimensions and batch 1 on the tested RTX 4050. User-supplied Android evidence independently shows CPU winning a 10k quick cell and WGPU winning both 100k full and soak cells; the soak advantage is 1.53$\times$ at P95. In a controlled Windows dense cell, exact WGPU was nominally 1.12$\times$ faster than tuned USearch at 0.992 recall, although uncertainty includes parity. On a held-out synthetic A6000 workload, a buffered exact CUDA prototype crosses FAISS GPU Flat between 10k and 100k eligible 768-dimensional vectors and is 1.36--1.39$\times$ faster at the two larger points. Yet FAISS wins the real selective TopK cell. H1 is partially supported; H3 is supported across desktop and mobile observations; H2 and H4 are suggestive; H5 is supported in one cell; H6 remains open. The defensible outcome is a bounded map, not a universal Qenlo victory.
+The strongest result is small enough to state plainly. On one RTX 4050 and one 100k$\times$384 workload, shipped CPU and WGPU exhaustive search exchange the lead between 2,000 and 3,000 eligible vectors. The route also depends on how the predicate is represented: compact rows win over shader-side evaluation when the eligible set is tiny, then lose when it is dense. At the dense endpoint, exhaustive WGPU is competitive with one tuned USearch point, but the latency interval crosses parity. Android and Intel Arc repeat the dense CPU/GPU ordering without closing the phase-space gaps. The A6000 study is useful precisely because it disagrees at \(\E\approx10k\): FAISS wins there, and an unrelated CUDA formulation wins only later.
+
+The defensible outcome is a bounded routing map. It is more useful than a universal \qenlo{} victory because a router has to survive the cells where its preferred backend loses.
+
+\subsubsection*{Reproducibility statement}
+For the primary native, Linux, and A6000 cohorts, the repository retains raw per-call samples alongside run summaries, configurations, tuning choices, oracle outputs, checksums, environment captures, failed backends, processed tables, plotting code, and reproduction commands. Android evidence is retained as the supplied aggregate records. Generated figures are derived from CSV/JSON artifacts by \texttt{research/scripts/analyze\_results.py} and \texttt{generate\_plots.py}. Appendix~\ref{sec:artifact} maps every headline claim to its artifact family.
 
 \bibliographystyle{plainnat}
 \bibliography{references}
+
 \appendix
 \input{appendix}
+
 \end{document}
