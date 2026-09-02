@@ -26,7 +26,7 @@
     "typescript": "^5.9.0"
   },
   "keywords": ["vector-database", "embedded", "semantic-search", "typescript"],
-  "license": "MIT OR Apache-2.0",
+  "license": "Apache-2.0",
   "author": {
     "name": "Akshat Singh Kushwaha",
     "email": "akshatsingh14372@outlook.com"

@@ -8,7 +8,7 @@ version = "0.1.0a1"
 description = "Type-safe Python SDK for the embedded Qenlo vector database"
 readme = "README.md"
 requires-python = ">=3.10"
-license = "MIT OR Apache-2.0"
+license = "Apache-2.0"
 authors = [{ name = "Akshat Singh Kushwaha", email = "akshatsingh14372@outlook.com" }]
 maintainers = [{ name = "Akshat Singh Kushwaha", email = "akshatsingh14372@outlook.com" }]
 keywords = ["vector search", "embedded database", "semantic search"]
