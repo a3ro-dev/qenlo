@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-09-02-bb51987",
+  "status": "completed_with_gpu_environment_failure",
+  "pod": {
+    "id": "pr27xjlhdfrk1s",
+    "gpu": "NVIDIA GeForce RTX 3070",
+    "community_price_per_hour": 0.13,
+    "image": "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
+    "deleted": true
+  },
+  "commit": "bb519873c00128e1fec93836d6f55a69ce418b57",
+  "model": "sentence-transformers/all-MiniLM-L12-v2",
+  "dimensions": 384,
+  "rows": 100000,
+  "tuning_rows": 100,
+  "evaluation_rows": 500,
+  "embedding_sha256": "70f5f11325823020c23e4b6ebbfbbb1b7849dd5fd15dd747777af7d1a5b8021a",
+  "dataset_sha256": "906ee4134368ce50691a2a664844d55250c33ab721c7708a6816b9caf1abe4e2",
+  "artifact_sha256": "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3",
+  "gpu": {
+    "cuda_visible": true,
+    "vulkan": "failed: vkCreateInstance unavailable",
+    "opengl_fallback": "failed: GL drivers/libraries could not be loaded",
+    "result": "not_measured_failed_closed"
+  },
+  "qdrant": {
+    "status": "excluded",
+    "reason": "local mode becomes exact brute-force above 20000 points"
+  },
+  "billing": {
+    "reported_pod_total_usd": 0.014132165582850575,
+    "resource_deleted": true
+  }
+}
