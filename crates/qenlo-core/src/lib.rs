@@ -313,6 +313,14 @@ impl CoreStore {
         self.records.get(slot as usize)
     }
 
+    pub fn get(&self, id: u64) -> Option<&Record> {
+        self.ids.get(&id).and_then(|&slot| self.records.get(slot as usize))
+    }
+
+    pub fn slot_of(&self, id: u64) -> Option<u32> {
+        self.ids.get(&id).copied()
+    }
+
     pub fn records(&self) -> impl ExactSizeIterator<Item = (u32, &Record)> {
         self.records
             .iter()

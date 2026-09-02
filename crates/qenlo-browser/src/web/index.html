@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QenloDB Browser — Embedded Vector Collection Inspector</title>
+  <style>
+    :root {
+      --bg: #121614;
+      --bg-subtle: #171C19;
+      --surface: #1B221E;
+      --surface-raised: #242D28;
+      --surface-active: #2E3833;
+      --border: #2B3530;
+      --border-strong: #44534B;
+      --text: #F7F5F0;
+      --text-muted: #9BA59F;
+      --text-faint: #6A7570;
+      --accent: #EF8B79;
+      --accent-dark: #B53C2F;
+      --accent-glow: rgba(239, 139, 121, 0.18);
+      --ok: #70E1A1;
+      --bad: #FF9A91;
+      --warning: #F5A623;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "IBM Plex Sans", sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "IBM Plex Mono", Menlo, Consolas, monospace;
+      --radius: 6px;
+      --header-h: 60px;
+    }
+
+    [data-theme="light"] {
+      --bg: #F7F5F0;
+      --bg-subtle: #EFECE6;
+      --surface: #FFFFFF;
+      --surface-raised: #E6E2DA;
+      --surface-active: #D8D3C8;
+      --border: #D8D3C8;
+      --border-strong: #878E8A;
+      --text: #1D2320;
+      --text-muted: #5A615D;
+      --text-faint: #878E8A;
+      --accent: #B53C2F;
+      --accent-dark: #8E2B20;
+      --accent-glow: rgba(181, 60, 47, 0.15);
+      --ok: #28633F;
+      --bad: #9D2F2A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: bold;
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+    .brand-title span { color: var(--accent); }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--bg-subtle);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-faint);
+    }
+    .status-dot.active { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+    .col-info {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      display: flex;
+      gap: 12px;
+    }
+    .col-info span { color: var(--text-muted); }
+    .col-info strong { color: var(--text); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Buttons */
+    button, .btn {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface-raised);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    button:hover, .btn:hover {
+      background: var(--surface-active);
+      border-color: var(--border-strong);
+    }
+    button.primary, .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #121614;
+      font-weight: 600;
+    }
+    [data-theme="light"] button.primary, [data-theme="light"] .btn.primary {
+      color: #FFFFFF;
+    }
+    button.primary:hover, .btn.primary:hover {
+      filter: brightness(1.1);
+    }
+    button.danger {
+      background: rgba(255, 154, 145, 0.15);
+      border-color: var(--bad);
+      color: var(--bad);
+    }
+    button.danger:hover {
+      background: var(--bad);
+      color: #121614;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Nav Tabs */
+    .tabs-bar {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      display: flex;
+      gap: 8px;
+    }
+    .tab-btn {
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+      background: transparent;
+      border-color: transparent;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: transparent;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 24px 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Cards & Panels */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Forms & Inputs */
+    .form-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 180px;
+    }
+    label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    input, select, textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    th {
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    tbody tr:hover {
+      background: var(--surface-raised);
+    }
+    .mono { font-family: var(--font-mono); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+    .badge-live { background: rgba(112, 225, 161, 0.15); color: var(--ok); }
+    .badge-tombstone { background: rgba(255, 154, 145, 0.15); color: var(--bad); }
+    .badge-rank { background: var(--accent); color: #121614; padding: 2px 6px; }
+
+    /* Sparkline / Vector Preview */
+    .vector-bar-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 320px;
+    }
+    .vec-preview-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 240px;
+    }
+    .sim-meter {
+      height: 6px;
+      background: var(--bg-subtle);
+      border-radius: 3px;
+      overflow: hidden;
+      width: 100px;
+      display: inline-block;
+      vertical-align: middle;
+      border: 1px solid var(--border);
+    }
+    .sim-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 580px;
+      padding: 24px;
+      box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    /* Grid Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+    .stat-value { font-size: 24px; font-weight: 600; font-family: var(--font-mono); color: var(--text); }
+    .stat-sub { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+
+    /* Search Results */
+    .search-results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .search-result-card {
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.15s;
+    }
+    .search-result-card:hover {
+      border-color: var(--accent);
+    }
+    .search-hit-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .search-rank {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      min-width: 40px;
+    }
+    .search-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .search-score-box {
+      text-align: right;
+    }
+    .score-num {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text);
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      background: var(--surface-raised);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-size: 13px;
+      color: var(--text);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.2s;
+      z-index: 2000;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header { padding: 0 12px; height: auto; flex-wrap: wrap; gap: 10px; padding: 10px; }
+      .header-center { order: 3; width: 100%; justify-content: center; }
+      .tabs-bar { overflow-x: auto; padding: 0 10px; }
+      main { padding: 16px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <a href="#" class="brand">
+      <div class="brand-logo">⬡</div>
+      <div class="brand-title">qenlo<span>DB</span> browser</div>
+    </a>
+
+    <div class="header-center">
+      <div class="status-dot" id="status-dot"></div>
+      <div class="col-info">
+        <div>Path: <strong id="header-path">None</strong></div>
+        <div>Dims: <strong id="header-dim">-</strong></div>
+        <div>Live: <strong id="header-rows">-</strong></div>
+        <div>Gen: <strong id="header-gen">-</strong></div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button onclick="openModal('modal-open')">📂 Open</button>
+      <button onclick="openModal('modal-create')">✨ New</button>
+      <button onclick="flushCollection()" title="Sync WAL to Snapshot">💾 Flush</button>
+      <button onclick="openModal('modal-export')">📦 Export</button>
+      <button onclick="toggleTheme()" id="theme-btn" title="Toggle Theme">🌓</button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs-bar">
+    <button class="tab-btn active" onclick="switchTab('records')">📋 Browse Records</button>
+    <button class="tab-btn" onclick="switchTab('search')">⚡ Vector Search Studio</button>
+    <button class="tab-btn" onclick="switchTab('storage')">💾 Storage & WAL</button>
+    <button class="tab-btn" onclick="switchTab('diagnostics')">📊 Diagnostics & Engine</button>
+  </nav>
+
+  <!-- Main Content Views -->
+  <main>
+    <!-- 1. Browse Records View -->
+    <div id="view-records" class="view active">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Filter & Filter Predicates</div>
+          <div style="display:flex; gap:8px;">
+            <button class="primary" onclick="openModal('modal-add')">+ Add Record</button>
+            <button onclick="loadRecords()">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="max-width: 180px;">
+            <label>User ID</label>
+            <input type="number" id="filter-user-id" placeholder="e.g. 7">
+          </div>
+          <div class="form-group" style="max-width: 200px;">
+            <label>Min Timestamp</label>
+            <input type="number" id="filter-min-ts" placeholder="Lower inclusive">
+          </div>
+          <div class="form-group" style="max-width: 200px;">
+            <label>Max Timestamp</label>
+            <input type="number" id="filter-max-ts" placeholder="Upper exclusive">
+          </div>
+          <button class="primary" onclick="applyFilter()">Apply Filter</button>
+          <button onclick="resetFilter()">Reset</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>User ID</th>
+              <th>Timestamp</th>
+              <th>Status</th>
+              <th>Vector Preview</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="records-tbody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 32px;">
+                No collection loaded. Click "Open" or "New" to start.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 14px;">
+        <div style="font-size:12px; color:var(--text-muted);" id="pagination-info">Showing 0 of 0 records</div>
+        <div style="display:flex; gap:8px;">
+          <button id="btn-prev" onclick="changePage(-1)" disabled>◀ Previous</button>
+          <button id="btn-next" onclick="changePage(1)" disabled>Next ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Vector Search Studio View -->
+    <div id="view-search" class="view">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">⚡ Cosine Vector Query & Filter Studio</div>
+          <div style="display:flex; gap:8px;">
+            <button onclick="generateRandomQueryVector()">🎲 Random Vector</button>
+            <button onclick="normalizeQueryInput()">✨ Normalize</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label>Query Vector Float Array (comma-separated or JSON list)</label>
+          <textarea id="search-vector" rows="3" placeholder="[1.0, 0.0, 0.0, ...]"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="max-width: 140px;">
+            <label>Results (k)</label>
+            <input type="number" id="search-k" value="10" min="1" max="64">
+          </div>
+          <div class="form-group" style="max-width: 160px;">
+            <label>Filter User ID</label>
+            <input type="number" id="search-filter-user" placeholder="Optional">
+          </div>
+          <div class="form-group" style="max-width: 160px;">
+            <label>Min Timestamp</label>
+            <input type="number" id="search-filter-min-ts" placeholder="Optional">
+          </div>
+          <div class="form-group" style="max-width: 160px;">
+            <label>Max Timestamp</label>
+            <input type="number" id="search-filter-max-ts" placeholder="Optional">
+          </div>
+          <button class="primary" style="height: 38px;" onclick="runSearch()">⚡ Run Search</button>
+        </div>
+      </div>
+
+      <div class="panel" id="search-results-panel" style="display: none;">
+        <div class="panel-header">
+          <div class="panel-title">Search Results (<span id="results-count">0</span> hits)</div>
+          <div id="search-metrics-pill" style="font-family:var(--font-mono); font-size:12px; color:var(--accent);"></div>
+        </div>
+        <div class="search-results-list" id="search-results-container"></div>
+      </div>
+    </div>
+
+    <!-- 3. Storage & WAL Inspector View -->
+    <div id="view-storage" class="view">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Disk Footprint</div>
+          <div class="stat-value" id="storage-total-bytes">0 B</div>
+          <div class="stat-sub">Across all snapshots & WALs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Committed Generation</div>
+          <div class="stat-value" id="storage-generation">0</div>
+          <div class="stat-sub">Canonical watermark</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Durable Generation</div>
+          <div class="stat-value" id="storage-durable-generation">-</div>
+          <div class="stat-sub">HEAD published generation</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Max Load Admission Budget</div>
+          <div class="stat-value" id="storage-budget">512 MiB</div>
+          <div class="stat-sub">Default memory limit</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">On-Disk Storage Files</div>
+          <button class="primary" onclick="flushCollection()">💾 Flush & Compact</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Type</th>
+                <th>Size</th>
+                <th>Path</th>
+              </tr>
+            </thead>
+            <tbody id="storage-files-tbody">
+              <tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">No files loaded.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. System Diagnostics View -->
+    <div id="view-diagnostics" class="view">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Hardware Environment & SIMD Acceleration</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Operating System</div>
+            <div class="stat-value" id="diag-os">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">CPU Architecture</div>
+            <div class="stat-value" id="diag-arch">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">CPU Distance Path</div>
+            <div class="stat-value" id="diag-cpu-path" style="color:var(--ok);">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Max Query k</div>
+            <div class="stat-value" id="diag-max-k">64</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modals -->
+  <!-- Modal: Open Collection -->
+  <div class="modal-backdrop" id="modal-open">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Open Collection</div>
+        <button class="modal-close" onclick="closeModal('modal-open')">✕</button>
+      </div>
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label>Collection Directory or .qn File Path</label>
+        <input type="text" id="open-path" placeholder="./notes.qenlo">
+      </div>
+      <div class="form-group">
+        <label>Configured Dimension (optional override)</label>
+        <input type="number" id="open-dim" placeholder="384">
+      </div>
+      <div class="modal-footer">
+        <button onclick="closeModal('modal-open')">Cancel</button>
+        <button class="primary" onclick="submitOpen()">Open Collection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Create Collection -->
+  <div class="modal-backdrop" id="modal-create">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Create New Collection</div>
+        <button class="modal-close" onclick="closeModal('modal-create')">✕</button>
+      </div>
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label>New Collection Directory Path</label>
+        <input type="text" id="create-path" placeholder="./my_vectors.qenlo">
+      </div>
+      <div class="form-group">
+        <label>Vector Dimension</label>
+        <input type="number" id="create-dim" value="384" min="1" max="8192">
+      </div>
+      <div class="modal-footer">
+        <button onclick="closeModal('modal-create')">Cancel</button>
+        <button class="primary" onclick="submitCreate()">Create Collection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Record -->
+  <div class="modal-backdrop" id="modal-add">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Add Record</div>
+        <button class="modal-close" onclick="closeModal('modal-add')">✕</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Record ID (u64)</label>
+          <input type="number" id="add-id" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label>User ID (u64)</label>
+          <input type="number" id="add-user-id" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label>Timestamp (i64)</label>
+          <input type="number" id="add-ts" placeholder="1000">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <label>Vector Float Components</label>
+          <a href="#" style="color:var(--accent); font-size:11px;" onclick="generateRandomAddVector(); return false;">Generate Random</a>
+        </div>
+        <textarea id="add-vector" rows="3" placeholder="[0.1, 0.2, ...]"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button onclick="closeModal('modal-add')">Cancel</button>
+        <button class="primary" onclick="submitAddRecord()">Insert Record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Export -->
+  <div class="modal-backdrop" id="modal-export">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Export Snapshot (.qn)</div>
+        <button class="modal-close" onclick="closeModal('modal-export')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Export File Path</label>
+        <input type="text" id="export-path" placeholder="./export.qn">
+      </div>
+      <div class="modal-footer">
+        <button onclick="closeModal('modal-export')">Cancel</button>
+        <button class="primary" onclick="submitExport()">Export</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: View Record Inspector -->
+  <div class="modal-backdrop" id="modal-inspect">
+    <div class="modal" style="max-width: 680px;">
+      <div class="modal-header">
+        <div class="modal-title">Record Inspector #<span id="inspect-id"></span></div>
+        <button class="modal-close" onclick="closeModal('modal-inspect')">✕</button>
+      </div>
+      <div class="form-row" style="margin-bottom: 16px;">
+        <div>User ID: <strong id="inspect-user" class="mono"></strong></div>
+        <div>Timestamp: <strong id="inspect-ts" class="mono"></strong></div>
+        <div>Status: <span id="inspect-status"></span></div>
+      </div>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Unit-Normalized Vector (<span id="inspect-dim"></span> dims)</label>
+        <textarea id="inspect-vector-json" rows="8" readonly class="mono"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button onclick="navigator.clipboard.writeText(document.getElementById('inspect-vector-json').value); showToast('Copied to clipboard');">📋 Copy Vector</button>
+        <button class="primary" onclick="closeModal('modal-inspect')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast">Message</div>
+
+  <script>
+    let currentTab = 'records';
+    let currentOffset = 0;
+    let currentLimit = 25;
+    let currentDimension = 384;
+    let totalRecords = 0;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function toggleTheme() {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      document.documentElement.setAttribute('data-theme', isLight ? 'dark' : 'light');
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      
+      const idx = ['records', 'search', 'storage', 'diagnostics'].indexOf(tab);
+      if (idx >= 0) {
+        document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+      }
+      document.getElementById('view-' + tab).classList.add('active');
+
+      if (tab === 'storage') loadStorage();
+      if (tab === 'diagnostics') loadDiagnostics();
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    async function api(path, opts = {}) {
+      try {
+        const res = await fetch('/api' + path, {
+          headers: { 'Content-Type': 'application/json' },
+          ...opts
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed with status ' + res.status);
+        return data;
+      } catch (err) {
+        showToast('Error: ' + err.message);
+        throw err;
+      }
+    }
+
+    async function updateStatus() {
+      try {
+        const status = await api('/status');
+        document.getElementById('header-path').textContent = status.path ? status.path.split(/[\\/]/).pop() : 'In-Memory';
+        document.getElementById('header-path').title = status.path || '';
+        document.getElementById('header-dim').textContent = status.dimension;
+        document.getElementById('header-rows').textContent = status.live_rows.toLocaleString() + (status.tombstones ? ` (+${status.tombstones} dead)` : '');
+        document.getElementById('header-gen').textContent = status.generation;
+        
+        const dot = document.getElementById('status-dot');
+        if (status.open && !status.closed) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+        currentDimension = status.dimension;
+      } catch (e) {}
+    }
+
+    async function loadRecords() {
+      const uid = document.getElementById('filter-user-id').value;
+      const minTs = document.getElementById('filter-min-ts').value;
+      const maxTs = document.getElementById('filter-max-ts').value;
+
+      let qs = `?offset=${currentOffset}&limit=${currentLimit}`;
+      if (uid) qs += `&user_id=${encodeURIComponent(uid)}`;
+      if (minTs) qs += `&min_ts=${encodeURIComponent(minTs)}`;
+      if (maxTs) qs += `&max_ts=${encodeURIComponent(maxTs)}`;
+
+      try {
+        const data = await api('/records' + qs);
+        const tbody = document.getElementById('records-tbody');
+        tbody.innerHTML = '';
+
+        if (!data.records || data.records.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:32px;">No records matching filter.</td></tr>';
+          document.getElementById('pagination-info').textContent = 'Showing 0 records';
+          document.getElementById('btn-prev').disabled = true;
+          document.getElementById('btn-next').disabled = true;
+          return;
+        }
+
+        totalRecords = data.total;
+        document.getElementById('pagination-info').textContent = `Showing ${currentOffset + 1}–${Math.min(currentOffset + data.records.length, data.total)} of ${data.total} records`;
+        document.getElementById('btn-prev').disabled = currentOffset <= 0;
+        document.getElementById('btn-next').disabled = currentOffset + data.records.length >= data.total;
+
+        data.records.forEach(r => {
+          const tr = document.createElement('tr');
+          const previewNums = r.vector.slice(0, 4).map(v => Number(v).toFixed(3)).join(', ');
+          const preview = `[${previewNums}${r.vector.length > 4 ? ', …' : ''}]`;
+          
+          tr.innerHTML = `
+            <td class="mono"><strong>#${r.id}</strong></td>
+            <td class="mono">${r.user_id}</td>
+            <td class="mono">${r.timestamp}</td>
+            <td><span class="badge ${r.live ? 'badge-live' : 'badge-tombstone'}">${r.live ? 'Active' : 'Tombstone'}</span></td>
+            <td>
+              <div class="vector-bar-cell">
+                <span class="vec-preview-text">${preview}</span>
+              </div>
+            </td>
+            <td style="text-align: right;">
+              <button onclick="inspectRecord(${r.id})">🔍 Inspect</button>
+              ${r.live ? `<button class="danger" onclick="deleteRecord(${r.id})">🗑️</button>` : ''}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {}
+      await updateStatus();
+    }
+
+    function applyFilter() { currentOffset = 0; loadRecords(); }
+    function resetFilter() {
+      document.getElementById('filter-user-id').value = '';
+      document.getElementById('filter-min-ts').value = '';
+      document.getElementById('filter-max-ts').value = '';
+      currentOffset = 0;
+      loadRecords();
+    }
+    function changePage(delta) {
+      currentOffset = Math.max(0, currentOffset + (delta * currentLimit));
+      loadRecords();
+    }
+
+    async function inspectRecord(id) {
+      try {
+        const r = await api(`/records/${id}`);
+        if (!r) return;
+        document.getElementById('inspect-id').textContent = r.id;
+        document.getElementById('inspect-user').textContent = r.user_id;
+        document.getElementById('inspect-ts').textContent = r.timestamp;
+        document.getElementById('inspect-status').innerHTML = `<span class="badge ${r.live ? 'badge-live' : 'badge-tombstone'}">${r.live ? 'Active' : 'Tombstone'}</span>`;
+        document.getElementById('inspect-dim').textContent = r.vector.length;
+        document.getElementById('inspect-vector-json').value = JSON.stringify(r.vector, null, 2);
+        openModal('modal-inspect');
+      } catch (e) {}
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm(`Are you sure you want to delete record #${id}? Deletions are durable and IDs are not reused.`)) return;
+      try {
+        await api('/mutate', {
+          method: 'POST',
+          body: JSON.stringify({
+            mutations: [{ type: 'delete', id: Number(id) }]
+          })
+        });
+        showToast(`Record #${id} deleted`);
+        loadRecords();
+      } catch (e) {}
+    }
+
+    async function submitAddRecord() {
+      const id = parseInt(document.getElementById('add-id').value);
+      const userId = parseInt(document.getElementById('add-user-id').value);
+      const ts = parseInt(document.getElementById('add-ts').value || Date.now());
+      let vecStr = document.getElementById('add-vector').value.trim();
+
+      if (isNaN(id) || isNaN(userId)) {
+        showToast('Please provide valid numeric ID and User ID');
+        return;
+      }
+
+      let vec = [];
+      try {
+        if (vecStr.startsWith('[')) {
+          vec = JSON.parse(vecStr);
+        } else {
+          vec = vecStr.split(/[,\s]+/).filter(Boolean).map(Number);
+        }
+      } catch (e) {
+        showToast('Invalid vector format: ' + e.message);
+        return;
+      }
+
+      try {
+        await api('/mutate', {
+          method: 'POST',
+          body: JSON.stringify({
+            mutations: [{
+              type: 'add',
+              record: { id, user_id: userId, timestamp: ts, vector: vec }
+            }]
+          })
+        });
+        showToast(`Record #${id} added successfully`);
+        closeModal('modal-add');
+        loadRecords();
+      } catch (e) {}
+    }
+
+    function generateRandomAddVector() {
+      const vec = [];
+      for (let i = 0; i < currentDimension; i++) {
+        vec.push((Math.random() * 2 - 1).toFixed(4));
+      }
+      document.getElementById('add-vector').value = JSON.stringify(vec.map(Number));
+    }
+
+    function generateRandomQueryVector() {
+      const vec = [];
+      for (let i = 0; i < currentDimension; i++) {
+        vec.push((Math.random() * 2 - 1).toFixed(4));
+      }
+      document.getElementById('search-vector').value = JSON.stringify(vec.map(Number));
+    }
+
+    function normalizeQueryInput() {
+      const str = document.getElementById('search-vector').value.trim();
+      let vec = [];
+      try {
+        if (str.startsWith('[')) vec = JSON.parse(str);
+        else vec = str.split(/[,\s]+/).filter(Boolean).map(Number);
+        
+        let norm = Math.hypot(...vec);
+        if (norm > 0) {
+          vec = vec.map(x => x / norm);
+          document.getElementById('search-vector').value = JSON.stringify(vec.map(v => Number(v.toFixed(6))));
+          showToast('Vector normalized (L2 norm = 1.0)');
+        }
+      } catch (e) {
+        showToast('Parse error: ' + e.message);
+      }
+    }
+
+    async function runSearch() {
+      const str = document.getElementById('search-vector').value.trim();
+      const k = parseInt(document.getElementById('search-k').value) || 10;
+      const uid = document.getElementById('search-filter-user').value;
+      const minTs = document.getElementById('search-filter-min-ts').value;
+      const maxTs = document.getElementById('search-filter-max-ts').value;
+
+      let vec = [];
+      try {
+        if (str.startsWith('[')) vec = JSON.parse(str);
+        else vec = str.split(/[,\s]+/).filter(Boolean).map(Number);
+      } catch (e) {
+        showToast('Invalid vector: ' + e.message);
+        return;
+      }
+
+      const filter = {};
+      if (uid) filter.user_id = parseInt(uid);
+      if (minTs) filter.lower_ts = parseInt(minTs);
+      if (maxTs) filter.upper_ts = parseInt(maxTs);
+
+      try {
+        const res = await api('/search', {
+          method: 'POST',
+          body: JSON.stringify({ query: vec, filter, k })
+        });
+
+        document.getElementById('search-results-panel').style.display = 'block';
+        document.getElementById('results-count').textContent = res.results.length;
+        document.getElementById('search-metrics-pill').textContent = 
+          `Duration: ${(res.total_duration_us / 1000).toFixed(2)} ms | Backend: ${res.actual_backend} (${res.algorithm}) ${res.cpu_distance_path ? '· ' + res.cpu_distance_path : ''}`;
+
+        const container = document.getElementById('search-results-container');
+        container.innerHTML = '';
+
+        if (res.results.length === 0) {
+          container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">No results found.</div>';
+          return;
+        }
+
+        res.results.forEach((hit, idx) => {
+          const card = document.createElement('div');
+          card.className = 'search-result-card';
+          const simPct = Math.max(0, Math.min(100, ((hit.similarity + 1) / 2) * 100)).toFixed(1);
+          
+          card.innerHTML = `
+            <div class="search-hit-left">
+              <div class="search-rank">#${idx + 1}</div>
+              <div class="search-meta">
+                <div style="font-weight:600;">Record ID: <span class="mono">#${hit.id}</span></div>
+                <div style="font-size:12px; color:var(--text-muted);" class="mono">
+                  ${hit.record ? `User: ${hit.record.user_id} · Timestamp: ${hit.record.timestamp}` : 'Row metadata loaded'}
+                </div>
+              </div>
+            </div>
+            <div class="search-score-box">
+              <div class="score-num">${hit.distance.toFixed(4)} <span style="font-size:12px; color:var(--text-muted);">dist</span></div>
+              <div style="margin-top:4px;">
+                <div class="sim-meter"><div class="sim-fill" style="width:${simPct}%;"></div></div>
+                <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-muted); margin-left:6px;">${hit.similarity.toFixed(4)} sim</span>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {}
+    }
+
+    async function loadStorage() {
+      try {
+        const details = await api('/storage');
+        document.getElementById('storage-total-bytes').textContent = formatBytes(details.total_bytes);
+        document.getElementById('storage-generation').textContent = details.generation;
+        document.getElementById('storage-durable-generation').textContent = details.durable_generation !== null ? details.durable_generation : 'None';
+        document.getElementById('storage-budget').textContent = formatBytes(details.max_load_bytes);
+
+        const tbody = document.getElementById('storage-files-tbody');
+        tbody.innerHTML = '';
+        if (!details.files || details.files.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">No on-disk files.</td></tr>';
+          return;
+        }
+
+        details.files.forEach(f => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="mono"><strong>${f.name}</strong></td>
+            <td><span class="badge badge-live">${f.kind}</span></td>
+            <td class="mono">${formatBytes(f.size_bytes)}</td>
+            <td class="mono" style="color:var(--text-muted); font-size:11px;">${f.path}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {}
+    }
+
+    async function loadDiagnostics() {
+      try {
+        const diag = await api('/diagnostics');
+        document.getElementById('diag-os').textContent = diag.os;
+        document.getElementById('diag-arch').textContent = diag.arch;
+        document.getElementById('diag-cpu-path').textContent = diag.cpu_distance_path;
+        document.getElementById('diag-max-k').textContent = diag.max_k;
+      } catch (e) {}
+    }
+
+    async function flushCollection() {
+      try {
+        await api('/flush', { method: 'POST' });
+        showToast('Collection flushed and compacted to disk');
+        await updateStatus();
+        if (currentTab === 'storage') loadStorage();
+      } catch (e) {}
+    }
+
+    async function submitOpen() {
+      const path = document.getElementById('open-path').value.trim();
+      const dim = parseInt(document.getElementById('open-dim').value) || undefined;
+      if (!path) return;
+      try {
+        await api('/open', {
+          method: 'POST',
+          body: JSON.stringify({ path, dimension: dim })
+        });
+        showToast('Collection opened');
+        closeModal('modal-open');
+        currentOffset = 0;
+        await updateStatus();
+        loadRecords();
+      } catch (e) {}
+    }
+
+    async function submitCreate() {
+      const path = document.getElementById('create-path').value.trim();
+      const dim = parseInt(document.getElementById('create-dim').value) || 384;
+      if (!path) return;
+      try {
+        await api('/create', {
+          method: 'POST',
+          body: JSON.stringify({ path, dimension: dim })
+        });
+        showToast('Collection created');
+        closeModal('modal-create');
+        currentOffset = 0;
+        await updateStatus();
+        loadRecords();
+      } catch (e) {}
+    }
+
+    async function submitExport() {
+      const path = document.getElementById('export-path').value.trim();
+      if (!path) return;
+      try {
+        await api('/export', {
+          method: 'POST',
+          body: JSON.stringify({ path })
+        });
+        showToast('Exported .qn file to ' + path);
+        closeModal('modal-export');
+      } catch (e) {}
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KiB', 'MiB', 'GiB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+    }
+
+    // Auto-init
+    updateStatus().then(() => loadRecords());
+  </script>
+</body>
+</html>

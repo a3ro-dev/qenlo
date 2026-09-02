@@ -1,4 +1,4 @@
-# `@qenlo/qenlo`
+# `@a3ro-dev/qenlo`
 
 Type-safe TypeScript and Node.js bindings for **Qenlo** — the embedded, durable vector database written in Rust.
 
@@ -7,8 +7,8 @@ Qenlo delivers exact filtered vector search with native C ABI performance, expli
 ## Installation
 
 ```bash
-pnpm add @qenlo/qenlo
-# or: npm install @qenlo/qenlo
+pnpm add @a3ro-dev/qenlo
+# or: npm install @a3ro-dev/qenlo
 ```
 
 Platform binaries are packaged directly in the module for:
@@ -23,7 +23,7 @@ Platform binaries are packaged directly in the module for:
 ### In-Memory Collection with Explicit Resource Management
 
 ```typescript
-import { Collection } from "@qenlo/qenlo";
+import { Collection } from "@a3ro-dev/qenlo";
 
 // Uses TypeScript 5.2+ / ECMAScript Explicit Resource Management (`using`)
 using db = Collection.memory(3);

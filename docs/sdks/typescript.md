@@ -5,14 +5,14 @@ High-performance native Node.js FFI bindings for Qenlo with TypeScript type safe
 ## Installation
 
 ```bash
-pnpm add @qenlo/qenlo
-# or npm install @qenlo/qenlo
+pnpm add @a3ro-dev/qenlo
+# or npm install @a3ro-dev/qenlo
 ```
 
 ## Quick Example
 
 ```typescript
-import { Collection } from "@qenlo/qenlo";
+import { Collection } from "@a3ro-dev/qenlo";
 
 // Open in-memory collection
 using db = Collection.memory(3);

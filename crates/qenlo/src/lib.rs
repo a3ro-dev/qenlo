@@ -43,6 +43,7 @@ mod usearch_backend;
 #[cfg(feature = "gpu-wgpu")]
 pub use gpu::GpuCapabilities;
 pub use qenlo_core::CpuDistancePath;
+pub use qenlo_core::Record;
 pub use qenlo_core::{Predicate as Filter, TimestampRange};
 
 /// Maximum supported result count for this prototype.
@@ -476,6 +477,50 @@ impl Collection {
     /// Return live eligible IDs. Retains the original empty-on-closed behavior.
     pub fn filter(&self, filter: &Filter) -> Vec<u64> {
         self.inner.read_blocking().filter(filter)
+    }
+
+    /// Return the dimension configured for this collection.
+    pub fn dimension(&self) -> usize {
+        self.inner.read_blocking().store.dimension()
+    }
+
+    /// Retrieve a single canonical record by ID, including tombstones.
+    pub fn get_record(&self, id: u64) -> Option<Record> {
+        self.inner.read_blocking().store.get(id).cloned()
+    }
+
+    /// Return a paginated slice of records matching an optional filter, along with total matching count.
+    pub fn scan_records(
+        &self,
+        offset: usize,
+        limit: usize,
+        filter: Option<&Filter>,
+    ) -> (Vec<Record>, usize) {
+        let state = self.inner.read_blocking();
+        match filter {
+            Some(f) => {
+                let slots = state.store.filter(f);
+                let total = slots.len();
+                let records = slots
+                    .into_iter()
+                    .skip(offset)
+                    .take(limit)
+                    .filter_map(|slot| state.store.record(slot).cloned())
+                    .collect();
+                (records, total)
+            }
+            None => {
+                let total = state.store.len();
+                let records = state
+                    .store
+                    .records()
+                    .skip(offset)
+                    .take(limit)
+                    .map(|(_, r)| r.clone())
+                    .collect();
+                (records, total)
+            }
+        }
     }
 
     /// Explicitly prepare the current generation, serialized with all mutations.

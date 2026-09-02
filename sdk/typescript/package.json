@@ -1,5 +1,5 @@
 {
-  "name": "@qenlo/qenlo",
+  "name": "@a3ro-dev/qenlo",
   "version": "0.1.0-alpha.1",
   "description": "Type-safe TypeScript SDK for the embedded Qenlo vector database",
   "type": "module",

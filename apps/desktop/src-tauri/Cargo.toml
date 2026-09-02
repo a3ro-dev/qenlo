@@ -1,0 +1,21 @@
+[package]
+name = "qenlo-browser-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+description = "QenloDB Desktop Collection Browser"
+
+[dependencies]
+qenlo = { path = "../../../crates/qenlo", default-features = false }
+qenlo-core = { path = "../../../crates/qenlo-core" }
+qenlo-browser = { path = "../../../crates/qenlo-browser" }
+tokio = { version = "1", features = ["full"] }
+serde.workspace = true
+serde_json.workspace = true
+
+[features]
+default = []
+gpu-wgpu = ["qenlo/gpu-wgpu"]
+usearch = ["qenlo/usearch"]

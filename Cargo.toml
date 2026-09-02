@@ -7,6 +7,8 @@ members = [
     "crates/qenlo-telemetry",
     "crates/qenlo-mobile",
     "crates/qenlo-ffi",
+    "crates/qenlo-browser",
+    "apps/desktop/src-tauri",
 ]
 resolver = "3"
 

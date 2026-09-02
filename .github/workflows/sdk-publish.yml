@@ -81,8 +81,8 @@ jobs:
           RELEASE_TAG: ${{ needs.verify.outputs.tag }}
         run: |
           mkdir -p dist
-          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'qenlo-qenlo-*.tgz' --dir dist
-          npm publish ./dist/qenlo-qenlo-*.tgz --access public --tag alpha
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.tgz' --dir dist
+          npm publish ./dist/*.tgz --access public --tag alpha
 
   maven-central:
     needs: verify
