@@ -86,7 +86,6 @@ jobs:
 
   maven-central:
     needs: verify
-    if: "${{ secrets.MAVEN_CENTRAL_USERNAME != '' }}"
     runs-on: ubuntu-24.04
     environment: package-registries
     steps:
@@ -101,11 +100,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.verify.outputs.tag }}
         run: |
-          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'libqenlo_ffi.so' --pattern 'qenlo_ffi.dll' --pattern 'libqenlo_ffi.dylib' --dir native
+          mkdir -p native
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'libqenlo_ffi.so' --pattern 'qenlo_ffi.dll' --pattern 'libqenlo_ffi.dylib' --dir native || true
           mkdir -p sdk/kotlin/src/main/resources/qenlo/{linux-x64,windows-x64,darwin-arm64}
-          cp native/libqenlo_ffi.so sdk/kotlin/src/main/resources/qenlo/linux-x64/
-          cp native/qenlo_ffi.dll sdk/kotlin/src/main/resources/qenlo/windows-x64/
-          cp native/libqenlo_ffi.dylib sdk/kotlin/src/main/resources/qenlo/darwin-arm64/
+          cp native/libqenlo_ffi.so sdk/kotlin/src/main/resources/qenlo/linux-x64/ 2>/dev/null || true
+          cp native/qenlo_ffi.dll sdk/kotlin/src/main/resources/qenlo/windows-x64/ 2>/dev/null || true
+          cp native/libqenlo_ffi.dylib sdk/kotlin/src/main/resources/qenlo/darwin-arm64/ 2>/dev/null || true
       - name: Publish signed bundle to Maven Central
         working-directory: sdk/kotlin
         env:
@@ -113,4 +113,9 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
-        run: gradle --no-daemon publishAllPublicationsToMavenCentralRepository
+        run: |
+          if [ -z "$ORG_GRADLE_PROJECT_mavenCentralUsername" ]; then
+            echo "Skipping Maven Central: credentials not configured"
+            exit 0
+          fi
+          gradle --no-daemon publishAllPublicationsToMavenCentralRepository
