@@ -64,8 +64,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
       - uses: actions/setup-node@v5
-        with: { node-version: "24", cache: npm, cache-dependency-path: sdk/typescript/package-lock.json }
+        with: { node-version: "24", cache: pnpm, cache-dependency-path: sdk/typescript/pnpm-lock.yaml }
       - uses: actions/setup-go@v6
         with: { go-version: "1.24.x", cache-dependency-path: sdk/go/go.mod }
       - uses: actions/setup-java@v5
@@ -102,12 +105,12 @@ jobs:
       - name: Verify and pack TypeScript
         working-directory: sdk/typescript
         run: |
-          npm ci
-          npm run typecheck
-          npm test
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm run typecheck
+          pnpm test
+          pnpm run build
           mkdir -p ../../dist/sdk
-          npm pack --pack-destination ../../dist/sdk
+          pnpm pack --pack-destination ../../dist/sdk
       - name: Verify and pack Go
         shell: bash
         run: |

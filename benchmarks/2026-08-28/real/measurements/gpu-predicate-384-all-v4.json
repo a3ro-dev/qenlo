@@ -1,0 +1,142 @@
+{
+  "command": [
+    "target/release/qenlo-bench-v3.exe",
+    "run",
+    "--dataset",
+    "data/ag-news/ag-news-100k-384.qnb",
+    "--dimensions",
+    "384",
+    "--output",
+    "benchmarks/2026-08-28/real/gpu-predicate-384-all-v4",
+    "--backend",
+    "gpu-predicate",
+    "--fraction",
+    "1",
+    "--warmups",
+    "200",
+    "--repetitions",
+    "5",
+    "--recall-target",
+    "0.95",
+    "--oracle-reference",
+    "benchmarks/2026-08-28/real/cpu-384-all-v4"
+  ],
+  "cwd": "D:\\qenloDB",
+  "platform": "Windows-11-10.0.26100-SP0",
+  "exit_code": 1,
+  "observed_wall_seconds": 6.1072117000003345,
+  "peak_host_working_set_bytes": 843137024,
+  "host_working_set_samples_seconds_bytes": [
+    [
+      0.005,
+      2039808
+    ],
+    [
+      0.256,
+      46268416
+    ],
+    [
+      0.507,
+      86003712
+    ],
+    [
+      0.757,
+      124891136
+    ],
+    [
+      1.008,
+      164360192
+    ],
+    [
+      1.258,
+      182849536
+    ],
+    [
+      1.508,
+      200871936
+    ],
+    [
+      1.759,
+      212049920
+    ],
+    [
+      2.009,
+      221028352
+    ],
+    [
+      2.26,
+      221028352
+    ],
+    [
+      2.51,
+      221028352
+    ],
+    [
+      2.76,
+      221028352
+    ],
+    [
+      3.011,
+      221028352
+    ],
+    [
+      3.261,
+      221028352
+    ],
+    [
+      3.511,
+      221028352
+    ],
+    [
+      3.762,
+      239296512
+    ],
+    [
+      4.013,
+      258973696
+    ],
+    [
+      4.263,
+      542339072
+    ],
+    [
+      4.513,
+      557068288
+    ],
+    [
+      4.763,
+      557068288
+    ],
+    [
+      5.014,
+      588972032
+    ],
+    [
+      5.265,
+      680980480
+    ],
+    [
+      5.515,
+      839962624
+    ],
+    [
+      5.766,
+      589217792
+    ],
+    [
+      6.016,
+      40960
+    ]
+  ],
+  "memory_errors": [],
+  "memory_scope": "child process only, OS working set; excludes GPU and child descendants",
+  "observer_interval_seconds": 0.25,
+  "environment": {
+    "WGPU_BACKEND": "dx12",
+    "CC": null,
+    "CXX": null,
+    "CARGO_INCREMENTAL": null
+  },
+  "executable_sha256": "2a6c2307a5330086f809a24d09dffb8054e3f27726e1c87caa8d0874bc37d55e",
+  "git_revision": "4ae9f1d134dc50ff91685c9eca093e5b290275d0"
+}

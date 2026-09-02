@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "backend": "faiss-hnsw",
+  "algorithm": "IndexHNSWFlat M=32 efConstruction=200 efSearch=256",
+  "package": "faiss-cpu",
+  "package_version": "1.15.0",
+  "build_ns": 79726541861,
+  "tuning_ns": 105195719,
+  "tuning_recall_at_10": 0.9990000000000001,
+  "evaluation_recall_at_10": 0.9994,
+  "recall_target": 0.95,
+  "recall_target_passed": true,
+  "median_run_p95_ns": 1493903,
+  "min_run_p95_ns": 1441773,
+  "max_run_p95_ns": 1532853,
+  "latency_boundary": "in-process single-query API completion",
+  "filter_semantics": "no filter; reference fraction=1 includes all corpus rows",
+  "native_query_threads": 1,
+  "dataset_sha256": "906ee4134368ce50691a2a664844d55250c33ab721c7708a6816b9caf1abe4e2",
+  "reference_revision": "bb519873c00128e1fec93836d6f55a69ce418b57",
+  "python": "3.12.3 (main, Aug 14 2025, 17:47:21) [GCC 13.3.0]",
+  "platform": "Linux-6.8.0-52-generic-x86_64-with-glibc2.39"
+}

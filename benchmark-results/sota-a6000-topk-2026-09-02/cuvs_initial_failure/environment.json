@@ -1,0 +1,23 @@
+{
+  "timestamp_utc": "2026-09-02T07:24:07.464942+00:00",
+  "protocol": {
+    "dataset": "TopK Bench docs-1m/queries-1m unchanged",
+    "N": 1000000,
+    "D": 768,
+    "k": 10,
+    "queries": 1000,
+    "warmup_queries": 100,
+    "repetitions": 10,
+    "measurement": "host search call through host IDs/distances; H2D, GPU work, D2H and synchronization included; dataset/filter/index setup excluded",
+    "eligible_set": "int_filter < threshold; materialized before timing for every adapter"
+  },
+  "environment": {
+    "python": "3.12.3",
+    "torch": null,
+    "cuda": null,
+    "gpu": "NVIDIA RTX A6000",
+    "nvidia_smi": "NVIDIA RTX A6000, 580.159.03, 49140 MiB",
+    "faiss": null,
+    "cuvs": "26.08.01"
+  }
+}

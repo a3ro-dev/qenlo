@@ -49,8 +49,11 @@ jobs:
       - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
       - uses: actions/setup-python@v6
         with: { python-version: "3.13" }
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
       - uses: actions/setup-node@v5
-        with: { node-version: "24", cache: npm, cache-dependency-path: sdk/typescript/package-lock.json }
+        with: { node-version: "24", cache: pnpm, cache-dependency-path: sdk/typescript/pnpm-lock.yaml }
       - uses: actions/setup-go@v6
         with: { go-version: "1.24.x", cache-dependency-path: sdk/go/go.mod }
       - uses: actions/setup-java@v5
@@ -96,11 +99,11 @@ jobs:
       - name: TypeScript type and runtime conformance
         working-directory: sdk/typescript
         run: |
-          npm ci
-          npm run typecheck
-          npm test
-          npm run build
-          npm pack --dry-run
+          pnpm install --frozen-lockfile
+          pnpm run typecheck
+          pnpm test
+          pnpm run build
+          pnpm pack --dry-run
 
       - name: Go vet and runtime conformance
         working-directory: sdk/go

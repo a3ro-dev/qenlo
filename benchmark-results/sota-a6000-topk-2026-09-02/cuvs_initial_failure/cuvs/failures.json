@@ -1,0 +1,20 @@
+[
+  {
+    "system": "cuvs_brute_force_ip",
+    "threshold": 10000,
+    "stage": "search",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/run_topk_a6000_exact_gpu.py\", line 104, in run_one\n    for q in queries[:WARMUP]: adapter.search(q)\n                               ^^^^^^^^^^^^^^^^^\n  File \"/workspace/run_topk_a6000_exact_gpu.py\", line 95, in search\n    return pos.get()[0], vals.get()[0]\n           ^^^^^^^\nAttributeError: 'device_ndarray' object has no attribute 'get'\n"
+  },
+  {
+    "system": "cuvs_brute_force_ip",
+    "threshold": 1000,
+    "stage": "search",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/run_topk_a6000_exact_gpu.py\", line 104, in run_one\n    for q in queries[:WARMUP]: adapter.search(q)\n                               ^^^^^^^^^^^^^^^^^\n  File \"/workspace/run_topk_a6000_exact_gpu.py\", line 95, in search\n    return pos.get()[0], vals.get()[0]\n           ^^^^^^^\nAttributeError: 'device_ndarray' object has no attribute 'get'\n"
+  },
+  {
+    "system": "cuvs_brute_force_ip",
+    "threshold": 100,
+    "stage": "search",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/run_topk_a6000_exact_gpu.py\", line 104, in run_one\n    for q in queries[:WARMUP]: adapter.search(q)\n                               ^^^^^^^^^^^^^^^^^\n  File \"/workspace/run_topk_a6000_exact_gpu.py\", line 95, in search\n    return pos.get()[0], vals.get()[0]\n           ^^^^^^^\nAttributeError: 'device_ndarray' object has no attribute 'get'\n"
+  }
+]

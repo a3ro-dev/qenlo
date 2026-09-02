@@ -16,6 +16,8 @@ edition = "2024"
 rust-version = "1.98.0"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/a3ro-dev/qenlo"
+homepage = "https://a3ro-dev.github.io/qenlo/docs/"
+authors = ["Akshat Singh Kushwaha <akshatsingh14372@outlook.com>"]
 
 [workspace.dependencies]
 crc32fast = "1"

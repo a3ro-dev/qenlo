@@ -1,0 +1,6 @@
+{
+  "source_git_revision": "ed19e3dd81d8d1d83d0027887df75358ea67d416",
+  "executable_sha256": "d6b61bf75d8f3f35111e1d60d77f86f92cd4a424e731b22dbd3bb0e69da62270",
+  "command": "CC=clang-cl CXX=clang-cl CARGO_INCREMENTAL=0 cargo build --release -p qenlo-bench --features usearch,gpu-wgpu",
+  "fixes": "Bounded cached oracle capacity; validated completed CPU oracle replay; recall rounding tolerance"
+}

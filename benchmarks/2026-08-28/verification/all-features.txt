@@ -1,0 +1,121 @@
+   Compiling qenlo v0.1.0 (D:\qenloDB\crates\qenlo)
+   Compiling qenlo-bench v0.1.0 (D:\qenloDB\crates\qenlo-bench)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.42s
+     Running unittests src\lib.rs (target\debug\deps\qenlo-e3d9c33cb9318a13.exe)
+
+running 40 tests
+test gpu::tests::all_optional_predicates_match_cpu_including_signed_extremes ... ok
+test gpu::tests::allocation_validation_is_returned_instead_of_uncaptured_panic ... ok
+test gpu::tests::budget_failure_is_explicit ... ok
+test gpu::tests::chunks_keep_readback_and_allocations_bounded ... ok
+test gpu::tests::empty_backend_selection_has_no_adapter ... ok
+test gpu::tests::failed_rebuild_releases_old_residents_and_can_retry ... ok
+test gpu::tests::gpu_exact_mask_smoke_if_adapter_is_available ... ok
+test gpu::tests::gpu_predicate_handles_signed_timestamps_and_tombstones_if_adapter_is_available ... ok
+test gpu::tests::initialization_and_search_reject_overbudget ... ok
+test gpu::tests::packed_words_round_trip ... ok
+test gpu::tests::parallel_scoring_and_selection_match_f64_oracle ... ok
+test gpu::tests::real_device_destroy_returns_sticky_error ... ok
+test gpu::tests::signed_i64_word_order_reference_handles_extremes ... ok
+test gpu::tests::unsupported_adapter_limits_are_unavailable ... ok
+test storage::tests::checksum_bit_flip_and_truncated_pending_are_detected ... ok
+test storage::tests::checksum_corruption_is_rejected_without_falling_back ... ok
+test storage::tests::complete_temporary_snapshot_is_recovered ... ok
+test storage::tests::exclusive_lock_is_released_on_drop ... ok
+test storage::tests::failed_head_publication_is_uncertain_and_reopen_resolves_newer_snapshot ... ok
+test storage::tests::head_checksum_and_truncation_are_rejected ... ok
+test storage::tests::load_budget_and_generation_collision_are_explicit ... ok
+test storage::tests::missing_acknowledged_snapshot_never_rolls_back_silently ... ok
+test storage::tests::nested_collection_creation_is_readable ... ok
+test storage::tests::snapshot_round_trip_preserves_rows_tombstones_and_generation ... ok
+test storage::tests::unknown_format_version_is_not_guessed ... ok
+test storage::tests::unpublished_transaction_is_never_promoted ... ok
+test storage::tests::write_and_open_share_admission_limits_before_publication ... ok
+test tests::automatic_gpu_mode_discloses_over_budget_cpu_fallback_if_adapter_is_available ... ok
+test tests::cpu_collection_rebuilds_after_mutation_and_reports_execution ... ok
+test tests::custom_storage_budget_rejects_unreopenable_writes_and_uncertain_commits_close ... ok
+test tests::device_loss_automatic_falls_back_but_required_returns_error ... ok
+test tests::diagnostics_preserve_results_and_disclose_missing_measurements ... ok
+test tests::durable_collection_survives_restart_with_tombstones ... ok
+test tests::index_markers_are_disposable_and_explicit_policy_never_serves_stale_data ... ok
+test tests::searches_observe_whole_transactions_while_writer_runs ... ok
+test tests::shared_collection_and_search_futures_are_send ... ok
+test tests::transaction_io_failure_preserves_memory_and_last_commit ... ok
+test tests::transactions_validate_all_rows_and_roll_back_before_publication ... ok
+test tests::usearch_filters_during_graph_search_and_reports_unknown_traversal_count ... ok
+test usearch_backend::tests::empty_indexes_and_search_configuration_survive_rebuilds ... ok
+
+test result: ok. 40 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.89s
+
+     Running tests\cpu_quality.rs (target\debug\deps\cpu_quality-8b100a42eaf6d52c.exe)
+
+running 2 tests
+test exact_cpu_matches_independent_eligible_set_oracle ... ok
+test usearch_measures_filtered_recall_against_independent_oracle ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.77s
+
+     Running tests\recovery.rs (target\debug\deps\recovery-2c1adc7a534370ef.exe)
+
+running 2 tests
+test committed_data_survives_process_exit_and_partial_staging ... ok
+test process_exit_child ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+     Running unittests examples\quickstart.rs (target\debug\examples\quickstart-73fc04e6c503a88c.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\deps\qenlo_bench-3cc6ff5dfddd9d03.exe)
+
+running 5 tests
+test dataset::tests::deterministic_split_dimension_checksum_and_budget_validation ... ok
+test tests::metadata_is_deterministic_and_distributions_differ ... ok
+test tests::oracle_filters_deletions_and_breaks_ties_by_id ... ok
+test tests::recall_and_nearest_rank_handle_small_samples ... ok
+test tests::report_retains_samples_and_uses_lower_median_for_five_runs ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests src\main.rs (target\debug\deps\qenlo_bench-559c66c6bba669eb.exe)
+
+running 2 tests
+test tests::parser_rejects_ambiguous_options_and_cells_have_exact_cardinality ... ok
+test tests::skewed_eligibility_differs_and_scores_and_order_are_validated ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\telemetry.rs (target\debug\deps\telemetry-0415418976f097ac.exe)
+
+running 1 test
+test stalled_collector_preserves_results_privacy_and_bounded_shutdown ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.77s
+
+     Running unittests examples\otlp.rs (target\debug\examples\otlp-2dbe2082b41dd681.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\deps\qenlo_core-56e4be6ceb7ac899.exe)
+
+running 12 tests
+test tests::bounded_selection_orders_ties_for_every_supported_k ... ok
+test tests::deletion_is_immediate_and_slots_are_not_reused ... ok
+test tests::exact_search_breaks_computed_distance_ties_by_id ... ok
+test tests::exhausted_generation_rejects_mutations_without_partial_changes ... ok
+test tests::malformed_queries_are_rejected_even_when_filter_is_empty ... ok
+test tests::predicate_clauses_are_joined_by_and ... ok
+test tests::restore_rejects_non_unit_vectors_but_preserves_extreme_normalized_inputs ... ok
+test tests::runtime_distance_agrees_with_scalar_including_vector_remainders ... ok
+test tests::search_handles_no_matches_fewer_than_k_and_invalid_k ... ok
+test tests::streaming_restore_preserves_generation_and_propagates_decode_errors ... ok
+test tests::timestamp_range_is_lower_inclusive_upper_exclusive_at_extremes ... ok
+test tests::validates_and_normalizes_vectors ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

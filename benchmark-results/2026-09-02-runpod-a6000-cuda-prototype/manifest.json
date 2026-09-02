@@ -1,0 +1,47 @@
+{
+  "status": "completed",
+  "implementation": "qenlo-cuda-predicate-prototype",
+  "integration_status": "external CUDA prototype; not the Rust/WGPU Qenlo backend",
+  "qualification": "GPU smoke measurement only; synthetic corpus and therefore not the preregistered local-embedding workload",
+  "timestamp_utc": "2026-09-02T06:54:10.531005+00:00",
+  "workload": {
+    "rows": 1000000,
+    "dimensions": 768,
+    "eligible_fraction": 0.01,
+    "batch": 1,
+    "k": 10,
+    "queries": 100,
+    "warmups": 20,
+    "repetitions": 5,
+    "seed": 42
+  },
+  "timing_scope": "GPU CUDA-event kernel time: candidate GEMV + top-k; excludes one-time corpus construction, CPU oracle, and host transfers",
+  "statistics": {
+    "count": 500,
+    "p50_ms": 0.11289600282907486,
+    "p95_ms": 0.11964800208806992,
+    "p99_ms": 0.12401471793651579,
+    "throughput_qps": 8853.579083233766,
+    "recall_at_10_min": 1.0,
+    "recall_at_10_mean": 1.0
+  },
+  "memory": {
+    "vector_allocation_bytes": 3072000000,
+    "eligible_candidate_allocation_bytes": 30720000,
+    "query_allocation_bytes": 307200,
+    "device_peak_allocated_bytes": 6148655616
+  },
+  "transfer_bytes": {
+    "per_query_host_to_device": 0,
+    "per_query_device_to_host": 40,
+    "note": "only ten int32 ids are copied after each query for independent recall verification"
+  },
+  "environment": {
+    "python": "3.12.3 (main, Aug 14 2025, 17:47:21) [GCC 13.3.0]",
+    "platform": "Linux-6.8.0-134-generic-x86_64-with-glibc2.39",
+    "torch": "2.8.0+cu128",
+    "torch_cuda": "12.8",
+    "gpu": "NVIDIA RTX A6000",
+    "nvidia_smi": "NVIDIA RTX A6000, 580.159.03, 113.89 W"
+  }
+}

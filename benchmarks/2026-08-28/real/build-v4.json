@@ -1,0 +1,6 @@
+{
+  "source_git_revision": "f1ccc4de6aafb22ec54aafef37d93ec876f6d3d0",
+  "executable_sha256": "969c671ab12f1c0a65695af3bca590ec03cd405fe1f67f17ed6ba107ed034cf1",
+  "command": "CC=clang-cl CXX=clang-cl CARGO_INCREMENTAL=0 cargo build --release -p qenlo-bench --features usearch,gpu-wgpu",
+  "changes": "strict oracle reuse; cached top-k capacity bounded; exact backends allow only validated 1e-5 boundary ties"
+}

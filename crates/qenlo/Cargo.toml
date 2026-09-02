@@ -5,7 +5,12 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 description = "Observable embedded filtered vector search with durable collections"
+readme = "../../README.md"
+keywords = ["vector-search", "embedded", "database", "gpu", "similarity"]
+categories = ["database-implementations", "algorithms"]
 
 [features]
 default = []

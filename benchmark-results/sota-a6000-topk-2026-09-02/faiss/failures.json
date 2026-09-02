@@ -1,0 +1,20 @@
+[
+  {
+    "system": "faiss",
+    "threshold": 10000,
+    "stage": "initialization",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/run_topk_a6000_exact_gpu.py\", line 172, in main\n    if torch is not None: torch.cuda.empty_cache()\n       ^^^^^\nUnboundLocalError: cannot access local variable 'torch' where it is not associated with a value\n"
+  },
+  {
+    "system": "faiss",
+    "threshold": 1000,
+    "stage": "initialization",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/run_topk_a6000_exact_gpu.py\", line 172, in main\n    if torch is not None: torch.cuda.empty_cache()\n       ^^^^^\nUnboundLocalError: cannot access local variable 'torch' where it is not associated with a value\n"
+  },
+  {
+    "system": "faiss",
+    "threshold": 100,
+    "stage": "initialization",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/run_topk_a6000_exact_gpu.py\", line 172, in main\n    if torch is not None: torch.cuda.empty_cache()\n       ^^^^^\nUnboundLocalError: cannot access local variable 'torch' where it is not associated with a value\n"
+  }
+]

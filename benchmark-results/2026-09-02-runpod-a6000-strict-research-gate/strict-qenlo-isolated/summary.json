@@ -1,0 +1,12 @@
+[
+  {
+    "system": "qenlo_cuda_predicate_prototype",
+    "samples": 5000,
+    "p50_ms": 0.160011,
+    "p95_ms": 0.17072245000000003,
+    "p99_ms": 0.18093209000000002,
+    "mean_recall_at_10": 1.0,
+    "min_recall_at_10": 1.0,
+    "perfect_recall_rows": 5000
+  }
+]

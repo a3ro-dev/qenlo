@@ -4,6 +4,91 @@ const routeOrder = routes.map((page) => page.dataset.page);
 const routeTitle = new Map(routes.map((page) => [page.dataset.page, page.querySelector('h1').textContent]));
 const toast = document.querySelector('#toast');
 
+const codeKeywords = new Set([
+  'as', 'assert', 'async', 'await', 'break', 'class', 'const', 'continue', 'data',
+  'def', 'defer', 'else', 'enum', 'export', 'extends', 'false', 'fn', 'for', 'from', 'fun', 'func', 'if',
+  'impl', 'import', 'implementation', 'in', 'interface', 'let', 'match', 'mod', 'mut',
+  'new', 'nil', 'None', 'null', 'package', 'pub', 'public', 'return', 'self', 'Self', 'Some',
+  'struct', 'throw', 'throws', 'true', 'try', 'type', 'unsafe', 'using', 'val', 'var', 'where', 'while',
+  'with', 'yield',
+]);
+
+function appendToken(fragment, type, value) {
+  const node = type ? document.createElement('span') : document.createTextNode(value);
+  if (type) {
+    node.className = `tok-${type}`;
+    node.textContent = value;
+  }
+  fragment.append(node);
+}
+
+function highlight(code, language) {
+  const source = code.textContent;
+  const fragment = document.createDocumentFragment();
+  const hashComments = !['json', 'typescript', 'javascript', 'rust', 'swift', 'kotlin'].includes(language);
+  let index = 0;
+  while (index < source.length) {
+    const rest = source.slice(index);
+    const comment = rest.startsWith('//') || (hashComments && rest[0] === '#');
+    if (comment) {
+      const end = source.indexOf('\n', index);
+      const stop = end === -1 ? source.length : end;
+      appendToken(fragment, 'comment', source.slice(index, stop));
+      index = stop;
+      continue;
+    }
+    if (rest[0] === '"' || rest[0] === "'" || rest[0] === '`') {
+      const quote = rest[0];
+      let end = index + 1;
+      while (end < source.length) {
+        if (source[end] === '\\') end += 2;
+        else if (source[end++] === quote) break;
+        else if (quote !== '`' && source[end - 1] === '\n') break;
+      }
+      appendToken(fragment, 'string', source.slice(index, end));
+      index = end;
+      continue;
+    }
+    const number = rest.match(/^-?(?:0x[\da-f]+|\d+(?:\.\d+)?)(?:[eE][+-]?\d+)?/i);
+    if (number) {
+      appendToken(fragment, 'number', number[0]);
+      index += number[0].length;
+      continue;
+    }
+    const identifier = rest.match(/^[A-Za-z_$][\w$]*/);
+    if (identifier) {
+      const value = identifier[0];
+      appendToken(fragment, codeKeywords.has(value) ? 'keyword' : null, value);
+      index += value.length;
+      continue;
+    }
+    appendToken(fragment, null, rest[0]);
+    index += 1;
+  }
+  code.replaceChildren(fragment);
+  code.parentElement.dataset.language = language;
+}
+
+document.querySelectorAll('pre > code').forEach((code) => {
+  const explicitClass = [...code.classList].find((c) => c.startsWith('language-'))?.replace('language-', '');
+  const panel = code.closest('[data-code-language]');
+  const page = code.closest('[data-page]')?.dataset.page;
+  const language = explicitClass || code.dataset.lang || panel?.dataset.codeLanguage || ({
+    python: 'python',
+    typescript: 'typescript',
+    rust: 'rust',
+    go: 'go',
+    kotlin: 'kotlin',
+    apple: 'swift',
+    storage: 'rust',
+    telemetry: 'json',
+    benchmarks: 'text',
+    'device-lab': 'bash',
+    publishing: 'bash',
+  }[page]) || 'text';
+  highlight(code, language);
+});
+
 function notify(message) {
   toast.textContent = message;
   toast.classList.add('show');

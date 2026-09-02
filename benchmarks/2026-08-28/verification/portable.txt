@@ -1,0 +1,109 @@
+   Compiling qenlo v0.1.0 (D:\qenloDB\crates\qenlo)
+   Compiling qenlo-bench v0.1.0 (D:\qenloDB\crates\qenlo-bench)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.44s
+     Running unittests src\lib.rs (target\debug\deps\qenlo-922ceed1a40f712e.exe)
+
+running 22 tests
+test storage::tests::exclusive_lock_is_released_on_drop ... ok
+test storage::tests::load_budget_and_generation_collision_are_explicit ... ok
+test storage::tests::snapshot_round_trip_preserves_rows_tombstones_and_generation ... ok
+test tests::cpu_collection_rebuilds_after_mutation_and_reports_execution ... ok
+test tests::diagnostics_preserve_results_and_disclose_missing_measurements ... ok
+test storage::tests::unknown_format_version_is_not_guessed ... ok
+test storage::tests::missing_acknowledged_snapshot_never_rolls_back_silently ... ok
+test tests::searches_observe_whole_transactions_while_writer_runs ... ok
+test tests::shared_collection_and_search_futures_are_send ... ok
+test storage::tests::checksum_corruption_is_rejected_without_falling_back ... ok
+test storage::tests::nested_collection_creation_is_readable ... ok
+test storage::tests::head_checksum_and_truncation_are_rejected ... ok
+test storage::tests::complete_temporary_snapshot_is_recovered ... ok
+test storage::tests::checksum_bit_flip_and_truncated_pending_are_detected ... ok
+test storage::tests::unpublished_transaction_is_never_promoted ... ok
+test storage::tests::write_and_open_share_admission_limits_before_publication ... ok
+test storage::tests::failed_head_publication_is_uncertain_and_reopen_resolves_newer_snapshot ... ok
+test tests::transaction_io_failure_preserves_memory_and_last_commit ... ok
+test tests::custom_storage_budget_rejects_unreopenable_writes_and_uncertain_commits_close ... ok
+test tests::transactions_validate_all_rows_and_roll_back_before_publication ... ok
+test tests::durable_collection_survives_restart_with_tombstones ... ok
+test tests::index_markers_are_disposable_and_explicit_policy_never_serves_stale_data ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\cpu_quality.rs (target\debug\deps\cpu_quality-3d9bd9c401dab2a1.exe)
+
+running 1 test
+test exact_cpu_matches_independent_eligible_set_oracle ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.37s
+
+     Running tests\recovery.rs (target\debug\deps\recovery-88d74771ba28800c.exe)
+
+running 2 tests
+test process_exit_child ... ok
+test committed_data_survives_process_exit_and_partial_staging ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests src\lib.rs (target\debug\deps\qenlo_bench-c4570420d9d4b83d.exe)
+
+running 5 tests
+test tests::recall_and_nearest_rank_handle_small_samples ... ok
+test tests::oracle_filters_deletions_and_breaks_ties_by_id ... ok
+test tests::report_retains_samples_and_uses_lower_median_for_five_runs ... ok
+test tests::metadata_is_deterministic_and_distributions_differ ... ok
+test dataset::tests::deterministic_split_dimension_checksum_and_budget_validation ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src\main.rs (target\debug\deps\qenlo_bench-fcd186f9bdd9c870.exe)
+
+running 2 tests
+test tests::skewed_eligibility_differs_and_scores_and_order_are_validated ... ok
+test tests::parser_rejects_ambiguous_options_and_cells_have_exact_cardinality ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\telemetry.rs (target\debug\deps\telemetry-83b601a2bb385035.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (target\debug\deps\qenlo_core-56e4be6ceb7ac899.exe)
+
+running 12 tests
+test tests::deletion_is_immediate_and_slots_are_not_reused ... ok
+test tests::malformed_queries_are_rejected_even_when_filter_is_empty ... ok
+test tests::exhausted_generation_rejects_mutations_without_partial_changes ... ok
+test tests::predicate_clauses_are_joined_by_and ... ok
+test tests::runtime_distance_agrees_with_scalar_including_vector_remainders ... ok
+test tests::restore_rejects_non_unit_vectors_but_preserves_extreme_normalized_inputs ... ok
+test tests::exact_search_breaks_computed_distance_ties_by_id ... ok
+test tests::streaming_restore_preserves_generation_and_propagates_decode_errors ... ok
+test tests::timestamp_range_is_lower_inclusive_upper_exclusive_at_extremes ... ok
+test tests::validates_and_normalizes_vectors ... ok
+test tests::search_handles_no_matches_fewer_than_k_and_invalid_k ... ok
+test tests::bounded_selection_orders_ties_for_every_supported_k ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests qenlo
+
+running 1 test
+test crates\qenlo\src\lib.rs - (line 6) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.43s; merged doctests compilation took 0.34s
+   Doc-tests qenlo_bench
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests qenlo_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

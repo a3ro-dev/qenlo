@@ -1,0 +1,109 @@
+name: Publish SDKs
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing immutable SDK release tag (sdk-vX.Y.Z)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with: { ref: "${{ inputs.tag }}" }
+      - id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          python scripts/check_release_versions.py "$RELEASE_TAG"
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+  crates:
+    needs: verify
+    runs-on: ubuntu-24.04
+    environment: package-registries
+    steps:
+      - uses: actions/checkout@v6
+        with: { ref: "${{ needs.verify.outputs.tag }}" }
+      - run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - name: Publish Rust crates in dependency order
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo publish --locked -p qenlo-core
+          cargo publish --locked -p qenlo
+
+  pypi:
+    needs: verify
+    runs-on: ubuntu-24.04
+    environment: package-registries
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download release wheels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.verify.outputs.tag }}
+        run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'qenlo-*.whl' --dir dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with: { packages-dir: dist }
+
+  npm:
+    needs: verify
+    runs-on: ubuntu-24.04
+    environment: package-registries
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v5
+        with: { node-version: "24", registry-url: "https://registry.npmjs.org" }
+      - name: Download and publish npm package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_TAG: ${{ needs.verify.outputs.tag }}
+        run: |
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'qenlo-qenlo-*.tgz' --dir dist
+          npm publish dist/qenlo-qenlo-*.tgz --access public --provenance
+
+  maven-central:
+    needs: verify
+    runs-on: ubuntu-24.04
+    environment: package-registries
+    steps:
+      - uses: actions/checkout@v6
+        with: { ref: "${{ needs.verify.outputs.tag }}" }
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v5
+        with: { gradle-version: "9.7.0" }
+      - name: Download native libraries and assemble resource layout
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.verify.outputs.tag }}
+        run: |
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'libqenlo_ffi.so' --pattern 'qenlo_ffi.dll' --pattern 'libqenlo_ffi.dylib' --dir native
+          mkdir -p sdk/kotlin/src/main/resources/qenlo/{linux-x64,windows-x64,darwin-arm64}
+          cp native/libqenlo_ffi.so sdk/kotlin/src/main/resources/qenlo/linux-x64/
+          cp native/qenlo_ffi.dll sdk/kotlin/src/main/resources/qenlo/windows-x64/
+          cp native/libqenlo_ffi.dylib sdk/kotlin/src/main/resources/qenlo/darwin-arm64/
+      - name: Publish signed bundle to Maven Central
+        working-directory: sdk/kotlin
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
+        run: gradle --no-daemon publishAllPublicationsToMavenCentralRepository

@@ -3,7 +3,12 @@
 *.profraw
 *.trace
 *.pdb
+*.exe
+*.qnb
+*.f32
+*.h5
 /data/
+
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -21,3 +26,12 @@ sdk/typescript/native/
 sdk/typescript/dist/
 sdk/typescript/LICENSE-MIT
 sdk/typescript/LICENSE-APACHE
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+

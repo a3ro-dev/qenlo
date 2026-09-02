@@ -1,0 +1,155 @@
+[
+  {
+    "system": "cuvs_brute_force_ip",
+    "int_filter_lte": 100,
+    "samples": 10000,
+    "repetitions": 10,
+    "mean_recall_at_10": 1.0,
+    "min_recall_at_10": 1.0,
+    "perfect_recall_rows": 10000,
+    "p50_ms": 0.524331,
+    "p95_ms": 1.1156413999999997,
+    "p99_ms": 1.4913935700000007,
+    "median_bootstrap_95_ci_ms": [
+      0.5232447625,
+      0.5253470375
+    ],
+    "raw_sha256": "d7b514582b3b59a0b8288e9f0439d5434c81a6bcfbb0635568d75497b998b109"
+  },
+  {
+    "system": "cuvs_brute_force_ip",
+    "int_filter_lte": 1000,
+    "samples": 10000,
+    "repetitions": 10,
+    "mean_recall_at_10": 0.9999,
+    "min_recall_at_10": 0.9,
+    "perfect_recall_rows": 9990,
+    "p50_ms": 0.8340025,
+    "p95_ms": 1.2892627499999987,
+    "p99_ms": 1.9994141200000022,
+    "median_bootstrap_95_ci_ms": [
+      0.8309015,
+      0.8390721750000001
+    ],
+    "raw_sha256": "d7b514582b3b59a0b8288e9f0439d5434c81a6bcfbb0635568d75497b998b109"
+  },
+  {
+    "system": "cuvs_brute_force_ip",
+    "int_filter_lte": 10000,
+    "samples": 10000,
+    "repetitions": 10,
+    "mean_recall_at_10": 0.9985,
+    "min_recall_at_10": 0.9,
+    "perfect_recall_rows": 9850,
+    "p50_ms": 5.268313,
+    "p95_ms": 10.393697399999997,
+    "p99_ms": 12.635947150000016,
+    "median_bootstrap_95_ci_ms": [
+      5.262984749999999,
+      5.273279049999999
+    ],
+    "raw_sha256": "d7b514582b3b59a0b8288e9f0439d5434c81a6bcfbb0635568d75497b998b109"
+  },
+  {
+    "system": "faiss_gpu_flat_ip",
+    "int_filter_lte": 100,
+    "samples": 10000,
+    "repetitions": 10,
+    "mean_recall_at_10": 1.0,
+    "min_recall_at_10": 1.0,
+    "perfect_recall_rows": 10000,
+    "p50_ms": 0.1237245,
+    "p95_ms": 0.1332441,
+    "p99_ms": 0.13650903,
+    "median_bootstrap_95_ci_ms": [
+      0.123692,
+      0.123761
+    ],
+    "raw_sha256": "df3b8b2d9197de214016d02ad33738362267bd29f4e33ccd1a4687b16a5a8e28"
+  },
+  {
+    "system": "faiss_gpu_flat_ip",
+    "int_filter_lte": 1000,
+    "samples": 10000,
+    "repetitions": 10,
+    "mean_recall_at_10": 1.0,
+    "min_recall_at_10": 1.0,
+    "perfect_recall_rows": 10000,
+    "p50_ms": 0.7768975,
+    "p95_ms": 0.7866303,
+    "p99_ms": 0.7908813299999999,
+    "median_bootstrap_95_ci_ms": [
+      0.7768134875,
+      0.7769930125000001
+    ],
+    "raw_sha256": "df3b8b2d9197de214016d02ad33738362267bd29f4e33ccd1a4687b16a5a8e28"
+  },
+  {
+    "system": "faiss_gpu_flat_ip",
+    "int_filter_lte": 10000,
+    "samples": 10000,
+    "repetitions": 10,
+    "mean_recall_at_10": 0.9988,
+    "min_recall_at_10": 0.9,
+    "perfect_recall_rows": 9880,
+    "p50_ms": 6.214736,
+    "p95_ms": 6.241739450000001,
+    "p99_ms": 6.29419729,
+    "median_bootstrap_95_ci_ms": [
+      6.214383300000001,
+      6.2150155125
+    ],
+    "raw_sha256": "df3b8b2d9197de214016d02ad33738362267bd29f4e33ccd1a4687b16a5a8e28"
+  },
+  {
+    "system": "qenlo_cuda_predicate_prototype",
+    "int_filter_lte": 100,
+    "samples": 10000,
+    "repetitions": 10,
+    "mean_recall_at_10": 1.0,
+    "min_recall_at_10": 1.0,
+    "perfect_recall_rows": 10000,
+    "p50_ms": 0.1680105,
+    "p95_ms": 0.18342975,
+    "p99_ms": 0.19011704000000001,
+    "median_bootstrap_95_ci_ms": [
+      0.1678639875,
+      0.16817705
+    ],
+    "raw_sha256": "0d44f34456488d28e5de4b049300fa6baec07adfaa9252cbd17201cb91ee2c31"
+  },
+  {
+    "system": "qenlo_cuda_predicate_prototype",
+    "int_filter_lte": 1000,
+    "samples": 10000,
+    "repetitions": 10,
+    "mean_recall_at_10": 0.9999,
+    "min_recall_at_10": 0.9,
+    "perfect_recall_rows": 9990,
+    "p50_ms": 0.5823675,
+    "p95_ms": 0.6086514000000001,
+    "p99_ms": 0.62058804,
+    "median_bootstrap_95_ci_ms": [
+      0.58209585,
+      0.582685025
+    ],
+    "raw_sha256": "0d44f34456488d28e5de4b049300fa6baec07adfaa9252cbd17201cb91ee2c31"
+  },
+  {
+    "system": "qenlo_cuda_predicate_prototype",
+    "int_filter_lte": 10000,
+    "samples": 10000,
+    "repetitions": 10,
+    "mean_recall_at_10": 0.998,
+    "min_recall_at_10": 0.9,
+    "perfect_recall_rows": 9800,
+    "p50_ms": 4.6929045,
+    "p95_ms": 4.7248086,
+    "p99_ms": 4.78685833,
+    "median_bootstrap_95_ci_ms": [
+      4.6926404999999995,
+      4.6931775625
+    ],
+    "raw_sha256": "0d44f34456488d28e5de4b049300fa6baec07adfaa9252cbd17201cb91ee2c31"
+  }
+]

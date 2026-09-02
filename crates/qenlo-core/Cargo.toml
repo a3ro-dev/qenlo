@@ -7,5 +7,9 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/a3ro-dev/qenlo"
 homepage = "https://a3ro-dev.github.io/qenlo/docs/"
 description = "Portable records, metadata predicates, and exact filtered vector search"
+authors.workspace = true
+readme = "../../README.md"
+keywords = ["vector-search", "embedded", "database", "similarity"]
+categories = ["database-implementations", "algorithms"]
 
 [dependencies]

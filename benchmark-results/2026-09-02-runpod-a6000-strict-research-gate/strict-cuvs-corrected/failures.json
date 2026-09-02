@@ -1,0 +1,6 @@
+[
+  {
+    "system": "CuvsBruteForce",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/run_strict_topk_research_gate_v2.py\", line 139, in main\n    adapter=cls(vectors); run_adapter(adapter,ids,queries,truth,out,rows,failures)\n            ^^^^^^^^^^^^\n  File \"/workspace/run_strict_topk_research_gate_v2.py\", line 85, in __init__\n    from cuvs.neighbors import brute_force\n  File \"/workspace/venv/lib/python3.12/site-packages/cuvs/neighbors/__init__.py\", line 5, in <module>\n    from cuvs.neighbors import (\n  File \"/workspace/venv/lib/python3.12/site-packages/cuvs/neighbors/all_neighbors/__init__.py\", line 4, in <module>\n    from .all_neighbors import AllNeighborsParams, build\nImportError: libcuvs_c.so: cannot open shared object file: No such file or directory\n"
+  }
+]

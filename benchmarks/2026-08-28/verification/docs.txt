@@ -1,0 +1,7 @@
+    Checking qenlo-core v0.1.0 (D:\qenloDB\crates\qenlo-core)
+ Documenting qenlo-core v0.1.0 (D:\qenloDB\crates\qenlo-core)
+    Checking qenlo v0.1.0 (D:\qenloDB\crates\qenlo)
+ Documenting qenlo v0.1.0 (D:\qenloDB\crates\qenlo)
+ Documenting qenlo-bench v0.1.0 (D:\qenloDB\crates\qenlo-bench)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.50s
+   Generated D:\qenloDB\target\doc\qenlo\index.html and 2 other files

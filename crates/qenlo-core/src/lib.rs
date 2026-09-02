@@ -576,6 +576,8 @@ pub enum CpuDistancePath {
     Scalar,
     /// x86/x86-64 AVX2 with float64 accumulation and a scalar remainder.
     Avx2,
+    /// x86/x86-64 AVX2 and FMA with two float64 accumulators.
+    Avx2Fma,
     /// AArch64 NEON with float64 accumulation and a scalar remainder.
     Neon,
 }
@@ -589,6 +591,9 @@ pub fn cpu_distance_path() -> CpuDistancePath {
     #[cfg(not(target_arch = "aarch64"))]
     {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        if std::is_x86_feature_detected!("avx2") && std::is_x86_feature_detected!("fma") {
+            return CpuDistancePath::Avx2Fma;
+        }
         if std::is_x86_feature_detected!("avx2") {
             return CpuDistancePath::Avx2;
         }
@@ -597,6 +602,11 @@ pub fn cpu_distance_path() -> CpuDistancePath {
 }
 
 fn dot_implementation() -> fn(&[f32], &[f32]) -> f64 {
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if cpu_distance_path() == CpuDistancePath::Avx2Fma {
+        // SAFETY: selected only after runtime AVX2 and FMA detection.
+        return |left, right| unsafe { dot_avx2_fma(left, right) };
+    }
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     if cpu_distance_path() == CpuDistancePath::Avx2 {
         // SAFETY: selected only after runtime AVX2 detection. Both input lengths
@@ -627,21 +637,71 @@ unsafe fn dot_avx2(left: &[f32], right: &[f32]) -> f64 {
     #[cfg(target_arch = "x86_64")]
     use std::arch::x86_64::*;
     debug_assert_eq!(left.len(), right.len());
-    let mut sum = _mm256_setzero_pd();
-    let end = left.len() / 4 * 4;
-    for offset in (0..end).step_by(4) {
-        // SAFETY: each unaligned load stays within four valid elements.
+    let mut low_sum = _mm256_setzero_pd();
+    let mut high_sum = _mm256_setzero_pd();
+    let end = left.len() / 8 * 8;
+    for offset in (0..end).step_by(8) {
+        // SAFETY: each unaligned load stays within eight valid elements.
         let (a, b) = unsafe {
             (
-                _mm_loadu_ps(left.as_ptr().add(offset)),
-                _mm_loadu_ps(right.as_ptr().add(offset)),
+                _mm256_loadu_ps(left.as_ptr().add(offset)),
+                _mm256_loadu_ps(right.as_ptr().add(offset)),
             )
         };
-        sum = _mm256_add_pd(sum, _mm256_mul_pd(_mm256_cvtps_pd(a), _mm256_cvtps_pd(b)));
+        low_sum = _mm256_add_pd(
+            low_sum,
+            _mm256_mul_pd(
+                _mm256_cvtps_pd(_mm256_castps256_ps128(a)),
+                _mm256_cvtps_pd(_mm256_castps256_ps128(b)),
+            ),
+        );
+        high_sum = _mm256_add_pd(
+            high_sum,
+            _mm256_mul_pd(
+                _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(a)),
+                _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(b)),
+            ),
+        );
     }
     let mut lanes = [0.0; 4];
     // SAFETY: lanes has room for all four doubles and unaligned stores are allowed.
-    unsafe { _mm256_storeu_pd(lanes.as_mut_ptr(), sum) };
+    unsafe { _mm256_storeu_pd(lanes.as_mut_ptr(), _mm256_add_pd(low_sum, high_sum)) };
+    lanes.iter().sum::<f64>() + dot_scalar(&left[end..], &right[end..])
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2,fma")]
+unsafe fn dot_avx2_fma(left: &[f32], right: &[f32]) -> f64 {
+    #[cfg(target_arch = "x86")]
+    use std::arch::x86::*;
+    #[cfg(target_arch = "x86_64")]
+    use std::arch::x86_64::*;
+    debug_assert_eq!(left.len(), right.len());
+    let mut low_sum = _mm256_setzero_pd();
+    let mut high_sum = _mm256_setzero_pd();
+    let end = left.len() / 8 * 8;
+    for offset in (0..end).step_by(8) {
+        // SAFETY: each unaligned load stays within eight valid elements.
+        let (a, b) = unsafe {
+            (
+                _mm256_loadu_ps(left.as_ptr().add(offset)),
+                _mm256_loadu_ps(right.as_ptr().add(offset)),
+            )
+        };
+        low_sum = _mm256_fmadd_pd(
+            _mm256_cvtps_pd(_mm256_castps256_ps128(a)),
+            _mm256_cvtps_pd(_mm256_castps256_ps128(b)),
+            low_sum,
+        );
+        high_sum = _mm256_fmadd_pd(
+            _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(a)),
+            _mm256_cvtps_pd(_mm256_extractf128_ps::<1>(b)),
+            high_sum,
+        );
+    }
+    let mut lanes = [0.0; 4];
+    // SAFETY: lanes has room for all four doubles and unaligned stores are allowed.
+    unsafe { _mm256_storeu_pd(lanes.as_mut_ptr(), _mm256_add_pd(low_sum, high_sum)) };
     lanes.iter().sum::<f64>() + dot_scalar(&left[end..], &right[end..])
 }
 

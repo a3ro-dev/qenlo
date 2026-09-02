@@ -76,15 +76,17 @@ pub fn checksum(path: &Path) -> io::Result<u32> {
     Ok(hasher.finalize())
 }
 
-/// Prepare generated vectors, or import raw little-endian f32 rows after checking
-/// the required expected source CRC32. Existing output files are never replaced.
+/// Prepare generated vectors, or import the requested leading rows from a raw
+/// little-endian f32 source after checking the complete source CRC32. Existing output files are never replaced.
 /// A failed preparation may leave a partial file; `load` rejects it.
 pub fn prepare(path: &Path, spec: DatasetSpec, source: Option<(&Path, u32)>) -> io::Result<u32> {
     let bytes = spec.payload_bytes()?;
     let mut input = if let Some((source, expected)) = source {
-        if source.metadata()?.len() != bytes {
+        let row_bytes = spec.dimension as u64 * 4;
+        let source_bytes = source.metadata()?.len();
+        if source_bytes < bytes || source_bytes % row_bytes != 0 {
             return Err(invalid(
-                "raw source length does not match dimensions and split sizes",
+                "raw source is too short or not row-aligned for the requested dimensions",
             ));
         }
         if checksum(source)? != expected {
@@ -113,7 +115,6 @@ pub fn prepare(path: &Path, spec: DatasetSpec, source: Option<(&Path, u32)>) -> 
     let mut row = Vec::new();
     row.try_reserve_exact(spec.dimension)
         .map_err(|_| invalid("vector allocation failed"))?;
-    let mut source_hasher = crc32fast::Hasher::new();
     for _ in 0..spec.rows()? {
         row.clear();
         for _ in 0..spec.dimension {
@@ -132,11 +133,7 @@ pub fn prepare(path: &Path, spec: DatasetSpec, source: Option<(&Path, u32)>) -> 
             let bytes = value.to_le_bytes();
             output.write_all(&bytes)?;
             hasher.update(&bytes);
-            source_hasher.update(&bytes);
         }
-    }
-    if source.is_some_and(|(_, expected)| source_hasher.finalize() != expected) {
-        return Err(invalid("raw source changed during preparation"));
     }
     let checksum = hasher.finalize();
     output.write_all(&checksum.to_le_bytes())?;
@@ -311,6 +308,19 @@ mod tests {
         let imported_data = load(&imported, 4, 4096).unwrap();
         assert_eq!(imported_data.source_checksum, Some(source_crc));
         assert_eq!(data.corpus[0].vector, imported_data.corpus[0].vector);
+        std::fs::remove_file(&imported).unwrap();
+        std::fs::OpenOptions::new()
+            .append(true)
+            .open(&raw)
+            .unwrap()
+            .write_all(&[0.0f32.to_le_bytes(); 4].concat())
+            .unwrap();
+        let extended_crc = checksum(&raw).unwrap();
+        prepare(&imported, spec, Some((&raw, extended_crc))).unwrap();
+        assert_eq!(
+            load(&imported, 4, 4096).unwrap().source_checksum,
+            Some(extended_crc)
+        );
         std::fs::remove_file(imported).unwrap();
         std::fs::remove_file(raw).unwrap();
         bytes[HEADER_BYTES as usize] ^= 1;

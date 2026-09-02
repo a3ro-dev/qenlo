@@ -1,0 +1,9 @@
+started_utc=2026-09-02T05:56:03Z
+finished_utc=2026-09-02T06:16:36Z
+/workspace/qenlo-runpod/artifacts/qenlo-cpu/summary.txt
+/workspace/qenlo-runpod/artifacts/qenlo-usearch/summary.txt
+/workspace/qenlo-runpod/artifacts/chroma/summary.json
+/workspace/qenlo-runpod/artifacts/faiss-flat/summary.json
+/workspace/qenlo-runpod/artifacts/faiss-hnsw/summary.json
+/workspace/qenlo-runpod/artifacts/milvus/summary.json
+/workspace/qenlo-runpod/artifacts/lancedb-flat/summary.json

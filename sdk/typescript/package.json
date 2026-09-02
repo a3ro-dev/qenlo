@@ -27,6 +27,11 @@
   },
   "keywords": ["vector-database", "embedded", "semantic-search", "typescript"],
   "license": "MIT OR Apache-2.0",
+  "author": {
+    "name": "Akshat Singh Kushwaha",
+    "email": "akshatsingh14372@outlook.com"
+  },
+  "publishConfig": { "access": "public", "provenance": true },
   "repository": { "type": "git", "url": "git+https://github.com/a3ro-dev/qenlo.git" },
   "homepage": "https://a3ro-dev.github.io/qenlo/docs/",
   "bugs": { "url": "https://github.com/a3ro-dev/qenlo/issues" }

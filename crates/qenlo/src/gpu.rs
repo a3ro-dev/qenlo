@@ -440,16 +440,22 @@ impl GpuExact {
                 scratch.batch_capacity,
             )?;
         ensure_budget(allocation_bytes, self.budget)?;
-        let flattened = queries
-            .iter()
-            .flat_map(|query| query.iter().copied())
-            .collect::<Vec<_>>();
+        let flattened;
+        let query_values: &[f32] = if let [query] = queries {
+            query
+        } else {
+            flattened = queries
+                .iter()
+                .flat_map(|query| query.iter().copied())
+                .collect::<Vec<_>>();
+            &flattened
+        };
         self.queue
-            .write_buffer(&scratch.query, 0, bytes_of(&flattened));
+            .write_buffer(&scratch.query, 0, bytes_of(query_values));
         self.health.check()?;
         let mut execution = GpuExecution {
             allocation_bytes,
-            upload_bytes: flattened.len() as u64 * 4,
+            upload_bytes: query_values.len() as u64 * 4,
             chunks: self.chunks.len() as u32,
             ..Default::default()
         };
@@ -465,10 +471,11 @@ impl GpuExact {
             } else {
                 chunk.rows
             };
-            let eligibility = if eligibility.is_empty() {
-                vec![0]
+            let empty_eligibility = [0];
+            let eligibility_upload = if eligibility.is_empty() {
+                &empty_eligibility[..]
             } else {
-                eligibility
+                &eligibility
             };
             let params = params(
                 mode,
@@ -479,10 +486,10 @@ impl GpuExact {
                 queries.len() as u32,
                 filter,
             );
-            execution.upload_bytes += eligibility.len() as u64 * 4 + PARAM_BYTES;
+            execution.upload_bytes += eligibility_upload.len() as u64 * 4 + PARAM_BYTES;
             execution.readback_bytes += result_bytes;
             self.queue
-                .write_buffer(&scratch.eligibility, 0, bytes_of(&eligibility));
+                .write_buffer(&scratch.eligibility, 0, bytes_of(eligibility_upload));
             self.queue
                 .write_buffer(&scratch.params, 0, bytes_of(&params));
             self.health.check()?;

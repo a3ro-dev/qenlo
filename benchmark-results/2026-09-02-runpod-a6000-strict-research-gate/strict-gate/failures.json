@@ -1,0 +1,6 @@
+[
+  {
+    "system": "qenlo_cuda_predicate_prototype",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/run_strict_topk_research_gate.py\", line 94, in run_adapter\n    for q in queries[:WARMUP]: adapter.search(q)\n                               ^^^^^^^^^^^^^^^^^\n  File \"/workspace/run_strict_topk_research_gate.py\", line 68, in search\n    values, pos = torch.topk(torch.mv(self.vectors, q), K, largest=True, sorted=False)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: CUDA error: CUBLAS_STATUS_INVALID_VALUE when calling `cublasSgemv(handle, op, m, n, &alpha, a, lda, x, incx, &beta, y, incy)`\n"
+  }
+]

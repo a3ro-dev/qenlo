@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.2.20"
     kotlin("plugin.serialization") version "2.2.20"
-    `maven-publish`
+    id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
 group = "dev.qenlo"
@@ -26,27 +26,39 @@ tasks.test {
     systemProperty("jna.library.path", System.getenv("QENLO_LIBRARY_DIR") ?: "")
 }
 
-java {
-    withSourcesJar()
-    withJavadocJar()
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            pom {
-                name.set("Qenlo Kotlin SDK")
-                description.set("Typed Kotlin/JVM bindings for the embedded Qenlo vector database")
-                url.set("https://a3ro-dev.github.io/qenlo/docs/")
-                licenses {
-                    license {
-                        name.set("MIT OR Apache-2.0")
-                        url.set("https://github.com/a3ro-dev/qenlo")
-                    }
-                }
-                scm { url.set("https://github.com/a3ro-dev/qenlo") }
+mavenPublishing {
+    publishToMavenCentral(automaticRelease = true)
+    signAllPublications()
+    coordinates(group.toString(), "qenlo", version.toString())
+    pom {
+        name.set("Qenlo Kotlin SDK")
+        description.set("Typed Kotlin/JVM bindings for the embedded Qenlo vector database")
+        inceptionYear.set("2026")
+        url.set("https://github.com/a3ro-dev/qenlo")
+        licenses {
+            license {
+                name.set("Apache License 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                distribution.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
             }
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+                distribution.set("https://opensource.org/licenses/MIT")
+            }
+        }
+        developers {
+            developer {
+                id.set("a3ro-dev")
+                name.set("Akshat Singh Kushwaha")
+                email.set("akshatsingh14372@outlook.com")
+                url.set("https://github.com/a3ro-dev")
+            }
+        }
+        scm {
+            url.set("https://github.com/a3ro-dev/qenlo")
+            connection.set("scm:git:https://github.com/a3ro-dev/qenlo.git")
+            developerConnection.set("scm:git:ssh://git@github.com/a3ro-dev/qenlo.git")
         }
     }
 }

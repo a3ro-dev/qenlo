@@ -17,7 +17,7 @@ This ledger separates implemented code from research directions and distribution
 | Snapdragon/MediaTek Android tester | built, awaiting hardware | arm64 APK records SoC and thermal state |
 | A-series iOS tester | source/build validation, signing required | arm64 SwiftUI shell; Apple provisioning/TestFlight is external |
 | telemetry/results viewer | implemented | bearer auth, strict 1 MiB schema, SQLite WAL, responsive dashboard |
-| CUDA/HIP/native Metal/direct Vulkan kernels | not implemented | portable wgpu first; add only after device traces prove a material gap |
+| CUDA/HIP/native Metal/direct Vulkan kernels | not implemented | portable wgpu first; CUDA Linux/Windows implementation requirements are tracked in `docs/cuda-backend-todo.md`; add only after an independent-oracle comparison proves a material gap |
 | ANE/QNN/NeuroPilot NPU stages | research gate not executed | vendor SDK access and physical devices are required for the prescribed P95/energy go/no-go |
 | FP16, IVF-PQ, RaBitQ, GPU graph ANN | not implemented | downstream research milestones, not required for the six tester packages |
 | multi-GPU, replication, encryption | not implemented | independent database/product milestones; keys/topology/requirements are unspecified |
