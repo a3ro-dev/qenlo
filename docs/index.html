@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Qenlo documentation for embedded filtered vector search, portable storage, SDKs, and reproducible benchmarks.">
-  <meta name="theme-color" content="#171c19">
-  <title>Qenlo documentation</title>
+  <meta name="theme-color" content="#090d16">
+  <title>Qenlo Documentation</title>
   <link rel="icon" href="../assets/brand/logo/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
@@ -13,69 +13,77 @@
 <body>
   <a class="skip-link" href="#content">Skip to documentation</a>
   <header class="topbar">
-    <button class="icon-button mobile-only" id="menu-button" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">☰</button>
-    <a class="brand" href="../" aria-label="Qenlo home">
-      <picture>
-        <source srcset="../assets/brand/logo/lockup-reversed.svg" media="(prefers-color-scheme: dark)">
-        <img src="../assets/brand/logo/lockup.svg" alt="Qenlo" width="112" height="30">
-      </picture>
-      <span>docs</span>
-    </a>
-    <label class="search" for="doc-search">
-      <span aria-hidden="true">⌕</span>
-      <input id="doc-search" type="search" placeholder="Search documentation" autocomplete="off" aria-controls="search-results">
-      <kbd>/</kbd>
-    </label>
-    <div class="top-actions">
-      <span class="version">v0.1.0</span>
-      <button class="icon-button mobile-only" id="mobile-search-button" type="button" aria-label="Open search" aria-controls="doc-search" aria-expanded="false">⌕</button>
-      <button class="icon-button" id="theme-button" type="button" aria-label="Toggle color theme">◐</button>
-      <a class="github-link" href="https://github.com/a3ro-dev/qenlo">GitHub ↗</a>
+    <div class="topbar-left">
+      <button class="icon-btn mobile-toggle" id="menu-button" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">☰</button>
+      <a class="brand" href="../" aria-label="Qenlo Home">
+        <picture>
+          <source srcset="../assets/brand/logo/lockup-reversed.svg" media="(prefers-color-scheme: dark)">
+          <img src="../assets/brand/logo/lockup.svg" alt="Qenlo" width="104" height="26">
+        </picture>
+        <span class="brand-badge">docs</span>
+      </a>
+    </div>
+
+    <div class="search-box">
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <input class="search-input" id="doc-search" type="search" placeholder="Search documentation... (/ or Ctrl+K)" autocomplete="off">
+      <kbd class="search-kbd">/</kbd>
+    </div>
+
+    <div class="topbar-right">
+      <span class="version-pill">v0.1.0-alpha.1</span>
+      <button class="icon-btn" id="theme-button" type="button" aria-label="Toggle dark/light theme">◐</button>
+      <a class="github-btn" href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noreferrer">
+        GitHub ↗
+      </a>
     </div>
   </header>
 
-  <div class="shell">
-    <aside class="sidebar" id="sidebar">
-      <nav aria-label="Documentation">
-        <div class="nav-group">
-          <p>Start</p>
-          <a href="#overview" data-route="overview">Overview</a>
-          <a href="#quickstart" data-route="quickstart">Quickstart</a>
-          <a href="#concepts" data-route="concepts">Core concepts</a>
+  <div class="search-modal" id="search-modal" hidden></div>
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <div class="docs-shell">
+    <aside class="docs-sidebar" id="sidebar">
+      <nav aria-label="Documentation Navigation">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <a class="nav-link" href="#overview" data-route="overview">Overview</a>
+          <a class="nav-link" href="#quickstart" data-route="quickstart">Quickstart</a>
+          <a class="nav-link" href="#concepts" data-route="concepts">Core Concepts</a>
         </div>
-        <div class="nav-group">
-          <p>SDKs</p>
-          <a href="#rust" data-route="rust">Rust</a>
-          <a href="#python" data-route="python">Python</a>
-          <a href="#typescript" data-route="typescript">TypeScript</a>
-          <a href="#go" data-route="go">Go</a>
-          <a href="#kotlin" data-route="kotlin">Kotlin</a>
-          <a href="#apple" data-route="apple">macOS and iOS</a>
+        <div class="nav-section">
+          <div class="nav-section-title">SDKs</div>
+          <a class="nav-link" href="#rust" data-route="rust">Rust</a>
+          <a class="nav-link" href="#python" data-route="python">Python</a>
+          <a class="nav-link" href="#typescript" data-route="typescript">TypeScript</a>
+          <a class="nav-link" href="#go" data-route="go">Go</a>
+          <a class="nav-link" href="#kotlin" data-route="kotlin">Kotlin &amp; Android</a>
+          <a class="nav-link" href="#apple" data-route="apple">macOS &amp; iOS</a>
         </div>
-        <div class="nav-group">
-          <p>Operate</p>
-          <a href="#storage" data-route="storage">Storage and .qn</a>
-          <a href="#recovery" data-route="recovery">Recovery</a>
-          <a href="#telemetry" data-route="telemetry">Execution reports</a>
+        <div class="nav-section">
+          <div class="nav-section-title">Operate</div>
+          <a class="nav-link" href="#storage" data-route="storage">Storage &amp; .qn</a>
+          <a class="nav-link" href="#recovery" data-route="recovery">Recovery Policy</a>
+          <a class="nav-link" href="#telemetry" data-route="telemetry">Execution Reports</a>
         </div>
-        <div class="nav-group">
-          <p>Research</p>
-          <a href="#benchmarks" data-route="benchmarks">Benchmarks</a>
-          <a href="#device-lab" data-route="device-lab">Device lab</a>
-          <a href="#release-status" data-route="release-status">Release status</a>
-          <a href="#publishing" data-route="publishing">Publishing</a>
+        <div class="nav-section">
+          <div class="nav-section-title">Research &amp; Release</div>
+          <a class="nav-link" href="#benchmarks" data-route="benchmarks">Benchmarks &amp; Gates</a>
+          <a class="nav-link" href="#device-lab" data-route="device-lab">Device Lab</a>
+          <a class="nav-link" href="#release-status" data-route="release-status">Release Status</a>
+          <a class="nav-link" href="#publishing" data-route="publishing">Package Publishing</a>
         </div>
       </nav>
-      <footer>
-        <a href="architecture.md">Architecture source</a>
-        <a href="verification.md">Verification record</a>
-      </footer>
+      <div class="sidebar-footer">
+        <a href="architecture.md">Architecture Specification ↗</a>
+        <a href="verification.md">Verification Record ↗</a>
+      </div>
     </aside>
 
-    <main id="content" tabindex="-1">
+    <main class="docs-main" id="content" tabindex="-1">
       <div class="search-results" id="search-results" hidden aria-live="polite"></div>
 
-      <article data-page="overview" data-summary="What Qenlo is, what it guarantees, and where the research boundary sits.">
+      <article class="docs-article" data-page="overview" data-summary="What Qenlo is, what it guarantees, and where the research boundary sits.">
         <p class="eyebrow">Qenlo documentation</p>
         <h1>Embedded vector search that explains its work.</h1>
         <p class="lede">Qenlo is a Rust vector database for native applications. It keeps canonical vectors and metadata local, applies filters before ranking, and returns an execution report with every search.</p>
@@ -100,7 +108,7 @@
         </table>
       </article>
 
-      <article data-page="quickstart" data-summary="Create a collection, add records, search with filters, and inspect execution telemetry.">
+      <article class="docs-article" data-page="quickstart" data-summary="Create a collection, add records, search with filters, and inspect execution telemetry.">
         <p class="eyebrow">Start</p>
         <h1>Quickstart</h1>
         <p class="lede">The API shape stays consistent across every binding: create, add, search, inspect, close.</p>
@@ -151,14 +159,14 @@ let response = try db.search([1, 0, 0], filter: .init(userID: 7))</code></pre></
         </ul>
       </article>
 
-      <article data-page="concepts" data-summary="Canonical generations, filters, exact and approximate paths, and deterministic results.">
+      <article class="docs-article" data-page="concepts" data-summary="Canonical generations, filters, exact and approximate paths, and deterministic results.">
         <p class="eyebrow">Concepts</p><h1>Core concepts</h1><div class="article-actions" data-ai-actions></div>
         <h2>Canonical first</h2><p>Vectors, metadata, tombstones, and generation are canonical. CPU and GPU indexes are replaceable views. A stale derived index is rebuilt or rejected; it never becomes the source of truth.</p>
         <h2>One committed generation</h2><p>A search observes one complete generation. Batch mutations validate atomically before publication, so readers do not see partial batches.</p>
         <h2>Backend selection is visible</h2><p><code>Automatic</code> may use exact CPU search or a GPU path. The execution report names the requested backend, actual backend, algorithm, routing reason, fallback reason, bytes moved, and measured timing.</p>
       </article>
 
-      <article data-page="rust" data-summary="Native async Rust API, feature flags, storage options, and durable collection lifecycle.">
+      <article class="docs-article" data-page="rust" data-summary="Native async Rust API, feature flags, storage options, and durable collection lifecycle.">
         <p class="eyebrow">SDK</p>
         <h1>Rust SDK</h1>
         <p class="lede">The native crate exposes the complete collection, backend router, diagnostics, and storage tuning surface.</p>
@@ -222,7 +230,7 @@ let snapshot_db = Collection::import_qn("snapshots/backup.qn", CollectionConfig:
         <p>Wrap <code>Collection</code> in an <code>Arc&lt;Collection&gt;</code> to share across tasks. Search operations share a read lock; mutations and rebuilds take a write lock. Close is explicit and idempotent.</p>
       </article>
 
-      <article data-page="python" data-summary="Typed Python bindings, native wheel behavior, persistence, and portable file APIs.">
+      <article class="docs-article" data-page="python" data-summary="Typed Python bindings, native wheel behavior, persistence, and portable file APIs.">
         <p class="eyebrow">SDK</p>
         <h1>Python SDK</h1>
         <p class="lede">Type-safe Python bindings for Qenlo with bundled native binaries, context managers, and full execution telemetry.</p>
@@ -278,7 +286,7 @@ db.add_batch([
 db.delete_batch([10, 11])</code></pre>
       </article>
 
-      <article data-page="typescript" data-summary="Node.js TypeScript bindings with bigint-safe identifiers and explicit disposal.">
+      <article class="docs-article" data-page="typescript" data-summary="Node.js TypeScript bindings with bigint-safe identifiers and explicit disposal.">
         <p class="eyebrow">SDK</p>
         <h1>TypeScript & Node.js SDK</h1>
         <p class="lede">Type-safe ESM bindings for Node.js with native C ABI performance, 64-bit integer safety via <code>bigint</code>, and explicit resource management.</p>
@@ -348,7 +356,7 @@ console.log(`Imported ${snapshotDb.stats().liveRows} rows`);</code></pre>
 db.deleteBatch([10n, 11n]);</code></pre>
       </article>
 
-      <article data-page="go" data-summary="cgo bindings, typed filters, lifecycle, and native library requirements.">
+      <article class="docs-article" data-page="go" data-summary="cgo bindings, typed filters, lifecycle, and native library requirements.">
         <p class="eyebrow">SDK</p>
         <h1>Go SDK</h1>
         <p class="lede">Type-safe cgo bindings for Qenlo with concurrent search safety, typed filter pointers, and direct C ABI integration.</p>
@@ -426,7 +434,7 @@ err = db.AddBatch([]qenlo.Record{
 err = db.DeleteBatch([]uint64{10, 11})</code></pre>
       </article>
 
-      <article data-page="kotlin" data-summary="Kotlin JVM bindings through JNA, unsigned identifiers, and AutoCloseable lifecycle.">
+      <article class="docs-article" data-page="kotlin" data-summary="Kotlin JVM bindings through JNA, unsigned identifiers, and AutoCloseable lifecycle.">
         <p class="eyebrow">SDK</p>
         <h1>Kotlin & JVM SDK</h1>
         <p class="lede">Type-safe Kotlin/JVM and Android bindings with JNA native bridge, unsigned integer types, and AutoCloseable disposal.</p>
@@ -487,7 +495,7 @@ QenloCollection.importQn("snapshot.qn", dimension = 128).use { snapshotDb ->
 }</code></pre>
       </article>
 
-      <article data-page="apple" data-summary="Swift bindings for macOS and iOS, Sendable values, and XCFramework distribution boundary.">
+      <article class="docs-article" data-page="apple" data-summary="Swift bindings for macOS and iOS, Sendable values, and XCFramework distribution boundary.">
         <p class="eyebrow">SDK</p>
         <h1>Swift SDK (macOS & iOS)</h1>
         <p class="lede">Type-safe Swift bindings for macOS 13+ and iOS 16+ with typed value objects, Sendable concurrency safety, and XCFramework packaging.</p>
@@ -543,7 +551,7 @@ let snapshotDb = try QenloCollection(importQN: fileURL, dimension: 128)
 defer { try? snapshotDb.close() }</code></pre>
       </article>
 
-      <article data-page="storage" data-summary="Durable directory format, portable .qn snapshots, checksums, and publication rules.">
+      <article class="docs-article" data-page="storage" data-summary="Durable directory format, portable .qn snapshots, checksums, and publication rules.">
         <p class="eyebrow">Operate</p>
         <h1>Storage and Portable Files</h1>
         <p class="lede">Crash-safe write-ahead logging (WAL), atomic compaction, and single-file portable interchange.</p>
@@ -580,7 +588,7 @@ defer { try? snapshotDb.close() }</code></pre>
         <p><a href="qn-format-v1.md">Read the byte-level v1 format specification →</a></p>
       </article>
 
-      <article data-page="recovery" data-summary="What Qenlo self-heals, what it preserves, and which failures remain operator decisions.">
+      <article class="docs-article" data-page="recovery" data-summary="What Qenlo self-heals, what it preserves, and which failures remain operator decisions.">
         <p class="eyebrow">Operate</p>
         <h1>Recovery Policy</h1>
         <p class="lede">Self-healing is bounded, transparent, and fail-closed. Canonical data is never silently invented or discarded.</p>
@@ -615,7 +623,7 @@ defer { try? snapshotDb.close() }</code></pre>
         <p><a href="recovery-policy.md">Read the complete recovery policy →</a></p>
       </article>
 
-      <article data-page="telemetry" data-summary="Read requested and actual backends, routing, fallback, timings, and memory movement.">
+      <article class="docs-article" data-page="telemetry" data-summary="Read requested and actual backends, routing, fallback, timings, and memory movement.">
         <p class="eyebrow">Operate</p>
         <h1>Execution Reports & Diagnostics</h1>
         <p class="lede">Every search response contains an execution report disclosing routing decisions, timings, and hardware memory transfers.</p>
@@ -661,7 +669,7 @@ defer { try? snapshotDb.close() }</code></pre>
         </table>
       </article>
 
-      <article data-page="benchmarks" data-summary="Reproducible benchmark protocol, independent correctness oracle, and the open investment gate.">
+      <article class="docs-article" data-page="benchmarks" data-summary="Reproducible benchmark protocol, independent correctness oracle, and the open investment gate.">
         <p class="eyebrow">Research</p>
         <h1>Benchmarks & Verification Gates</h1>
         <p class="lede">Reproducible benchmark protocols, independent float64 CPU correctness oracles, and transparent scientific gates.</p>
@@ -707,7 +715,7 @@ defer { try? snapshotDb.close() }</code></pre>
         <p><a href="benchmark-protocol.md">Read the complete benchmark protocol →</a> · <a href="results-2026-08-28.md">Inspect August 2026 results →</a> · <a href="reports/2026-09-02-topk-a6000-assessment.md">Inspect A6000 gate report →</a></p>
       </article>
 
-      <article data-page="device-lab" data-summary="Run quick and soak suites on real devices, retain local reports, and submit telemetry explicitly.">
+      <article class="docs-article" data-page="device-lab" data-summary="Run quick and soak suites on real devices, retain local reports, and submit telemetry explicitly.">
         <p class="eyebrow">Research</p>
         <h1>Device Lab</h1>
         <p class="lede">Turn physical tester hardware into reproducible benchmark stations across Linux, Windows, macOS, Android, and iOS.</p>
@@ -726,7 +734,7 @@ qenlo-lab --suite soak</code></pre>
         <p><a href="device-lab.md">Read the Device Lab architecture & packaging guide →</a></p>
       </article>
 
-      <article data-page="release-status" data-summary="What is implemented, what CI proves, and what still needs credentials or physical hardware.">
+      <article class="docs-article" data-page="release-status" data-summary="What is implemented, what CI proves, and what still needs credentials or physical hardware.">
         <p class="eyebrow">Release</p>
         <h1>Release Status</h1>
         <p class="lede">Track implemented surfaces, automated CI matrices, and open hardware gates.</p>
@@ -748,7 +756,7 @@ qenlo-lab --suite soak</code></pre>
         <p><a href="implementation-status.md">Read the complete implementation ledger →</a> · <a href="verification.md">Inspect verification record →</a></p>
       </article>
 
-      <article data-page="publishing" data-summary="Registry identities, credentials, immutable release order, and package-specific publication commands.">
+      <article class="docs-article" data-page="publishing" data-summary="Registry identities, credentials, immutable release order, and package-specific publication commands.">
         <p class="eyebrow">Release</p>
         <h1>Package Publishing & Registries</h1>
         <p class="lede">Single-version release pipeline across PyPI, npm, crates.io, Maven Central, SwiftPM, and Go.</p>
@@ -769,18 +777,25 @@ qenlo-lab --suite soak</code></pre>
 
         <h2>Release Checklist</h2>
         <ol>
-          <li>Run <code>python scripts/check_release_versions.py sdk-v0.1.0</code> to verify version consistency across all manifests.</li>
+          <li>Run <code>python scripts/check_release_versions.py sdk-v0.1.0-alpha.1</code> to verify version consistency across all manifests.</li>
           <li>Execute complete workspace verification: <code>cargo fmt</code>, <code>cargo clippy</code>, <code>cargo test --workspace</code>, <code>pnpm test</code>, and <code>pytest</code>.</li>
           <li>Build Apple XCFramework release candidate, compute checksum, and commit Swift manifest.</li>
-          <li>Push immutable git tag <code>sdk-v0.1.0</code> to trigger automated GitHub Actions release packaging.</li>
+          <li>Push immutable git tag <code>sdk-v0.1.0-alpha.1</code> to trigger automated GitHub Actions release packaging.</li>
           <li>Dispatch publication workflow in strict dependency order: crates.io → PyPI → npm → Maven Central → SwiftPM → Go.</li>
         </ol>
         <p><a href="../RELEASING.md">Read the complete Releasing checklist →</a></p>
       </article>
 
-      <nav class="page-nav" aria-label="Adjacent documentation">
-        <a id="previous-page" href="#overview"></a><a id="next-page" href="#quickstart"></a>
-      </nav>
+      <div class="page-navigation">
+        <a class="page-nav-btn prev" id="prev-page-btn" href="#">
+          <span class="page-nav-sub">Previous</span>
+          <span class="page-nav-title"></span>
+        </a>
+        <a class="page-nav-btn next" id="next-page-btn" href="#">
+          <span class="page-nav-sub">Next</span>
+          <span class="page-nav-title"></span>
+        </a>
+      </div>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

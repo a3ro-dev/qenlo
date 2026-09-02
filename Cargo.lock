@@ -1526,7 +1526,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "async-lock",
  "crc32fast",
@@ -1541,7 +1541,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-bench"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "crc32fast",
  "opentelemetry",
@@ -1560,7 +1560,7 @@ version = "0.1.0"
 
 [[package]]
 name = "qenlo-ffi"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "pollster",
  "qenlo",
@@ -1571,7 +1571,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-mobile"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "jni",
  "qenlo-testkit",
@@ -1580,7 +1580,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-telemetry"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "axum",
  "qenlo-testkit",
@@ -1592,7 +1592,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-testkit"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "qenlo",
  "reqwest 0.12.28",

@@ -11,7 +11,7 @@ members = [
 resolver = "3"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 edition = "2024"
 rust-version = "1.98.0"
 license = "Apache-2.0 OR MIT"
@@ -22,7 +22,7 @@ authors = ["Akshat Singh Kushwaha <akshatsingh14372@outlook.com>"]
 [workspace.dependencies]
 crc32fast = "1"
 memmap2 = "0.9"
-qenlo-core = { path = "crates/qenlo-core", version = "0.1.0" }
+qenlo-core = { path = "crates/qenlo-core", version = "0.1.0-alpha.1" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
