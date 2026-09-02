@@ -1,0 +1,6 @@
+{
+  "backend": "qdrant",
+  "status": "excluded",
+  "reason": "qdrant-client local mode warns that collections above 20000 points use exact brute-force search; this is not a representative ANN comparison for the 100000-point corpus",
+  "next_step": "run Qdrant server as a separate HTTP-boundary cohort"
+}
