@@ -6,17 +6,130 @@
   <meta name="description" content="Qenlo documentation for embedded filtered vector search, portable storage, SDKs, and reproducible benchmarks.">
   <title>Qenlo Documentation</title>
   <link rel="icon" href="../assets/brand/logo/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/brand/tokens.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
   <style>
     :root {
-      --base-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --code-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      --theme-color: #38bdf8;
-      --sidebar-width: 270px;
+      /* Typography */
+      --base-font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --code-font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --base-font-size: 15px;
+      --base-line-height: 1.68;
+
+      /* Brand Colors */
+      --theme-color: #E05343;
+      --theme-color-dark: #B53C2F;
+      --base-background-color: #0E1210;
+      --base-color: #E8EBE9;
+      
+      /* Sidebar */
+      --sidebar-background: #080B0A;
+      --sidebar-border-color: #1F2723;
+      --sidebar-border-width: 1px;
+      --sidebar-width: 280px;
+      --sidebar-name-color: #E8EBE9;
+      --sidebar-name-font-weight: 700;
+      --sidebar-nav-link-color: #969E9A;
+      --sidebar-nav-link-color--active: #E05343;
+      --sidebar-nav-link-font-weight--active: 600;
+
+      /* Content Area */
       --content-max-width: 860px;
+      --heading-color: #FFFFFF;
+      --heading-font-weight: 700;
+      --link-color: #E05343;
+      --link-color--hover: #F06A5B;
+
+      /* Code Blocks & Tables */
+      --code-theme-background: #040605;
+      --code-theme-text: #E8EBE9;
+      --table-body-border-color: #1F2723;
+      --table-head-border-color: #2A332E;
+      --table-head-background: #171D1A;
+      --table-row-odd-background: rgba(255, 255, 255, 0.015);
+      
+      /* Admonition / Blockquote */
+      --blockquote-border-color: #E05343;
+      --blockquote-background: #171D1A;
+      --blockquote-color: #E8EBE9;
+
+      /* Pagination */
+      --pagination-title-color: #E8EBE9;
+    }
+
+    /* Brand Logo Lockup in Sidebar */
+    .app-name-link {
+      padding: 1.25rem 0.5rem 0.5rem;
+      display: block;
     }
     .app-name-link img {
-      max-height: 28px;
+      max-height: 32px;
+      width: auto;
+    }
+
+    /* Navbar / Version Tag */
+    .app-nav {
+      margin: 1.5rem 2rem 0 0;
+    }
+    .app-nav li {
+      font-size: 0.85rem;
+      font-family: var(--code-font-family);
+    }
+    .app-nav a {
+      color: #969E9A !important;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      background: #171D1A;
+      border: 1px solid #2A332E;
+      transition: all 0.15s ease;
+    }
+    .app-nav a:hover {
+      color: #FFFFFF !important;
+      border-color: #E05343;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2A332E;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3B4741;
+    }
+
+    /* Inline Code */
+    :not(pre) > code {
+      background: #171D1A !important;
+      border: 1px solid #2A332E !important;
+      color: #E05343 !important;
+      border-radius: 4px !important;
+      padding: 0.15em 0.35em !important;
+      font-size: 0.88em !important;
+    }
+
+    /* Tables */
+    table {
+      border: 1px solid #1F2723;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+
+    /* Search Input */
+    .sidebar .search input {
+      background: #171D1A !important;
+      border: 1px solid #2A332E !important;
+      color: #E8EBE9 !important;
+      border-radius: 6px !important;
+      font-family: var(--base-font-family) !important;
+    }
+    .sidebar .search input:focus {
+      border-color: #E05343 !important;
+      box-shadow: 0 0 0 2px rgba(224, 83, 67, 0.2) !important;
     }
   </style>
 </head>
@@ -25,8 +138,10 @@
   <script>
     window.$docsify = {
       name: 'Qenlo',
+      logo: '../assets/brand/logo/lockup-reversed.svg',
       repo: 'https://github.com/a3ro-dev/qenlo',
       loadSidebar: true,
+      loadNavbar: true,
       subMaxLevel: 3,
       auto2top: true,
       search: {
