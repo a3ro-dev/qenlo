@@ -104,6 +104,10 @@ pub(crate) struct GpuExecution {
     pub readback_bytes: u64,
     pub allocation_bytes: u64,
     pub chunks: u32,
+    /// Host time spent enqueueing queue writes; it is not device transfer time.
+    pub upload_enqueue: Duration,
+    /// Host wait plus mapped-range parsing and merge time after submission.
+    pub readback_completion: Duration,
 }
 
 #[derive(Debug)]
@@ -450,13 +454,16 @@ impl GpuExact {
                 .collect::<Vec<_>>();
             &flattened
         };
+        let upload_started = web_time::Instant::now();
         self.queue
             .write_buffer(&scratch.query, 0, bytes_of(query_values));
+        let query_upload_enqueue = upload_started.elapsed();
         self.health.check()?;
         let mut execution = GpuExecution {
             allocation_bytes,
             upload_bytes: query_values.len() as u64 * 4,
             chunks: self.chunks.len() as u32,
+            upload_enqueue: query_upload_enqueue,
             ..Default::default()
         };
         let mut merged = (0..queries.len())
@@ -488,10 +495,12 @@ impl GpuExact {
             );
             execution.upload_bytes += eligibility_upload.len() as u64 * 4 + PARAM_BYTES;
             execution.readback_bytes += result_bytes;
+            let upload_started = web_time::Instant::now();
             self.queue
                 .write_buffer(&scratch.eligibility, 0, bytes_of(eligibility_upload));
             self.queue
                 .write_buffer(&scratch.params, 0, bytes_of(&params));
+            execution.upload_enqueue += upload_started.elapsed();
             self.health.check()?;
 
             let group0 = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -536,6 +545,7 @@ impl GpuExact {
             self.health.check()?;
             execution.dispatch_count += if dispatch_items == 0 { 1 } else { 2 };
 
+            let readback_started = web_time::Instant::now();
             map_wait_range(&self.device, &scratch.staging, result_bytes).inspect_err(|error| {
                 self.health.fail(error.to_string());
                 self.device.destroy();
@@ -567,6 +577,7 @@ impl GpuExact {
             }
             drop(mapped);
             scratch.staging.unmap();
+            execution.readback_completion += readback_started.elapsed();
         }
         Ok((merged, execution))
     }
@@ -789,6 +800,10 @@ impl GpuBackend {
             .map_or(&self.capabilities, |exact| &exact.capabilities)
     }
 
+    pub(crate) fn filter_mode(&self) -> super::GpuFilterMode {
+        self.mode
+    }
+
     pub(crate) fn is_healthy(&self) -> bool {
         self.exact
             .as_ref()
@@ -928,6 +943,7 @@ impl GpuBackend {
         queries: &[&[f32]],
         predicate: &qenlo_core::Predicate,
         k: usize,
+        prepared_rows: Option<&[u32]>,
     ) -> Result<Vec<super::BackendOutput>, GpuError> {
         let started = web_time::Instant::now();
         let normalized = queries
@@ -949,7 +965,7 @@ impl GpuBackend {
         });
         let rows = match self.mode {
             super::GpuFilterMode::CpuMask | super::GpuFilterMode::CpuEligibleRows => {
-                Some(store.filter(predicate))
+                prepared_rows.map_or_else(|| Some(store.filter(predicate)), |_| None)
             }
             super::GpuFilterMode::GpuPredicate => None,
         };
@@ -959,7 +975,9 @@ impl GpuBackend {
         } else {
             match self.mode {
                 super::GpuFilterMode::CpuMask => {
-                    let rows = rows.as_deref().expect("CPU mode has filtered rows");
+                    let rows = prepared_rows
+                        .or(rows.as_deref())
+                        .expect("CPU mode has filtered rows");
                     mask.resize(store.len(), false);
                     for &row in rows {
                         mask[row as usize] = true;
@@ -967,7 +985,9 @@ impl GpuBackend {
                     (FilterMode::Mask(&mask), Some(rows.len() as u64))
                 }
                 super::GpuFilterMode::CpuEligibleRows => {
-                    let rows = rows.as_deref().expect("CPU mode has filtered rows");
+                    let rows = prepared_rows
+                        .or(rows.as_deref())
+                        .expect("CPU mode has filtered rows");
                     (FilterMode::EligibleRows(rows), Some(rows.len() as u64))
                 }
                 super::GpuFilterMode::GpuPredicate => (
@@ -1079,7 +1099,7 @@ fn gpu_output(
         actual_backend: super::BackendKind::Wgpu,
         algorithm,
         filter_execution: super::FilterExecution::Gpu(mode),
-        phases: gpu_phases(elapsed),
+        phases: gpu_phases(elapsed, execution),
         upload_bytes: super::Measurement::Available(execution.upload_bytes),
         readback_bytes: super::Measurement::Available(execution.readback_bytes),
         dispatch_count: super::Measurement::Available(execution.dispatch_count),
@@ -1094,6 +1114,32 @@ fn gpu_output(
             },
             super::Measurement::Available,
         ),
+        gpu_row_preparation: None,
+        predicate_traversals: 0,
+        row_materialization: super::Measurement::Unavailable(super::Unavailable {
+            reason: "set by collection".into(),
+        }),
+        materialized_rows: super::Measurement::Unavailable(super::Unavailable {
+            reason: "set by collection".into(),
+        }),
+        row_cache_hit: None,
+        eligibility_predicate_kind: None,
+        eligibility_representation: None,
+        eligibility_generation: None,
+        corpus_rows: super::Measurement::Unavailable(super::Unavailable {
+            reason: "set by collection".into(),
+        }),
+        eligible_selectivity: super::Measurement::Unavailable(super::Unavailable {
+            reason: "set by collection".into(),
+        }),
+        eligibility_transfer_bytes: super::Measurement::Unavailable(super::Unavailable {
+            reason: "set by collection".into(),
+        }),
+        eligible_contiguous_runs: super::Measurement::Unavailable(super::Unavailable {
+            reason: "set by collection".into(),
+        }),
+        eligibility_cacheable: None,
+        eligibility_resident: None,
     }
 }
 
@@ -1102,7 +1148,7 @@ enum OwnedFilter {
     Rows(Vec<u32>),
 }
 
-fn gpu_phases(execution: web_time::Duration) -> super::PhaseTimings {
+fn gpu_phases(execution: web_time::Duration, details: &GpuExecution) -> super::PhaseTimings {
     super::PhaseTimings {
         preparation: super::Measurement::Unavailable(super::Unavailable {
             reason: "set by collection".into(),
@@ -1110,13 +1156,9 @@ fn gpu_phases(execution: web_time::Duration) -> super::PhaseTimings {
         filtering: super::Measurement::Unavailable(super::Unavailable {
             reason: "included in GPU execution".into(),
         }),
-        upload: super::Measurement::Unavailable(super::Unavailable {
-            reason: "phase timing not yet instrumented".into(),
-        }),
+        upload: super::Measurement::Available(details.upload_enqueue),
         execution: super::Measurement::Available(execution),
-        readback: super::Measurement::Unavailable(super::Unavailable {
-            reason: "included in GPU execution".into(),
-        }),
+        readback: super::Measurement::Available(details.readback_completion),
         selection: super::Measurement::Unavailable(super::Unavailable {
             reason: "included in GPU execution".into(),
         }),

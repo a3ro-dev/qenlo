@@ -1,0 +1,12 @@
+{
+  "error": "runpodctl failed: pod create --name qenlo-mi300x-eu-ro-secure --image rocm/dev-ubuntu-24.04:6.4-complete --gpu-id AMD Instinct MI300X OAM --data-center-ids EU-RO-1 --cloud-type SECURE --container-disk-in-gb 30 --volume-in-gb 0 --ports 22/tcp --env {\"NVIDIA_DRIVER_CAPABILITIES\":\"compute,utility,graphics\",\"NVIDIA_VISIBLE_DEVICES\":\"all\"} --wait --wait-timeout 3m",
+  "configuration": {
+    "name": "mi300x-eu-ro-secure",
+    "gpuId": "AMD Instinct MI300X OAM",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "price": 2.39,
+    "amd": true
+  },
+  "status": "failed_or_unavailable"
+}

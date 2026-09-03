@@ -117,6 +117,28 @@ impl UsearchBackend {
             candidates: Measurement::unavailable(
                 "USearch does not expose graph traversal counters",
             ),
+            gpu_row_preparation: None,
+            predicate_traversals: 1,
+            row_materialization: Measurement::unavailable(
+                "USearch evaluates the predicate during graph traversal",
+            ),
+            materialized_rows: Measurement::unavailable(
+                "USearch has no GPU eligible-row materialization",
+            ),
+            row_cache_hit: None,
+            eligibility_predicate_kind: None,
+            eligibility_representation: None,
+            eligibility_generation: None,
+            corpus_rows: Measurement::unavailable("USearch has no compiled eligibility plan"),
+            eligible_selectivity: Measurement::unavailable(
+                "USearch has no compiled eligibility plan",
+            ),
+            eligibility_transfer_bytes: Measurement::Available(0),
+            eligible_contiguous_runs: Measurement::unavailable(
+                "USearch has no compiled eligibility plan",
+            ),
+            eligibility_cacheable: None,
+            eligibility_resident: None,
         })
     }
 }

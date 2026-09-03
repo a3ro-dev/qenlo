@@ -1,0 +1,14 @@
+[
+  {"name":"3090-eu-cz-community","gpuId":"NVIDIA GeForce RTX 3090","dataCenter":"EU-CZ-1","cloud":"COMMUNITY","price":0.22},
+  {"name":"a5000-us-il-community","gpuId":"NVIDIA RTX A5000","dataCenter":"US-IL-1","cloud":"COMMUNITY","price":0.16},
+  {"name":"a6000-eu-se-community","gpuId":"NVIDIA RTX A6000","dataCenter":"EU-SE-1","cloud":"COMMUNITY","price":0.33},
+  {"name":"a6000-us-tx-community","gpuId":"NVIDIA RTX A6000","dataCenter":"US-TX-1","cloud":"COMMUNITY","price":0.33},
+  {"name":"4090-is1-community","gpuId":"NVIDIA GeForce RTX 4090","dataCenter":"EUR-IS-1","cloud":"COMMUNITY","price":0.34},
+  {"name":"4090-is2-community","gpuId":"NVIDIA GeForce RTX 4090","dataCenter":"EUR-IS-2","cloud":"COMMUNITY","price":0.34},
+  {"name":"4090-us-il-community","gpuId":"NVIDIA GeForce RTX 4090","dataCenter":"US-IL-1","cloud":"COMMUNITY","price":0.34},
+  {"name":"a40-eu-se-secure","gpuId":"NVIDIA A40","dataCenter":"EU-SE-1","cloud":"SECURE","price":0.44},
+  {"name":"l4-eu-ro-secure","gpuId":"NVIDIA L4","dataCenter":"EU-RO-1","cloud":"SECURE","price":0.49},
+  {"name":"rtx2000-eu-ro-secure","gpuId":"NVIDIA RTX 2000 Ada Generation","dataCenter":"EU-RO-1","cloud":"SECURE","price":0.24},
+  {"name":"rtx4000-eu-ro-secure","gpuId":"NVIDIA RTX 4000 Ada Generation","dataCenter":"EU-RO-1","cloud":"SECURE","price":0.28},
+  {"name":"mi300x-eu-ro-secure","gpuId":"AMD Instinct MI300X OAM","dataCenter":"EU-RO-1","cloud":"SECURE","price":2.39,"amd":true}
+]

@@ -25,6 +25,8 @@ use async_lock::{RwLock, RwLockWriteGuard};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
+#[cfg(feature = "gpu-wgpu")]
+use std::sync::{Arc, Mutex, RwLock as SyncRwLock};
 
 #[cfg(feature = "usearch")]
 use qenlo_core::Predicate;
@@ -89,6 +91,53 @@ pub enum GpuFilterMode {
     CpuMask,
     CpuEligibleRows,
     GpuPredicate,
+}
+
+/// Host-side eligible-row preparation used by exact WGPU row and mask filters.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[repr(u8)]
+pub enum GpuRowPreparation {
+    /// Preserve the original count-then-materialize behavior for controlled ablations.
+    LegacyTwoPass,
+    /// Materialize eligible rows once and reuse them for routing and execution.
+    #[default]
+    OnePass,
+    /// Reuse one bounded eligible-row list for the current generation and predicate.
+    Cached,
+}
+
+/// One conservative, hardware-bound automatic-routing decision boundary.
+///
+/// Profiles are produced from tuning data, never from held-out evaluation data.
+/// A mismatch falls back to Qenlo's documented static rule.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RouterProfile {
+    pub adapter_name: String,
+    pub dimension: usize,
+    pub batch_size: usize,
+    pub filter_mode: GpuFilterMode,
+    pub cached_rows: bool,
+    pub gpu_min_eligible_rows: usize,
+}
+
+/// Canonical predicate shape compiled into an eligibility plan.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EligibilityPredicateKind {
+    All,
+    UserEquality,
+    TimestampRange,
+    UserAndTimestamp,
+    Empty,
+}
+
+/// Physical eligibility representation selected before backend execution.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EligibilityRepresentation {
+    Empty,
+    TinyRows,
+    SortedRows,
+    DenseMask,
+    ShaderPredicate,
 }
 
 /// Where row eligibility was evaluated.
@@ -244,6 +293,29 @@ pub struct ExecutionReport {
     pub dispatch_count: Measurement<u32>,
     pub qenlo_allocation_bytes: Measurement<u64>,
     pub candidates: Measurement<u64>,
+    /// Eligible-row preparation mode for WGPU row/mask execution.
+    pub gpu_row_preparation: Option<GpuRowPreparation>,
+    /// Complete predicate traversals performed before or during this search.
+    pub predicate_traversals: u32,
+    /// Time spent materializing the eligible-row list on the host.
+    pub row_materialization: Measurement<Duration>,
+    /// Rows in the materialized list, distinct from algorithm candidates.
+    pub materialized_rows: Measurement<u64>,
+    /// `Some(true)` for a cache hit, `Some(false)` for a miss, otherwise absent.
+    pub row_cache_hit: Option<bool>,
+    /// Predicate shape and physical representation chosen by `EligibilityPlan`.
+    pub eligibility_predicate_kind: Option<EligibilityPredicateKind>,
+    pub eligibility_representation: Option<EligibilityRepresentation>,
+    /// Generation and corpus size against which eligibility was compiled.
+    pub eligibility_generation: Option<u64>,
+    pub corpus_rows: Measurement<u64>,
+    pub eligible_selectivity: Measurement<f64>,
+    /// Estimated eligibility bytes uploaded by the selected representation.
+    pub eligibility_transfer_bytes: Measurement<u64>,
+    /// Number of contiguous runs in the sorted eligible-row sequence.
+    pub eligible_contiguous_runs: Measurement<u64>,
+    pub eligibility_cacheable: Option<bool>,
+    pub eligibility_resident: Option<bool>,
     pub results: usize,
     /// Queries sharing this execution. Transfer/dispatch metrics are batch totals.
     pub batch_size: usize,
@@ -345,6 +417,194 @@ pub struct Collection {
     inner: RwLock<CollectionState>,
     #[cfg(feature = "gpu-wgpu")]
     gpu_gate: async_lock::Mutex<()>,
+    #[cfg(feature = "gpu-wgpu")]
+    gpu_row_preparation: AtomicU8,
+    #[cfg(feature = "gpu-wgpu")]
+    gpu_row_cache: Mutex<Option<CachedGpuRows>>,
+    #[cfg(feature = "gpu-wgpu")]
+    router_profile: SyncRwLock<Option<RouterProfile>>,
+}
+
+#[cfg(feature = "gpu-wgpu")]
+struct CachedGpuRows {
+    generation: u64,
+    filter: Filter,
+    rows: Arc<[u32]>,
+}
+
+#[cfg(feature = "gpu-wgpu")]
+struct EligibilityPlan {
+    generation: u64,
+    eligible_count: usize,
+    corpus_size: usize,
+    predicate_kind: EligibilityPredicateKind,
+    representation: EligibilityRepresentation,
+    rows: Option<Arc<[u32]>>,
+    transfer_bytes: u64,
+    contiguous_runs: usize,
+    materialization: Measurement<Duration>,
+    predicate_traversals: u32,
+    cache_hit: Option<bool>,
+}
+
+struct SearchBatchContext<'a> {
+    rebuilt: bool,
+    preparation: Measurement<Duration>,
+    #[cfg(feature = "gpu-wgpu")]
+    row_preparation: GpuRowPreparation,
+    #[cfg(feature = "gpu-wgpu")]
+    row_cache: &'a Mutex<Option<CachedGpuRows>>,
+    #[cfg(feature = "gpu-wgpu")]
+    router_profile: Option<RouterProfile>,
+    #[cfg(not(feature = "gpu-wgpu"))]
+    marker: std::marker::PhantomData<&'a ()>,
+}
+
+#[cfg(feature = "gpu-wgpu")]
+impl EligibilityPlan {
+    fn compile(
+        store: &CoreStore,
+        filter: &Filter,
+        mode: GpuFilterMode,
+        preparation: GpuRowPreparation,
+        cache: &Mutex<Option<CachedGpuRows>>,
+    ) -> Self {
+        let generation = store.generation();
+        let corpus_size = store.len();
+        let predicate_kind = eligibility_predicate_kind(filter);
+        let uses_host_rows = matches!(
+            mode,
+            GpuFilterMode::CpuMask | GpuFilterMode::CpuEligibleRows
+        );
+        let materialization;
+        let mut cache_hit = None;
+        let mut predicate_traversals = 1;
+        let rows = if uses_host_rows && preparation == GpuRowPreparation::Cached {
+            let cached = cache
+                .lock()
+                .expect("GPU row cache poisoned")
+                .as_ref()
+                .filter(|entry| entry.generation == generation && entry.filter == *filter)
+                .map(|entry| Arc::clone(&entry.rows));
+            if let Some(rows) = cached {
+                predicate_traversals = 0;
+                cache_hit = Some(true);
+                materialization = Measurement::Available(Duration::ZERO);
+                rows
+            } else {
+                let started = Instant::now();
+                let rows: Arc<[u32]> = store.filter(filter).into();
+                materialization = Measurement::Available(started.elapsed());
+                cache_hit = Some(false);
+                *cache.lock().expect("GPU row cache poisoned") = Some(CachedGpuRows {
+                    generation,
+                    filter: *filter,
+                    rows: Arc::clone(&rows),
+                });
+                rows
+            }
+        } else {
+            if uses_host_rows && preparation == GpuRowPreparation::LegacyTwoPass {
+                // Deliberately preserve the shipped count pass for controlled ablations only.
+                let _ = store.filter(filter).len();
+                predicate_traversals = 2;
+            }
+            let started = Instant::now();
+            let rows: Arc<[u32]> = store.filter(filter).into();
+            materialization = Measurement::Available(started.elapsed());
+            rows
+        };
+        let eligible_count = rows.len();
+        let contiguous_runs = contiguous_run_count(&rows);
+        let representation = if eligible_count == 0 {
+            EligibilityRepresentation::Empty
+        } else {
+            match mode {
+                GpuFilterMode::CpuMask => EligibilityRepresentation::DenseMask,
+                GpuFilterMode::CpuEligibleRows if eligible_count <= 64 => {
+                    EligibilityRepresentation::TinyRows
+                }
+                GpuFilterMode::CpuEligibleRows => EligibilityRepresentation::SortedRows,
+                GpuFilterMode::GpuPredicate => EligibilityRepresentation::ShaderPredicate,
+            }
+        };
+        let transfer_bytes = match representation {
+            EligibilityRepresentation::Empty => 0,
+            EligibilityRepresentation::TinyRows | EligibilityRepresentation::SortedRows => {
+                eligible_count as u64 * 4
+            }
+            EligibilityRepresentation::DenseMask => corpus_size as u64 * 4,
+            EligibilityRepresentation::ShaderPredicate => 0,
+        };
+        Self {
+            generation,
+            eligible_count,
+            corpus_size,
+            predicate_kind,
+            representation,
+            // Retain canonical rows even for shader execution so an automatic CPU decision or
+            // GPU fallback can consume the same traversal without recompiling eligibility.
+            rows: Some(rows),
+            transfer_bytes,
+            contiguous_runs,
+            materialization,
+            predicate_traversals,
+            cache_hit,
+        }
+    }
+
+    fn annotate(
+        &self,
+        output: &mut BackendOutput,
+        row_preparation: GpuRowPreparation,
+        uses_host_rows: bool,
+    ) {
+        output.gpu_row_preparation = uses_host_rows.then_some(row_preparation);
+        output.predicate_traversals = self.predicate_traversals;
+        output.row_materialization = self.materialization.clone();
+        output.materialized_rows = Measurement::Available(self.eligible_count as u64);
+        output.row_cache_hit = uses_host_rows.then_some(self.cache_hit).flatten();
+        output.eligibility_predicate_kind = Some(self.predicate_kind);
+        output.eligibility_representation = Some(self.representation);
+        output.eligibility_generation = Some(self.generation);
+        output.corpus_rows = Measurement::Available(self.corpus_size as u64);
+        output.eligible_selectivity = Measurement::Available(if self.corpus_size == 0 {
+            0.0
+        } else {
+            self.eligible_count as f64 / self.corpus_size as f64
+        });
+        output.eligibility_transfer_bytes = Measurement::Available(self.transfer_bytes);
+        output.eligible_contiguous_runs = Measurement::Available(self.contiguous_runs as u64);
+        output.eligibility_cacheable = Some(uses_host_rows);
+        output.eligibility_resident = Some(false);
+    }
+}
+
+#[cfg(feature = "gpu-wgpu")]
+fn eligibility_predicate_kind(filter: &Filter) -> EligibilityPredicateKind {
+    if filter.timestamp.is_empty() {
+        EligibilityPredicateKind::Empty
+    } else {
+        match (
+            filter.user_id.is_some(),
+            filter.timestamp == TimestampRange::ALL,
+        ) {
+            (false, true) => EligibilityPredicateKind::All,
+            (true, true) => EligibilityPredicateKind::UserEquality,
+            (false, false) => EligibilityPredicateKind::TimestampRange,
+            (true, false) => EligibilityPredicateKind::UserAndTimestamp,
+        }
+    }
+}
+
+#[cfg(feature = "gpu-wgpu")]
+fn contiguous_run_count(rows: &[u32]) -> usize {
+    rows.first().map_or(0, |_| {
+        1 + rows
+            .windows(2)
+            .filter(|pair| pair[1] != pair[0] + 1)
+            .count()
+    })
 }
 
 impl Collection {
@@ -417,6 +677,12 @@ impl Collection {
             inner: RwLock::new(state),
             #[cfg(feature = "gpu-wgpu")]
             gpu_gate: async_lock::Mutex::new(()),
+            #[cfg(feature = "gpu-wgpu")]
+            gpu_row_preparation: AtomicU8::new(GpuRowPreparation::OnePass as u8),
+            #[cfg(feature = "gpu-wgpu")]
+            gpu_row_cache: Mutex::new(None),
+            #[cfg(feature = "gpu-wgpu")]
+            router_profile: SyncRwLock::new(None),
         }
     }
 
@@ -429,6 +695,8 @@ impl Collection {
         let lock_wait = started.elapsed();
         state.add(id, user_id, timestamp, vector)?;
         state.record_single_commit(operation_id, lock_wait, started.elapsed());
+        #[cfg(feature = "gpu-wgpu")]
+        self.invalidate_gpu_row_cache();
         Ok(())
     }
 
@@ -441,6 +709,8 @@ impl Collection {
         let lock_wait = started.elapsed();
         state.delete(id)?;
         state.record_single_commit(operation_id, lock_wait, started.elapsed());
+        #[cfg(feature = "gpu-wgpu")]
+        self.invalidate_gpu_row_cache();
         Ok(())
     }
 
@@ -456,6 +726,8 @@ impl Collection {
         report.lock_wait = lock_wait;
         report.total_duration = started.elapsed();
         state.last_commit = Some(report.clone());
+        #[cfg(feature = "gpu-wgpu")]
+        self.invalidate_gpu_row_cache();
         Ok(report)
     }
 
@@ -591,9 +863,32 @@ impl Collection {
         } else {
             None
         };
+        #[cfg(feature = "gpu-wgpu")]
+        let router_profile = self
+            .router_profile
+            .read()
+            .expect("router profile poisoned")
+            .clone();
         let mut response = state
-            .search_inner(query, filter, k, rebuilt, preparation)
-            .await?;
+            .search_batch_inner(
+                &[query],
+                filter,
+                k,
+                SearchBatchContext {
+                    rebuilt,
+                    preparation,
+                    #[cfg(feature = "gpu-wgpu")]
+                    row_preparation: self.gpu_row_preparation(),
+                    #[cfg(feature = "gpu-wgpu")]
+                    row_cache: &self.gpu_row_cache,
+                    #[cfg(feature = "gpu-wgpu")]
+                    router_profile,
+                    #[cfg(not(feature = "gpu-wgpu"))]
+                    marker: std::marker::PhantomData,
+                },
+            )
+            .await?
+            .remove(0);
         response.report.lock_wait = lock_wait;
         response.report.preparation_reason = if rebuilt { preparation_reason } else { None };
         #[cfg(feature = "gpu-wgpu")]
@@ -617,8 +912,10 @@ impl Collection {
         }
         response.report.total_duration = started.elapsed();
         if self.diagnostics.load(Ordering::Relaxed) == Diagnostics::Detailed as u8 {
-            response.report.eligible_rows =
-                Measurement::Available(state.store.filter(filter).len() as u64);
+            if matches!(response.report.eligible_rows, Measurement::Unavailable(_)) {
+                response.report.eligible_rows =
+                    Measurement::Available(state.store.filter(filter).len() as u64);
+            }
             response.report.total_duration = started.elapsed();
         }
         Ok(response)
@@ -672,8 +969,30 @@ impl Collection {
         } else {
             None
         };
+        #[cfg(feature = "gpu-wgpu")]
+        let router_profile = self
+            .router_profile
+            .read()
+            .expect("router profile poisoned")
+            .clone();
         let mut responses = state
-            .search_batch_inner(queries, filter, k, rebuilt, preparation)
+            .search_batch_inner(
+                queries,
+                filter,
+                k,
+                SearchBatchContext {
+                    rebuilt,
+                    preparation,
+                    #[cfg(feature = "gpu-wgpu")]
+                    row_preparation: self.gpu_row_preparation(),
+                    #[cfg(feature = "gpu-wgpu")]
+                    row_cache: &self.gpu_row_cache,
+                    #[cfg(feature = "gpu-wgpu")]
+                    router_profile,
+                    #[cfg(not(feature = "gpu-wgpu"))]
+                    marker: std::marker::PhantomData,
+                },
+            )
             .await?;
         for response in &mut responses {
             response.report.operation_id = NEXT_OPERATION_ID.fetch_add(1, Ordering::Relaxed);
@@ -701,6 +1020,39 @@ impl Collection {
     /// Select tracing detail; only `Detailed` adds an eligibility-count scan.
     pub fn set_diagnostics(&self, diagnostics: Diagnostics) {
         self.diagnostics.store(diagnostics as u8, Ordering::Relaxed);
+    }
+
+    /// Select eligible-row preparation for exact WGPU row and mask filters.
+    #[cfg(feature = "gpu-wgpu")]
+    pub fn set_gpu_row_preparation(&self, mode: GpuRowPreparation) {
+        self.gpu_row_preparation
+            .store(mode as u8, Ordering::Relaxed);
+        *self.gpu_row_cache.lock().expect("GPU row cache poisoned") = None;
+    }
+
+    /// Install a tuning-only automatic router profile. It is ignored on mismatch.
+    #[cfg(feature = "gpu-wgpu")]
+    pub fn set_router_profile(&self, profile: Option<RouterProfile>) {
+        *self
+            .router_profile
+            .write()
+            .expect("router profile poisoned") = profile;
+    }
+
+    #[cfg(feature = "gpu-wgpu")]
+    fn gpu_row_preparation(&self) -> GpuRowPreparation {
+        match self.gpu_row_preparation.load(Ordering::Relaxed) {
+            value if value == GpuRowPreparation::LegacyTwoPass as u8 => {
+                GpuRowPreparation::LegacyTwoPass
+            }
+            value if value == GpuRowPreparation::Cached as u8 => GpuRowPreparation::Cached,
+            _ => GpuRowPreparation::OnePass,
+        }
+    }
+
+    #[cfg(feature = "gpu-wgpu")]
+    fn invalidate_gpu_row_cache(&self) {
+        *self.gpu_row_cache.lock().expect("GPU row cache poisoned") = None;
     }
 
     /// Enable portable IVF candidate generation with exact FP32 GPU re-ranking.
@@ -1307,62 +1659,146 @@ impl CollectionState {
         queries: &[&[f32]],
         filter: &Filter,
         k: usize,
-        rebuilt: bool,
-        preparation: Measurement<Duration>,
+        context: SearchBatchContext<'_>,
     ) -> Result<Vec<SearchResponse>, Error> {
+        let SearchBatchContext {
+            rebuilt,
+            preparation,
+            #[cfg(feature = "gpu-wgpu")]
+            row_preparation,
+            #[cfg(feature = "gpu-wgpu")]
+            row_cache,
+            #[cfg(feature = "gpu-wgpu")]
+            router_profile,
+            #[cfg(not(feature = "gpu-wgpu"))]
+                marker: _,
+        } = context;
         #[cfg(feature = "gpu-wgpu")]
         if let Backend::Wgpu(gpu) = &self.backend {
-            let eligible_rows = if *filter == Filter::ALL {
-                self.store.live_len()
-            } else {
-                self.store.filter(filter).len()
-            };
+            let uses_host_rows = matches!(
+                gpu.filter_mode(),
+                GpuFilterMode::CpuMask | GpuFilterMode::CpuEligibleRows
+            );
+            let plan = EligibilityPlan::compile(
+                &self.store,
+                filter,
+                gpu.filter_mode(),
+                row_preparation,
+                row_cache,
+            );
+            let eligible_rows = plan.eligible_count;
             let automatic = matches!(self.config.backend, BackendSelection::Automatic(_));
-            let use_cpu = automatic && route_automatic_to_cpu_batch(eligible_rows, queries.len());
+            let matched_profile = router_profile.as_ref().filter(|profile| {
+                profile.adapter_name == gpu.capabilities().adapter_name
+                    && profile.dimension == self.store.dimension()
+                    && profile.batch_size == queries.len()
+                    && profile.filter_mode == gpu.filter_mode()
+                    && profile.cached_rows == (row_preparation == GpuRowPreparation::Cached)
+            });
+            let use_cpu = automatic
+                && route_automatic_to_cpu_batch(
+                    eligible_rows,
+                    queries.len(),
+                    matched_profile.map(|profile| profile.gpu_min_eligible_rows),
+                );
+            if use_cpu {
+                let source = if matched_profile.is_some() {
+                    "matched tuning profile"
+                } else {
+                    "static fallback"
+                };
+                let routing_reason = Some(format!(
+                    "automatic CPU route ({source}): {eligible_rows} eligible rows across {} queries",
+                    queries.len()
+                ));
+                let started = Instant::now();
+                let rows = plan.rows.as_deref().expect("eligibility plan retains rows");
+                let exact = queries
+                    .iter()
+                    .map(|query| self.store.search_rows(query, filter, rows, k))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let elapsed = started.elapsed();
+                return Ok(exact
+                    .into_iter()
+                    .map(|exact| {
+                        let mut output =
+                            BackendOutput::cpu(exact.hits, exact.evaluated_rows as u64, elapsed);
+                        plan.annotate(&mut output, row_preparation, uses_host_rows);
+                        let mut response = self.response_from_output(
+                            output,
+                            rebuilt,
+                            preparation.clone(),
+                            routing_reason.clone(),
+                            self.fallback_reason.clone(),
+                            elapsed,
+                        );
+                        response.report.eligible_rows =
+                            Measurement::Available(eligible_rows as u64);
+                        response
+                    })
+                    .collect());
+            }
             if !use_cpu {
                 let routing_reason = automatic.then(|| {
-                    format!(
-                        "automatic GPU route: {eligible_rows} eligible rows across {} queries",
-                        queries.len()
-                    )
+                    let source = if matched_profile.is_some() {
+                        "matched tuning profile"
+                    } else {
+                        "static fallback"
+                    };
+                    format!("automatic GPU route ({source}): {eligible_rows} eligible rows across {} queries", queries.len())
                 });
                 let started = Instant::now();
-                match gpu.search_batch(&self.store, queries, filter, k).await {
-                    Ok(outputs) => {
+                match gpu
+                    .search_batch(&self.store, queries, filter, k, plan.rows.as_deref())
+                    .await
+                {
+                    Ok(mut outputs) => {
                         let elapsed = started.elapsed();
+                        for output in &mut outputs {
+                            plan.annotate(output, row_preparation, uses_host_rows);
+                        }
                         return Ok(outputs
                             .into_iter()
                             .map(|output| {
-                                self.response_from_output(
+                                let mut response = self.response_from_output(
                                     output,
                                     rebuilt,
                                     preparation.clone(),
                                     routing_reason.clone(),
                                     self.fallback_reason.clone(),
                                     elapsed,
-                                )
+                                );
+                                response.report.eligible_rows =
+                                    Measurement::Available(eligible_rows as u64);
+                                response
                             })
                             .collect());
                     }
                     Err(error) if automatic => {
                         let fallback = Some(error.to_string());
                         let elapsed = started.elapsed();
+                        let rows = plan.rows.as_deref().expect("eligibility plan retains rows");
                         return queries
                             .iter()
                             .map(|query| {
-                                let exact = self.store.search(query, filter, k)?;
-                                Ok(self.response_from_output(
-                                    BackendOutput::cpu(
-                                        exact.hits,
-                                        exact.evaluated_rows as u64,
-                                        elapsed,
-                                    ),
+                                let exact = self.store.search_rows(query, filter, rows, k)?;
+                                let mut output = BackendOutput::cpu(
+                                    exact.hits,
+                                    exact.evaluated_rows as u64,
+                                    elapsed,
+                                );
+                                plan.annotate(&mut output, row_preparation, uses_host_rows);
+                                let mut response = self.response_from_output(
+                                    output,
                                     rebuilt,
                                     preparation.clone(),
                                     Some("automatic CPU fallback after batched GPU failure".into()),
                                     fallback.clone(),
                                     elapsed,
-                                ))
+                                );
+                                response.report.eligible_rows =
+                                    Measurement::Available(eligible_rows as u64);
+                                Ok(response)
                             })
                             .collect();
                     }
@@ -1425,6 +1861,20 @@ impl CollectionState {
             dispatch_count: output.dispatch_count,
             qenlo_allocation_bytes: output.allocation_bytes,
             candidates: output.candidates,
+            gpu_row_preparation: output.gpu_row_preparation,
+            predicate_traversals: output.predicate_traversals,
+            row_materialization: output.row_materialization,
+            materialized_rows: output.materialized_rows,
+            row_cache_hit: output.row_cache_hit,
+            eligibility_predicate_kind: output.eligibility_predicate_kind,
+            eligibility_representation: output.eligibility_representation,
+            eligibility_generation: output.eligibility_generation,
+            corpus_rows: output.corpus_rows,
+            eligible_selectivity: output.eligible_selectivity,
+            eligibility_transfer_bytes: output.eligibility_transfer_bytes,
+            eligible_contiguous_runs: output.eligible_contiguous_runs,
+            eligibility_cacheable: output.eligibility_cacheable,
+            eligibility_resident: output.eligibility_resident,
             results: results.len(),
             batch_size: 1,
         };
@@ -1489,8 +1939,16 @@ fn route_automatic_to_cpu(eligible_rows: usize) -> bool {
 }
 
 #[cfg(feature = "gpu-wgpu")]
-fn route_automatic_to_cpu_batch(eligible_rows: usize, batch_size: usize) -> bool {
-    route_automatic_to_cpu(eligible_rows) && batch_size < 8
+fn route_automatic_to_cpu_batch(
+    eligible_rows: usize,
+    batch_size: usize,
+    profiled_gpu_min_rows: Option<usize>,
+) -> bool {
+    let below_crossover = profiled_gpu_min_rows.map_or_else(
+        || route_automatic_to_cpu(eligible_rows),
+        |minimum| eligible_rows < minimum,
+    );
+    below_crossover && batch_size < 8
 }
 
 fn backend_tag(backend: &Backend) -> u8 {
@@ -1514,6 +1972,20 @@ pub(crate) struct BackendOutput {
     dispatch_count: Measurement<u32>,
     allocation_bytes: Measurement<u64>,
     candidates: Measurement<u64>,
+    gpu_row_preparation: Option<GpuRowPreparation>,
+    predicate_traversals: u32,
+    row_materialization: Measurement<Duration>,
+    materialized_rows: Measurement<u64>,
+    row_cache_hit: Option<bool>,
+    eligibility_predicate_kind: Option<EligibilityPredicateKind>,
+    eligibility_representation: Option<EligibilityRepresentation>,
+    eligibility_generation: Option<u64>,
+    corpus_rows: Measurement<u64>,
+    eligible_selectivity: Measurement<f64>,
+    eligibility_transfer_bytes: Measurement<u64>,
+    eligible_contiguous_runs: Measurement<u64>,
+    eligibility_cacheable: Option<bool>,
+    eligibility_resident: Option<bool>,
 }
 
 impl BackendOutput {
@@ -1529,6 +2001,24 @@ impl BackendOutput {
             dispatch_count: Measurement::Available(0),
             allocation_bytes: Measurement::unavailable("CPU allocator bytes are not instrumented"),
             candidates: Measurement::Available(candidates),
+            gpu_row_preparation: None,
+            predicate_traversals: 1,
+            row_materialization: Measurement::unavailable("CPU exact execution owns filtering"),
+            materialized_rows: Measurement::unavailable("CPU exact execution has no GPU row list"),
+            row_cache_hit: None,
+            eligibility_predicate_kind: None,
+            eligibility_representation: None,
+            eligibility_generation: None,
+            corpus_rows: Measurement::unavailable("CPU execution has no compiled eligibility plan"),
+            eligible_selectivity: Measurement::unavailable(
+                "CPU execution has no compiled eligibility plan",
+            ),
+            eligibility_transfer_bytes: Measurement::Available(0),
+            eligible_contiguous_runs: Measurement::unavailable(
+                "CPU execution has no compiled eligibility plan",
+            ),
+            eligibility_cacheable: None,
+            eligibility_resident: None,
         }
     }
 }
@@ -2037,6 +2527,132 @@ mod tests {
                 response.report.candidates,
                 Measurement::Unavailable(_)
             ));
+        });
+    }
+
+    #[cfg(feature = "gpu-wgpu")]
+    #[test]
+    fn eligibility_plan_matches_canonical_filter_across_mutations() {
+        let mut store = CoreStore::new(2).unwrap();
+        let mut seed = 0x51_7a_9d_23_u64;
+        let mut next = || {
+            seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1);
+            seed
+        };
+        for id in 0..200_u64 {
+            let user = next() % 11;
+            let timestamp = (next() % 401) as i64 - 200;
+            store.add(id, user, timestamp, [1.0, 0.5]).unwrap();
+        }
+        for id in (0..200_u64).filter(|id| id % 3 == 0) {
+            store.delete(id).unwrap();
+        }
+
+        let cache = Mutex::new(None);
+        for _ in 0..256 {
+            let user = (next() & 1 != 0).then(|| next() % 11);
+            let lower = (next() & 1 != 0).then(|| (next() % 501) as i64 - 250);
+            let upper = (next() & 1 != 0).then(|| (next() % 501) as i64 - 250);
+            let filter = Filter::new(user, TimestampRange::new(lower, upper));
+            let expected = store.filter(&filter);
+            for mode in [
+                GpuFilterMode::CpuEligibleRows,
+                GpuFilterMode::CpuMask,
+                GpuFilterMode::GpuPredicate,
+            ] {
+                let plan = EligibilityPlan::compile(
+                    &store,
+                    &filter,
+                    mode,
+                    GpuRowPreparation::OnePass,
+                    &cache,
+                );
+                assert_eq!(plan.generation, store.generation());
+                assert_eq!(plan.eligible_count, expected.len());
+                if let Some(rows) = plan.rows {
+                    assert_eq!(rows.as_ref(), expected.as_slice());
+                }
+                assert_eq!(plan.contiguous_runs, contiguous_run_count(&expected));
+            }
+        }
+
+        let filter = Filter::ALL;
+        let first = EligibilityPlan::compile(
+            &store,
+            &filter,
+            GpuFilterMode::CpuEligibleRows,
+            GpuRowPreparation::Cached,
+            &cache,
+        );
+        assert_eq!(first.cache_hit, Some(false));
+        let second = EligibilityPlan::compile(
+            &store,
+            &filter,
+            GpuFilterMode::CpuEligibleRows,
+            GpuRowPreparation::Cached,
+            &cache,
+        );
+        assert_eq!(second.cache_hit, Some(true));
+        store.add(200, 4, 0, [0.5, 1.0]).unwrap();
+        let after_mutation = EligibilityPlan::compile(
+            &store,
+            &filter,
+            GpuFilterMode::CpuEligibleRows,
+            GpuRowPreparation::Cached,
+            &cache,
+        );
+        assert_eq!(after_mutation.cache_hit, Some(false));
+        assert_eq!(after_mutation.eligible_count, store.filter(&filter).len());
+    }
+
+    #[cfg(feature = "gpu-wgpu")]
+    #[test]
+    fn gpu_row_preparation_modes_are_observable_and_exact() {
+        block_on(async {
+            let created = Collection::new(CollectionConfig {
+                dimension: 2,
+                backend: BackendSelection::WgpuRequired(GpuFilterMode::CpuEligibleRows),
+                gpu_allocation_budget_bytes: DEFAULT_GPU_BUDGET_BYTES,
+            })
+            .await;
+            let collection = match created {
+                Ok(collection) => collection,
+                Err(error) if std::env::var_os("QENLO_REQUIRE_GPU").is_none() => {
+                    eprintln!("GPU unavailable: {error}");
+                    return;
+                }
+                Err(error) => panic!("GPU required: {error}"),
+            };
+            collection.add(1, 7, 0, &[1.0, 0.0]).unwrap();
+            collection.add(2, 8, 0, &[0.0, 1.0]).unwrap();
+            collection.prepare().await.unwrap();
+            let filter = Filter::new(Some(7), TimestampRange::ALL);
+            for (mode, traversals) in [
+                (GpuRowPreparation::LegacyTwoPass, 2),
+                (GpuRowPreparation::OnePass, 1),
+            ] {
+                collection.set_gpu_row_preparation(mode);
+                let response = collection
+                    .search_batch(&[&[1.0, 0.0]], &filter, 1)
+                    .await
+                    .unwrap()
+                    .remove(0);
+                assert_eq!(response.results[0].id, 1);
+                assert_eq!(response.report.gpu_row_preparation, Some(mode));
+                assert_eq!(response.report.predicate_traversals, traversals);
+                assert_eq!(response.report.row_cache_hit, None);
+            }
+            collection.set_gpu_row_preparation(GpuRowPreparation::Cached);
+            for (expected_hit, traversals) in [(false, 1), (true, 0)] {
+                let response = collection
+                    .search_batch(&[&[1.0, 0.0]], &filter, 1)
+                    .await
+                    .unwrap()
+                    .remove(0);
+                assert_eq!(response.results[0].id, 1);
+                assert_eq!(response.report.row_cache_hit, Some(expected_hit));
+                assert_eq!(response.report.predicate_traversals, traversals);
+            }
         });
     }
 

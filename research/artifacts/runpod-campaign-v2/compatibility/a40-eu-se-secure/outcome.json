@@ -1,0 +1,11 @@
+{
+  "configuration": {
+    "name": "a40-eu-se-secure",
+    "gpuId": "NVIDIA A40",
+    "dataCenter": "EU-SE-1",
+    "cloud": "SECURE",
+    "price": 0.44
+  },
+  "error": "The property 'ip' cannot be found on this object. Verify that the property exists.",
+  "status": "failed_or_unavailable"
+}

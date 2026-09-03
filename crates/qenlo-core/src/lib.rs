@@ -26,7 +26,7 @@ impl TimestampRange {
             && self.upper.is_none_or(|upper| timestamp < upper)
     }
 
-    fn is_empty(self) -> bool {
+    pub const fn is_empty(self) -> bool {
         matches!((self.lower, self.upper), (Some(lower), Some(upper)) if lower >= upper)
     }
 }
@@ -177,6 +177,7 @@ pub enum Error {
     UnknownId(u64),
     AlreadyDeleted(u64),
     InvalidK(usize),
+    InvalidEligibleRow(u32),
     CapacityExceeded,
     GenerationExhausted,
 }
@@ -198,6 +199,9 @@ impl fmt::Display for Error {
             Self::UnknownId(id) => write!(f, "record ID {id} does not exist"),
             Self::AlreadyDeleted(id) => write!(f, "record ID {id} is already deleted"),
             Self::InvalidK(k) => write!(f, "k must be in 1..=64, got {k}"),
+            Self::InvalidEligibleRow(row) => {
+                write!(f, "eligible row {row} is stale or violates the predicate")
+            }
             Self::CapacityExceeded => write!(f, "record count exceeds u32 row-slot capacity"),
             Self::GenerationExhausted => write!(f, "store generation is exhausted"),
         }
@@ -314,7 +318,9 @@ impl CoreStore {
     }
 
     pub fn get(&self, id: u64) -> Option<&Record> {
-        self.ids.get(&id).and_then(|&slot| self.records.get(slot as usize))
+        self.ids
+            .get(&id)
+            .and_then(|&slot| self.records.get(slot as usize))
     }
 
     pub fn slot_of(&self, id: u64) -> Option<u32> {
@@ -509,13 +515,54 @@ impl CoreStore {
         }
         let query = normalize_vector(query.as_ref(), self.dimension)?;
         let slots = self.filter(predicate);
+        self.search_normalized_rows(&query, predicate, &slots, k)
+    }
+
+    /// Exact search over a previously compiled canonical eligibility list.
+    ///
+    /// Every row is revalidated against current canonical state and the predicate, so a stale or
+    /// malformed derived plan fails closed rather than changing search semantics.
+    pub fn search_rows(
+        &self,
+        query: impl AsRef<[f32]>,
+        predicate: &Predicate,
+        slots: &[u32],
+        k: usize,
+    ) -> Result<SearchOutput, Error> {
+        if !(1..=64).contains(&k) {
+            return Err(Error::InvalidK(k));
+        }
+        let query = normalize_vector(query.as_ref(), self.dimension)?;
+        self.search_normalized_rows(&query, predicate, slots, k)
+    }
+
+    fn search_normalized_rows(
+        &self,
+        query: &[f32],
+        predicate: &Predicate,
+        slots: &[u32],
+        k: usize,
+    ) -> Result<SearchOutput, Error> {
         let mut best = BinaryHeap::with_capacity(k);
         let dot = dot_implementation();
-        for &slot in &slots {
-            let record = &self.records[slot as usize];
+        let mut previous = None;
+        for &slot in slots {
+            if previous.is_some_and(|prior| slot <= prior) {
+                return Err(Error::InvalidEligibleRow(slot));
+            }
+            previous = Some(slot);
+            let Some(record) = self.records.get(slot as usize) else {
+                return Err(Error::InvalidEligibleRow(slot));
+            };
+            if !record.live
+                || predicate.user_id.is_some_and(|user| user != record.user_id)
+                || !predicate.timestamp.contains(record.timestamp)
+            {
+                return Err(Error::InvalidEligibleRow(slot));
+            }
             let hit = RankedHit(SearchHit {
                 id: record.id,
-                distance: (1.0 - dot(&query, &record.vector)) as f32,
+                distance: (1.0 - dot(query, &record.vector)) as f32,
             });
             if best.len() < k {
                 best.push(hit);
@@ -857,6 +904,22 @@ mod tests {
         let store = store();
         let predicate = Predicate::new(Some(7), TimestampRange::new(Some(0), None));
         assert_eq!(store.filter(&predicate), vec![1]);
+    }
+
+    #[test]
+    fn compiled_rows_match_filter_search_and_fail_closed_when_stale() {
+        let mut store = store();
+        let predicate = Predicate::new(Some(7), TimestampRange::ALL);
+        let rows = store.filter(&predicate);
+        assert_eq!(
+            store.search([1.0, 0.0], &predicate, 2).unwrap(),
+            store.search_rows([1.0, 0.0], &predicate, &rows, 2).unwrap()
+        );
+        store.delete(30).unwrap();
+        assert_eq!(
+            store.search_rows([1.0, 0.0], &predicate, &rows, 2),
+            Err(Error::InvalidEligibleRow(rows[0]))
+        );
     }
 
     #[test]

@@ -1,5 +1,6 @@
 /target/
 /dist/
+/.tools/
 *.profraw
 *.trace
 *.pdb
@@ -33,4 +34,5 @@ sdk/typescript/dist/
 *.synctex.gz
 *.fdb_latexmk
 *.fls
-
+/research/artifacts/phase0-baseline-head-minimal.tar.gz
+/research/artifacts/runpod-campaign-v2/runpodctl-doctor.json

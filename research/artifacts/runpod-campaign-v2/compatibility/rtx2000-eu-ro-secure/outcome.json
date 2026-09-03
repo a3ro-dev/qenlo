@@ -1,0 +1,11 @@
+{
+  "configuration": {
+    "name": "rtx2000-eu-ro-secure",
+    "gpuId": "NVIDIA RTX 2000 Ada Generation",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "price": 0.24
+  },
+  "error": "Upload failed: D:\\qenloDB\\research\\artifacts\\runpod-campaign-v2\\qenlo-campaign-input.tar.gz",
+  "status": "failed_or_unavailable"
+}

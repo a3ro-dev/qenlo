@@ -1,0 +1,5 @@
+
+Algorithm : SHA256
+Hash      : 629EA9F15E7E20E07EA6748879CC65F89E0FD36E2CAECEF5488EF3102EA573F9
+Path      : D:\qenloDB\research\artifacts\runpod-campaign-v2\qenlo-campaign-input.tar.gz
+

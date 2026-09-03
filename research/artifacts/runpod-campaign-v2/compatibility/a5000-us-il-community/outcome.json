@@ -1,0 +1,11 @@
+{
+  "configuration": {
+    "name": "a5000-us-il-community",
+    "gpuId": "NVIDIA RTX A5000",
+    "dataCenter": "US-IL-1",
+    "cloud": "COMMUNITY",
+    "price": 0.16
+  },
+  "error": "runpodctl failed: pod create --name qenlo-a5000-us-il-community --image runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404 --gpu-id NVIDIA RTX A5000 --data-center-ids US-IL-1 --cloud-type COMMUNITY --container-disk-in-gb 30 --volume-in-gb 0 --ports 22/tcp --env {\"NVIDIA_DRIVER_CAPABILITIES\":\"compute,utility,graphics\",\"NVIDIA_VISIBLE_DEVICES\":\"all\"} --public-ip",
+  "status": "failed_or_unavailable"
+}

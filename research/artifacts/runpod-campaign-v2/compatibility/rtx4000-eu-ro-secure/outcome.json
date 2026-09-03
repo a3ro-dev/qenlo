@@ -1,0 +1,11 @@
+{
+  "error": "The property 'amd' cannot be found on this object. Verify that the property exists.",
+  "configuration": {
+    "name": "rtx4000-eu-ro-secure",
+    "gpuId": "NVIDIA RTX 4000 Ada Generation",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "price": 0.28
+  },
+  "status": "failed_or_unavailable"
+}

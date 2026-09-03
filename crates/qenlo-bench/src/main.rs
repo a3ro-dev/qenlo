@@ -3,13 +3,17 @@
 mod replay;
 
 use std::{
+    alloc::{GlobalAlloc, Layout, System},
     collections::{BTreeMap, HashSet},
     error::Error,
     fs::File,
     future::Future,
     io::{BufWriter, Write},
     path::PathBuf,
-    sync::Arc,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
     task::{Context, Poll, Wake, Waker},
     time::Instant,
 };
@@ -17,6 +21,8 @@ use std::{
 use qenlo::{
     BackendSelection, Collection, CollectionConfig, Filter, Measurement, NewRecord, TimestampRange,
 };
+#[cfg(feature = "gpu-wgpu")]
+use qenlo::{GpuFilterMode, GpuRowPreparation, RouterProfile};
 use qenlo_bench::{
     MetadataDistribution, OracleFilter, OracleRecord, PreparedOracle,
     dataset::{self, DatasetSpec},
@@ -24,6 +30,66 @@ use qenlo_bench::{
 };
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
+
+struct CountingAllocator;
+
+static ALLOCATION_COUNT: AtomicU64 = AtomicU64::new(0);
+static ALLOCATED_BYTES: AtomicU64 = AtomicU64::new(0);
+
+// Counts gross process-wide allocator traffic during a completed call. This includes
+// Rust dependencies and any background Rust work, not just allocations owned by Qenlo.
+unsafe impl GlobalAlloc for CountingAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        ALLOCATION_COUNT.fetch_add(1, Ordering::Relaxed);
+        ALLOCATED_BYTES.fetch_add(layout.size() as u64, Ordering::Relaxed);
+        // SAFETY: this allocator delegates the unchanged layout to the system allocator.
+        unsafe { System.alloc(layout) }
+    }
+
+    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
+        ALLOCATION_COUNT.fetch_add(1, Ordering::Relaxed);
+        ALLOCATED_BYTES.fetch_add(layout.size() as u64, Ordering::Relaxed);
+        // SAFETY: this allocator delegates the unchanged layout to the system allocator.
+        unsafe { System.alloc_zeroed(layout) }
+    }
+
+    unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) {
+        // SAFETY: the pointer and layout came from the delegated system allocator.
+        unsafe { System.dealloc(pointer, layout) }
+    }
+
+    unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+        ALLOCATION_COUNT.fetch_add(1, Ordering::Relaxed);
+        ALLOCATED_BYTES.fetch_add(new_size as u64, Ordering::Relaxed);
+        // SAFETY: the pointer/layout pair came from System and new_size is forwarded unchanged.
+        unsafe { System.realloc(pointer, layout, new_size) }
+    }
+}
+
+#[global_allocator]
+static GLOBAL_ALLOCATOR: CountingAllocator = CountingAllocator;
+
+#[derive(Clone, Copy)]
+struct AllocationSnapshot {
+    count: u64,
+    bytes: u64,
+}
+
+impl AllocationSnapshot {
+    fn now() -> Self {
+        Self {
+            count: ALLOCATION_COUNT.load(Ordering::Relaxed),
+            bytes: ALLOCATED_BYTES.load(Ordering::Relaxed),
+        }
+    }
+
+    fn since(self, before: Self) -> Self {
+        Self {
+            count: self.count.wrapping_sub(before.count),
+            bytes: self.bytes.wrapping_sub(before.bytes),
+        }
+    }
+}
 
 const HELP: &str = "qenlo-bench: deterministic preparation and one workload cell per run
 
@@ -35,10 +101,14 @@ run     --dataset PATH --output NEW_DIRECTORY [--dimensions 16|384|768]
         [--distribution independent|positive|negative|skewed]
         [--fraction 1|0.1|0.01|0.001|0.0001|empty|fewer]
         [--eligible-count ROWS]
+        [--gpu-row-preparation legacy-two-pass|one-pass|cached]
+        [--order-seed U64]
+        [--router-profile KEY_VALUE_FILE]
         [--user-id U64]
         [--batch 1|8|32] [--warmups 8] [--repetitions 3]
         [--recall-target 0.95|0.99] [--expansion-search 128]
         [--tune-expansion-search 128,256,512,1024]
+        [--allow-recall-miss true|false]
         [--oracle-reference COMPLETED_EXACT_CPU_DIRECTORY]
         [--diagnostics disabled|basic|detailed]
         [--vector-budget-mib 512] [--gpu-budget-mib 512]
@@ -286,6 +356,42 @@ fn bytes(value: Measurement<u64>) -> Option<u64> {
     }
 }
 
+fn duration_ns(value: &Measurement<std::time::Duration>) -> Option<u128> {
+    match value {
+        Measurement::Available(value) => Some(value.as_nanos()),
+        Measurement::Unavailable(_) => None,
+    }
+}
+
+#[cfg(feature = "gpu-wgpu")]
+fn router_profile(path: &std::path::Path) -> Result<RouterProfile> {
+    let fields = std::fs::read_to_string(path)?
+        .lines()
+        .filter_map(|line| line.split_once('='))
+        .map(|(key, value)| (key.trim().to_owned(), value.trim().to_owned()))
+        .collect::<BTreeMap<_, _>>();
+    let required = |key: &str| -> Result<String> {
+        Ok(fields
+            .get(key)
+            .cloned()
+            .ok_or_else(|| format!("router profile missing {key}"))?)
+    };
+    let filter_mode = match required("filter_mode")?.as_str() {
+        "gpu-mask" => GpuFilterMode::CpuMask,
+        "gpu-rows" => GpuFilterMode::CpuEligibleRows,
+        "gpu-predicate" => GpuFilterMode::GpuPredicate,
+        _ => return Err("router profile filter_mode is invalid".into()),
+    };
+    Ok(RouterProfile {
+        adapter_name: required("adapter_name")?,
+        dimension: required("dimension")?.parse()?,
+        batch_size: required("batch_size")?.parse()?,
+        filter_mode,
+        cached_rows: required("cached_rows")?.parse()?,
+        gpu_min_eligible_rows: required("gpu_min_eligible_rows")?.parse()?,
+    })
+}
+
 fn tuning_expansions(value: Option<String>, backend: &str, fixed: usize) -> Result<Vec<usize>> {
     let Some(value) = value else {
         return Ok(vec![fixed]);
@@ -320,6 +426,7 @@ async fn run_cell(
 ) -> Result<()> {
     let output = PathBuf::from(options.remove("--output").ok_or("--output is required")?);
     let oracle_reference = options.remove("--oracle-reference").map(PathBuf::from);
+    let router_profile_path = options.remove("--router-profile").map(PathBuf::from);
     let backend_name = take(&mut options, "--backend", "cpu");
     let distribution_name = take(&mut options, "--distribution", "independent");
     let distribution = match distribution_name.as_str() {
@@ -347,10 +454,30 @@ async fn run_cell(
     if repetitions == 0 {
         return Err("--repetitions must be nonzero".into());
     }
+    let order_seed: u64 = take(&mut options, "--order-seed", "42").parse()?;
+    let row_preparation_name = take(&mut options, "--gpu-row-preparation", "one-pass");
+    #[cfg(feature = "gpu-wgpu")]
+    let row_preparation = match row_preparation_name.as_str() {
+        "legacy-two-pass" => GpuRowPreparation::LegacyTwoPass,
+        "one-pass" => GpuRowPreparation::OnePass,
+        "cached" => GpuRowPreparation::Cached,
+        _ => {
+            return Err("--gpu-row-preparation must be legacy-two-pass, one-pass or cached".into());
+        }
+    };
+    #[cfg(not(feature = "gpu-wgpu"))]
+    if row_preparation_name != "one-pass" {
+        return Err("--gpu-row-preparation requires the gpu-wgpu feature".into());
+    }
+    #[cfg(not(feature = "gpu-wgpu"))]
+    if router_profile_path.is_some() {
+        return Err("--router-profile requires the gpu-wgpu feature".into());
+    }
     let target: f64 = take(&mut options, "--recall-target", "0.95").parse()?;
     if target != 0.95 && target != 0.99 {
         return Err("--recall-target must be 0.95 or 0.99".into());
     }
+    let allow_recall_miss: bool = take(&mut options, "--allow-recall-miss", "false").parse()?;
     let expansion = count(&take(&mut options, "--expansion-search", "128"))?;
     if expansion == 0 {
         return Err("--expansion-search must be nonzero".into());
@@ -399,10 +526,11 @@ async fn run_cell(
         .unwrap_or_else(|| "unavailable".into());
     writeln!(
         manifest,
-        "format=qenlo-bench-run-v1\nstatus=incomplete-until-summary-exists\ndataset={}\ndataset_crc32={:08x}\nsource=prepared-f32-rows-see-preparation-record\nseed={}\nrows={}\ndimensions={}\ncorpus_range=0..{}\ntuning_range={}..{}\nevaluation_range={}..{}\nbackend={}\nmetadata={}\nfraction_requested={}\neligible_count={}\neligible_fraction_actual={}\nbatch={}\nfilter_mode=shared\nk=10\nwarmup_queries={}\nrepetitions={}\nrecall_target={}\nexpansion_search={}\nvector_budget_bytes={}\ngpu_budget_bytes={}\nplatform={}-{}\npackage_version={}\ngit_revision={}\npercentile=nearest-rank\nquery_latency=batch-call-completion\nqps_window=includes-driver-validation-and-csv\nhost_rss_bytes=unavailable:no-portable-process-measurement\nhost_allocator_bytes=unavailable:no-instrumented-allocator\nvector_budget_scope=source-plus-normalized-corpus-payload-only\ngpu_allocation_scope=qenlo-owned-not-physical-vram\nmissing_csv_measurement=empty:not-reported-by-backend\nscale_gate=untested-by-this-single-cell\nload_ns={}",
+        "format=qenlo-bench-run-v2\nstatus=incomplete-until-summary-exists\ndataset={}\ndataset_crc32={:08x}\nsource=prepared-f32-rows-see-preparation-record\nseed={}\norder_seed={}\nrows={}\ndimensions={}\ncorpus_range=0..{}\ntuning_range={}..{}\nevaluation_range={}..{}\nbackend={}\ngpu_row_preparation={}\nmetadata={}\nfraction_requested={}\neligible_count={}\neligible_fraction_actual={}\nbatch={}\nfilter_mode=shared\nk=10\nwarmup_queries={}\nrepetitions={}\nrecall_target={}\nexpansion_search={}\nvector_budget_bytes={}\ngpu_budget_bytes={}\nplatform={}-{}\npackage_version={}\ngit_revision={}\npercentile=nearest-rank\nquery_latency=batch-call-completion\nqps_window=includes-driver-validation-and-csv\nhost_rss_bytes=unavailable:no-portable-process-measurement\nprocess_allocator_scope=gross-process-wide-rust-allocator-traffic-during-completed-call\nprocess_allocated_bytes=gross-not-live-or-peak-bytes\nvector_budget_scope=source-plus-normalized-corpus-payload-only\ngpu_allocation_scope=qenlo-owned-not-physical-vram\nmissing_csv_measurement=empty:not-reported-by-backend\nscale_gate=untested-by-this-single-cell\nload_ns={}",
         path.display(),
         data.checksum,
         data.spec.seed,
+        order_seed,
         data.spec.corpus,
         dimension,
         data.spec.corpus,
@@ -411,6 +539,7 @@ async fn run_cell(
         data.spec.corpus + data.spec.tuning,
         data.spec.corpus + data.spec.tuning + data.spec.evaluation,
         backend_name,
+        row_preparation_name,
         distribution.label(),
         fraction,
         eligible,
@@ -489,6 +618,13 @@ async fn run_cell(
     })
     .await?;
     collection.set_diagnostics(diagnostics);
+    #[cfg(feature = "gpu-wgpu")]
+    collection.set_gpu_row_preparation(row_preparation);
+    #[cfg(feature = "gpu-wgpu")]
+    if let Some(path) = &router_profile_path {
+        collection.set_router_profile(Some(router_profile(path)?));
+        writeln!(manifest, "router_profile={}", path.display())?;
+    }
     #[cfg(feature = "usearch")]
     if backend_name == "usearch" {
         collection.set_ann_search_expansion(expansion)?;
@@ -559,7 +695,7 @@ async fn run_cell(
             })
             .collect::<std::result::Result<_, _>>()?
     };
-    let mut tuning_recall = 0.0;
+    let mut last_tuning_recall = None;
     let mut replay_truth = BufWriter::new(File::create_new(output.join("truth.csv"))?);
     writeln!(replay_truth, "split,query_index,ids")?;
     for (index, ids) in tuning_truth.iter().enumerate() {
@@ -574,14 +710,13 @@ async fn run_cell(
         tuning_samples,
         "expansion_search,query_count,recall_at_10,wall_ns"
     )?;
-    let mut effective_expansion = expansion;
+    let mut selected_expansion = None;
     for candidate in expansions {
         #[cfg(feature = "usearch")]
         if backend_name == "usearch" {
             collection.set_ann_search_expansion(candidate)?;
         }
-        effective_expansion = candidate;
-        tuning_recall = 0.0;
+        let mut tuning_recall = 0.0;
         let tuning_started = Instant::now();
         for (query, expected) in data.tuning.iter().zip(&tuning_truth) {
             let response = collection.search(query, &filter, 10).await?;
@@ -594,6 +729,7 @@ async fn run_cell(
             tuning_recall += recall_at_k(expected, &actual, 10)?;
         }
         tuning_recall /= data.tuning.len() as f64;
+        last_tuning_recall = Some(tuning_recall);
         writeln!(
             tuning_samples,
             "{candidate},{},{tuning_recall},{}",
@@ -601,18 +737,30 @@ async fn run_cell(
             tuning_started.elapsed().as_nanos()
         )?;
         tuning_samples.flush()?;
-        if recall_passes(tuning_recall, target) {
-            break;
+        if recall_passes(tuning_recall, target) && selected_expansion.is_none() {
+            selected_expansion = Some((candidate, tuning_recall));
         }
+    }
+    let (effective_expansion, selected_tuning_recall) = match selected_expansion {
+        Some(selected) => selected,
+        None if allow_recall_miss => (
+            expansion,
+            last_tuning_recall.ok_or("no ANN expansion was evaluated")?,
+        ),
+        None => {
+            return Err("no supplied expansion met tuning recall target; held-out evaluation not run; tuning.csv retained".into());
+        }
+    };
+    let tuning_recall = selected_tuning_recall;
+    #[cfg(feature = "usearch")]
+    if backend_name == "usearch" {
+        collection.set_ann_search_expansion(effective_expansion)?;
     }
     writeln!(
         manifest,
         "expansion_search_effective={effective_expansion}\ntuning_selection=smallest-supplied-expansion-meeting-target-before-heldout"
     )?;
     manifest.flush()?;
-    if !recall_passes(tuning_recall, target) {
-        return Err("no supplied expansion met tuning recall target; held-out evaluation not run; tuning.csv retained".into());
-    }
     let truth: Vec<Vec<u64>> = if let Some(truth) = reference_truth {
         truth.evaluation
     } else {
@@ -637,14 +785,13 @@ async fn run_cell(
     replay_truth.flush()?;
     let oracle_time = oracle_started.elapsed();
     for i in 0..warmups {
-        collection
-            .search(&data.tuning[i % data.tuning.len()], &filter, 10)
-            .await?;
+        let query = data.tuning[i % data.tuning.len()].as_slice();
+        collection.search_batch(&[query], &filter, 10).await?;
     }
     let mut samples = BufWriter::new(File::create_new(output.join("samples.csv"))?);
     writeln!(
         samples,
-        "run,batch_index,query_indices,query_count,batch_latency_ns,recall_at_10,result_count,eligible_count,upload_bytes,readback_bytes,max_qenlo_allocation_bytes,actual_backend,backend_counts,lock_wait_ns,cpu_distance_path,routing_reasons,fallback"
+        "run,batch_index,query_indices,query_count,batch_latency_ns,recall_at_10,result_count,eligible_count,upload_bytes,readback_bytes,max_qenlo_allocation_bytes,process_allocation_count,process_allocated_bytes,upload_enqueue_ns,readback_completion_ns,backend_execution_ns,actual_backend,backend_counts,lock_wait_ns,cpu_distance_path,routing_reasons,fallback,gpu_row_preparation,predicate_traversals,row_materialization_ns,materialized_rows,row_cache_hit,eligibility_predicate_kind,eligibility_representation,eligibility_generation,corpus_rows,eligibility_transfer_bytes,eligible_contiguous_runs"
     )?;
     let mut runs = BufWriter::new(File::create_new(output.join("runs.csv"))?);
     writeln!(
@@ -656,7 +803,7 @@ async fn run_cell(
     let mut all_passed = recall_passes(tuning_recall, target);
     for run in 0..repetitions {
         let mut order: Vec<_> = (0..data.evaluation.len()).collect();
-        shuffle(&mut order, data.spec.seed.wrapping_add(run as u64));
+        shuffle(&mut order, order_seed.wrapping_add(run as u64));
         let started = Instant::now();
         let mut latencies = Vec::new();
         let mut run_recall = 0.0;
@@ -665,13 +812,62 @@ async fn run_cell(
                 .iter()
                 .map(|&i| data.evaluation[i].as_slice())
                 .collect();
+            let allocations_before = AllocationSnapshot::now();
             let call_started = Instant::now();
             let responses = collection.search_batch(&queries, &filter, 10).await?;
             let latency = call_started.elapsed();
+            let call_allocations = AllocationSnapshot::now().since(allocations_before);
             if responses.len() != queries.len() {
                 return Err("backend returned wrong response count for batch".into());
             }
             latencies.push(latency);
+            let first_report = &responses[0].report;
+            let gpu_row_preparation = first_report
+                .gpu_row_preparation
+                .map(|mode| format!("{mode:?}"))
+                .unwrap_or_default();
+            let predicate_traversals = first_report.predicate_traversals;
+            let row_materialization_ns = duration_ns(&first_report.row_materialization)
+                .map(|value| value.to_string())
+                .unwrap_or_default();
+            let materialized_rows = match &first_report.materialized_rows {
+                Measurement::Available(value) => value.to_string(),
+                Measurement::Unavailable(_) => String::new(),
+            };
+            let row_cache_hit = first_report
+                .row_cache_hit
+                .map(|value| value.to_string())
+                .unwrap_or_default();
+            let eligibility_predicate_kind = first_report
+                .eligibility_predicate_kind
+                .map(|value| format!("{value:?}"))
+                .unwrap_or_default();
+            let eligibility_representation = first_report
+                .eligibility_representation
+                .map(|value| format!("{value:?}"))
+                .unwrap_or_default();
+            let eligibility_generation = first_report
+                .eligibility_generation
+                .map(|value| value.to_string())
+                .unwrap_or_default();
+            let corpus_rows = bytes(first_report.corpus_rows.clone())
+                .map(|value| value.to_string())
+                .unwrap_or_default();
+            let eligibility_transfer_bytes = bytes(first_report.eligibility_transfer_bytes.clone())
+                .map(|value| value.to_string())
+                .unwrap_or_default();
+            let eligible_contiguous_runs = bytes(first_report.eligible_contiguous_runs.clone())
+                .map(|value| value.to_string())
+                .unwrap_or_default();
+            let upload_enqueue_ns = duration_ns(&first_report.phases.upload)
+                .map(|value| value.to_string())
+                .unwrap_or_default();
+            let readback_completion_ns = duration_ns(&first_report.phases.readback)
+                .map(|value| value.to_string())
+                .unwrap_or_default();
+            let backend_execution_ns = duration_ns(&first_report.phases.execution)
+                .map(|value| value.to_string())
+                .unwrap_or_default();
             let mut recall = 0.0;
             let mut results = 0;
             let mut upload = Some(0_u64);
@@ -749,13 +945,15 @@ async fn run_cell(
                 .join(";");
             writeln!(
                 samples,
-                "{run},{batch_index},{indices},{},{},{},{results},{eligible},{},{},{},{actual_backend},{counts},{lock_wait_ns},{cpu_distance_path},{routing_reasons},{fallback}",
+                "{run},{batch_index},{indices},{},{},{},{results},{eligible},{},{},{},{},{},{upload_enqueue_ns},{readback_completion_ns},{backend_execution_ns},{actual_backend},{counts},{lock_wait_ns},{cpu_distance_path},{routing_reasons},{fallback},{gpu_row_preparation},{predicate_traversals},{row_materialization_ns},{materialized_rows},{row_cache_hit},{eligibility_predicate_kind},{eligibility_representation},{eligibility_generation},{corpus_rows},{eligibility_transfer_bytes},{eligible_contiguous_runs}",
                 queries.len(),
                 latency.as_nanos(),
                 recall / queries.len() as f64,
                 csv_value(upload),
                 csv_value(readback),
-                csv_value(allocated)
+                csv_value(allocated),
+                call_allocations.count,
+                call_allocations.bytes
             )?;
         }
         samples.flush()?;
@@ -802,7 +1000,7 @@ async fn run_cell(
         all_passed,
         median.as_nanos()
     );
-    if !all_passed {
+    if !all_passed && !allow_recall_miss {
         return Err("held-out recall target not met; samples retained".into());
     }
     Ok(())
