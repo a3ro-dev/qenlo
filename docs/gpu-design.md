@@ -75,11 +75,14 @@ same exact FP32 GPU rerank. Canonical vectors remain FP32 and authoritative.
 
 The benchmark times completed API calls, including CPU eligibility, transfer,
 dispatch, synchronization, readback and CPU merging. Preparation is separately
-reported. No isolated GPU timestamp measurement is claimed. GPU-required mode
-returns errors. Automatic mode routes fewer than 4,096 eligible rows to exact CPU,
-uses GPU above that initial crossover, and still falls back on availability or
-execution failure. Reports and benchmark samples retain the routing reason. The
-static crossover is intentionally replaced by per-device autotuning later.
+reported. No isolated GPU timestamp measurement is claimed. A generation-bound
+`EligibilityPlan` performs the default host predicate traversal once and retains
+the selected row, mask, or shader-predicate representation and diagnostics.
+GPU-required mode returns errors. Automatic mode uses a matching hardware-bound
+profile when supplied; otherwise fewer than 4,096 eligible rows route to exact CPU
+and larger sets route to GPU, with availability or execution failures falling back.
+Reports and benchmark samples retain the routing reason. The static rule remains a
+fallback, not a claimed universal crossover or a completed adaptive phase engine.
 
 ## What the experiment establishes
 

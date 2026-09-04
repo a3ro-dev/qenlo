@@ -201,10 +201,14 @@ are connectivity 16, insertion expansion 128, and search expansion 128.
 `set_ann_search_expansion` changes the last value for the handle and subsequent
 rebuilds. results remain approximate, even though returned ties are sorted.
 
-GPU modes are CPU mask, CPU eligible rows, and GPU predicate. allocation admission
-includes scratch, execution is chunked, and candidate readback is bounded.
-required mode reports failures; automatic mode routes selective searches below
-the initial 4,096-row crossover to CPU and reports routing/fallback reasons.
+GPU modes are CPU mask, CPU eligible rows, and GPU predicate. eligibility is
+compiled once into a generation-bound plan carrying E, representation, transfer,
+and locality diagnostics; a benchmark-only mode retains the original two-pass path.
+allocation admission includes scratch, execution is chunked, and candidate readback
+is bounded. required mode reports failures. automatic mode can consume a matching
+hardware-bound profile, otherwise it falls back to the original 4,096-row rule and
+reports routing/fallback reasons. retained RTX 4050 cells show that the fallback
+rule is not a universal crossover.
 true batches contain up to 128 queries in one GPU workload. `set_gpu_ivf` enables
 deterministic IVF-Flat candidate generation; `set_gpu_ivf_sq8` adds an SQ8 coarse
 stage. both retain canonical FP32 vectors and perform an exact FP32 GPU rerank.

@@ -1,12 +1,16 @@
 # Reproducing the paper
 
-Use repository revision `3e2a4a9bd82e130192907fc29eee6321269fb374` plus this worktree's benchmark changes.
+Use immutable tag `paper-adaptive-routing-v1`. The tag contains the exact Rust
+source, `Cargo.lock`, analysis and plotting scripts, paper source, processed data,
+and retained raw archives used by this revision.
 
 ## Verify code and retained results
 
 ```sh
 cargo test --workspace --no-default-features -- --test-threads=1
 cargo test -p qenlo-bench --no-default-features
+cargo test -p qenlo --features gpu-wgpu -- --test-threads=1
+python -m unittest discover -s scripts -p "test_*.py"
 python scripts/verify_strict_research_gate.py --help
 python research/scripts/analyze_results.py
 python research/scripts/generate_plots.py
@@ -37,6 +41,25 @@ cargo run --release -p qenlo-bench --features gpu-wgpu -- run \
 
 Use new output directories. The retained samples and exact commands are recorded under `research/data/raw/2026-09-02-native-crossover`.
 
+## Re-run the eligibility-materialization ablation
+
+Do not run this campaign on an uncontrolled laptop if the paper result is the
+target. On a Vulkan-capable NVIDIA Runpod, prepare the retained AG News corpus,
+copy the tagged repository, then run:
+
+```sh
+export QENLO_REMOTE_ROOT=/workspace/qenlo-phase1
+bash scripts/runpod/bootstrap.sh compatibility
+bash scripts/runpod/phase1-eligibility-ablation.sh
+```
+
+The script writes new cell directories and never overwrites the committed raw
+archive. The authoritative archive is
+`research/artifacts/qenlo-phase1-eligibility-2026-09-04.tar.gz`, SHA-256
+`26e0ccc057c59c0fb4687f8d85a923e88b7bb25257e4e551e22cffe13c1b821f`.
+It includes exact commands, source patch, environment capture, raw calls,
+complete-run summaries, oracle output, failures, and internal checksums.
+
 ## Compile
 
 The Android device-lab cohort was supplied as schema-v1 app output. Its exact run IDs and transcription limitations are recorded in `research/data/raw/2026-09-02-android/PROVENANCE.md`; the 21-cell table is `research/data/processed/android_device_lab.csv`.
@@ -47,6 +70,11 @@ pdflatex paper.tex
 bibtex paper
 pdflatex paper.tex
 pdflatex paper.tex
+cp paper.pdf output/pdf/qenlo-routing-filtered-vector-search.pdf
 ```
 
-The validated revision was compiled with MiKTeX pdfTeX 1.40.28 and visually checked from Poppler page renders. Tectonic remains an alternative: run `tectonic paper.tex --keep-logs` from the `paper` directory.
+The validated revision was compiled with MiKTeX pdfTeX 1.40.28 and visually
+checked from Poppler page renders. `scripts/runpod/bootstrap.sh reference` pins
+the paper-analysis Python packages used in the retained Linux reproduction
+environment. Tectonic remains an alternative: run
+`tectonic paper.tex --keep-logs` from the `paper` directory.

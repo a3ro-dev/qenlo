@@ -34,7 +34,7 @@ Hardware cohort: Runpod secure cloud, NVIDIA GeForce RTX 4090, Linux/Vulkan, dri
 | 6,000 | 0.401130 ms | 0.271618 ms | 0.171330 ms | -32.3% | -57.3% |
 | 100,000 | 1.786170 ms | 1.720476 ms | 1.596024 ms | -3.7% | -10.6% |
 
-Values are lower-middle medians of five complete-run P95 values. All cells reported recall@10=1 and no filter violation. This campaign does not justify confidence intervals or a new crossover claim: it was designed as an implementation ablation, used only five complete runs, and did not interleave the three modes.
+Values are lower-middle medians of five complete-run P95 values. Sparse cells reported recall@10=1; the E=100,000 cells reported 0.99998. No filter violation was reported. This campaign does not justify confidence intervals or a new crossover claim: it was designed as an implementation ablation, used only five complete runs, and did not interleave the three modes.
 
 Median per-call plan materialization was 0 ns for warmed cached calls. For one-pass it was 12.714 microseconds at E=1,000, 55.473 microseconds at E=4,000, 84.528 microseconds at E=6,000, and 64.851 microseconds at E=100,000. The nonmonotonic dense value is retained as measured; E alone does not determine indexed predicate materialization cost.
 

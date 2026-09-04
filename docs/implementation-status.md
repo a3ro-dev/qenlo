@@ -6,7 +6,7 @@ This ledger separates implemented code from research directions and distribution
 |---|---|---|
 | correctness/oracle hardening | implemented | deterministic semantic checks and independent exact truth in `qenlo-lab` |
 | storage v2 WAL/manifest/mmap | implemented | atomic batch, recovery, corruption, reopen, and fail-closed tests |
-| query-level router | implemented | selective single-query CPU and batch GPU cells retain routing reason |
+| query-level router | partial | eligibility plans and hardware-bound threshold profiles are implemented; persisted calibration, online adaptation, and held-out regret evaluation remain open |
 | ARM NEON fallback | implemented | target compilation; physical ARM run comes from macOS/mobile packages |
 | portable exact GPU | implemented | persistent arenas, chunked bounded readback, true B×D batches |
 | portable IVF-Flat | implemented | Recall@10 ≥ 0.95 tester gate and exact FP32 GPU rerank |

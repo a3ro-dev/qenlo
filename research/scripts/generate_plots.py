@@ -44,9 +44,51 @@ def style() -> None:
 
 def save(fig: plt.Figure, name: str) -> None:
     FIG.mkdir(parents=True, exist_ok=True)
-    fig.savefig(FIG / f"{name}.pdf", bbox_inches="tight", pad_inches=0.03)
+    metadata = {
+        "Creator": "Qenlo research/scripts/generate_plots.py",
+        "CreationDate": None,
+        "ModDate": None,
+    }
+    fig.savefig(FIG / f"{name}.pdf", bbox_inches="tight", pad_inches=0.03, metadata=metadata)
     fig.savefig(FIG / f"{name}.png", bbox_inches="tight", pad_inches=0.03)
     plt.close(fig)
+
+
+def eligibility_ablation() -> None:
+    df = pd.read_csv(DATA / "eligibility_ablation_summary.csv")
+    labels = {
+        "legacy-two-pass": ("legacy two-pass", GREY, "o"),
+        "one-pass": ("one-pass plan", BLUE, "s"),
+        "cached": ("cached plan", GREEN, "^"),
+    }
+    fig, ax = plt.subplots(figsize=(5.35, 2.75))
+    for mode, (label, color, marker) in labels.items():
+        sub = df[df["mode"] == mode].sort_values("eligible")
+        ax.plot(sub.eligible, sub.median_run_p95_ms, marker=marker, color=color,
+                lw=1.8, ms=4.5, label=label)
+    ax.set(xscale="log", yscale="log", xlabel="eligible vectors, E",
+           ylabel="median complete-run P95 (ms)",
+           title="Eligibility materialization ablation, RTX 4090 / Vulkan")
+    ax.grid(True, which="both", axis="both", alpha=.7)
+    ax.legend(frameon=False, loc="upper left")
+    fig.tight_layout()
+    save(fig, "eligibility_ablation")
+
+
+def routing_regret() -> None:
+    df = pd.read_csv(DATA / "static_router_regret.csv")
+    fig, ax = plt.subplots(figsize=(5.35, 2.75))
+    colors = [RED if value > 0 else GREEN for value in df.absolute_p95_regret_ms]
+    bars = ax.bar(df.eligible.astype(str), df.absolute_p95_regret_ms, color=colors, width=.7)
+    for bar, row in zip(bars, df.itertuples()):
+        label = "correct" if row.route_correct else f"{100 * row.relative_p95_regret:.1f}%"
+        ax.text(bar.get_x() + bar.get_width()/2, max(row.absolute_p95_regret_ms, .004) + .008,
+                label, ha="center", va="bottom", fontsize=7)
+    ax.set(xlabel="eligible vectors, E", ylabel="absolute P95 regret (ms)",
+           title="Counterfactual regret of the shipped 4,096-row rule, RTX 4050")
+    ax.set_ylim(0, max(df.absolute_p95_regret_ms) * 1.35)
+    fig.tight_layout()
+    save(fig, "routing_regret")
 
 
 def phase_map() -> None:
@@ -184,23 +226,25 @@ def linux_context() -> None:
 
 
 def architecture() -> None:
-    fig, ax = plt.subplots(figsize=(7.05, 2.15))
+    fig, ax = plt.subplots(figsize=(7.05, 2.35))
     ax.axis("off")
     boxes = [
-        (.02, .29, .23, .46, "canonical CoreStore\nFP32 vectors + metadata\ntombstones + generation", BLUE, "#EAF4F7"),
-        (.36, .68, .25, .22, "CPU exhaustive", ORANGE, "#FFF0E6"),
-        (.36, .39, .25, .22, "filtered HNSW", PURPLE, "#F2EDF8"),
-        (.36, .10, .25, .22, "WGPU exhaustive / IVF", BLUE, "#EAF4F7"),
-        (.73, .29, .25, .46, "observable router\nrequested vs executed route\nfallback + E + transfers", GREEN, "#ECF6F0"),
+        (.01, .30, .20, .43, "canonical CoreStore\nFP32 rows + metadata\ntombstones + generation", BLUE, "#EAF4F7"),
+        (.27, .30, .20, .43, "EligibilityPlan\nE + predicate shape\nrows/mask/predicate\ntransfer + locality", GREEN, "#ECF6F0"),
+        (.54, .67, .20, .20, "CPU exhaustive", ORANGE, "#FFF0E6"),
+        (.54, .40, .20, .20, "WGPU exhaustive", BLUE, "#EAF4F7"),
+        (.54, .13, .20, .20, "filtered HNSW", PURPLE, "#F2EDF8"),
+        (.80, .30, .19, .43, "observable route\nrequested / executed\nfallback + timings\nplan diagnostics", GREEN, "#ECF6F0"),
     ]
     for x, y, w, h, text, edge, face in boxes:
         ax.add_patch(mpl.patches.FancyBboxPatch((x, y), w, h, boxstyle="round,pad=.012", ec=edge, fc=face, lw=1.3))
         ax.text(x+w/2, y+h/2, text, ha="center", va="center", transform=ax.transAxes, fontsize=8)
-    for y0, y1 in [(.60, .79), (.52, .50), (.44, .21)]:
-        ax.annotate("", xy=(.36, y1), xytext=(.25, y0), xycoords="axes fraction",
+    ax.annotate("", xy=(.27, .515), xytext=(.21, .515), xycoords="axes fraction",
+                arrowprops=dict(arrowstyle="->", color=GREY, lw=1.1))
+    for y in (.77, .50, .23):
+        ax.annotate("", xy=(.54, y), xytext=(.47, .515), xycoords="axes fraction",
                     arrowprops=dict(arrowstyle="->", color=GREY, lw=1.1))
-    for y0, y1 in [(.79, .60), (.50, .52), (.21, .44)]:
-        ax.annotate("", xy=(.73, y1), xytext=(.61, y0), xycoords="axes fraction",
+        ax.annotate("", xy=(.80, .515), xytext=(.74, y), xycoords="axes fraction",
                     arrowprops=dict(arrowstyle="->", color=GREY, lw=1.1))
     ax.text(.5, .01, "logical truth remains canonical; every search structure is rebuildable derived state",
             ha="center", va="bottom", transform=ax.transAxes, fontsize=7.2, color=GREY)
@@ -209,12 +253,14 @@ def architecture() -> None:
 
 def main() -> None:
     style()
+    eligibility_ablation()
+    routing_regret()
     phase_map()
     windows_strategies()
     android_matched()
     linux_context()
     architecture()
-    print("generated phase_map, windows_strategies, android_matched, linux_library_context, architecture")
+    print("generated eligibility_ablation, routing_regret, phase_map, windows_strategies, android_matched, linux_library_context, architecture")
 
 
 if __name__ == "__main__":
