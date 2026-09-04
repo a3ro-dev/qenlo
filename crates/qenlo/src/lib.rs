@@ -1825,6 +1825,18 @@ impl CollectionState {
         fallback_reason: Option<String>,
         total_duration: Duration,
     ) -> SearchResponse {
+        let cpu_distance_path = if output.actual_backend == BackendKind::Cpu {
+            match &output.candidates {
+                Measurement::Available(rows) => {
+                    Some(qenlo_core::cpu_distance_path_for_eligible_count(
+                        usize::try_from(*rows).unwrap_or(usize::MAX),
+                    ))
+                }
+                Measurement::Unavailable(_) => Some(qenlo_core::cpu_distance_path()),
+            }
+        } else {
+            None
+        };
         let results = output
             .hits
             .into_iter()
@@ -1835,8 +1847,7 @@ impl CollectionState {
             .collect::<Vec<_>>();
         let report = ExecutionReport {
             operation_id: 0,
-            cpu_distance_path: (output.actual_backend == BackendKind::Cpu)
-                .then(qenlo_core::cpu_distance_path),
+            cpu_distance_path,
             eligible_rows: Measurement::unavailable("detailed diagnostics disabled"),
             last_commit: self.last_commit.clone(),
             preparation_reason: None,

@@ -1,8 +1,11 @@
 //! Portable canonical storage and exact filtered vector search for Qenlo.
 
+use std::alloc::{Layout, alloc, dealloc, handle_alloc_error};
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap};
 use std::fmt;
+use std::ptr::NonNull;
+use std::sync::OnceLock;
 
 /// Inclusive-lower, exclusive-upper timestamp range.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -211,7 +214,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 /// Canonical record storage with metadata indexes and exact cosine search.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct CoreStore {
     dimension: usize,
     records: Vec<Record>,
@@ -220,6 +223,106 @@ pub struct CoreStore {
     timestamps: BTreeMap<i64, BTreeSet<u32>>,
     live_len: usize,
     generation: u64,
+    scan_matrix: OnceLock<AlignedScanMatrix>,
+}
+
+impl Clone for CoreStore {
+    fn clone(&self) -> Self {
+        Self {
+            dimension: self.dimension,
+            records: self.records.clone(),
+            ids: self.ids.clone(),
+            users: self.users.clone(),
+            timestamps: self.timestamps.clone(),
+            live_len: self.live_len,
+            generation: self.generation,
+            // The scan matrix is derived state. Clones rebuild it on first use instead of
+            // duplicating a potentially large cache behind the caller's back.
+            scan_matrix: OnceLock::new(),
+        }
+    }
+}
+
+/// Disposable cache-line-aligned row-major view of canonical vectors.
+#[derive(Debug)]
+struct AlignedScanMatrix {
+    ptr: NonNull<f32>,
+    len: usize,
+    dimension: usize,
+    stride: usize,
+    layout: Option<Layout>,
+}
+
+// The allocation is immutable after construction and is freed only when the owning matrix drops.
+unsafe impl Send for AlignedScanMatrix {}
+unsafe impl Sync for AlignedScanMatrix {}
+
+impl AlignedScanMatrix {
+    fn from_records(records: &[Record], dimension: usize) -> Self {
+        let stride = dimension
+            .checked_add(15)
+            .expect("canonical dimensions already fit address space")
+            / 16
+            * 16;
+        let len = records
+            .len()
+            .checked_mul(stride)
+            .expect("canonical vectors already fit address space");
+        if len == 0 {
+            return Self {
+                ptr: NonNull::dangling(),
+                len,
+                dimension,
+                stride,
+                layout: None,
+            };
+        }
+        let layout = Layout::array::<f32>(len)
+            .expect("canonical vectors already fit address space")
+            .align_to(64)
+            .expect("64-byte alignment is valid")
+            .pad_to_align();
+        // SAFETY: layout has non-zero size and valid 64-byte alignment.
+        let raw = unsafe { alloc(layout) }.cast::<f32>();
+        let ptr = NonNull::new(raw).unwrap_or_else(|| handle_alloc_error(layout));
+        for (row, record) in records.iter().enumerate() {
+            // SAFETY: each canonical vector has exactly `dimension` values and each row range is
+            // disjoint and contained in the allocation.
+            unsafe {
+                ptr.as_ptr()
+                    .add(row * stride)
+                    .copy_from_nonoverlapping(record.vector.as_ptr(), dimension);
+            }
+        }
+        Self {
+            ptr,
+            len,
+            dimension,
+            stride,
+            layout: Some(layout),
+        }
+    }
+
+    fn row(&self, slot: u32) -> &[f32] {
+        let start = slot as usize * self.stride;
+        debug_assert!(start + self.dimension <= self.len);
+        // SAFETY: construction allocates `len` initialized f32 values and the checked row range
+        // stays within that allocation. The matrix is immutable for its lifetime.
+        unsafe { std::slice::from_raw_parts(self.ptr.as_ptr().add(start), self.dimension) }
+    }
+
+    fn bytes(&self) -> usize {
+        self.len * std::mem::size_of::<f32>()
+    }
+}
+
+impl Drop for AlignedScanMatrix {
+    fn drop(&mut self) {
+        if let Some(layout) = self.layout {
+            // SAFETY: `ptr` was allocated with this exact layout and has not been freed.
+            unsafe { dealloc(self.ptr.as_ptr().cast(), layout) };
+        }
+    }
 }
 
 impl CoreStore {
@@ -235,6 +338,7 @@ impl CoreStore {
             timestamps: BTreeMap::new(),
             live_len: 0,
             generation: 0,
+            scan_matrix: OnceLock::new(),
         })
     }
 
@@ -313,6 +417,11 @@ impl CoreStore {
         self.generation
     }
 
+    /// Bytes retained by the disposable aligned exact-scan view, or zero before first use.
+    pub fn derived_scan_matrix_bytes(&self) -> usize {
+        self.scan_matrix.get().map_or(0, AlignedScanMatrix::bytes)
+    }
+
     pub fn record(&self, slot: u32) -> Option<&Record> {
         self.records.get(slot as usize)
     }
@@ -345,9 +454,22 @@ impl CoreStore {
             return Err(Error::DuplicateId(id));
         }
         let vector = normalize_vector(vector.as_ref(), self.dimension)?;
+        self.add_normalized(id, user_id, timestamp, vector)
+    }
+
+    fn add_normalized(
+        &mut self,
+        id: u64,
+        user_id: u64,
+        timestamp: i64,
+        vector: Vec<f32>,
+    ) -> Result<u32, Error> {
+        debug_assert!(!self.ids.contains_key(&id));
+        debug_assert_eq!(vector.len(), self.dimension);
         let slot = u32::try_from(self.records.len()).map_err(|_| Error::CapacityExceeded)?;
         let generation = self.next_generation()?;
 
+        let _ = self.scan_matrix.take();
         self.records.push(Record {
             id,
             user_id,
@@ -396,7 +518,7 @@ impl CoreStore {
                     timestamp,
                     vector,
                 } => {
-                    self.add(id, user_id, timestamp, vector)?;
+                    self.add_normalized(id, user_id, timestamp, vector)?;
                 }
                 OwnedMutation::Delete(id) => self.delete(id)?,
             }
@@ -515,7 +637,23 @@ impl CoreStore {
         }
         let query = normalize_vector(query.as_ref(), self.dimension)?;
         let slots = self.filter(predicate);
-        self.search_normalized_rows(&query, predicate, &slots, k)
+        self.search_normalized_rows_optimized(&query, predicate, &slots, k)
+    }
+
+    /// FP64-accumulating reference search used to verify optimized exact routes.
+    #[doc(hidden)]
+    pub fn search_reference(
+        &self,
+        query: impl AsRef<[f32]>,
+        predicate: &Predicate,
+        k: usize,
+    ) -> Result<SearchOutput, Error> {
+        if !(1..=64).contains(&k) {
+            return Err(Error::InvalidK(k));
+        }
+        let query = normalize_vector(query.as_ref(), self.dimension)?;
+        let slots = self.filter(predicate);
+        self.search_normalized_rows_reference(&query, predicate, &slots, k)
     }
 
     /// Exact search over a previously compiled canonical eligibility list.
@@ -533,10 +671,26 @@ impl CoreStore {
             return Err(Error::InvalidK(k));
         }
         let query = normalize_vector(query.as_ref(), self.dimension)?;
-        self.search_normalized_rows(&query, predicate, slots, k)
+        self.search_normalized_rows_optimized(&query, predicate, slots, k)
     }
 
-    fn search_normalized_rows(
+    /// FP64-accumulating reference search over a compiled eligibility list.
+    #[doc(hidden)]
+    pub fn search_rows_reference(
+        &self,
+        query: impl AsRef<[f32]>,
+        predicate: &Predicate,
+        slots: &[u32],
+        k: usize,
+    ) -> Result<SearchOutput, Error> {
+        if !(1..=64).contains(&k) {
+            return Err(Error::InvalidK(k));
+        }
+        let query = normalize_vector(query.as_ref(), self.dimension)?;
+        self.search_normalized_rows_reference(&query, predicate, slots, k)
+    }
+
+    fn search_normalized_rows_reference(
         &self,
         query: &[f32],
         predicate: &Predicate,
@@ -577,6 +731,92 @@ impl CoreStore {
             .collect();
         Ok(SearchOutput {
             hits,
+            evaluated_rows: slots.len(),
+        })
+    }
+
+    fn search_normalized_rows_optimized(
+        &self,
+        query: &[f32],
+        predicate: &Predicate,
+        slots: &[u32],
+        k: usize,
+    ) -> Result<SearchOutput, Error> {
+        if slots.len() > CERTIFIED_FP32_MAX_ROWS {
+            return self.search_normalized_rows_reference(query, predicate, slots, k);
+        }
+        let Some(approximate_dot) = fp32_dot_implementation() else {
+            return self.search_normalized_rows_reference(query, predicate, slots, k);
+        };
+        let Some(error_bound) = fp32_dot_error_bound(self.dimension) else {
+            return self.search_normalized_rows_reference(query, predicate, slots, k);
+        };
+        let matrix = self
+            .scan_matrix
+            .get_or_init(|| AlignedScanMatrix::from_records(&self.records, self.dimension));
+        let mut approximate_best = BinaryHeap::with_capacity(k);
+        let mut candidates = Vec::with_capacity(k * 2);
+        let mut previous = None;
+        for &slot in slots {
+            if previous.is_some_and(|prior| slot <= prior) {
+                return Err(Error::InvalidEligibleRow(slot));
+            }
+            previous = Some(slot);
+            let Some(record) = self.records.get(slot as usize) else {
+                return Err(Error::InvalidEligibleRow(slot));
+            };
+            if !record.live
+                || predicate.user_id.is_some_and(|user| user != record.user_id)
+                || !predicate.timestamp.contains(record.timestamp)
+            {
+                return Err(Error::InvalidEligibleRow(slot));
+            }
+
+            let approximate_distance = 1.0 - approximate_dot(query, matrix.row(slot));
+            let hit = RankedHit(SearchHit {
+                id: record.id,
+                distance: approximate_distance,
+            });
+            if approximate_best.len() < k {
+                approximate_best.push(hit);
+                candidates.push(slot);
+                continue;
+            }
+            if approximate_best.peek().is_some_and(|worst| hit < *worst) {
+                *approximate_best
+                    .peek_mut()
+                    .expect("heap contains k entries") = hit;
+            }
+            let cutoff = approximate_best
+                .peek()
+                .expect("heap contains k entries")
+                .0
+                .distance;
+            if approximate_distance <= cutoff + 2.0 * error_bound {
+                candidates.push(slot);
+            }
+        }
+
+        let exact_dot = dot_implementation();
+        let mut best = BinaryHeap::with_capacity(k);
+        for slot in candidates {
+            let record = &self.records[slot as usize];
+            let hit = RankedHit(SearchHit {
+                id: record.id,
+                distance: (1.0 - exact_dot(query, matrix.row(slot))) as f32,
+            });
+            if best.len() < k {
+                best.push(hit);
+            } else if best.peek().is_some_and(|worst| hit < *worst) {
+                *best.peek_mut().expect("heap contains k entries") = hit;
+            }
+        }
+        Ok(SearchOutput {
+            hits: best
+                .into_sorted_vec()
+                .into_iter()
+                .map(|hit| hit.0)
+                .collect(),
             evaluated_rows: slots.len(),
         })
     }
@@ -635,10 +875,38 @@ pub enum CpuDistancePath {
     Avx2Fma,
     /// AArch64 NEON with float64 accumulation and a scalar remainder.
     Neon,
+    /// AVX2 float32 candidate scoring with a conservative FP64 boundary verification.
+    Fp32Avx2Certified,
+    /// AVX2/FMA float32 candidate scoring with a conservative FP64 boundary verification.
+    Fp32Avx2FmaCertified,
 }
 
-/// Report the distance implementation selected on this CPU.
+// The certified two-pass path wins for selective scans but loses once its extra pass exceeds the
+// measured benefit. This conservative boundary is replaced by the adaptive cost model later.
+const CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
+
+/// Report the optimized exact distance implementation selected on this CPU.
 pub fn cpu_distance_path() -> CpuDistancePath {
+    cpu_distance_path_for_eligible_count(0)
+}
+
+/// Report the exact distance implementation selected for a known eligible-row count.
+pub fn cpu_distance_path_for_eligible_count(eligible_rows: usize) -> CpuDistancePath {
+    if eligible_rows > CERTIFIED_FP32_MAX_ROWS {
+        return reference_cpu_distance_path();
+    }
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if std::is_x86_feature_detected!("avx2") && std::is_x86_feature_detected!("fma") {
+        return CpuDistancePath::Fp32Avx2FmaCertified;
+    }
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if std::is_x86_feature_detected!("avx2") {
+        return CpuDistancePath::Fp32Avx2Certified;
+    }
+    reference_cpu_distance_path()
+}
+
+fn reference_cpu_distance_path() -> CpuDistancePath {
     #[cfg(target_arch = "aarch64")]
     {
         CpuDistancePath::Neon
@@ -658,23 +926,50 @@ pub fn cpu_distance_path() -> CpuDistancePath {
 
 fn dot_implementation() -> fn(&[f32], &[f32]) -> f64 {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    if cpu_distance_path() == CpuDistancePath::Avx2Fma {
+    if reference_cpu_distance_path() == CpuDistancePath::Avx2Fma {
         // SAFETY: selected only after runtime AVX2 and FMA detection.
         return |left, right| unsafe { dot_avx2_fma(left, right) };
     }
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    if cpu_distance_path() == CpuDistancePath::Avx2 {
+    if reference_cpu_distance_path() == CpuDistancePath::Avx2 {
         // SAFETY: selected only after runtime AVX2 detection. Both input lengths
         // are validated against the store dimension before this function is used.
         return |left, right| unsafe { dot_avx2(left, right) };
     }
     #[cfg(target_arch = "aarch64")]
-    if cpu_distance_path() == CpuDistancePath::Neon {
+    if reference_cpu_distance_path() == CpuDistancePath::Neon {
         // SAFETY: NEON is part of the AArch64 baseline. Input lengths are
         // validated against the store dimension before this function is used.
         return |left, right| unsafe { dot_neon(left, right) };
     }
     dot_scalar
+}
+
+fn fp32_dot_implementation() -> Option<fn(&[f32], &[f32]) -> f32> {
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if cpu_distance_path() == CpuDistancePath::Fp32Avx2FmaCertified {
+        // SAFETY: selected only after runtime AVX2 and FMA detection.
+        return Some(|left, right| unsafe { dot_f32_avx2_fma(left, right) });
+    }
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if cpu_distance_path() == CpuDistancePath::Fp32Avx2Certified {
+        // SAFETY: selected only after runtime AVX2 detection.
+        return Some(|left, right| unsafe { dot_f32_avx2(left, right) });
+    }
+    None
+}
+
+/// Conservative absolute error bound for a float32 dot of unit-normalized inputs.
+///
+/// Four times Higham's gamma bound covers lane-wise accumulation, horizontal reduction,
+/// normalization rounding, and the final distance subtraction. If the bound would become too
+/// loose, the caller uses the FP64 reference route instead.
+fn fp32_dot_error_bound(dimension: usize) -> Option<f32> {
+    let scaled_epsilon = dimension as f64 * f64::from(f32::EPSILON);
+    if scaled_epsilon >= 0.25 {
+        return None;
+    }
+    Some((4.0 * scaled_epsilon / (1.0 - scaled_epsilon) * 1.001) as f32)
 }
 
 fn dot_scalar(left: &[f32], right: &[f32]) -> f64 {
@@ -725,6 +1020,37 @@ unsafe fn dot_avx2(left: &[f32], right: &[f32]) -> f64 {
 }
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2")]
+unsafe fn dot_f32_avx2(left: &[f32], right: &[f32]) -> f32 {
+    #[cfg(target_arch = "x86")]
+    use std::arch::x86::*;
+    #[cfg(target_arch = "x86_64")]
+    use std::arch::x86_64::*;
+    debug_assert_eq!(left.len(), right.len());
+    let mut sum = _mm256_setzero_ps();
+    let end = left.len() / 8 * 8;
+    for offset in (0..end).step_by(8) {
+        // SAFETY: each unaligned load stays within eight valid elements.
+        let (a, b) = unsafe {
+            (
+                _mm256_loadu_ps(left.as_ptr().add(offset)),
+                _mm256_loadu_ps(right.as_ptr().add(offset)),
+            )
+        };
+        sum = _mm256_add_ps(sum, _mm256_mul_ps(a, b));
+    }
+    let mut lanes = [0.0; 8];
+    // SAFETY: lanes has room for all eight floats and unaligned stores are allowed.
+    unsafe { _mm256_storeu_ps(lanes.as_mut_ptr(), sum) };
+    lanes.iter().sum::<f32>()
+        + left[end..]
+            .iter()
+            .zip(&right[end..])
+            .map(|(&a, &b)| a * b)
+            .sum::<f32>()
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 #[target_feature(enable = "avx2,fma")]
 unsafe fn dot_avx2_fma(left: &[f32], right: &[f32]) -> f64 {
     #[cfg(target_arch = "x86")]
@@ -758,6 +1084,37 @@ unsafe fn dot_avx2_fma(left: &[f32], right: &[f32]) -> f64 {
     // SAFETY: lanes has room for all four doubles and unaligned stores are allowed.
     unsafe { _mm256_storeu_pd(lanes.as_mut_ptr(), _mm256_add_pd(low_sum, high_sum)) };
     lanes.iter().sum::<f64>() + dot_scalar(&left[end..], &right[end..])
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2,fma")]
+unsafe fn dot_f32_avx2_fma(left: &[f32], right: &[f32]) -> f32 {
+    #[cfg(target_arch = "x86")]
+    use std::arch::x86::*;
+    #[cfg(target_arch = "x86_64")]
+    use std::arch::x86_64::*;
+    debug_assert_eq!(left.len(), right.len());
+    let mut sum = _mm256_setzero_ps();
+    let end = left.len() / 8 * 8;
+    for offset in (0..end).step_by(8) {
+        // SAFETY: each unaligned load stays within eight valid elements.
+        let (a, b) = unsafe {
+            (
+                _mm256_loadu_ps(left.as_ptr().add(offset)),
+                _mm256_loadu_ps(right.as_ptr().add(offset)),
+            )
+        };
+        sum = _mm256_fmadd_ps(a, b, sum);
+    }
+    let mut lanes = [0.0; 8];
+    // SAFETY: lanes has room for all eight floats and unaligned stores are allowed.
+    unsafe { _mm256_storeu_ps(lanes.as_mut_ptr(), sum) };
+    lanes.iter().sum::<f32>()
+        + left[end..]
+            .iter()
+            .zip(&right[end..])
+            .map(|(&a, &b)| a.mul_add(b, 0.0))
+            .sum::<f32>()
 }
 
 #[cfg(target_arch = "aarch64")]
@@ -1002,6 +1359,18 @@ mod tests {
     }
 
     #[test]
+    fn cpu_distance_route_uses_the_measured_selective_boundary() {
+        assert_eq!(
+            cpu_distance_path_for_eligible_count(CERTIFIED_FP32_MAX_ROWS),
+            cpu_distance_path()
+        );
+        assert_eq!(
+            cpu_distance_path_for_eligible_count(CERTIFIED_FP32_MAX_ROWS + 1),
+            reference_cpu_distance_path()
+        );
+    }
+
+    #[test]
     fn malformed_queries_are_rejected_even_when_filter_is_empty() {
         let store = store();
         let none = Predicate::new(Some(999), TimestampRange::ALL);
@@ -1117,6 +1486,88 @@ mod tests {
         assert_eq!(store.len(), 2);
         assert_eq!(store.live_len(), 1);
         assert!(!store.record(1).unwrap().is_live());
+    }
+
+    #[test]
+    fn optimized_exact_matches_fp64_oracle_across_randomized_filters_and_k() {
+        fn random_f32(state: &mut u64) -> f32 {
+            *state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            let unit = (*state >> 40) as f32 / ((1u32 << 24) - 1) as f32;
+            unit * 2.0 - 1.0
+        }
+
+        for dimension in [1, 2, 3, 7, 8, 15, 16, 31, 64, 384] {
+            let mut state = 0x5eed_u64 ^ dimension as u64;
+            let mut store = CoreStore::new(dimension).unwrap();
+            for row in 0..257u64 {
+                let mut vector = (0..dimension)
+                    .map(|_| random_f32(&mut state))
+                    .collect::<Vec<_>>();
+                if vector.iter().all(|value| *value == 0.0) {
+                    vector[0] = 1.0;
+                }
+                store
+                    .add(row * 13 + 7, row % 5, row as i64 - 128, vector)
+                    .unwrap();
+            }
+            for row in (0..257u64).step_by(17) {
+                store.delete(row * 13 + 7).unwrap();
+            }
+            let predicates = [
+                Predicate::ALL,
+                Predicate::new(Some(3), TimestampRange::ALL),
+                Predicate::new(None, TimestampRange::new(Some(-50), Some(70))),
+                Predicate::new(Some(1), TimestampRange::new(Some(-75), Some(91))),
+            ];
+            for query_index in 0..8 {
+                let mut query = (0..dimension)
+                    .map(|_| random_f32(&mut state))
+                    .collect::<Vec<_>>();
+                if query.iter().all(|value| *value == 0.0) {
+                    query[0] = 1.0;
+                }
+                for predicate in predicates {
+                    for k in [1, 3, 10, 32, 64] {
+                        let optimized = store.search(&query, &predicate, k).unwrap();
+                        let reference = store.search_reference(&query, &predicate, k).unwrap();
+                        assert_eq!(
+                            optimized, reference,
+                            "dimension={dimension} query={query_index} predicate={predicate:?} k={k}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn derived_scan_matrix_is_aligned_disposable_and_mutation_safe() {
+        let mut store = CoreStore::new(3).unwrap();
+        store.add(9, 1, 0, [1.0, 2.0, 3.0]).unwrap();
+        assert_eq!(store.derived_scan_matrix_bytes(), 0);
+        store.search([1.0, 2.0, 3.0], &Predicate::ALL, 1).unwrap();
+        let matrix = store.scan_matrix.get().unwrap();
+        assert_eq!(matrix.ptr.as_ptr() as usize % 64, 0);
+        assert_eq!(
+            store.derived_scan_matrix_bytes(),
+            16 * std::mem::size_of::<f32>()
+        );
+
+        let clone = store.clone();
+        assert_eq!(clone.derived_scan_matrix_bytes(), 0);
+        store.add(10, 1, 1, [3.0, 2.0, 1.0]).unwrap();
+        assert_eq!(store.derived_scan_matrix_bytes(), 0);
+        let optimized = store.search([3.0, 2.0, 1.0], &Predicate::ALL, 2).unwrap();
+        let reference = store
+            .search_reference([3.0, 2.0, 1.0], &Predicate::ALL, 2)
+            .unwrap();
+        assert_eq!(optimized, reference);
+        assert_eq!(
+            store.derived_scan_matrix_bytes(),
+            32 * std::mem::size_of::<f32>()
+        );
     }
 
     #[test]
