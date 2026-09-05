@@ -39,10 +39,19 @@ jobs:
         with:
           enablement: true
 
+      - name: Assemble site directory
+        run: |
+          mkdir -p _site
+          cp index.html .nojekyll _site/
+          cp -r docs assets _site/
+          [ -f llms.txt ] && cp llms.txt _site/ || true
+          [ -f llms-full.txt ] && cp llms-full.txt _site/ || true
+          [ -d .well-known ] && cp -r .well-known _site/ || true
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment

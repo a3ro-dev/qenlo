@@ -2,42 +2,70 @@ name: portable correctness
 
 on:
   push:
+    branches: [main]
+    tags: ['*']
   pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  portable:
+  # ── Fast gate: runs on every PR and push ───────────────────────────
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
+      - uses: Swatinem/rust-cache@v2
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Clippy lints
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Workspace tests
+        run: cargo test --workspace
+
+  research-evidence:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - name: Install replay test dependency
+        run: python -m pip install numpy==2.5.2
+      - name: Test comparison, replay, and immutable gate rules
+        run: python -m unittest discover -s scripts -p "test_*.py"
+
+  # ── Cross-platform: only on main merges and tags ───────────────────
+  cross-platform:
+    if: github.event_name == 'push'
+    needs: lint
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-15]
+        os: [windows-latest, macos-15]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - name: Install pinned Rust
         run: rustup toolchain install 1.98.0 --profile minimal --no-self-update
-      - name: Record host
-        run: rustc -vV
-      - name: Test canonical format, WAL recovery, and exact oracle
+      - uses: Swatinem/rust-cache@v2
+      - name: Workspace tests
         run: cargo test --workspace
 
   windows-arm64-compile:
+    if: github.event_name == 'push'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - name: Install pinned Rust and ARM64 target
         run: |
           rustup toolchain install 1.98.0 --profile minimal --no-self-update
           rustup target add aarch64-pc-windows-msvc --toolchain 1.98.0
       - name: Check AArch64 NEON and storage
         run: cargo check -p qenlo --target aarch64-pc-windows-msvc
-
-  research-evidence:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.13" }
-      - name: Install replay test dependency
-        run: python -m pip install numpy==2.5.2
-      - name: Test comparison, replay, and immutable gate rules
-        run: python -m unittest discover -s scripts -p "test_*.py"
