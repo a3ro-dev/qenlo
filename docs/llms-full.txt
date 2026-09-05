@@ -1,0 +1,1952 @@
+# Qenlo: Complete Documentation Bundle
+
+This file concatenates all official Qenlo documentation pages for AI agents and language models.
+Project repository: https://github.com/a3ro-dev/qenlo
+Project documentation: https://a3ro-dev.github.io/qenlo/docs/
+
+================================================================================
+Document: Overview
+Path: docs/README.md
+URL: https://a3ro-dev.github.io/qenlo/docs/README.md
+Description: Core introduction, boundaries, and documentation index
+================================================================================
+
+# Qenlo documentation
+
+Qenlo is a research-grade embedded vector store for durable, exact, metadata-filtered retrieval. It runs inside your application and stores canonical records locally. Optional CPU, WGPU, ANN, and tensor structures determine how a query runs, not which records exist.
+
+## Start here
+
+- [Quickstart](quickstart.md): Create, mutate, search, close, and reopen a collection.
+- [Concepts](concepts.md): Canonical state, eligibility, exactness, and routing.
+- [Use cases](use-cases.md): Where Qenlo fits and where it does not.
+- [Trade-offs](trade-offs.md): Operational and performance costs.
+- [Architecture](architecture.md): Storage and derived execution structures.
+- [Feature matrix](feature-matrix.md): Implemented, optional, and unverified capabilities.
+
+## Operate and integrate
+
+- [Recovery policy](recovery-policy.md)
+- [Portable `.qn` format](qn-format-v1.md)
+- [GPU design](gpu-design.md)
+- [QenloDB browser](browser.md)
+- [Rust SDK](sdks/rust.md)
+- [Python SDK](sdks/python.md)
+- [TypeScript SDK](sdks/typescript.md)
+- [Go SDK](sdks/go.md)
+- [Kotlin SDK](sdks/kotlin.md)
+- [Swift SDK](sdks/swift.md)
+
+## Evidence and project status
+
+- [Verification](verification.md)
+- [Benchmark protocol](benchmark-protocol.md)
+- [Implementation status](implementation-status.md)
+- [Research paper](../paper/output/pdf/qenlo-final-research-paper.pdf)
+
+Benchmark results apply only to their recorded data, hardware, source revision, runtime, and timing boundary. They do not establish a universal CPU or GPU threshold, nor do they claim production readiness.
+
+Rust and the native ABI run in CI across Linux, Windows, and macOS. Passing a target build does not prove physical device validation. The core engine and SDKs start no background workers and make no network requests. Telemetry is an entirely separate, host-controlled service.
+
+
+================================================================================
+Document: Quickstart
+Path: docs/quickstart.md
+URL: https://a3ro-dev.github.io/qenlo/docs/quickstart.md
+Description: Build from source, create collections, insert, search, and reopen
+================================================================================
+
+# Quickstart
+
+This repository is a prerelease source tree. Published package installs are not available until release CI and registry verification finish.
+
+## Rust from this checkout
+
+```powershell
+cargo run -p qenlo --example quickstart -- ./demo.qenlo cpu
+$env:WGPU_BACKEND = 'dx12'
+cargo run -p qenlo --features gpu-wgpu --example quickstart -- ./gpu-demo.qenlo gpu
+```
+
+Use a new directory. The example adds records, runs a filtered cosine search, deletes a row, closes the collection, and verifies state after reopen. Required GPU mode fails if the requested adapter cannot execute it.
+
+## Minimal Rust API
+
+```rust
+use qenlo::{Collection, CollectionConfig, Filter};
+
+async fn search() -> Result<(), qenlo::Error> {
+    let db = Collection::new(CollectionConfig::cpu_exact(3)).await?;
+    db.add(1, 42, 1_700_000_000, &[0.1, 0.8, 0.5])?;
+    let response = db.search(&[0.1, 0.7, 0.5], &Filter::ALL, 5).await?;
+    println!("{:?}", response.results);
+    Ok(())
+}
+```
+
+Collections above the default admission limit need an explicit budget, including in-memory benchmark collections:
+
+```rust
+use qenlo::{Collection, CollectionConfig, StorageOptions};
+
+let db = Collection::new_with_options(
+    CollectionConfig::cpu_exact(768),
+    StorageOptions { max_load_bytes: 2 * 1024 * 1024 * 1024 },
+).await?;
+```
+
+See the language-specific pages under `docs/sdks/` for source-checkout examples. Do not advertise an SDK backend unless its packaged native artifact contains that feature.
+
+
+================================================================================
+Document: Core concepts
+Path: docs/concepts.md
+URL: https://a3ro-dev.github.io/qenlo/docs/concepts.md
+Description: Canonical state, eligibility, exactness, and routing boundaries
+================================================================================
+
+# Concepts
+
+## Canonical and derived state
+
+The canonical collection contains normalized FP32 vectors, public IDs, user IDs, signed timestamps, liveness, and a generation number. This state determines which records exist.
+
+CPU scan layouts, WGPU buffers, ANN indexes, tensor snapshots, and eligibility plans are derived. You can rebuild or discard them, but they never redefine canonical membership.
+
+## Eligibility
+
+A filter selects live records by optional user equality and a timestamp range whose lower bound is inclusive and upper bound is exclusive. The number of selected records is the eligible cardinality, `E`.
+
+Search cost depends on more than total collection size `N`. Eligible work, dimension, batch size, predicate representation, preparation, selection, transfers, and device state can all affect the winning execution path.
+
+An eligibility plan binds a prepared predicate result to a canonical generation. Mutations advance the generation and invalidate plans that no longer describe current state.
+
+## Exact search
+
+Qenlo uses "exact" to mean exhaustive coverage of every eligible candidate. It does not mean every backend is bit-identical to an ideal FP64 computation. Stored FP32 values and different accumulation orders can change rankings near numerical ties.
+
+Correctness evaluations therefore track exhaustive coverage and FP64-oracle recall as separate properties.
+
+## Approximate search
+
+USearch HNSW visits only part of the eligible search space. Its latency is meaningful only beside recall for the same data, filters, and tuning. A measured recall of 1.0 on one workload does not make an ANN method universally exact.
+
+## Routing
+
+CPU, WGPU, and tensor execution have different fixed and variable costs. CPU often fits tiny eligible sets; accelerators can help when enough scoring work or batching amortizes dispatch and transfer overhead.
+
+Qenlo exposes explicit route selection and a hardware-bound profile mechanism. The current research archive does not validate an adaptive router on held-out workloads, so do not treat the fallback threshold as a universal crossover.
+
+## Completed-call timing
+
+The native timing boundary begins at the host search call and ends with ordered, host-visible results. It can include eligibility work, transfers, dispatch, synchronization, readback, and merging. Isolated GPU phase timings may overlap, so do not sum them as if they were disjoint.
+
+## Durability boundary
+
+File-backed collections publish validated mutations through snapshots, WAL state, and a generation watermark. In-memory collections do not have that durability boundary. Recovery tests demonstrate named scenarios; they do not prove behavior for every filesystem or crash schedule.
+
+## Evidence boundary
+
+A benchmark observation belongs to its source revision, hardware, software environment, data, queries, filter, and timing definition. Results from different cohorts are useful context but are not interchangeable replications. See the [benchmark protocol](benchmark-protocol.md) and [verification notes](verification.md).
+
+
+================================================================================
+Document: Collection browser
+Path: docs/browser.md
+URL: https://a3ro-dev.github.io/qenlo/docs/browser.md
+Description: Terminal user interface (TUI), local web UI, and Tauri desktop inspector
+================================================================================
+
+# QenloDB browser
+
+<p align="center"><img src="../assets/brand/logo/lockup.svg" alt="Qenlo" width="320"></p>
+
+A visual and terminal inspector for embedded vector collections, modeled after DB Browser for SQLite.
+
+---
+
+## Why this database browser exists
+
+Embedded SQL databases like SQLite earned widespread developer trust because anyone could open, inspect, and query `.sqlite` files locally using tools like DB Browser for SQLite.
+
+Most vector databases treat embeddings and nearest-neighbor indices as opaque black boxes behind remote servers. QenloDB Browser provides that same local visibility for embedded vector search:
+
+- Inspect stored vectors, unit-normalization status, dimensions, user IDs, and signed timestamps directly from on-disk `.qenlo` directories or `.qn` snapshots.
+- Observe how atomic deletions produce durable tombstones, compare uncompacted WAL segments against `.qdb` snapshots, and check recovery watermarks (`HEAD`) directly on disk.
+- Test vector queries with compound metadata filters, such as `user_id` and timestamp ranges, across backends including CPU Exact (AVX2/FMA), USearch HNSW, and GPU (wgpu). The browser reports execution timings, distance metrics, and similarity rankings for each query.
+- Verify which SIMD vector distance kernel (AVX2+FMA, AVX2, NEON, or Scalar) and GPU adapters your machine runs.
+
+---
+
+## Three interfaces
+
+QenloDB Browser has three interfaces:
+
+### 1. Terminal user interface (TUI)
+
+An interactive, keyboard-driven terminal interface built with `ratatui` and `crossterm`.
+
+```powershell
+# Open an existing collection in the TUI
+cargo run -p qenlo-browser -- ./notes.qenlo
+
+# Or create a new collection with 384 dimensions
+cargo run -p qenlo-browser -- ./notes.qenlo --dimension 384 --create
+```
+
+#### TUI keyboard shortcuts
+| Key | Action |
+|---|---|
+| `Tab` / `Shift+Tab` | Cycle through navigation tabs |
+| `1` to `4`, `?` | Jump directly to Rows, Search, Storage, Diagnostics, or Help |
+| `j` / `k` / `↑` / `↓` | Navigate rows in the table |
+| `n` / `p` | Next / previous page of records |
+| `Enter` | Open full vector inspector modal |
+| `a` | Add new record dialog (`Ctrl+R` for random vector) |
+| `d` / `Delete` | Durable row deletion |
+| `/` | Live filter table by user ID |
+| `s` | Run vector cosine similarity search |
+| `r` | Generate normalized random query vector |
+| `f` | Flush and compact WAL to snapshot |
+| `:` | Command prompt (`:open`, `:create`, `:search`, `:flush`, `:export`, `:quit`) |
+| `q` / `Ctrl+C` | Quit |
+
+---
+
+### 2. Embedded local web UI
+
+A responsive single-page web dashboard served by an internal Axum HTTP server.
+
+```powershell
+# Launch the Web UI server on port 3456
+cargo run -p qenlo-browser -- --web ./notes.qenlo --port 3456
+```
+
+Open `http://127.0.0.1:3456` in your browser to:
+- Browse paginated rows with sparkline vector previews and active or tombstone indicators.
+- Run vector queries with visual similarity meters (`████████░░ 0.9541`) and latency breakdowns.
+- Inspect on-disk `.qdb`, `.wal`, `.lock`, and `HEAD` files.
+- Flush and compact WAL logs or export collections to portable `.qn` archives.
+
+---
+
+### 3. Tauri v2 desktop app
+
+A native cross-platform desktop application under `apps/desktop` with OS folder pickers and window chrome.
+
+```powershell
+cd apps/desktop
+pnpm install
+cargo run -p qenlo-browser-desktop
+```
+
+---
+
+## REST API reference
+
+When running in web mode (`--web`), `qenlo-browser` exposes a JSON REST API:
+
+- `GET /api/status` returns collection metadata, dimension, live row count, tombstones, and generation.
+- `POST /api/open` opens a collection from a directory path or a portable `.qn` file.
+- `POST /api/create` creates a new collection with a specified dimension.
+- `GET /api/records?offset=0&limit=50&user_id=7` returns paginated rows with optional filters.
+- `GET /api/records/:id` returns full vector float components for a single record.
+- `POST /api/search` runs cosine similarity search with user and time filters.
+- `POST /api/mutate` executes atomic add and delete mutation batches.
+- `POST /api/flush` forces a sync and WAL compaction to a `.qdb` snapshot.
+- `POST /api/export` exports the collection to a portable `.qn` file.
+- `GET /api/storage` returns file listings, sizes, and load admission budgets.
+- `GET /api/diagnostics` reports host CPU architecture, SIMD distance kernels, and system limits.
+
+
+================================================================================
+Document: Use cases
+Path: docs/use-cases.md
+URL: https://a3ro-dev.github.io/qenlo/docs/use-cases.md
+Description: Where Qenlo fits and where it does not
+================================================================================
+
+# Use cases
+
+Qenlo is for local applications that need durable vector records and exact search over a metadata-filtered candidate set. Its strongest product shape is closer to an embedded database library than a vector-search service.
+
+## Desktop and offline retrieval
+
+Use Qenlo for note search, document retrieval, code search, or local RAG when the index lives directly beside the application. There is no external service to run, and search requires no network access. It fits best when the host application manages precomputed embeddings and prefers deterministic exact results over tuning an approximate index.
+
+## Application and agent memory
+
+Atomic batches, tombstones, durable reopen, and time-range filtering support episodic or working-memory stores. A host can restrict retrieval by user and time without maintaining a second vector index for every partition.
+
+Qenlo does not provide authentication or authorization. The application must enforce who may select a user or predicate.
+
+## Per-user local collections
+
+Applications can isolate users with separate collection directories or use the built-in user filter. Separate collections provide a clearer storage boundary; filters are convenient when one trusted process owns the dataset.
+
+## Exact filtered retrieval
+
+Qenlo evaluates eligible live rows and returns exhaustive top-k results within the selected exact engine. This pays off when predicates eliminate enough candidates that an approximate index adds indexing overhead without saving query latency.
+
+"Exact" means exhaustive candidate coverage. FP32 storage and backend arithmetic can still differ from an FP64 oracle near ties.
+
+## Optional local acceleration
+
+WGPU can accelerate dense or batched work on supported adapters. PyTorch is useful when the host already owns a tensor runtime. Both remain derived execution state around the canonical collection.
+
+Do not choose a route from collection size alone. Eligibility, dimension, batch size, representation, preparation cost, selection, and device state all matter. Measure the retained build on the deployment host.
+
+## Device and systems research
+
+The benchmark harness, independent oracle, diagnostics, and failure-preserving reports make Qenlo useful for studying exact vector-search execution across devices. This is currently a stronger claim than universal performance portability.
+
+## When Qenlo is the wrong tool
+
+Choose another system when you need SQL and joins, multi-process writers, a remote shared service, replication, sharding, an operational SLA, billion-scale ANN, embedding generation, built-in encryption, or mature production support.
+
+PostgreSQL with pgvector is a better fit for relational applications. A managed or distributed vector database is a better fit for shared services. FAISS, cuVS, or another search library may be simpler when persistence and mutation semantics are unnecessary.
+
+
+================================================================================
+Document: Trade-offs
+Path: docs/trade-offs.md
+URL: https://a3ro-dev.github.io/qenlo/docs/trade-offs.md
+Description: Memory costs, CPU baseline realities, and routing guidance
+================================================================================
+
+# Trade-offs
+
+Qenlo combines a durable embedded store with replaceable search paths. That keeps ownership and semantics local, but it does not make every path the fastest choice.
+
+## What Qenlo provides
+
+- One canonical record model across CPU, WGPU, ANN, and tensor views.
+- Exact filtered search with deterministic distance-then-ID ordering.
+- Atomic mutations, tombstones, checksummed persistence, and fail-closed recovery.
+- Explicit required-GPU and automatic-fallback behavior.
+- Route, preparation, transfer, allocation, and failure reports.
+- No daemon and no automatic network activity.
+
+## Costs and limits
+
+### Memory
+
+Canonical vectors, metadata indexes, and prepared scan layouts consume host memory. GPU execution adds resident vectors, scratch buffers, transfers, and synchronization. Large collections require explicit storage and accelerator budgets.
+
+### CPU performance
+
+CPU is the conservative default and often wins when filtering leaves very few candidates. Qenlo's measured CPU implementation is not a bound on optimized libraries: in one corrected filtered batch cell, FAISS Flat and Torch CPU were roughly nine times faster than Qenlo CPU. General CPU/GPU crossover claims therefore require a stronger CPU baseline.
+
+### GPU portability
+
+WGPU provides a single programming path across graphics APIs, but it does not guarantee performance or hardware availability. Adapter selection, drivers, Vulkan ICDs, shader compilation, dispatch, and readback can dominate useful work. Required mode fails explicitly; automatic mode may fall back.
+
+### Approximate and tensor paths
+
+USearch changes the correctness contract, so recall must accompany latency. PyTorch can be attractive when CUDA is already present, but it is a substantial optional dependency and its index is a generation-bound snapshot rather than durable state.
+
+### Reopen and mutation
+
+Canonical mutations can invalidate prepared eligibility and accelerator state. Reopening a collection may rebuild derived state. Existing tests cover defined recovery cases, not arbitrary concurrent or power-loss schedules.
+
+## Routing guidance
+
+Start with exact CPU execution. Add WGPU or tensor execution only after measuring completed calls on the target device and realistic filters. Treat the built-in automatic threshold as a fallback, not a learned or transferable router.
+
+The September 2026 paper found route reversals, but its cohorts differ in hardware, data, and source revision. Its headline corrected WGPU cells used a selector candidate that was later rejected. Those results motivate profiling; they do not select a production default.
+
+## Choose another system when
+
+Use PostgreSQL with pgvector for relational data and transactions. Use a managed or distributed vector database for remote access, replication, sharding, and service operations. Use FAISS, cuVS, or another standalone library when a canonical durable store is unnecessary.
+
+
+================================================================================
+Document: Feature matrix
+Path: docs/feature-matrix.md
+URL: https://a3ro-dev.github.io/qenlo/docs/feature-matrix.md
+Description: Implemented, optional, and unverified capabilities
+================================================================================
+
+# Feature matrix
+
+This page describes Qenlo's current code and evidence. It does not infer competitor capabilities or mobile support from desktop builds.
+
+## Deployment profiles
+
+| Capability | Embedded profile | Accelerated profile | Current evidence |
+| --- | --- | --- | --- |
+| Canonical Rust records, tombstones, generations | included | included | Rust storage/core tests |
+| Exact CPU cosine search | included | included | x86 Windows and Linux cloud runs; ARM target build only |
+| Portable WGPU exact search | optional | optional | Vulkan on RTX 2000 Ada, A40, RTX 4050/4090; Metal and DX12 need current release validation |
+| USearch HNSW | excluded by default | optional feature | selected reference runs; approximate recall must be measured |
+| PyTorch tensor index | excluded | optional Python extra | CPU and CUDA tested; MPS API exists but has no current hardware result |
+| Durable `.qn` snapshots and WAL | included | included | create/open/recovery/corruption tests |
+| Rich diagnostics and browser | excluded | optional packages | desktop source and tests |
+| Network telemetry | never automatic | separate optional service | core engine and SDKs make no network requests |
+
+## SDK and packaging status
+
+| Surface | Binding status | Distribution status |
+| --- | --- | --- |
+| Rust | native API | source crate; release publication pending |
+| Python | native ABI, bulk float32 input, optional `TorchIndex` | wheel validation pending final release CI |
+| TypeScript | native ABI | package validation pending final release CI |
+| Go | cgo/native ABI | package validation pending final release CI |
+| Kotlin/JVM | JNA/native ABI | JVM tests exist; this is not Android packaging evidence |
+| Swift | C ABI wrapper | Apple device and simulator artifacts require separate CI validation |
+| Android | bridge/tester source | physical-device and release-package evidence missing |
+| iOS | wrapper/tester source | signing, simulator, and physical-device evidence missing |
+
+## Search semantics
+
+| Property | Exact CPU/WGPU | USearch | `TorchIndex` |
+| --- | --- | --- | --- |
+| Canonical source of truth | yes | no, derived | no, immutable derived snapshot |
+| Exhaustive over eligible rows | yes | no | yes for snapshot rows |
+| Distance | cosine over normalized FP32 storage | cosine, approximate traversal | matrix product converted to cosine distance |
+| Tie order | distance then unsigned ID | final output sorted distance then ID | distance then unsigned ID |
+| Mutation behavior | canonical generation; WGPU may update resident state | rebuild derived graph | reject or rebuild stale snapshot |
+| Correctness claim | exhaustive; checked against FP64 oracle | report recall | checked against the same oracle |
+
+## Measured small-collection result
+
+The September 5, 2026 campaign contains 182 status rows: 131 completed, 42 marked failed or unavailable, seven failed, and two invalid-harness rows. Only 130 qualify because one completed USearch row misses its recall gate. On one RTX 4090/Vulkan host, exact WGPU P95 was 0.897 ms for 100k by 768, batch one, `k=1`, and 0.896 ms for batch eight, `k=64`, at 10% eligibility. PyTorch CUDA was faster in both cells. Those WGPU rows used a lane-minimum selector candidate that won five and lost seven of 12 frozen-baseline pairs and was subsequently rejected.
+
+These numbers do not describe the retained selector and select no deployment default. See [the performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) and [the paper](../paper/output/pdf/qenlo-final-research-paper.pdf) for timing boundaries and limitations.
+
+
+================================================================================
+Document: Rust API
+Path: docs/sdks/rust.md
+URL: https://a3ro-dev.github.io/qenlo/docs/sdks/rust.md
+Description: Core asynchronous Rust client, options, and usage
+================================================================================
+
+# Rust API reference
+
+`qenlo` is an asynchronous, in-process vector database for Rust. It runs locally in your application without external service dependencies.
+
+## Installation
+
+Add `qenlo` to `Cargo.toml`:
+
+```toml
+[dependencies]
+qenlo = "0.1.0-alpha.3"
+tokio = { version = "1", features = ["full"] }
+```
+
+## Basic usage
+
+```rust
+use qenlo::{Collection, CollectionConfig, Filter, Record};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize in-memory collection
+    let config = CollectionConfig::cpu_exact(3);
+    let db = Collection::new(config).await?;
+
+    // Insert records
+    db.add(1, 100, 1700000000, &[1.0, 0.0, 0.0])?;
+    db.add(2, 200, 1700000050, &[0.0, 1.0, 0.0])?;
+
+    // Perform filtered vector search
+    let filter = Filter {
+        user_id: Some(100),
+        ..Filter::ALL
+    };
+
+    let response = db.search(&[0.9, 0.1, 0.0], &filter, 5).await?;
+    for match_record in response.results {
+        println!("ID: {}, Score: {}", match_record.id, match_record.score);
+    }
+
+    Ok(())
+}
+```
+
+
+================================================================================
+Document: Python SDK
+Path: docs/sdks/python.md
+URL: https://a3ro-dev.github.io/qenlo/docs/sdks/python.md
+Description: Python bindings, bulk buffer ingestion, and optional TorchIndex
+================================================================================
+
+# Python SDK
+
+The Python SDK provides typed bindings for Qenlo using precompiled binary wheels.
+
+## Installation
+
+```bash
+pip install qenlo
+```
+
+## Quick example
+
+```python
+from qenlo import Collection, Filter, Record
+
+# In-memory collection
+with Collection.memory(dimension=3) as db:
+    db.add(Record(id=1, user_id=10, timestamp=1700000000, vector=(0.2, 0.8, 0.0)))
+    db.add(Record(id=2, user_id=20, timestamp=1700000010, vector=(0.8, 0.1, 0.1)))
+
+    response = db.search(
+        query=(0.2, 0.7, 0.1),
+        filter=Filter(user_id=10),
+        k=5,
+    )
+    print(f"Matched ID: {response.results[0].id}")
+```
+
+## Bulk ingestion and optional tensors
+
+`Collection.add_buffer` accepts a C-contiguous native `float32` matrix along with parallel arrays for ID, user ID, and timestamp values. It performs a single native batch commit. Read-only matrix exporters require one bulk copy, while writable exporters are borrowed until the call returns.
+
+Install `qenlo[torch]` to use `TorchIndex`. Calling `TorchIndex.from_collection` captures filtered live rows through the typed native ABI, binds the index to that specific generation, and rejects searches after any mutation. Supported device targets include `cpu`, `cuda`, and `mps`. The package imports PyTorch lazily only when you use tensor features.
+
+The tensor backend supports IDs up to `2**63 - 1`, whereas the durable core supports the full unsigned 64-bit range. Qenlo checks this limit during construction because PyTorch backends vary in their eager `uint64` coverage. The `max_bytes` setting acts as a lower bound for explicit index and search tensors, not as a cap on process RSS or allocator cache usage.
+
+## Background work and networking
+
+Importing or using the Python SDK starts no background threads and makes no network requests. If your application needs telemetry, export it from your own application layer.
+
+
+================================================================================
+Document: TypeScript SDK
+Path: docs/sdks/typescript.md
+URL: https://a3ro-dev.github.io/qenlo/docs/sdks/typescript.md
+Description: Node.js native FFI bindings with TypeScript type safety
+================================================================================
+
+# TypeScript / Node.js SDK
+
+Native Node.js FFI bindings for Qenlo with TypeScript type definitions and explicit resource management (`using`).
+
+## Installation
+
+```bash
+pnpm add @a3ro.dev/qenlo
+# or npm install @a3ro.dev/qenlo
+```
+
+## Quick example
+
+```typescript
+import { Collection } from "@a3ro.dev/qenlo";
+
+// Open in-memory collection
+using db = Collection.memory(3);
+
+// Insert records
+db.add({
+  id: 1n,
+  userId: 42n,
+  timestamp: 1700000000n,
+  vector: [0.1, 0.8, 0.5],
+});
+
+// Search
+const response = db.search([0.1, 0.7, 0.5], { userId: 42n }, 5);
+console.log(`Matched ID: ${response.results[0]?.id}`);
+```
+
+Collections default to exhaustive CPU search. Desktop binaries compiled with portable GPU support also accept `{ backend: "automatic" }` or `{ backend: "gpu-required" }`, alongside `gpuFilterMode` and `gpuAllocationBudgetBytes`. Automatic mode returns the chosen execution route and any fallback in the execution report. Required mode throws an error instead of silently falling back to CPU.
+
+
+================================================================================
+Document: Go driver
+Path: docs/sdks/go.md
+URL: https://a3ro-dev.github.io/qenlo/docs/sdks/go.md
+Description: cgo bindings for Go services and command-line tools
+================================================================================
+
+# Go SDK
+
+cgo bindings for embedding Qenlo in Go services and command-line tools. The package links against the shared native ABI and requires cgo.
+
+## Installation
+
+```bash
+go get github.com/a3ro-dev/qenlo/sdk/go
+```
+
+## Quick example
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/a3ro-dev/qenlo/sdk/go"
+)
+
+func main() {
+    db, err := qenlo.New(3)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
+
+    err = db.Add(qenlo.Record{
+        ID:        1,
+        UserID:    42,
+        Timestamp: 1700000000,
+        Vector:    []float32{0.1, 0.8, 0.5},
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    resp, err := db.Search([]float32{0.1, 0.7, 0.5}, qenlo.Filter{UserID: qenlo.Uint64(42)}, 5)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("Matches found: %d\n", len(resp.Results))
+}
+```
+
+Collections run on CPU by default. Desktop binaries built with portable GPU support expose `NewWithOptions`, `CreateWithOptions`, `OpenWithOptions`, and `ImportQNWithOptions`. Set `Automatic` to allow a fallback to CPU, or `GPURequired` to fail when GPU execution is unavailable. Configure memory limits with `GPUAllocationBudgetBytes`.
+
+
+================================================================================
+Document: Kotlin SDK
+Path: docs/sdks/kotlin.md
+URL: https://a3ro-dev.github.io/qenlo/docs/sdks/kotlin.md
+Description: JNA bindings for JVM applications
+================================================================================
+
+# Kotlin/JVM SDK
+
+JNA bindings for JVM applications. Android packaging and bridge validation are tracked separately, so this JVM artifact does not provide Android support on its own.
+
+## Gradle setup
+
+```kotlin
+dependencies {
+    implementation("dev.qenlo:qenlo:0.1.0-alpha.3")
+}
+```
+
+## Quick example
+
+```kotlin
+import dev.qenlo.QenloCollection
+import dev.qenlo.Record
+import dev.qenlo.Filter
+
+QenloCollection.memory(dimension = 3).use { db ->
+    db.add(Record(id = 1u, userId = 7u, timestamp = 1700000000L, vector = floatArrayOf(1f, 0f, 0f)))
+    val response = db.search(floatArrayOf(1f, 0f, 0f), Filter(userId = 7u), k = 5)
+    println("Matches: ${response.results.size}")
+}
+```
+
+The default execution mode is `ExecutionMode.CPU`. Desktop native binaries with portable GPU support also accept `CollectionOptions` configured with `AUTOMATIC` or `GPU_REQUIRED`, a `GpuFilterMode`, and a byte allocation budget. Automatic mode records the chosen route and fallback in `ExecutionReport`. GPU-required mode fails if the host environment cannot provide GPU execution.
+
+
+================================================================================
+Document: Swift SDK
+Path: docs/sdks/swift.md
+URL: https://a3ro-dev.github.io/qenlo/docs/sdks/swift.md
+Description: Swift bindings over the shared C ABI
+================================================================================
+
+# Swift SDK
+
+Swift bindings over the shared C ABI for macOS 13+ and iOS 16+.
+
+## Swift Package Manager
+
+Add `qenlo` to `Package.swift`:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/a3ro-dev/qenlo.git", from: "0.1.0-alpha.3")
+]
+```
+
+## Quick example
+
+```swift
+import Qenlo
+
+let db = try QenloCollection(memoryDimension: 3)
+try db.add(QenloRecord(id: 1, userID: 42, timestamp: 1700000000, vector: [0.1, 0.8, 0.5]))
+
+let response = try db.search([0.1, 0.7, 0.5], filter: QenloFilter(userID: 42), k: 5)
+
+print("Found \(response.results.count) results")
+```
+
+Collections default to CPU. On macOS, binaries compiled with portable GPU support accept a `QenloCollectionConfiguration` with `.automatic` or `.gpuRequired`. Automatic mode reports the active execution route and any fallback. The iOS artifact runs strictly on CPU unless built with custom GPU flags.
+
+
+================================================================================
+Document: Architecture specification
+Path: docs/architecture.md
+URL: https://a3ro-dev.github.io/qenlo/docs/architecture.md
+Description: CoreStore, transaction lifecycle, lock protocols, and visibility
+================================================================================
+
+# Canonical data, disposable indexes
+
+A derived index is allowed to be missing. Canonical rows are not. That distinction
+drives the storage protocol, locks, and error behavior.
+
+## Ownership and format
+
+`CoreStore` owns normalized vectors, public IDs, metadata, permanent row slots,
+tombstones, and mutation generations. User and timestamp indexes are rebuilt from
+those rows. Deleted IDs cannot be reused. Generation increments per successful
+mutation, not per batch.
+
+`Collection` wraps state in a read/write lock. It owns the backend, preparation
+state, storage options, and the durable directory's OS lock. Use one shared
+`Arc<Collection>` rather than repeatedly opening the same directory.
+
+The little-endian v1 header contains magic, version, dimension, generation,
+total rows, and live rows. Each row has an ID, user ID, signed timestamp, live flag,
+reserved bytes, and normalized float32 vector bits. A trailing CRC32 covers the
+header and rows. Loading preserves normalized bytes rather than normalizing them
+again. Unknown versions and inconsistent shapes return explicit errors.
+
+| File | Meaning |
+| --- | --- |
+| `collection.lock` | Handle under an exclusive OS file lock |
+| `canonical-<20-digit-generation>.qdb` | Published canonical snapshot |
+| `canonical-<generation>.pending` | Current uncommitted staging file |
+| `HEAD` | 20-byte magic, acknowledged generation, and CRC32 watermark |
+| `HEAD.pending` | Staged replacement watermark |
+| `index.qidx` | Checksummed dimension, backend, and readiness generation (not a graph) |
+| `index.pending` | Staged disposable readiness marker |
+
+Valid newer legacy `.tmp` snapshots retain their recovery behavior. Current
+writes use `.pending` so fully written but unpublished transactions are not
+mistaken for commits.
+
+## Transaction and durability order
+
+One write lock covers the entire transaction:
+
+1. Clone canonical state and apply the ordered batch. Invalid vectors, duplicate
+   IDs, invalid deletions, and exhausted generations abort the staged copy.
+2. Check the staged store's admission budget before writing.
+3. Stream a complete `.pending` snapshot, append the CRC32, flush, and sync the file.
+4. Rename to `.qdb`, then sync the collection directory where supported.
+5. Write and sync `HEAD.pending`, rename over `HEAD`, and sync the directory.
+6. Prune older snapshots while retaining the immediately preceding one, publish
+   staged memory, invalidate preparation, and return success.
+
+Validation and pre-publication I/O failures leave original memory unchanged.
+Canonical rename marks publication. Subsequent failure indicates uncertainty, not
+rollback: `CommitUncertain` closes the handle and releases the OS lock. Reopen
+resolves the outcome. Durable single-row mutations already execute this protocol;
+`flush` is normally a no-op.
+
+The retained previous snapshot helps manual investigation. It is not permission
+for automatic rollback. `HEAD` is a lower bound on acknowledged generation: if
+its snapshot is missing, opening the collection returns an error. The highest published generation is checked
+in full, and corruption does not cause fallback. A valid `.qdb` newer than `HEAD`
+can originate from uncertain publication. Reopen repairs and syncs the watermark
+before returning it. Valid legacy files without `HEAD` are upgraded similarly.
+
+Current `.pending` contents never become visible on reopen. Interrupted initial
+creation may leave no canonical snapshot at all. Open then returns an error, while create
+refuses a non-empty directory. Inspect and preserve the directory before manually cleaning
+confirmed uncommitted initialization files or using another location.
+
+Unix syncs publication and newly created directory entries, including their
+parents, subject to filesystem and hardware guarantees. Windows syncs files but does
+not implement directory sync. Process-crash recovery is supported; complete
+sudden-power-loss durability is not claimed. CRC32 is not authentication.
+
+## Memory and write costs
+
+The default `StorageOptions::max_load_bytes` is 512 MiB. Both read and durable
+write admission check snapshot size and the estimate
+`rows * (32 + 4 * dimension + 64 * ceil(dimension / 16) + 512)` with checked
+arithmetic. The aligned term accounts for the disposable exact-CPU scan matrix
+that may appear on the first query; the final 512 bytes per row allow for metadata
+indexes and bookkeeping. This estimate includes tombstones, does not measure resident set size (RSS), and does
+not pre-reserve memory. The host supplies options on create or open; they are not a
+persisted machine policy.
+
+`CollectionConfig::gpu_allocation_budget_bytes` is a separate device-allocation
+scope. Exact GPU preparation rejects resident vector, ID, and metadata buffers plus the
+admitted scratch arena when their checked total exceeds this cap. Scratch includes
+query, eligibility, score, selected-candidate, and readback buffers, growing to the
+largest admitted batch. Host canonical memory, preparation copies, driver-private
+allocations, and physical residency fall outside this number. Automatic mode reports
+an exact-CPU fallback after a GPU budget failure; required-GPU mode returns the
+failure. Hosts requiring a process-wide limit must account for both Qenlo scopes and
+their own inputs.
+
+Loading keeps one decoded row outside the growing canonical store. Directory
+selection and pruning retain only the generation candidates they need. No second
+full decoded snapshot is staged, though canonical rows and all metadata indexes
+remain resident. Allocation can still fail.
+
+Transactions validate the complete ordered batch before publishing a checksummed
+immutable WAL file and atomic manifest, then apply it to the resident store. Commit
+work is O(batch), not O(collection). Reopen maps and validates the latest immutable
+canonical snapshot, then replays contiguous WAL generations. `flush` and `close`
+synchronously compact the current store into a new full snapshot and prune covered
+WAL files. Background compaction and zero-copy row ownership are not implemented yet.
+
+## Visibility and locks
+
+Ready CPU and USearch searches hold a shared read lock for the entire query.
+Mutations and rebuilds take the write lock, so a query sees a complete committed
+generation. Search-triggered preparation drops its initial read lock, acquires a
+write lock, prepares the current generation, and downgrades before search.
+No stale graph is served during that transition.
+
+GPU queries also take a per-collection gate so simultaneous use of the persistent
+scratch arena cannot multiply the budget. Mutations wait for readers. There are no collection background
+workers or speculative MVCC versions. `search_batch` holds one canonical generation
+and forms a single GPU workload when GPU routing is selected.
+
+For prepared exact-GPU state, deletion updates the owning chunk's host live mask;
+the next query uploads that mask through the existing bounded eligibility arena.
+Appends upload suffix rows as at most eight additional chunks. The ninth append
+wave consolidates through the full preparation path. Budget failure, device error,
+and IVF configuration also trigger full preparation. The collection write lock
+publishes the canonical mutation and its derived update as one visible generation,
+preventing readers from mixing old vectors with new tombstones.
+
+Synchronous methods block. Do not block a single-thread executor on mutations
+while an earlier GPU future needs that executor to finish. Place contended
+synchronous work on a blocking thread. Async signatures do not make snapshot I/O
+or CPU distance calculations nonblocking.
+
+## Preparation and backend boundaries
+
+`index.qidx` stores only readiness metadata. No ANN graph, metadata tree, or GPU
+buffer is serialized. Restart always rebuilds, even when its generation matches.
+Missing, corrupt, backend-mismatched, or stale markers change the preparation
+reason, never canonical membership. Marker-save failures are reported separately
+from canonical commits.
+
+`RebuildPolicy::OnSearch` prepares lazily. `Explicit` requires calling `prepare` and
+otherwise returns `IndexNotPrepared`. Policies and ANN search expansion settings belong
+to the handle; the host should reapply them after reopen.
+
+Exact CPU search evaluates the entire eligible subset, selecting AVX2 at runtime
+or falling back to scalar code. Its heap holds at most k hits. Float64 accumulation
+reduces numerical error, though returned float32 distances still have finite precision.
+Ordering uses computed distance, then ID.
+
+USearch performs approximate filtered HNSW with canonical live-ID eligibility.
+The adapter sorts returned ties, but cannot guarantee globally smallest IDs among
+equal-distance candidates that the graph did not visit. Recall must be measured for
+each workload and parameter claim.
+
+The wgpu backend supplies exact search plus deterministic IVF-Flat and IVF-SQ8 candidate
+generation with exact FP32 GPU reranking: CPU-mask, eligible-row, or GPU-predicate
+filtering; signed timestamps; bounded chunks and candidate readback; persistent
+scratch admission; true query batches; and capability and device-loss reporting.
+Required failures and automatic fallback are explicit. IVF configuration is derived
+state and is rebuilt after mutations; there is no custom GPU ANN graph. Exact-GPU
+state uses bounded suffix chunks and live-mask updates between consolidating rebuilds.
+On a hybrid machine, the high-performance adapter
+request is observable in the returned capabilities and benchmark manifest; the
+2026-08-28 Windows measurements used the discrete NVIDIA GeForce RTX 4050 rather
+than the integrated Intel UHD adapter. Callers should treat the reported actual
+adapter as part of the performance result.
+
+## Reports and evidence
+
+Operation IDs provide process-local correlation, not durable transaction IDs. Reports
+record the actual backend, preparation reason, lock wait, commit context, CPU path,
+ANN parameters, transfer counts, and unavailable measurements. GPU completed-call
+timing is host-observed. Adapters with wgpu timestamp-query support also report
+isolated scoring and selection device time. Detailed
+eligibility diagnostics add a scan and increase overhead.
+
+The library installs no global subscriber. Default spans omit vectors,
+credentials, raw user IDs, timestamps, and predicates. Hosts own telemetry
+workers, queue bounds, exporter timeouts, and shutdown. Exporter failures may lose
+observations but must not alter search results.
+
+See [the benchmark protocol](benchmark-protocol.md) for evidence requirements and
+[the verification record](verification.md) for actual commands and results.
+
+
+================================================================================
+Document: .qn storage format
+Path: docs/qn-format-v1.md
+URL: https://a3ro-dev.github.io/qenlo/docs/qn-format-v1.md
+Description: Binary file layout, little-endian specs, and atomic exchange semantics
+================================================================================
+
+# Qenlo portable file format (`.qn`) v1
+
+Status: Implemented and covered by round-trip, shape, version, checksum, tombstone,
+and non-overwrite tests. Multi-byte values use little-endian byte order. Readers must reject
+unknown versions, non-zero reserved bytes, impossible shapes, duplicate IDs,
+non-unit or non-finite vectors, and checksum mismatches.
+
+## Layout
+
+| Offset | Size | Field |
+| ---: | ---: | --- |
+| 0 | 8 | Magic bytes `QENLODB\0` |
+| 8 | 4 | Format version (`1`, `u32`) |
+| 12 | 4 | Vector dimension (`u32`, non-zero) |
+| 16 | 8 | Canonical generation (`u64`) |
+| 24 | 8 | Total row slots including tombstones (`u64`) |
+| 32 | 8 | Live row count (`u64`) |
+| 40 | variable | Fixed-width row records |
+| EOF - 4 | 4 | CRC32 of all preceding bytes (`u32`) |
+
+Each row is `32 + dimension * 4` bytes:
+
+| Relative offset | Size | Field |
+| ---: | ---: | --- |
+| 0 | 8 | Public ID (`u64`, unique and never reused) |
+| 8 | 8 | User ID (`u64`) |
+| 16 | 8 | Timestamp (`i64`) |
+| 24 | 1 | Live flag (`0` or `1`) |
+| 25 | 7 | Reserved, all zero |
+| 32 | `dimension * 4` | Normalized IEEE-754 binary32 vector values |
+
+The exact file length is:
+
+```text
+40 + rows * (32 + dimension * 4) + 4
+```
+
+## Semantics
+
+- `.qn` is the canonical portable interchange artifact and MIME/file-association target.
+- Export is create-only and atomic: Qenlo writes a sibling `.qn.pending`, syncs it,
+  renames it, and syncs the parent directory. Existing targets are not overwritten.
+- Import self-heals an interrupted export only when the target is absent and the
+  complete pending file passes normal shape, record, and checksum validation. The
+  recovery is reported in collection statistics. Invalid pending files are preserved.
+- Import validates the complete file before returning a mutable in-memory collection.
+- Tombstones and generation are retained, so ID non-reuse and deterministic ordering survive transfer.
+- Derived CPU and GPU indexes, telemetry, locks, and embedding models are not serialized.
+  They represent local, replaceable state and rebuild after import.
+
+## Durability boundary
+
+Version 1 is a portable snapshot, not the live write-ahead-log container. Durable
+collections continue to use Qenlo's tested directory snapshot/WAL protocol and can
+be exported to `.qn` at a committed generation. A future live single-file revision
+must define dual-superblock publication, recovery, locking, and torn-write behavior
+before it can replace that protocol.
+
+
+================================================================================
+Document: Recovery policy
+Path: docs/recovery-policy.md
+URL: https://a3ro-dev.github.io/qenlo/docs/recovery-policy.md
+Description: Deterministic recovery, fail-closed boundaries, and operator contracts
+================================================================================
+
+# Recovery policy
+
+Qenlo self-heals replaceable state. It never invents canonical data, conceals
+corruption, or changes benchmark evidence. Every automatic recovery is bounded,
+deterministic, and visible through statistics, routing reasons, fallback reasons,
+or retained raw attempt data.
+
+| Surface | Automatic recovery | Fail-closed boundary |
+| --- | --- | --- |
+| Durable collection | Replay a contiguous, checksummed WAL and promote only a complete snapshot whose generation is valid. | Missing generations, invalid checksums, malformed records, and ambiguous publication are errors. The original files remain available for diagnosis. |
+| Portable `.qn` | If the target is absent, validate a complete sibling `.qn.pending`, atomically promote it, sync the directory, and set `recovered_interrupted_write`. | A corrupt pending file is preserved and rejected. An existing target is authoritative and is never overwritten. |
+| Derived indexes | Discard and rebuild an index when its recorded generation does not match the canonical store. | Canonical vectors and metadata are never reconstructed from an index. |
+| GPU execution | Mark a lost or invalid GPU device unhealthy. `Automatic` mode may route later work to the exact CPU backend with an explicit reason. | A required-GPU request returns an error; it never silently changes backend. |
+| SDK loading | Prefer the package's platform library, then an explicitly configured library path, and return a typed load error with searched locations. | The loader avoids unbounded retries and never downloads or executes an unverified binary. |
+| Embedding models | Resume into a temporary file, verify the declared digest and license metadata, then publish atomically while retaining the last verified model. | A missing or mismatched digest never replaces a working model. Models remain optional and outside the database core. |
+| Browser and repair tools | Reopen safely after interruption, rebuild derived views, and create a verified backup before an explicit repair. | Repair is never automatic for canonical corruption and never runs without a recoverable source. |
+| CI and benchmarks | Retry transient infrastructure setup within a small fixed limit and retain every attempt with environment and version metadata. | Correctness failures, recall misses, fallbacks, and performance regressions are not retried away or cherry-picked. |
+
+## Operator contract
+
+Recovery changes must be idempotent: running recovery twice yields the same
+canonical result. Publication uses write, flush, file sync, atomic rename, then
+directory sync where the platform supports it. When the final durability status
+cannot be established, Qenlo returns a commit-uncertain error and requires reopen
+to resolve which validated generation became authoritative.
+
+Backups and exports are accepted as recovery sources only after passing the same shape,
+record, normalization, generation, and checksum validations applied during normal
+opens. The safest available copy wins by explicit generation rules, never by file
+modification time.
+
+
+================================================================================
+Document: GPU search design
+Path: docs/gpu-design.md
+URL: https://a3ro-dev.github.io/qenlo/docs/gpu-design.md
+Description: Custom WGSL scoring, selection pipelines, chunking, and memory arenas
+================================================================================
+
+# How Qenlo's GPU search works
+
+The GPU implementation is a custom exact cosine-search kernel in
+[`gpu_exact.wgsl`](../crates/qenlo/src/gpu_exact.wgsl), driven by
+[`gpu.rs`](../crates/qenlo/src/gpu.rs). The wgpu backend provides device access, buffer
+management, shader compilation, and synchronization. It does not supply a vector
+index or nearest-neighbor algorithm. USearch is a separate, externally supplied
+CPU HNSW implementation; its graph does not run on the GPU.
+
+## From vectors to results
+
+```mermaid
+flowchart LR
+    A[Canonical normalized vectors and metadata] -->|prepare or bounded update| B[Resident GPU chunks]
+    Q[Normalized query batch and eligibility] --> C[Parallel dot products]
+    A -->|optional derived index| I[IVF lists / SQ8 codes]
+    I -->|candidate rows| C
+    B --> C
+    C --> D[Parallel exact top-k per chunk]
+    D -->|16 bytes per candidate| E[Bounded readback]
+    E --> F[CPU merges chunk top-k]
+```
+
+For normalized vectors, cosine distance is `1 - dot(query, vector)`. The score
+kernel uses 32 adjacent threads per vector so adjacent threads read adjacent
+dimensions. Eight vectors share a 256-thread workgroup. Each thread accumulates
+its dimensions, and a shared-memory tree reduction combines the 32 partial sums.
+Dimensions do not need to be multiples of 32; missing components contribute zero.
+This kernel uses standard WGSL workgroup barriers rather than an NVIDIA-specific warp intrinsic.
+
+Eligibility can come from a CPU membership mask, a compact CPU row list, or a
+GPU predicate. The predicate joins optional user equality and timestamp bounds
+with AND, and always excludes tombstones. User IDs and timestamps travel as two
+32-bit words. Signed timestamp ordering flips the high word's sign bit before
+unsigned comparison, preserving the complete signed 64-bit range.
+
+The selection kernel has 256 threads. Each thread scans its stripe once and keeps
+its minimum in a register. A tree reduction elects the smallest distance, with the
+full unsigned 64-bit ID breaking computed-distance ties. The winner is written to
+a candidate buffer, and its score is invalidated. On the next iteration, only the lane
+that supplied that winner rescans its stripe; every other lane's minimum remains
+valid. Empty slots have a sentinel that the host discards. Selection work is
+O(rows + 256 × k) for the reductions plus rescans of at most `ceil(rows / 256)`
+items per emitted result, with k bounded to 64.
+
+Only `16 × k` result bytes return per chunk (160 bytes for k=10), rather than the full
+distance array. Adapters with timestamp-query support return another 32 bytes
+per chunk for phase diagnostics. The CPU merges the candidate lists. This is
+sufficient: an item outside a
+chunk's top-k cannot enter the global top-k because that chunk already contains
+k better items under the same ordering.
+
+## Limits and costs
+
+Chunk size respects negotiated buffer and dispatch limits, with an additional
+131,072-row cap. At 384 dimensions, a 100,000-row corpus fits in one chunk on the
+tested adapter. On the measured hybrid Windows host, wgpu enumerates Intel UHD
+Graphics (integrated) and NVIDIA GeForce RTX 4050 Laptop GPU (discrete); the
+high-performance request selected the NVIDIA adapter for the retained runs, and
+the manifest records the actual adapter and API. Each chunk uses a scoring dispatch and a selection dispatch;
+an empty compact eligible list needs only the selection dispatch. Every chunk
+currently completes readback before the next starts.
+
+Vectors, IDs, and metadata stay resident between queries. Query, eligibility,
+score, candidate, selection, and staging buffers live in a persistent scratch arena
+that grows when a larger batch requires it. Resource bind groups are created with
+that arena and reused until it grows, rather than allocated per completed call.
+When the adapter supports timestamp queries, the arena also owns a 32-byte
+resolve buffer and a 32-byte mapped readback buffer. The query set itself is a
+driver object and is not included in the byte total. Allocation admission accounts for
+resident buffers, scores, candidates, readback, and conservative transfer staging;
+the default budget is 512 MiB. This is tracked buffer allocation, not physical
+VRAM residency; driver-private pipeline and bind-group memory is outside the byte
+count. Canonical CPU storage and the temporary flattened preparation copy also need
+host RAM. Increasing the GPU budget does not solve host memory pressure.
+
+`search_batch` normalizes and uploads up to 128 queries and dispatches them as one
+GPU workload. Every response observes the same canonical generation. An optional
+deterministic spherical k-means index probes configured posting lists before the
+exact kernel. IVF-Flat reranks all probed eligible rows. IVF-SQ8 scores those rows
+with per-vector symmetric scalar codes, retains up to `32 × k`, then performs the
+same exact FP32 GPU rerank. Canonical vectors remain FP32 and authoritative.
+
+While exact-GPU state is prepared, a deletion updates the owning chunk's host
+live mask, and an append uploads canonical suffix rows. Appends may create at most
+eight extra chunks before the next search consolidates them through full
+preparation. Budget failure, device failure, or enabled IVF also uses full
+preparation. The collection write lock covers canonical publication and the
+derived update, so a search cannot combine generations.
+
+The benchmark measures completed API calls, including CPU eligibility, transfer,
+dispatch, synchronization, readback, and CPU merging. Preparation is separately
+reported. On adapters with timestamp-query support, scoring and selection are
+also reported from beginning/end timestamps on separate compute passes. Their
+sum is device work, not completed-call latency; it excludes queueing, transfer,
+synchronization, and host merging. Unsupported adapters report both fields as
+unavailable. A generation-bound
+`EligibilityPlan` performs the default host predicate traversal once and retains
+the selected row, mask, or shader-predicate representation and diagnostics.
+GPU-required mode returns errors. Automatic mode uses a matching hardware-bound
+profile when supplied; otherwise fewer than 4,096 eligible rows route to exact CPU
+and larger sets route to GPU, with availability or execution failures falling back.
+Reports and benchmark samples retain the routing reason. The static rule remains a
+fallback, not a claimed universal crossover or a completed adaptive phase engine.
+
+## What the experiment establishes
+
+The original implementation scored one vector per thread and selected top-k
+serially. Cooperative loads, parallel reduction, and larger bounded chunks removed
+measured bottlenecks. [The retained tuning runs](../benchmarks/2026-08-28/gpu-tuning/)
+show broad-scan gains and selective-filter losses on this laptop. Their small
+query sets are exploratory, not the preregistered scale gate.
+
+GPU and CPU use different floating-point reduction orders. Returned scores are
+checked against an independent float64 oracle with absolute tolerance `1e-5`;
+the benchmark additionally requires exact paths to return the same IDs except for
+a documented boundary tie within `1e-5`; score, filter, count, and uniqueness
+checks remain strict. A non-tie mismatch fails explicitly.
+
+The exact mode is brute-force search with bounded top-k output. IVF-Flat and
+IVF-SQ8 are approximate candidate generators with explicit recall gates; neither
+is a GPU graph index. This does not establish novelty and does not promise a gain at
+every selectivity. Physical runtime tests cover this Windows RTX 4050 through
+DX12 and Vulkan only. The [real-data result record](results-2026-08-28.md)
+shows a 5.14× all-row P95 reduction versus Qenlo exact CPU at 100k × 384, but
+also a slower GPU result at 1% selectivity. Linux AMD/Intel/NVIDIA, Metal, mobile,
+and browser execution remain package-built but not physically validated here.
+
+
+================================================================================
+Document: CUDA backend todo
+Path: docs/cuda-backend-todo.md
+URL: https://a3ro-dev.github.io/qenlo/docs/cuda-backend-todo.md
+Description: Entry gates and engineering requirements for a native CUDA backend
+================================================================================
+
+# CUDA backend todo (Linux and Windows)
+
+Status: Not implemented. Qenlo currently uses its portable `gpu-wgpu`
+backend. The Python/PyTorch prototype used in the September 2026 A6000 study is
+not linked into a Qenlo binary and must not be described as a Qenlo CUDA backend.
+
+Implement a native CUDA backend only after a valid, independent-oracle benchmark
+shows a material benefit over the portable path and Faiss/cuVS. It requires:
+
+1. An opt-in Cargo feature (`gpu-cuda`) and runtime adapter selection; requested
+   CUDA must fail explicitly if the CUDA driver or device is unavailable, never
+   silently falling back to CPU or wgpu.
+2. A stable FFI boundary around the CUDA Driver API (without a build-machine-specific
+   `nvcc` dependency for normal users), with RAII ownership for context, streams,
+   device buffers, events, and error codes.
+3. Exact FP32 cosine and L2 scores with deterministic top-k semantics matching the
+   canonical CPU tie-breaker; predicate, row-materialization, and mask filter
+   modes must share the same eligibility semantics.
+4. End-to-end timing that includes query host-to-device transfer, CUDA execution,
+   top-k selection, result device-to-host transfer, and synchronization; record
+   transfer and allocation bytes separately.
+5. A test matrix covering Linux x86_64 NVIDIA CUDA and Windows x86_64 NVIDIA CUDA,
+   plus compile-only coverage when GPU hardware is unavailable. Tests must verify
+   required CUDA failure, explicit CPU fallback, cancellation and recovery, and
+   independent exact-oracle recall.
+6. Packaging that dynamically loads the platform driver (`libcuda.so.1` on Linux,
+   `nvcuda.dll` on Windows), documents supported driver minimums, and avoids
+   redistributing NVIDIA driver libraries. Both targets must ship the same feature
+   name and diagnostic schema.
+
+Exit criterion: Retain raw apples-to-apples results for Qenlo CUDA, Faiss GPU,
+and cuVS on one GPU with a separate exact oracle and no correctness failures.
+
+
+================================================================================
+Document: Benchmark protocol
+Path: docs/benchmark-protocol.md
+URL: https://a3ro-dev.github.io/qenlo/docs/benchmark-protocol.md
+Description: Reproducible test harness execution and cell definitions
+================================================================================
+
+# Reproducible benchmark protocol
+
+`qenlo-bench` runs one explicitly selected workload cell at a time. The defaults
+are a small synthetic correctness smoke, not a performance or scale result.
+The independent oracle still uses exhaustive f64 cosine scoring and never calls
+qenlo's scoring or eligibility implementation.
+
+## Smoke
+
+Run these from the repository root with fresh output paths:
+
+```powershell
+cargo run -p qenlo-bench -- --help
+cargo run -p qenlo-bench -- prepare --dataset smoke.qnb
+cargo run -p qenlo-bench -- run --dataset smoke.qnb --output smoke-cpu --fraction 0.1 --batch 8
+```
+
+Preparation defaults to seed 42, 256 corpus vectors, 8 tuning vectors, 32 held-out
+evaluation vectors, and dimension 16. Runs default to 8 tuning-query warmups,
+3 shuffled repetitions, k=10, and a 0.95 recall target. Output creation is exclusive:
+existing datasets and run directories are never overwritten. Incomplete preparation
+can leave a partial file, which loading rejects. An incomplete run has no completed
+`summary.txt`; preserve it for diagnosis, and use a fresh directory to retry.
+
+## Data and provenance
+
+The prepared format is little-endian, versioned `QNLOB001`: an 8-byte magic;
+six u64 fields for dimensions, corpus rows, tuning rows, evaluation rows, seed,
+and source provenance; all row-major f32 vector values; then CRC32 over the header
+and vector payload. The provenance field is zero for generation, or bit 32 plus
+the imported source CRC32. Source CRC is checked both before and during import.
+Load rejects unsupported versions, inconsistent lengths, dimension mismatch,
+non-finite values, zero norms, and checksum mismatch.
+
+Generated vectors use the fixed SplitMix64 sequence and uniform components in
+[-1,1). Row identity ranges are disjoint: corpus `[0,N)`, tuning `[N,N+T)`, and
+evaluation `[N+T,N+T+E)`. Imported data uses the same disjoint source-row ranges;
+this is not a promise that an external source contains no duplicate content.
+Remove duplicates upstream if that property matters for your dataset.
+
+An external source must be row-major raw little-endian f32 with exactly
+`(N+T+E)*dimensions*4` bytes. Prepare a deterministic source subset and retain its
+selection recipe and publisher SHA-256 separately. CRC32 detects accidental
+corruption; it does not authenticate a download. There is no built-in network
+download or dataset-license acceptance.
+
+```powershell
+cargo run --release -p qenlo-bench -- prepare --dataset ag-news-100k-384.qnb --input selected.f32 --expect-crc32 YOUR_HEX_CRC32 --rows 100k --dimensions 384 --tuning 1000 --evaluation 5000 --seed 42
+```
+
+`--rows 100k` and `--rows 1m`, and `--dimensions 384` and `--dimensions 768`, are
+supported sizes, not claims that those workloads were run. Omitting `--input`
+creates a labelled synthetic dataset, never a substitute for the real embedding
+dataset in a published comparison. Canonical source provenance and split sizes
+are stored in the prepared header and copied into each run manifest.
+
+## Workload cells
+
+Run every backend and both recall targets against the exact same prepared data:
+
+| Parameter | Values |
+| --- | --- |
+| corpus size | 100k, 1m |
+| dimensions | 384, 768 |
+| requested eligible fraction | 1, 0.1, 0.01, 0.001, 0.0001, empty, fewer |
+| synthetic metadata | independent, positive, negative, skewed |
+| batch size | 1, 8, 32 |
+| recall@10 target | 0.95, 0.99 |
+| backend | cpu, usearch, gpu-mask, gpu-rows, gpu-predicate, automatic |
+
+Each cell uses a shared upper-exclusive timestamp filter. Exact cardinality is
+floor(N*fraction); `empty` has zero rows and `fewer` has min(N,5). Actual count and
+fraction are always recorded, including small smoke fractions that round to zero.
+Metadata is independent of vectors after deterministic permutation in `independent`.
+`positive` and `negative` correlate timestamp rank and synthetic user bucket with
+the first vector component, in opposite directions. `skewed` ranks by
+`0.2*x[0] + x[1]^3`, uses cubic timestamp spacing, and places 90% of users in one
+synthetic bucket. This changes eligible IDs as well as metadata frequencies;
+a regression test distinguishes it from positive rank. All metadata is synthetic, not the original corpus's
+user or publication data. These are controlled projection correlations, not a
+claim to model every real-world relationship to semantic distance.
+
+By default the runner exercises timestamp-only, shared-filter batches. Adding
+`--user-id 0` joins user equality with bounded timestamps; in that case fraction
+is relative to the selected user's population and actual corpus eligibility is
+recorded. Independent metadata with `--user-id 0 --fraction 1` selects 1% of a
+100k corpus. Distinct-filter batches remain to be added. Batches are
+sequential API batches, not an assertion of parallel device execution. The final
+batch may be partial, and its query count is recorded.
+
+```powershell
+cargo run --release -p qenlo-bench -- run --dataset ag-news-100k-384.qnb --output cpu-01 --dimensions 384 --backend cpu --fraction 0.01 --distribution positive --batch 1 --recall-target 0.99 --warmups 200 --repetitions 5
+
+$env:CC = 'clang-cl'
+$env:CXX = 'clang-cl'
+cargo run --release -p qenlo-bench --features usearch -- run --dataset ag-news-100k-384.qnb --output ann-01 --dimensions 384 --backend usearch --expansion-search 128 --fraction 0.01 --recall-target 0.99 --warmups 200 --repetitions 5
+
+cargo run --release -p qenlo-bench --features gpu-wgpu -- run --dataset ag-news-100k-384.qnb --output gpu-01 --dimensions 384 --backend gpu-predicate --fraction 0.01 --warmups 200 --repetitions 5
+```
+
+ANN expansion is explicit and fixed for measured queries. For USearch,
+`--tune-expansion-search 128,256,512,1024,2048,4096,8192` tests the supplied values
+on tuning queries first and records every attempt in `tuning.csv`. It selects the
+smallest supplied passing value before accessing held-out queries; no passing
+value means an error with no evaluation run. The effective value is recorded in
+the manifest. Without the grid, only `--expansion-search` is tried. Do not choose
+parameters by repeatedly chasing evaluation recall.
+
+## Timing and correctness
+
+Ground truth is `TopK({x in corpus where filter(x)}, query)`, never a filtered
+unfiltered top-k. Compute it before timing. `PreparedOracle` validates the corpus
+and caches f64 norms and eligibility once; each query still scores every eligible
+row independently of the library implementation. Retain corpus originals for f64 scoring;
+the collection normalizes its own copy. Result IDs are checked for membership,
+deletion, duplication, and filter eligibility after every measured call.
+Recall is unique-ID overlap divided by min(10,eligible count), with empty truth
+defined as recall 1. Every returned score is independently recomputed in f64 and
+must be within absolute distance tolerance 1e-5. Results must be sorted by
+computed f32 distance, then ID. Exact backends must achieve the recall target and
+strict score, filter, count, and uniqueness checks; if the only ID difference is
+an f64 boundary tie within 1e-5, the tie checker accepts it and records the raw
+recall rather than hiding the difference.
+
+`samples.csv` contains every completed batch's wall-clock latency, evaluation
+indices, query count, recall, result/eligible counts, actual backend, and available
+transfer/allocation counts, lock-wait sum, CPU distance path, and fallback flag.
+Per-backend query counts are retained; automatic batches crossing a fallback are
+marked `mixed`, never labelled only by the last query's backend.
+Latency begins immediately before `search_batch`
+and ends only when results/readback complete; it includes API locking, filtering,
+execution, transfers, synchronization, and selection. Backend initialization,
+ingestion, explicit preparation, oracle work, and warmups are outside this window.
+
+`runs.csv` retains each repetition's P50/P95/P99 using nearest rank
+`ceil(p*sample_count)`, run wall time, measured queries/second, and mean recall.
+QPS includes driver validation and buffered CSV writing, unlike batch-call latency.
+`summary.txt` reports build, readiness, oracle/tuning times, tuning/evaluation
+recall, pass/fail, and the lower-middle median across run P95 values. Reference
+runs use five repetitions, so the median is unambiguous. A failed recall target
+returns a nonzero exit code but retains samples. Filter violations fail immediately.
+Publish every cell, including failures, rather than only a favorable aggregate.
+The completed 2026-08-28 100k × 384 real-data cells are retained in the
+[result record](results-2026-08-28.md); the preregistered 1m × 768 gate remains
+untested.
+
+`configuration.txt` retains split ranges, seed, source and prepared CRC32, requested
+backend, metadata distribution, fraction/count, batch, target, ANN expansion,
+budgets, platform/architecture, package version, Git revision, dirty-worktree state,
+exact uploaded source-bundle SHA-256 (when supplied), and metric conventions. Paid
+campaigns must set `QENLO_SOURCE_BUNDLE_SHA256`; a Git revision alone does not identify
+an uncommitted implementation.
+Also archive your compiler version, feature flags, build profile, dirty diff,
+GPU driver/adapter, power settings, and machine specifications with a published run.
+On the measured hybrid host, wgpu enumerated Intel UHD Graphics (integrated) and
+NVIDIA GeForce RTX 4050 Laptop GPU (discrete). The high-performance request
+selected the NVIDIA adapter; `gpu_adapter`, `gpu_device_type`, and `gpu_api` in
+the run manifest are the source of truth for reproductions on multi-GPU hosts.
+The runner does not infer those hardware details or claim a clean checkout.
+
+## Memory and reporting limits
+
+Preparation streams one vector at a time. Loading estimates source vector payload
+plus the normalized collection copy and rejects it above `--vector-budget-mib`
+(default 512). That is not an RSS limit: metadata, allocator overhead, indexes,
+oracle scratch, and runtime allocations are additional. Source and collection
+vectors are RAM-resident. A 1m x 768 run needs an explicit larger vector budget
+(for example `--vector-budget-mib 8192`) and enough real host memory. Do not run
+that command merely to force an out-of-memory result on a constrained laptop.
+
+The runner itself has no portable process sampler or instrumented allocator.
+For native Windows, `scripts/measure_command.py` wraps the benchmark executable,
+recording sampled host working set and the OS peak working set separately from
+latency reports. It measures that process only, not descendants, allocator totals,
+or GPU VRAM. Do not wrap a virtualenv Python launcher and mistake its memory for
+the child workload. Empty transfer/allocation
+CSV cells mean the backend did not report them. Qenlo-owned GPU allocations are
+not physical VRAM residency. `--gpu-budget-mib` separately controls the backend
+budget, including its supported scratch accounting. Required GPU errors remain
+errors; only explicit `automatic` may fall back, and the actual backend is retained.
+
+## Instrumentation and OTLP checks
+
+```powershell
+cargo test -p qenlo-bench --features otlp --all-targets
+cargo run -p qenlo-bench --features otlp --example otlp
+```
+
+The example performs a real search under a scoped subscriber and exports traces
+and bounded-category metrics. Query spans finish before shutdown. The helper caps
+the trace queue at 32 spans and drops overflow; requests have explicit timeouts.
+The test compares instrumented search results to uninstrumented results, floods
+the queue, checks captured diagnostic data for sensitive input, connects to a collector
+that accepts but never responds, and bounds shutdown. Exporter failure is never
+converted into a search error.
+
+`--diagnostics disabled|basic|detailed` selects the collection's diagnostics mode
+for workload runs (default basic). The runner installs no subscriber; these runs
+measure report/diagnostic work without OTLP export. Compare that overhead with
+identical cells and retain all samples. The failure test separately covers actual
+export, and checks that disabled diagnostics emit no operation spans. The host
+uses the blocking HTTP client because the synchronous SDK processors export on
+dedicated threads without a Tokio reactor; provider construction/shutdown is
+isolated with `spawn_blocking` when called from an async host.
+
+SDK 0.32.1 ignores the meter provider's `shutdown_with_timeout` parameter; the
+periodic reader has a fixed five-second wait. Trace shutdown uses two seconds;
+HTTP requests use 100ms in the failure test and 500ms in the example. The helper
+registers no observable callbacks, which could independently block collection.
+This limitation was verified against the pinned SDK source, not inferred from
+the method name. The test allows an eight-second combined shutdown ceiling.
+See [OpenTelemetry Rust batch processing](https://github.com/open-telemetry/opentelemetry-rust/blob/main/opentelemetry-sdk/src/trace/span_processor.rs)
+and the checked-in lockfile for the exact dependency version.
+
+## The investment gate remains untested
+
+The preregistered gate is 1m x 768, 1% eligible, batch 1, k=10: at least 2x lower
+P95 than the best validated CPU path at the recall target, no invalid results,
+five shuffled runs with uncertainty reported, and complete transfer/selection
+costs with basic diagnostics. This runner enables measurements; it does not
+establish that gate. [Native Chroma replay](../scripts/chroma-replay.md) now
+validates the same vectors, canonical synthetic metadata, compound filter,
+independent truth, and shuffled query order. `scripts/compare_runs.py` checks
+workload compatibility and recall gates before reporting latency ratios and
+seeded whole-run bootstrap intervals. Five repetitions give coarse uncertainty;
+neither bootstrap nor one laptop establishes general performance. Other competitor
+adapters and pinned service environments remain absent. Native Windows library
+measurements must not be presented as directly comparable to Linux/WSL HTTP
+service latency. If memory or toolchains prevent the run, report it as untested.
+
+
+================================================================================
+Document: Device lab
+Path: docs/device-lab.md
+URL: https://a3ro-dev.github.io/qenlo/docs/device-lab.md
+Description: Multi-platform test runner, profiles, and telemetry handling
+================================================================================
+
+# Qenlo device lab
+
+The same native suite is packaged for Linux, Windows, macOS, Android, and iOS. It tests canonical semantics before timing hardware, retains every result locally, and uploads only after an explicit action. The desktop packages use wgpu's Vulkan, DX12, or Metal implementation, so one binary covers NVIDIA, AMD, and Intel adapters supported by that operating system.
+
+## Desktop
+
+Run the quick suite:
+
+```text
+qenlo-lab run --profile quick --output qenlo-run.json
+```
+
+On Windows, double-clicking `qenlo-lab.exe` starts the quick suite, shows four
+progress stages and the complete cell summary, saves `qenlo-lab-run.json` beside
+the executable, and waits for Enter before closing. Command-line arguments retain
+the non-interactive behavior used by automation.
+
+Use `full` for the 100k × 384 matrix and `soak` for sustained batches. Select a GPU by setting `WGPU_ADAPTER_NAME` to a case-insensitive part of its driver-reported name. Set `WGPU_BACKEND` to `vulkan`, `dx12`, or `metal` to force an API. A requested adapter that is not present fails explicitly.
+
+Submit during the run:
+
+```text
+qenlo-lab run --profile full --output qenlo-run.json --endpoint https://lab.example/api/v1/runs --token TOKEN
+```
+
+Or submit a retained result later:
+
+```text
+qenlo-lab upload --input qenlo-run.json --endpoint https://lab.example/api/v1/runs --token TOKEN
+```
+
+## Mobile
+
+The Android application supports arm64 devices and reports `Build.SOC_MANUFACTURER` and `Build.SOC_MODEL` on Android 12+, allowing Snapdragon and MediaTek runs to be separated. The iOS application requires arm64 and Metal and reports the Apple machine identifier and thermal state.
+
+Keep the app foregrounded during a suite. Android configuration changes do not recreate the runner activity. A crash, background kill, network failure, redirect, server rejection, or invalid token never deletes the last completed local report. Submission requires HTTPS, uses system certificate validation, and refuses redirects so a bearer token cannot be forwarded to another host. Tokens are held in memory and are not included in reports.
+
+## Test profiles
+
+| Profile | Corpus | Dimensions | Timed queries | Intended use |
+|---|---:|---:|---:|---|
+| quick | 10,000 | 384 | 16 | install and compatibility check |
+| full | 100,000 | 384 | 64 | comparable device result |
+| soak | 100,000 | 384 | 512 | thermal and sustained-throughput observation |
+
+The suite covers invalid inputs, filter semantics, durable reopen, exact CPU search, exact GPU search, true batch-8 GPU execution, IVF-Flat and IVF-SQ8 at a Recall@10 ≥ 0.95 gate, an independent float64 truth calculation, P50/P95/P99 latency, transfer bytes, allocation bytes, dispatch count, routing, fallback, device/API identity, and retained failures. It precomputes truth and runs CPU, required-GPU, and automatic collections sequentially so full/soak profiles do not keep three corpora resident on a phone. Its deterministic clustered corpus makes the IVF cells repeatable; it is a device-comparison workload, not evidence of recall on arbitrary production embeddings.
+
+## Retained device submissions
+
+The [Intel Arc submission](../benchmarks/2026-08-31/device-lab/intel-arc/README.md)
+retains two embedded `quick` reports and one `soak` report from an Intel Arc
+Vulkan adapter. All 21 cells passed with Recall@10 = 1.0 and no fallback. The
+soak result recorded exact GPU P95 of 4,444 µs versus exact CPU P95 of 16,486 µs.
+One report was supplied under a "full" label but identifies itself as `quick`;
+Qenlo preserves the embedded suite value and does not represent it as full.
+These device-lab results do not satisfy the separate 1M × 768 investment gate.
+
+## Telemetry server
+
+Set a random token of at least 24 characters and place the server behind an HTTPS reverse proxy:
+
+```text
+QENLO_TELEMETRY_API_KEY=... QENLO_TELEMETRY_BIND=127.0.0.1:8787 QENLO_TELEMETRY_DB=qenlo.sqlite3 qenlo-telemetry
+```
+
+Open `/` for the results viewer. `POST /api/v1/runs`, `GET /api/v1/runs`, and `GET /api/v1/runs/{run_id}` require `Authorization: Bearer TOKEN`. The request body is capped at 1 MiB, unknown JSON fields are rejected, run IDs are unique, SQLite uses WAL mode, and database work runs outside the async executor.
+
+Reports exclude vectors, queries, raw filter values, source data, hostnames, serial numbers, IP addresses, and credentials. The collector logs server errors without echoing submitted payloads.
+
+## GitHub-only telemetry inbox
+
+For a zero-server test round, submit retained reports through the repository's
+[device lab report form](https://github.com/a3ro-dev/qenlo/issues/new?template=device-lab-report.yml).
+Android and iOS provide "Copy report and open GitHub"; desktop testers paste the
+contents of `qenlo-lab-run.json`. Reports remain visible and searchable as GitHub
+issues. Because the repository is public, the form requires explicit consent.
+
+This path needs a GitHub account and a final paste/submit action. GitHub Pages is
+static hosting and cannot accept telemetry POSTs. Fully automatic background
+submission still requires the HTTPS collector above; do not embed a repository
+token in a tester binary.
+
+## Build outputs
+
+| Output | Intended devices | Installability |
+|---|---|---|
+| `qenlo-lab-linux-x86_64` | Linux NVIDIA/AMD/Intel | executable archive; normal OS permissions apply |
+| `qenlo-lab-windows-x86_64` | Windows NVIDIA/AMD/Intel | executable archive; Authenticode recommended for external distribution |
+| `qenlo-lab-macos-arm64` | Apple-silicon Macs | executable archive; Developer ID signing/notarization required to avoid Gatekeeper friction |
+| `qenlo-lab-android-arm64` | Snapdragon and MediaTek arm64 phones | installable debug APK plus SHA-256 for controlled sideload testing |
+| `qenlo-lab-ios-unsigned-validation` | A-series iPhones | build validation only; cannot be installed until provisioned and signed |
+| `qenlo-telemetry-linux-x86_64` | results ingestion/viewer host | deploy behind an HTTPS reverse proxy |
+
+## Distribution status
+
+The `device lab packages` GitHub workflow produces all outputs above with SHA-256 manifests for desktop, Android, and server artifacts. Push a `lab-v*` tag, such as `lab-v0.1.0`, to build the packages and publish them as a GitHub Release automatically. Manual workflow runs build downloadable Actions artifacts without publishing a release. The Apple desktop and iOS builds share one macOS runner to control runner cost.
+
+Production distribution still requires your code-signing identities: Authenticode for Windows, Developer ID/notarization for macOS, an Android release keystore, and Apple Developer provisioning/TestFlight for iOS. Those identities cannot safely be manufactured or committed by this repository. Do not send unsigned production packages as if they were trusted releases.
+
+GitHub-hosted debug APKs may be signed with a different ephemeral debug key on a later workflow run. If Android refuses an update because signatures differ, uninstall the older tester (its retained local report will be removed) or use a stable release keystore. Upload the retained result before uninstalling.
+
+
+================================================================================
+Document: Measured results (2026-08-28)
+Path: docs/results-2026-08-28.md
+URL: https://a3ro-dev.github.io/qenlo/docs/results-2026-08-28.md
+Description: Native Windows benchmark run data and comparisons
+================================================================================
+
+# Measured results: 2026-08-28
+
+This is the reproducible result record for the native Windows benchmark run. It
+is deliberately narrower than a product claim: one laptop, one real embedding
+source, five measured repetitions per cell, and the exact workload definitions in
+the [benchmark protocol](benchmark-protocol.md).
+
+## Machine and data
+
+- Windows 11, Intel Core i5-13420H, 12 logical processors, 16.87 GiB RAM.
+- NVIDIA GeForce RTX 4050 Laptop GPU, 6,141 MiB, driver 616.56, alongside Intel
+  UHD Graphics as the integrated adapter. The GPU cells requested the
+  high-performance adapter and record `gpu_adapter`, `gpu_api=Dx12`, and
+  `gpu_device_type=DiscreteGpu`; they are actual NVIDIA device runs, not CPU
+  fallbacks.
+- Rust 1.98.0, release build with `CC=clang-cl`, `CXX=clang-cl`,
+  `CARGO_INCREMENTAL=0`, and features `usearch,gpu-wgpu`.
+- 100,000 rows × 384 dimensions from the DTU AG News
+  `all-MiniLM-L12-v2` HDF5 source. The source checksum, license, author, and
+  extraction details are in [the dataset record](../benchmarks/2026-08-28/real/dataset/ag-news-384.json).
+
+The corpus, tuning queries, and evaluation queries are disjoint. Every cell used
+the same metadata, compound user-and-time filter, query order, k=10, 200 warmups,
+five repetitions, and a 0.95 recall target. P95 is the lower-middle value of the
+five run P95 samples. Exact backends use an independent f64 oracle; one exact
+result at a floating point boundary may choose a different tied ID, which is
+accepted only within the documented 1e-5 boundary tolerance. Filter violations
+were zero in every completed cell.
+
+## All eligible rows
+
+This is the 100,000-row cell with all rows eligible. Latencies are P95 per batch
+in milliseconds; recall is evaluation recall@10.
+
+| Backend | Median P95 | Tuning recall | Evaluation recall | Result |
+| --- | ---: | ---: | ---: | --- |
+| Qenlo exact CPU | 16.6567 ms | 1.00000 | 0.99998 | passed |
+| Qenlo GPU predicate | 3.2404 ms | 1.00000 | 0.99998 | passed |
+| Qenlo GPU rows | 4.2428 ms | 1.00000 | 0.99998 | passed |
+| Qenlo GPU mask | 4.4591 ms | 1.00000 | 0.99998 | passed |
+| Qenlo USearch (ANN, ef=128) | 3.6245 ms | 0.99320 | 0.99224 | passed |
+| Chroma PersistentClient (ANN, ef=128) | 1.1303 ms | 0.99450 | 0.99414 | passed |
+
+The Qenlo GPU predicate cell is 5.14× lower than the Qenlo exact CPU cell for
+this workload (seeded whole-run bootstrap interval 3.55×–6.77×). USearch is
+1.12× lower than GPU predicate, with a coarse interval of 0.77×–1.54×. Chroma
+is lower still, but that comparison crosses an API boundary: it includes the
+Python `PersistentClient` call, native bindings, serialization, and local
+database execution, while Qenlo measures a Rust in-memory `search_batch` call.
+Chroma and USearch are approximate indexes; the exact Qenlo GPU paths are not
+ANN implementations.
+
+Raw configurations, samples, truth, and measurements are retained under
+[`benchmarks/2026-08-28/real/`](../benchmarks/2026-08-28/real/). The comparison
+files contain the workload compatibility checks and seeded 10,000-draw
+whole-run intervals.
+
+## One-percent selective rows
+
+The same 100,000-row corpus with 1,000 eligible rows shows why selectivity is a
+separate workload. Qenlo exact CPU is 0.2304 ms P95; GPU rows is 0.6766 ms and
+GPU predicate is 2.8832 ms. All three returned recall 1.0 with zero filter
+violations. The CPU-over-GPU-predicate ratio is 0.0799× (the GPU path is slower
+for this selective cell), so the all-row GPU speedup must not be generalized to
+selective queries.
+
+## What remains untested
+
+The preregistered investment gate is 1,000,000 × 768, 1% eligible, batch 1,
+k=10, at least 2× lower P95 than the best validated CPU path. It remains
+untested. This host recorded about 4.54 GiB free RAM while two 1m×768 vector
+copies alone require 6.144 GB, before metadata, the oracle, and GPU preparation
+buffers. The run was not forced into an OOM condition. The 768-dimensional
+source download is retained for a future machine with enough memory.
+
+Linux, Metal, mobile, browser, service/HTTP competitors, and a controlled
+multi-machine performance study are also outside this result record. Five runs
+on a shared laptop provide a coarse interval, not a universal ranking.
+
+## Reproduce
+
+Use fresh output directories and the prepared dataset described in the protocol.
+For an actual GPU run, set `WGPU_BACKEND=dx12` and use a build with
+`--features gpu-wgpu`; required GPU mode fails instead of silently falling back.
+The Chroma procedure and its failed runtime ef sweep are documented in
+[`scripts/chroma-replay.md`](../scripts/chroma-replay.md).
+
+
+================================================================================
+Document: Verification record
+Path: docs/verification.md
+URL: https://a3ro-dev.github.io/qenlo/docs/verification.md
+Description: Verification record, test outcomes, and audit trail
+================================================================================
+
+# Verification record
+
+## Small-collection campaign (2026-09-05)
+
+The Runpod campaign retained 182 rows: 131 completed, 42 unavailable, seven
+failed, and two invalid-harness rows. The invalid rows remain visible and are
+excluded from conclusions. Corrected 100K × 768 RTX 4090 cells reached oracle
+recall 1.0. WGPU P95 was 0.897 ms for batch one, k=1, and 0.896 ms for batch
+eight, k=64, with 10% eligibility. PyTorch CUDA reached 0.671 ms and 0.384 ms
+respectively. See the [performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) for timing scopes and all losses.
+
+The selector candidate won five and lost seven of 12 qualified frozen-revision
+pairs and was therefore reverted. Mutation cells reported zero resident rebuilds;
+reopen rebuilt once. All campaign pods were deleted and the final known spend was
+`$0.9400778694252952`. Cloud NVIDIA results are not mobile evidence.
+
+The final bounded local release checks used one Cargo build job, one test thread,
+and at most two numerical threads. Workspace no-default-feature testing passed
+95 unit/integration tests plus one doctest. The required Vulkan GPU library run
+passed 52 tests on the local RTX 4050; the FFI suite passed six. Focused core,
+native CPU, and benchmark runs passed 18, 28, and 10 tests respectively. Strict
+Clippy passed for the changed Rust packages. Python passed 23 tests, including
+Torch CPU conformance, and built a tagged wheel plus source archive. TypeScript
+passed type checking and five tests and produced an inspected package tarball.
+Seven workflow YAML files and all PowerShell campaign scripts parsed. A local
+POSIX shell was unavailable, so the shell scripts remain covered by workflow
+execution rather than a new local `bash -n` result. The final eight-page PDF was
+compiled without unresolved references or overfull boxes and every rendered page
+was visually inspected.
+
+Historical verification records follow unchanged.
+
+2026-08-28, native Windows, `x86_64-pc-windows-msvc`, Intel UHD Graphics
+(integrated) plus NVIDIA GeForce RTX 4050 Laptop GPU (discrete). Rust 1.98.0
+(`88d9e12ae`, LLVM 22.1.8), Cargo 1.98.0.
+This is a local correctness and benchmark record, not a production-readiness or
+general scale claim.
+
+## Commands and results
+
+The starting portable suite passed 16 tests before changes. The final native
+commands used these process-local settings for C++ builds:
+
+```powershell
+$env:CC = 'clang-cl'
+$env:CXX = 'clang-cl'
+$env:CARGO_INCREMENTAL = '0'
+```
+
+| Command | Final result |
+| --- | --- |
+| `cargo fmt --all -- --check` | passed |
+| `cargo test --workspace --no-default-features -- --test-threads=1` | 47 tests + 1 doctest passed |
+| `cargo test --workspace --all-features --all-targets -- --test-threads=1` | 67 tests + 1 doctest passed |
+| `cargo clippy --workspace --all-targets --all-features -- -D warnings` | passed, no warnings |
+| `cargo doc --workspace --all-features --no-deps` | passed |
+| `cargo test -p qenlo --features usearch --test cpu_quality -- --nocapture` | 2 tests passed; CPU and USearch recall@10 = 1.0 in all 9 fixture filters |
+| `cargo test -p qenlo-bench --all-features --all-targets` | 8 tests passed, including the real stalled-collector test |
+
+The final all-features total consists of 40 collection/storage/GPU unit tests, 2
+CPU quality tests, 2 process-exit tests, 7 benchmark-library tests, 3 runner
+tests, 1 telemetry test, and 12 core tests. The doctest compiles the durable
+quickstart.
+Both README Rust snippets also passed a separate `rustdoc --test` compilation.
+
+Hardware acceptance was run twice, with adapter absence made fatal:
+
+```powershell
+$env:QENLO_REQUIRE_GPU = '1'
+$env:WGPU_BACKEND = 'dx12'
+cargo test -p qenlo --features gpu-wgpu --lib -- --nocapture --test-threads=1
+$env:WGPU_BACKEND = 'vulkan'
+cargo test -p qenlo --features gpu-wgpu --lib -- --nocapture --test-threads=1
+```
+
+Both runs passed 37 tests and printed the RTX 4050 with the requested backend.
+The Intel adapter was present on the host but was not the reported device: the
+high-performance request selected the discrete NVIDIA adapter. The retained
+manifests record the actual adapter, device type, API, and negotiated limits.
+Coverage includes optional predicate combinations and signed extremes, tombstones,
+bounded chunk/readback accounting, real device destruction, required errors,
+automatic fallback, explicit recovery, unavailable adapters, and allocation validation.
+
+Device destruction is `Device::destroy()`, not an injected driver reset. Allocation
+failure uses a real invalid allocation request and budget rejection, not deliberate
+physical VRAM exhaustion. Process-exit tests bypass destructors and leave partial
+staging files; they do not simulate power removal. Unix, Metal, mobile, browser,
+network filesystems, and sudden-power-loss behavior were not exercised.
+
+## Benchmark smoke and lock observations
+
+The prepared smoke has 256 corpus rows, dimension 16, 8 tuning queries, and 32
+held-out evaluation queries, seed 42. Its prepared CRC32 is `c256dfdd`.
+
+```powershell
+cargo run -p qenlo-bench -- --help
+cargo run -p qenlo-bench -- prepare --dataset target/bench-smoke-v1.qnb
+cargo run -p qenlo-bench -- run --dataset target/bench-smoke-v1.qnb --output target/bench-smoke-cpu-v1 --fraction 0.1 --batch 8 --diagnostics detailed
+
+foreach ($mode in @('disabled','basic','detailed')) {
+    cargo run -p qenlo-bench -- run --dataset target/bench-smoke-v1.qnb --output "target/verification-lock-$mode" --fraction 0.1 --batch 1 --repetitions 5 --diagnostics $mode
+}
+```
+
+All passed recall@10 = 1.0. The latter runs retained 160 samples each, 25 eligible
+rows, AVX2, debug profile, and no subscriber. Measured observations:
+
+| Diagnostics | Median of run P95 batch latency | Mean reported lock wait per query |
+| --- | --- | --- |
+| disabled | 24,400 ns | 85.62 ns |
+| basic | 23,000 ns | 53.12 ns |
+| detailed | 30,100 ns | 70.62 ns |
+
+These are small, sequential, uncontended smoke observations on a busy laptop.
+Lock wait includes clock/acquisition overhead, not an isolated estimate of all
+locking costs. Noise is visible: basic happened to be lower than disabled.
+Do not interpret this as a speed ranking or extrapolate it to scale.
+Raw samples and manifests remain in the named ignored `target/` directories;
+`cargo clean` will remove them. Repeat with fresh output paths.
+
+Additional corrected-runner smokes used CPU, USearch, GPU mask, GPU eligible rows,
+GPU predicate, and automatic mode, plus empty/fewer-than-k and batch-32 cases.
+All passed recall 1.0 and strict score/order validation. Their raw outputs are
+`target/bench-smoke-*-v2/`. Exact commands are reproducible from their manifests
+and [the protocol](benchmark-protocol.md).
+
+The larger independent correctness fixture has 2,048 rows, dimension 32, and 16
+disjoint queries across 9 filters. Both CPU and USearch measured recall 1.0.
+The follow-up [real-data result record](results-2026-08-28.md) now retains
+100k × 384 CPU, RTX 4050 GPU, USearch, and native Chroma cells with five runs,
+independent truth, recall gates, and seeded whole-run intervals. The exact GPU
+predicate path measured 5.14× lower P95 than Qenlo exact CPU when all rows were
+eligible, while the 1% selective GPU predicate cell was slower than CPU. The
+predeclared 1m × 768 investment gate remains untested because this host lacks
+the required memory. Host RSS/allocator totals and GPU kernel timestamps remain
+explicitly unavailable for the library reports.
+
+## Device-lab verification (2026-08-30)
+
+The release `quick` profile ran on the NVIDIA RTX 4050 through Vulkan with a
+10,000 × 384 deterministic clustered corpus and 16 timed queries. Every cell
+passed with Recall@10 1.0:
+
+| Cell | P95 per query | Upload bytes |
+| --- | ---: | ---: |
+| CPU exact | 1,099 µs | 0 |
+| GPU exact | 464 µs | 41,600 |
+| native GPU batch-8 | 99 µs | 52,352 |
+| IVF-Flat | 356 µs | 15,352 |
+| IVF-SQ8 | 2,153 µs | 2,880 |
+| automatic selective CPU | 28 µs | 0 |
+| automatic selective batch-8 GPU | 414 µs | 52,352 |
+
+These are compatibility/profile observations, not a production embedding claim.
+SQ8 reduced transfer relative to IVF-Flat but did not reduce latency on this cell.
+The same runner also completed on Intel UHD through Vulkan. AMD, Linux, Metal,
+Android, and iOS still require physical tester devices.
+
+`cargo test --workspace --features gpu-wgpu --no-fail-fast` passed 74 unit and
+integration tests plus doctests. The all-features run with the documented
+`clang-cl` workaround passed 78 unit/integration tests plus doctests, including
+USearch and the bounded OTLP test. Strict workspace Clippy, format, diff, and
+workflow YAML validation passed. The packaged telemetry executable accepted the
+seven-cell report, listed it, and returned its detail with zero retained failures.
+The dashboard was visually checked at 1280 × 720 and 390 × 844 with no document
+overflow; empty, loaded, detail, pass, and no-failure states were exercised.
+
+## Intel Arc device-lab evidence (2026-09-01)
+
+Three manually supplied Windows/Vulkan reports are retained under
+`benchmarks/2026-08-31/device-lab/intel-arc/`: two reports whose embedded suite
+is `quick`, and one `soak` report with 100,000 × 384 rows and 512 samples per
+cell. All 21 cells passed with Recall@10 = 1.0 and no reported fallback.
+
+On the soak run, exact GPU P95 was 4,444 µs versus exact CPU P95 16,486 µs
+(3.71× lower). IVF-Flat P95 was 2,704 µs (6.10× lower than exact CPU), while
+IVF-SQ8 P95 was 22,797 µs and therefore slower than exact CPU on this cell.
+The report supplied under a "full" label identifies itself as `quick`; the
+retained record and public summary use the embedded value. These observations
+are evidence for one Intel Arc adapter and do not close the 1M × 768 gate.
+
+## Toolchain and remaining release limits
+
+- The existing MSVC 14.29 native-dependency crash was not repaired or re-tested;
+  this work used the documented `clang-cl` workaround successfully.
+- Early builds printed Windows incremental-cache finalization `Access denied`.
+  Final verification disabled incremental compilation without changing user config.
+- The OTLP test initially exposed a real runtime panic with an async HTTP client
+  on synchronous exporter workers. Switching the host to the blocking client
+  fixed it. The final stalled-collector/privacy/overflow/shutdown check passed.
+- Full Windows power-loss durability is not guaranteed: files are synced, but
+  directory publication is not synced with a Windows-specific primitive.
+- Commits append checksummed immutable WAL transactions after O(batch) atomic
+  validation. Reopen replays contiguous generations; flush/close synchronously
+  compact to a full snapshot. Background compaction is not claimed.
+- Only derived readiness metadata is persisted; ANN graphs and resident GPU
+  buffers rebuild after restart. No persisted graph cache is claimed.
+- Interrupted initial creation may require manual handling of confirmed staging
+  files. Preserve evidence before cleanup; never guess at a committed outcome.
+- The repository includes `LICENSE-MIT`; metadata also declares Apache-2.0 as an
+  option, but a separate Apache license text is not included. No licensing terms
+  were changed in this implementation.
+
+## Implementation commits
+
+Starting point: `4c40187`. No push or remote repository creation was performed.
+
+```text
+458d783 feat(cpu): add SIMD eligible-set baseline and streaming restore
+a5d8fc5 feat(storage): lock writers and bound crash recovery loading
+a51e285 feat(tx): add atomic durable mutation batches
+08154d6 feat(cpu): validate filtered ANN recall and expose search parameters
+a2c9e8a feat(concurrency): serialize writes and allow concurrent searches
+09eb5fa fix(storage): detect missing commits and enforce reopen budgets
+8891d19 feat(gpu): harden wgpu lifecycle and failure handling
+cb82bd6 feat(index): integrate recovery policies and correlated diagnostics
+28b8084 test(storage): exercise process exit and interrupted staging
+ebd7d5f fix(obs): account for resident uploads and failed GPU preparation
+36f2e11 feat(bench): add reproducible workload runner and bounded OTLP checks
+f70b5d6 docs(api): add checked quickstart and clarify recovery diagnostics
+```
+
+The documentation-only commit containing this historical record follows those
+commits. Later result, site, and adapter documentation is tracked in the current
+repository history. The pre-existing `index.html` modification was preserved
+until the site update requested after this record; the current site file now
+includes the measured adapter and result status.
+
+
+================================================================================
+Document: Implementation status
+Path: docs/implementation-status.md
+URL: https://a3ro-dev.github.io/qenlo/docs/implementation-status.md
+Description: Engineering roadmap status and hardware gates
+================================================================================
+
+# Heterogeneous roadmap status
+
+This ledger separates implemented code from research directions and distribution prerequisites. "Built" means source and automated packaging exist; "physically validated" means the test ran on hardware available during implementation.
+
+| Milestone | Status | Evidence or remaining gate |
+|---|---|---|
+| correctness/oracle hardening | implemented | deterministic semantic checks and independent exact truth in `qenlo-lab` |
+| storage v2 WAL/manifest/mmap | implemented | atomic batch, recovery, corruption, reopen, and fail-closed tests |
+| query-level router | partial | eligibility plans and hardware-bound threshold profiles are implemented; persisted calibration, online adaptation, and held-out regret evaluation remain open |
+| ARM NEON fallback | implemented | target compilation; physical ARM run comes from macOS/mobile packages |
+| portable exact GPU | implemented | persistent arenas, chunked bounded readback, true B×D batches |
+| small-collection Runpod matrix | completed | 182 retained rows across six GPU configurations plus a corrected 100K × 768 supplement; final known spend $0.9401 |
+| lane-minimum selector candidate | measured and rejected | won five and lost seven of 12 qualified pairs; final source retains the simpler full-rescan selector |
+| post-mutation resident updates | implemented and measured | append/live-mask cells rebuilt zero times; reopen remains a full resident rebuild |
+| optional PyTorch index | implemented, desktop-only | lazy CPU/CUDA/MPS tensor API bound to canonical generation; CUDA and CPU measured, MPS unavailable in this campaign |
+| portable IVF-Flat | implemented | Recall@10 ≥ 0.95 tester gate and exact FP32 GPU rerank |
+| IVF-SQ8 | implemented | symmetric scalar candidate stage, bounded top-R, exact FP32 GPU rerank |
+| Linux NVIDIA tester | campaign validated | six cloud configurations; AMD/Intel and physical phone Linux remain untested |
+| Windows NVIDIA/Intel tester | physically validated | RTX 4050, Intel UHD, and Intel Arc Vulkan; AMD package awaits hardware |
+| Apple-silicon macOS tester | built, awaiting signed hardware run | Metal package workflow |
+| Snapdragon/MediaTek Android tester | source present, package/device gate open | arm64 tester records SoC and thermal state; no current package or physical run evidence |
+| A-series iOS tester | source/build validation, signing required | arm64 SwiftUI shell; Apple provisioning/TestFlight is external |
+| optional results collector/viewer | implemented | separate host-owned service with bearer auth, strict 1 MiB schema, SQLite WAL, and no SDK auto-export |
+| CUDA/HIP/native Metal/direct Vulkan kernels | not implemented | portable wgpu first; CUDA Linux/Windows implementation requirements are tracked in `docs/cuda-backend-todo.md`; add only after an independent-oracle comparison proves a material gap |
+| ANE/QNN/NeuroPilot NPU stages | research gate not executed | vendor SDK access and physical devices are required for the prescribed P95/energy go/no-go |
+| FP16, IVF-PQ, RaBitQ, GPU graph ANN | not implemented | downstream research milestones, not required for the six tester packages |
+| multi-GPU, replication, encryption | not implemented | independent database/product milestones; keys/topology/requirements are unspecified |
+
+The six deliverables deliberately exercise the portable implementation before native vendor backends are added. A package detecting a vendor is not evidence that a vendor-specific kernel exists; reports name the actual wgpu adapter and graphics API.
+
+
+================================================================================
+Document: CI and release map
+Path: docs/ci.md
+URL: https://a3ro-dev.github.io/qenlo/docs/ci.md
+Description: GitHub Actions workflows and release sequence
+================================================================================
+
+# CI and release map
+
+Qenlo uses seven GitHub Actions workflows. A passing build does not mean packages were published to public registries.
+
+| Workflow | Trigger | Purpose | Publishes externally |
+| --- | --- | --- | --- |
+| `portable correctness` | Every push and pull request | Runs the Rust workspace on Linux, Windows, and macOS; cross-checks Windows ARM64 and research evidence | No |
+| `SDK conformance` | SDK, FFI, core, lockfile, or workflow changes; manual dispatch | Tests the native ABI and Python, TypeScript, Go, Kotlin, Swift, docs, formatting, and linting | No |
+| `SDK release artifacts` | `sdk-v*` tag or manual dispatch | Builds native libraries, wheels, language bundles, XCFramework, and checksums | GitHub Release only on a tag |
+| `Publish SDKs` | Manual dispatch with an existing SDK tag | Verifies version alignment, then publishes independent registry jobs | crates.io, PyPI, npm; Maven only when credentials exist |
+| `browser & desktop ci/cd` | Browser-related changes, `v*` tags, or manual dispatch | Tests the browser and builds CLI browser binaries and Tauri compilation checks | No release job currently exists |
+| `device lab packages` | `lab-v*` tag or manual dispatch | Builds desktop, Android, Apple, and telemetry lab packages | GitHub Release only on a lab tag |
+| `Deploy Static Landing to GitHub Pages` | Landing, docs, or asset changes on `main`; manual dispatch | Deploys the static repository site | GitHub Pages |
+
+## SDK release sequence
+
+1. Merge and verify `portable correctness` and `SDK conformance`.
+2. Create an immutable `sdk-vX.Y.Z` tag with matching manifest versions.
+3. Wait for `SDK release artifacts` to produce the GitHub Release and checksums.
+4. Manually dispatch `Publish SDKs` with that exact tag.
+5. Check each registry independently. A passing workflow can still contain deliberate skips, such as Maven Central when credentials are absent.
+
+The publication workflow runs separately because published package versions cannot be replaced or deleted. Re-running it is only partly idempotent: PyPI uses `skip-existing`, while the Rust publish step suppresses failures with `|| true`. Because of that suppression, a green Rust job does not prove publication succeeded. Always check crates.io directly.
+
+## Tag families
+
+- `sdk-v*` tags trigger SDK artifact builds and releases.
+- `lab-v*` tags trigger device lab package builds.
+- `v*` tags are reserved for the browser workflow, which does not currently publish a GitHub Release.
+
+## Required release configuration
+
+The `package-registries` GitHub environment protects the release jobs. You must configure the following secrets in repository settings:
+
+- `CARGO_REGISTRY_TOKEN`
+- `PYPI_API_TOKEN` (or configured PyPI trusted publishing)
+- `NPM_TOKEN` (or configured npm trusted publishing)
+- `MAVEN_CENTRAL_USERNAME`
+- `MAVEN_CENTRAL_PASSWORD`
+- `MAVEN_SIGNING_KEY`
+- `MAVEN_SIGNING_PASSWORD`
+
+Never record secret values in logs, build artifacts, documentation, or release notes.
+
+
+================================================================================
+Document: Package publishing
+Path: docs/publishing.md
+URL: https://a3ro-dev.github.io/qenlo/docs/publishing.md
+Description: Multi-registry publication pipeline
+================================================================================
+
+# Package publishing and registries
+
+Automated release workflows publish Qenlo builds across public package registries.
+
+## Release process
+
+1. Update versions across all package manifests (`Cargo.toml`, `pyproject.toml`, `package.json`, and `build.gradle.kts`) in lockstep.
+2. Run `python scripts/check_release_versions.py sdk-v<tag>` to ensure every version string matches canonical SemVer or PEP 440 formats.
+3. Push an `sdk-v*` git tag to trigger the multi-platform CI build pipeline.
+4. Run the publication workflow to push pre-built packages to their destination registries:
+   - PyPI receives precompiled binary wheels (`manylinux`, `macosx`, `win_amd64`).
+   - npm receives `@a3ro.dev/qenlo` with bundled native shared objects.
+   - crates.io receives the `qenlo` and `qenlo-core` crates.
+

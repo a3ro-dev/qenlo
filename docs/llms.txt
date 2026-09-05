@@ -1,0 +1,50 @@
+# Qenlo
+
+> Embedded filtered vector search for native applications. Measured before marketed.
+
+Qenlo is a research-grade embedded vector database for durable, exact, metadata-filtered retrieval. It runs in-process with canonical local records and optional CPU, WGPU, and tensor execution.
+
+- Website: https://a3ro-dev.github.io/qenlo/
+- Documentation: https://a3ro-dev.github.io/qenlo/docs/
+- Repository: https://github.com/a3ro-dev/qenlo
+
+## Getting started
+
+- [Overview](https://a3ro-dev.github.io/qenlo/docs/README.md): Core introduction, boundaries, and documentation index
+- [Quickstart](https://a3ro-dev.github.io/qenlo/docs/quickstart.md): Build from source, create collections, insert, search, and reopen
+- [Core concepts](https://a3ro-dev.github.io/qenlo/docs/concepts.md): Canonical state, eligibility, exactness, and routing boundaries
+- [Collection browser](https://a3ro-dev.github.io/qenlo/docs/browser.md): Terminal user interface (TUI), local web UI, and Tauri desktop inspector
+- [Use cases](https://a3ro-dev.github.io/qenlo/docs/use-cases.md): Where Qenlo fits and where it does not
+- [Trade-offs](https://a3ro-dev.github.io/qenlo/docs/trade-offs.md): Memory costs, CPU baseline realities, and routing guidance
+- [Feature matrix](https://a3ro-dev.github.io/qenlo/docs/feature-matrix.md): Implemented, optional, and unverified capabilities
+
+## SDKs and bindings
+
+- [Rust API](https://a3ro-dev.github.io/qenlo/docs/sdks/rust.md): Core asynchronous Rust client, options, and usage
+- [Python SDK](https://a3ro-dev.github.io/qenlo/docs/sdks/python.md): Python bindings, bulk buffer ingestion, and optional TorchIndex
+- [TypeScript SDK](https://a3ro-dev.github.io/qenlo/docs/sdks/typescript.md): Node.js native FFI bindings with TypeScript type safety
+- [Go driver](https://a3ro-dev.github.io/qenlo/docs/sdks/go.md): cgo bindings for Go services and command-line tools
+- [Kotlin SDK](https://a3ro-dev.github.io/qenlo/docs/sdks/kotlin.md): JNA bindings for JVM applications
+- [Swift SDK](https://a3ro-dev.github.io/qenlo/docs/sdks/swift.md): Swift bindings over the shared C ABI
+
+## Architecture and storage
+
+- [Architecture specification](https://a3ro-dev.github.io/qenlo/docs/architecture.md): CoreStore, transaction lifecycle, lock protocols, and visibility
+- [.qn storage format](https://a3ro-dev.github.io/qenlo/docs/qn-format-v1.md): Binary file layout, little-endian specs, and atomic exchange semantics
+- [Recovery policy](https://a3ro-dev.github.io/qenlo/docs/recovery-policy.md): Deterministic recovery, fail-closed boundaries, and operator contracts
+- [GPU search design](https://a3ro-dev.github.io/qenlo/docs/gpu-design.md): Custom WGSL scoring, selection pipelines, chunking, and memory arenas
+- [CUDA backend todo](https://a3ro-dev.github.io/qenlo/docs/cuda-backend-todo.md): Entry gates and engineering requirements for a native CUDA backend
+
+## Research and verification
+
+- [Benchmark protocol](https://a3ro-dev.github.io/qenlo/docs/benchmark-protocol.md): Reproducible test harness execution and cell definitions
+- [Device lab](https://a3ro-dev.github.io/qenlo/docs/device-lab.md): Multi-platform test runner, profiles, and telemetry handling
+- [Measured results (2026-08-28)](https://a3ro-dev.github.io/qenlo/docs/results-2026-08-28.md): Native Windows benchmark run data and comparisons
+- [Verification record](https://a3ro-dev.github.io/qenlo/docs/verification.md): Verification record, test outcomes, and audit trail
+- [Implementation status](https://a3ro-dev.github.io/qenlo/docs/implementation-status.md): Engineering roadmap status and hardware gates
+- [CI and release map](https://a3ro-dev.github.io/qenlo/docs/ci.md): GitHub Actions workflows and release sequence
+- [Package publishing](https://a3ro-dev.github.io/qenlo/docs/publishing.md): Multi-registry publication pipeline
+
+## Optional
+
+- [Consolidated full documentation bundle](https://a3ro-dev.github.io/qenlo/llms-full.txt): Complete documentation suite concatenated into a single plain text file

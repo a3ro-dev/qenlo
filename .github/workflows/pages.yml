@@ -8,6 +8,9 @@ on:
       - 'index.html'
       - 'docs/**'
       - 'assets/**'
+      - 'llms.txt'
+      - 'llms-full.txt'
+      - '.well-known/**'
       - '.nojekyll'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
