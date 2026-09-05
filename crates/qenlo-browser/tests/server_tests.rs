@@ -150,7 +150,7 @@ async fn test_rest_api_full_flow() {
     assert_eq!(res.status(), StatusCode::OK);
     let bytes = res.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&bytes).unwrap();
-    assert!(body["files"].as_array().unwrap().len() > 0);
+    assert!(!body["files"].as_array().unwrap().is_empty());
 
     // 8. GET /api/diagnostics
     let res = app

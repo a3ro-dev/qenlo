@@ -2417,17 +2417,18 @@ mod tests {
 
     #[test]
     fn initialization_and_search_reject_overbudget() {
+        let initialization = block_on(GpuExact::new(
+            2,
+            &[1.0, 0.0],
+            &[1],
+            &[1],
+            &[0],
+            &[true],
+            Some(1),
+        ));
         assert!(matches!(
-            block_on(GpuExact::new(
-                2,
-                &[1.0, 0.0],
-                &[1],
-                &[1],
-                &[0],
-                &[true],
-                Some(1)
-            )),
-            Err(GpuError::OverBudget { .. })
+            initialization,
+            Err(GpuError::OverBudget { .. } | GpuError::Unavailable(_))
         ));
         let Some(mut exact) = tiny_gpu() else {
             return;

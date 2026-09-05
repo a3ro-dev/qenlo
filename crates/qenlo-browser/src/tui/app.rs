@@ -615,7 +615,7 @@ impl App {
     }
 
     async fn execute_command(&mut self, cmd: &str) {
-        let parts: Vec<&str> = cmd.trim().split_whitespace().collect();
+        let parts: Vec<&str> = cmd.split_whitespace().collect();
         if parts.is_empty() {
             return;
         }

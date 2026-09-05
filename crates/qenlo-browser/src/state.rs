@@ -88,6 +88,12 @@ pub struct BrowserSession {
     pub dimension: usize,
 }
 
+impl Default for BrowserSession {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BrowserSession {
     pub fn new() -> Self {
         Self {
@@ -113,7 +119,7 @@ impl BrowserSession {
             let _ = c.close();
         }
 
-        let collection = if path.extension().map_or(false, |ext| ext == "qn") {
+        let collection = if path.extension().is_some_and(|ext| ext == "qn") {
             Collection::import_qn(&path, config)
                 .await
                 .map_err(|e| format!("Failed to import .qn file: {e}"))?
@@ -278,7 +284,7 @@ impl BrowserSession {
                     live: r.is_live(),
                 });
                 // Cosine distance is in [0, 2], similarity is 1.0 - distance
-                let similarity = (1.0 - res.distance).max(-1.0).min(1.0);
+                let similarity = (1.0 - res.distance).clamp(-1.0, 1.0);
                 SearchHitDto {
                     id: res.id,
                     distance: res.distance,
@@ -391,7 +397,7 @@ impl BrowserSession {
                             name: filename,
                             path: entry.path().display().to_string(),
                             size_bytes: size,
-                            is_dir: meta.map_or(false, |m| m.is_dir()),
+                            is_dir: meta.is_some_and(|m| m.is_dir()),
                             kind,
                         });
                     }

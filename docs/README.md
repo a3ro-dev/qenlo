@@ -1,20 +1,36 @@
 # Qenlo documentation
 
-Qenlo is a durable, in-process vector-search library for roughly 1k--100k vectors. Canonical Rust records define IDs, metadata, tombstones, and generations. CPU, WGPU, USearch, and PyTorch structures are derived execution choices.
+Qenlo is a research-grade embedded vector store for durable, exact, metadata-filtered retrieval. It runs inside an application and keeps canonical records locally; optional CPU, WGPU, ANN, and tensor structures decide how a query executes, not what data exists.
 
 ## Start here
 
-- [Quickstart](quickstart.md)
-- [Architecture](architecture.md)
+- [Quickstart](quickstart.md): create, mutate, search, close, and reopen a collection.
+- [Concepts](concepts.md): canonical state, eligibility, exactness, and routing.
+- [Use cases](use-cases.md): where Qenlo fits and where it does not.
+- [Trade-offs](trade-offs.md): operational and performance costs.
+- [Architecture](architecture.md): storage and derived execution structures.
+- [Feature matrix](feature-matrix.md): implemented, optional, and unverified capabilities.
+
+## Operate and integrate
+
+- [Recovery policy](recovery-policy.md)
+- [Portable `.qn` format](qn-format-v1.md)
 - [GPU design](gpu-design.md)
-- [Feature and packaging status](feature-matrix.md)
-- [Trade-offs](trade-offs.md)
-- [Benchmark protocol](benchmark-protocol.md)
-- [September 2026 implementation status](implementation-status.md)
 - [QenloDB browser](browser.md)
+- [Rust SDK](sdks/rust.md)
+- [Python SDK](sdks/python.md)
+- [TypeScript SDK](sdks/typescript.md)
+- [Go SDK](sdks/go.md)
+- [Kotlin SDK](sdks/kotlin.md)
+- [Swift SDK](sdks/swift.md)
 
-## Platform evidence
+## Evidence and project status
 
-Rust and the native ABI are exercised locally and in CI. Current performance evidence covers Windows and Linux-hosted Vulkan GPUs. Kotlin/JVM is not Android packaging evidence. Apple simulator, Apple device, Android package, and physical mobile performance checks remain separate release gates.
+- [Verification](verification.md)
+- [Benchmark protocol](benchmark-protocol.md)
+- [Implementation status](implementation-status.md)
+- [Research paper](../paper/output/pdf/qenlo-final-research-paper.pdf)
 
-The core and SDKs start no background worker and make no network request. The optional telemetry collector is a separate service controlled by the host application.
+Benchmark results apply only to their recorded data, hardware, source revision, runtime, and timing boundary. They do not establish a universal CPU/GPU threshold or production-readiness claim.
+
+Rust and the native ABI run in CI across Linux, Windows, and macOS. A successful target build is not physical-device validation. The core and SDKs start no background worker and make no network request; telemetry is a separately deployed, host-controlled component.

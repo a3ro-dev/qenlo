@@ -1,27 +1,39 @@
 # Use cases
 
-Qenlo is an embedded vector store for exact, filtered search over small collections. The strongest current evidence covers 1K--100K vectors on desktop CPU and portable GPU backends.
+Qenlo is for local applications that need durable vector records and exact search over a metadata-filtered candidate set. Its strongest product shape is closer to an embedded database library than a vector-search service.
 
-## Local desktop retrieval
+## Desktop and offline retrieval
 
-Qenlo fits note search, code search, document retrieval, and application memory when the collection should live beside the application instead of in a separate service. Canonical records remain durable on disk; CPU, WGPU, and optional tensor indexes are execution choices around those records.
+Use Qenlo for note search, document retrieval, code search, or local RAG when the index should live beside the application. There is no service to deploy, and search does not require network access. This fit is strongest when the host owns precomputed embeddings and exact results are preferable to ANN tuning.
 
-## Per-user and per-tenant collections
+## Application and agent memory
 
-Use one durable collection per isolation boundary, or filter by user identifier, timestamp, and flags. Filtering occurs before result publication, and exact engines retain the distance-then-ID order. Application authorization must still be enforced outside the database.
+Atomic batches, tombstones, durable reopen, and time-range filtering support episodic or working-memory stores. A host can restrict retrieval by user and time without maintaining a second vector index for every partition.
 
-## Agent memory
+Qenlo does not provide authentication or authorization. The application must enforce who may select a user or predicate.
 
-Atomic batches, tombstones, reopen checks, and compound filters support episodic or working-memory stores. A host can restrict a query to one user, time range, or status mask without maintaining a second source of truth.
+## Per-user local collections
 
-## Optional desktop acceleration
+Applications can isolate users with separate collection directories or use the built-in user filter. Separate collections provide a clearer storage boundary; filters are convenient when one trusted process owns the dataset.
 
-WGPU is useful when completed-call latency and accelerator allocation fit the deployment budget. PyTorch integration is appropriate when an application already owns a CUDA or MPS runtime; it remains optional derived state, not durable storage. Automatic mode reports the backend it actually used and any fallback.
+## Exact filtered retrieval
 
-## Mobile and edge evaluation
+Qenlo evaluates eligible live rows and returns exhaustive top-k results within the selected exact engine. This is attractive when predicates are selective enough that ANN adds complexity without useful latency savings.
 
-The repository contains a C/JNI bridge plus Android and iOS tester source, but release packaging, signing, simulator coverage, and physical-device performance are not verified for this revision. Do not treat the desktop NVIDIA campaign as mobile evidence. Until device runs exist, mobile use is an integration target rather than a supported performance claim.
+“Exact” means exhaustive candidate coverage. FP32 storage and backend arithmetic can still differ from an FP64 oracle near ties.
 
-## Air-gapped applications
+## Optional local acceleration
 
-The core search and persistence path does not require a hosted service. Telemetry and inspection components are separate, optional packages. Deployments with regulatory or threat-model requirements must independently evaluate encryption, access control, filesystem behavior, and platform durability; Qenlo does not provide those controls itself.
+WGPU can accelerate dense or batched work on supported adapters. PyTorch is useful when the host already owns a tensor runtime. Both remain derived execution state around the canonical collection.
+
+Do not choose a route from collection size alone. Eligibility, dimension, batch size, representation, preparation cost, selection, and device state all matter. Measure the retained build on the deployment host.
+
+## Device and systems research
+
+The benchmark harness, independent oracle, diagnostics, and failure-preserving reports make Qenlo useful for studying exact vector-search execution across devices. This is currently a stronger claim than universal performance portability.
+
+## When Qenlo is the wrong tool
+
+Choose another system when you need SQL and joins, multi-process writers, a remote shared service, replication, sharding, an operational SLA, billion-scale ANN, embedding generation, built-in encryption, or mature production support.
+
+PostgreSQL with pgvector is a better fit for relational applications. A managed or distributed vector database is a better fit for shared services. FAISS, cuVS, or another search library may be simpler when persistence and mutation semantics are unnecessary.

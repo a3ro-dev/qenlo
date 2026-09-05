@@ -1550,12 +1550,17 @@ mod tests {
         store.add(9, 1, 0, [1.0, 2.0, 3.0]).unwrap();
         assert_eq!(store.derived_scan_matrix_bytes(), 0);
         store.search([1.0, 2.0, 3.0], &Predicate::ALL, 1).unwrap();
-        let matrix = store.scan_matrix.get().unwrap();
-        assert_eq!(matrix.ptr.as_ptr() as usize % 64, 0);
-        assert_eq!(
-            store.derived_scan_matrix_bytes(),
-            16 * std::mem::size_of::<f32>()
-        );
+        if let Some(matrix) = store.scan_matrix.get() {
+            assert_eq!(matrix.ptr.as_ptr() as usize % 64, 0);
+            assert_eq!(
+                store.derived_scan_matrix_bytes(),
+                16 * std::mem::size_of::<f32>()
+            );
+        } else {
+            // Targets without a certified FP32 SIMD implementation use the
+            // reference path and do not materialize a derived scan matrix.
+            assert_eq!(store.derived_scan_matrix_bytes(), 0);
+        }
 
         let clone = store.clone();
         assert_eq!(clone.derived_scan_matrix_bytes(), 0);
@@ -1566,10 +1571,14 @@ mod tests {
             .search_reference([3.0, 2.0, 1.0], &Predicate::ALL, 2)
             .unwrap();
         assert_eq!(optimized, reference);
-        assert_eq!(
-            store.derived_scan_matrix_bytes(),
-            32 * std::mem::size_of::<f32>()
-        );
+        if fp32_dot_implementation().is_some() {
+            assert_eq!(
+                store.derived_scan_matrix_bytes(),
+                32 * std::mem::size_of::<f32>()
+            );
+        } else {
+            assert_eq!(store.derived_scan_matrix_bytes(), 0);
+        }
     }
 
     #[test]

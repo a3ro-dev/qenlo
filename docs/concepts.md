@@ -1,51 +1,43 @@
-# Core Concepts
+# Concepts
 
-Understand the data model, storage mechanisms, and filtering rules in Qenlo.
+## Canonical and derived state
 
----
+The canonical collection contains normalized FP32 vectors, public IDs, user IDs, signed timestamps, liveness, and a generation number. This state determines which records exist.
 
-## Data Model
+CPU scan layouts, WGPU buffers, ANN indexes, tensor snapshots, and eligibility plans are derived. They may be rebuilt or discarded, but they must not redefine canonical membership.
 
-Every item stored in Qenlo is a `Record`:
+## Eligibility
 
-* **`id`** (`u64`): Unique record identifier. IDs are non-reusable once deleted.
-* **`user_id`** (`u64`): Primary partition / tenant identifier for security boundary enforcement.
-* **`timestamp`** (`i64`): Signed Unix timestamp in seconds for temporal range queries and expiration.
-* **`vector`** (`[f32; dim]`): FP32 vector representation. Automatically normalized to unit length for cosine distance computation.
+A filter selects live records by optional user equality and a timestamp range whose lower bound is inclusive and upper bound is exclusive. The number of selected records is the eligible cardinality, `E`.
 
----
+Search cost is influenced by more than total collection size `N`. Eligible work, dimension, batch size, predicate representation, preparation, selection, transfers, and device state can all affect the winning execution path.
 
-## Filter Semantics
+An eligibility plan binds a prepared predicate result to a canonical generation. Mutations advance the generation and invalidate plans that no longer describe current state.
 
-Unlike traditional vector databases that compute approximate nearest neighbors and then filter (causing recall drop), Qenlo evaluates scalar filters **before** scoring:
+## Exact search
 
-```rust
-pub struct Filter {
-    pub user_id: Option<u64>,
-    pub timestamp_min: Option<i64>,
-    pub timestamp_max: Option<i64>,
-}
-```
+Qenlo uses “exact” to mean exhaustive coverage of every eligible candidate. It does not mean every backend is bit-identical to an ideal FP64 computation. Stored FP32 values and different accumulation orders can change rankings near numerical ties.
 
-* **`user_id`**: Matches records with the exact same user ID.
-* **`timestamp_min`** / **`timestamp_max`**: Half-open interval `[min, max)` matching records in that range.
-* **Combined Filters**: When multiple clauses are specified, they are combined with strict boolean `AND`.
+Correctness evaluation therefore keeps exhaustive coverage and FP64-oracle recall as separate properties.
 
----
+## Approximate search
 
-## Storage Modes
+USearch HNSW visits only part of the eligible search space. Its latency is meaningful only beside recall for the same data, filters, and tuning. A measured recall of 1.0 on one workload does not make an ANN method universally exact.
 
-1. **In-Memory**: Transient workspace ideal for unit tests, ephemeral worker processes, and client-side web sessions.
-2. **Durable Directory**: Write-ahead log (WAL) and segment snapshots stored on disk with checksum verification and recovery.
-3. **`.qn` Portable Snapshots**: Single-file, standalone export that can be distributed across machines or embedded into mobile assets.
+## Routing
 
----
+CPU, WGPU, and tensor execution have different fixed and variable costs. CPU often fits tiny eligible sets; accelerators can help when enough scoring work or batching amortizes dispatch and transfer overhead.
 
-## Execution Reports
+Qenlo exposes explicit route selection and a hardware-bound profile mechanism. The current research archive does not validate an adaptive router on held-out workloads, so the fallback threshold should not be treated as a universal crossover.
 
-Every search query returns an `ExecutionReport` detailing:
+## Completed-call timing
 
-* **Engine**: The path used (`CpuExact`, `CpuSimd`, `WgpuCompute`, `Cuda`).
-* **Scanned Candidates**: Total records considered.
-* **Filtered Count**: Records passing scalar filter constraints.
-* **Elapsed Time**: Nanoseconds spent in filtering vs vector scoring.
+The native timing boundary begins at the host search call and ends with ordered, host-visible results. It can include eligibility work, transfers, dispatch, synchronization, readback, and merging. Isolated GPU phase timings may overlap and must not be summed as if they were disjoint.
+
+## Durability boundary
+
+File-backed collections publish validated mutations through snapshots, WAL state, and a generation watermark. In-memory collections do not have that durability boundary. Recovery tests demonstrate named scenarios; they do not prove behavior for every filesystem or crash schedule.
+
+## Evidence boundary
+
+A benchmark observation belongs to its source revision, hardware, software environment, data, queries, filter, and timing definition. Results from different cohorts are useful context but are not interchangeable replications. See the [benchmark protocol](benchmark-protocol.md) and [verification notes](verification.md).

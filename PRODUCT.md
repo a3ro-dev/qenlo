@@ -1,33 +1,40 @@
 # Product
 
-## Register
+## Positioning
 
-product
+Qenlo is a local-first, embedded vector store for durable exact retrieval over metadata-filtered collections. It gives an application one canonical record store and several optional execution paths without requiring a database server.
 
-## Users
+Qenlo is research-grade alpha software. Product copy must not present benchmark observations as universal performance claims or imply production validation that has not happened.
 
-Qenlo is used by database and systems engineers evaluating embedded vector search on real hardware. The device-lab applications are used by trusted external testers on desktop and mobile devices; the results viewer is used by the core research team to compare correctness, latency, recall, routing, memory movement, and hardware behavior across platforms.
+## Primary users
 
-## Product Purpose
+- Developers building desktop, offline, or air-gapped semantic retrieval.
+- Systems engineers evaluating exact vector search on heterogeneous hardware.
+- Researchers who need reproducible, correctness-gated execution records.
 
-Qenlo tests whether a trustworthy Rust vector database can deliver useful heterogeneous acceleration without weakening canonical database semantics. The lab must turn diverse devices into reproducible test stations, preserve an independent correctness authority, and return privacy-safe evidence the team can compare. Success means a tester can run a rigorous suite without specialist setup, understand failures, retain a local report, and explicitly submit comparable telemetry.
+## Core promise
 
-## Brand Personality
+Canonical records decide what exists. Search indexes and accelerator buffers are derived and replaceable. A route change must not resurrect deleted data, bypass filters, or silently change requested failure behavior.
 
-Precise, candid, and quietly technical. Copy should read like a research instrument operated by experts: clear about what was measured, explicit about unavailable data, and unwilling to inflate prototype results into product claims.
+## Product boundaries
 
-## Anti-references
+Qenlo stores precomputed vectors and limited metadata. It does not provide embedding generation, SQL, access control, encryption, replication, sharding, or a hosted service. GPU and ANN paths are optional. The host application owns runtime setup, authorization, deployment, and telemetry export.
 
-Avoid generic AI dashboards, neon cyberpunk terminals, decorative database cylinders, glowing chips, glass surfaces, gamified benchmark scores, unexplained pass/fail badges, and marketing claims about universal performance. Do not hide fallbacks, unsupported hardware, missing measurements, thermal conditions, or partial failures.
+## Communication principles
 
-## Design Principles
+1. Lead with embedded durability and exact filtered search.
+2. Name hardware, source revision, workload, timing boundary, and recall when quoting performance.
+3. Report failed and unavailable routes as evidence.
+4. Distinguish exhaustive coverage from FP64 numerical identity.
+5. Describe automatic routing as unvalidated until held-out regret is measured.
+6. Never imply that Qenlo CPU represents optimized CPU performance.
 
-1. Show the evidence behind every conclusion.
-2. Make the safe action and current test state unmistakable.
-3. Keep comparable measurements structurally identical across platforms.
-4. Treat unsupported hardware and unavailable measurements as useful results.
-5. Keep sensitive inputs local and make telemetry submission explicit.
+## Brand personality
 
-## Accessibility & Inclusion
+Precise, candid, and quietly technical. The interface should feel like a trustworthy local instrument: clear about what happened, explicit about unsupported states, and restrained about experimental results.
 
-Target WCAG 2.2 AA for the web viewer and platform accessibility conventions for native shells. Do not rely on color alone for status. Support keyboard and assistive-technology navigation, 200% text zoom, reduced motion, clear focus indicators, and readable tabular figures. Long-running tests must tolerate backgrounding, interruption, and screen-reader use without losing the local result.
+Avoid generic AI imagery, unexplained benchmark scores, universal speed claims, and decorative infrastructure metaphors. Do not hide fallbacks, missing measurements, device failures, or evidence from superseded revisions.
+
+## Accessibility
+
+Target WCAG 2.2 AA for the web viewer and platform accessibility conventions for native shells. Do not rely on color alone. Support keyboard navigation, visible focus, assistive technologies, 200% zoom, and reduced motion.

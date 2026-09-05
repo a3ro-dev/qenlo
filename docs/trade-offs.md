@@ -1,29 +1,44 @@
 # Trade-offs
 
-Qenlo is an in-process vector store for small collections. It is a fit when one application owns the data, needs durable local records, and can express filtering as optional user equality plus a timestamp range.
+Qenlo combines a durable embedded store with replaceable search paths. That keeps ownership and semantics local, but it does not make every path the fastest choice.
 
-## What Qenlo buys
+## What Qenlo provides
 
-- One canonical record model across CPU, WGPU, ANN, and tensor-derived views.
+- One canonical record model across CPU, WGPU, ANN, and tensor views.
 - Exact filtered search with deterministic distance-then-ID ordering.
-- Durable batches, tombstones, checksum validation, and fail-closed generations.
-- Explicit CPU, automatic, and required-GPU behavior.
-- No daemon and no network activity in the core or SDKs.
+- Atomic mutations, tombstones, checksummed persistence, and fail-closed recovery.
+- Explicit required-GPU and automatic-fallback behavior.
+- Route, preparation, transfer, allocation, and failure reports.
+- No daemon and no automatic network activity.
 
-## What it costs
+## Costs and limits
 
-- Canonical vectors, an aligned CPU scan view, and metadata indexes remain resident after preparation. The default admission limit is 512 MiB; larger collections require an explicit `StorageOptions` budget.
-- WGPU adds device initialization, resident allocations, scratch, transfers, and synchronization. On the measured 100k-by-768 cell it used about 311 MB of Qenlo-owned accelerator allocation and a 1.204 GB process RSS high-water mark.
-- Reopen rebuilds resident GPU state. The measured first search after reopen was 101.296 ms on one RTX 4090 workload.
-- PyTorch can be fastest when CUDA is already present, but it is a large optional dependency and its tensor index is derived state, not durable storage.
-- USearch is approximate. Its recall must be measured for the actual filters and tuning values.
+### Memory
 
-## When to use something else
+Canonical vectors, metadata indexes, and prepared scan layouts consume host memory. GPU execution adds resident vectors, scratch buffers, transfers, and synchronization. Large collections require explicit storage and accelerator budgets.
 
-Use PostgreSQL with pgvector when vectors participate in relational joins, foreign keys, and existing database transactions. Use a distributed or managed vector database when the collection requires multi-node sharding, replication, service-level operations, or hosted ingestion. Use a standalone matrix or ANN library when persistence and canonical mutation semantics are unnecessary.
+### CPU performance
 
-Qenlo does not implement SQL, replication, encryption, multi-node consensus, an embedding model, or a hosted service. Current Android and iOS performance is unmeasured, and release packaging for those targets is not yet verified.
+CPU is the conservative default and often wins when filtering leaves very few candidates. Qenlo's measured CPU implementation is not a bound on optimized libraries: in one corrected filtered batch cell, FAISS Flat and Torch CPU were roughly nine times faster than Qenlo CPU. General CPU/GPU crossover claims therefore require a stronger CPU baseline.
 
-## Backend choice
+### GPU portability
 
-CPU is the conservative embedded default. WGPU is useful on tested desktop GPUs near 100k rows, but the selector revision was faster in only five of 12 qualified before/after pairs. PyTorch CUDA won the two tested 768-dimensional cells. Use explicit configuration or a small measured rule; the evidence does not justify a learned router or a universal threshold.
+WGPU offers one programming path across graphics APIs, not guaranteed performance or availability. Adapter selection, drivers, Vulkan ICDs, shader compilation, dispatch, and readback can dominate useful work. Required mode fails explicitly; automatic mode may fall back.
+
+### Approximate and tensor paths
+
+USearch changes the correctness contract, so recall must accompany latency. PyTorch can be attractive when CUDA is already present, but it is a substantial optional dependency and its index is a generation-bound snapshot rather than durable state.
+
+### Reopen and mutation
+
+Canonical mutations can invalidate prepared eligibility and accelerator state. Reopen may rebuild derived state. Existing tests cover defined recovery cases, not arbitrary concurrent or power-loss schedules.
+
+## Routing guidance
+
+Start with exact CPU execution. Add WGPU or tensor execution only after measuring completed calls on the target device and realistic filters. Treat the built-in automatic threshold as a fallback, not a learned or transferable router.
+
+The September 2026 paper found route reversals, but its cohorts differ in hardware, data, and source revision. Its headline corrected WGPU cells used a selector candidate that was later rejected. Those results motivate profiling; they do not select a production default.
+
+## Choose another system when
+
+Use PostgreSQL with pgvector for relational data and transactions. Use a managed or distributed vector database for remote access, replication, sharding, and service operations. Use FAISS, cuVS, or another standalone library when a canonical durable store is unnecessary.
