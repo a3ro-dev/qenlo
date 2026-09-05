@@ -54,44 +54,44 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
 
     let title_line = Line::from(vec![
         Span::styled(
-            " ⬡ QENLO ",
+            " QENLO ",
             Style::default()
                 .fg(QENLO_THEME.bg)
                 .bg(QENLO_THEME.accent)
                 .add_modifier(Modifier::BOLD),
         ),
         Span::styled(
-            " BROWSER ",
+            " COLLECTION BROWSER ",
             Style::default()
                 .fg(QENLO_THEME.accent)
                 .add_modifier(Modifier::BOLD),
         ),
         Span::raw(" │ "),
         Span::styled(
-            format!("📁 {path_str}"),
+            path_str.to_string(),
             Style::default()
                 .fg(QENLO_THEME.text)
                 .add_modifier(Modifier::BOLD),
         ),
         Span::raw(" │ "),
         Span::styled(
-            format!("Dim: {}D", app.status.dimension),
+            format!("{}D", app.status.dimension),
             Style::default().fg(QENLO_THEME.accent),
         ),
         Span::raw(" │ "),
         Span::styled(
-            format!("Live: {} ({})", app.status.live_rows, app.total_records),
+            format!("{} live / {} rows", app.status.live_rows, app.total_records),
             Style::default().fg(QENLO_THEME.text),
         ),
         Span::raw(" │ "),
         Span::styled(
-            format!("Gen: #{}", app.status.generation),
+            format!("gen {}", app.status.generation),
             Style::default().fg(QENLO_THEME.text_muted),
         ),
         Span::raw(" │ "),
         Span::styled(
             if app.status.open {
-                "● READY"
+                "● OPEN"
             } else {
                 "○ CLOSED"
             },
@@ -255,7 +255,7 @@ fn render_rows_view(frame: &mut Frame, app: &App, area: Rect) {
             .border_style(Style::default().fg(QENLO_THEME.border))
             .border_type(BorderType::Rounded)
             .title(Span::styled(
-                format!(" Records Data Grid (Total: {}) ", app.total_records),
+                format!(" RECORDS  {} total ", app.total_records),
                 Style::default()
                     .fg(QENLO_THEME.text)
                     .add_modifier(Modifier::BOLD),
@@ -635,7 +635,7 @@ fn render_diagnostics_view(frame: &mut Frame, app: &App, area: Rect) {
             .borders(Borders::ALL)
             .border_style(Style::default().fg(QENLO_THEME.border))
             .border_type(BorderType::Rounded)
-            .title(" Hardware Environment & Engine Capabilities ")
+            .title(" ENGINE / HOST ")
             .style(Style::default().bg(QENLO_THEME.surface)),
     );
     frame.render_widget(p, area);

@@ -37,11 +37,11 @@ impl Tab {
 
     pub fn title(self) -> &'static str {
         match self {
-            Tab::DataRows => "1: 📋 Rows",
-            Tab::VectorSearch => "2: ⚡ Search",
-            Tab::StorageWal => "3: 💾 Storage",
-            Tab::Diagnostics => "4: 📊 Diagnostics",
-            Tab::Help => "?: ❓ Help",
+            Tab::DataRows => "1  Records",
+            Tab::VectorSearch => "2  Search",
+            Tab::StorageWal => "3  Storage",
+            Tab::Diagnostics => "4  Diagnostics",
+            Tab::Help => "?  Help",
         }
     }
 }

@@ -466,6 +466,201 @@
       pointer-events: none;
     }
     #toast.show { opacity: 1; transform: translateY(0); }
+    /* Qenlo precision workbench */
+    :root {
+      --bg: oklch(16% 0.009 158);
+      --bg-subtle: oklch(19% 0.011 158);
+      --surface: oklch(22% 0.012 158);
+      --surface-raised: oklch(26% 0.014 158);
+      --surface-active: oklch(30% 0.017 158);
+      --border: oklch(34% 0.015 158);
+      --border-strong: oklch(47% 0.018 158);
+      --text: oklch(94% 0.008 80);
+      --text-muted: oklch(72% 0.012 158);
+      --text-faint: oklch(58% 0.014 158);
+      --accent: oklch(72% 0.135 35);
+      --accent-dark: oklch(59% 0.15 35);
+      --accent-glow: oklch(72% 0.135 35 / 0.22);
+      --ok: oklch(78% 0.12 153);
+      --bad: oklch(72% 0.16 25);
+      --warning: oklch(80% 0.13 82);
+      --radius: 8px;
+      --rail-w: 228px;
+      --header-h: 76px;
+      --motion-fast: 150ms;
+      --motion: 210ms;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    [data-theme="light"] {
+      --bg: oklch(96% 0.008 80);
+      --bg-subtle: oklch(93% 0.009 80);
+      --surface: oklch(99% 0.004 80);
+      --surface-raised: oklch(95% 0.009 80);
+      --surface-active: oklch(91% 0.014 80);
+      --border: oklch(84% 0.012 158);
+      --border-strong: oklch(65% 0.018 158);
+      --text: oklch(23% 0.014 158);
+      --text-muted: oklch(43% 0.015 158);
+      --text-faint: oklch(52% 0.014 158);
+      --accent: oklch(55% 0.16 35);
+      --accent-dark: oklch(46% 0.15 35);
+      --accent-glow: oklch(55% 0.16 35 / 0.16);
+      --ok: oklch(46% 0.11 153);
+      --bad: oklch(51% 0.17 25);
+    }
+    html { background: var(--bg); }
+    body {
+      display: grid;
+      grid-template: var(--header-h) minmax(0, 1fr) / var(--rail-w) minmax(0, 1fr);
+      min-height: 100dvh;
+      overflow: hidden;
+      letter-spacing: -0.006em;
+    }
+    header {
+      grid-column: 1 / -1;
+      height: var(--header-h);
+      padding: 0 18px;
+      background: var(--bg-subtle);
+      box-shadow: 0 1px 0 var(--border);
+    }
+    .brand { min-width: calc(var(--rail-w) - 18px); gap: 10px; }
+    .brand-logo {
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 7px;
+      box-shadow: inset 0 0 0 1px oklch(100% 0 0 / 0.18);
+    }
+    .brand-title { letter-spacing: -0.025em; }
+    .header-center {
+      min-width: 0;
+      flex: 1;
+      justify-content: center;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0 16px;
+    }
+    .status-dot { box-shadow: 0 0 0 3px var(--surface-active); }
+    .status-dot.active { box-shadow: 0 0 0 3px oklch(78% 0.12 153 / 0.16); }
+    .col-info { gap: 18px; overflow: hidden; }
+    .col-info > div { white-space: nowrap; }
+    .col-info > div:first-child { overflow: hidden; text-overflow: ellipsis; }
+    .header-actions { gap: 6px; }
+    button, .btn {
+      min-height: 36px;
+      padding: 7px 11px;
+      border-radius: 7px;
+      background: transparent;
+      transition: color var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out), opacity var(--motion-fast) var(--ease-out);
+      touch-action: manipulation;
+    }
+    button:hover, .btn:hover { background: var(--surface-raised); }
+    button:active, .btn:active { transform: scale(0.97); }
+    button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    button:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
+    button.primary, .btn.primary { color: var(--bg); box-shadow: 0 1px 0 oklch(100% 0 0 / 0.14) inset; }
+    .tabs-bar {
+      grid-column: 1;
+      grid-row: 2;
+      padding: 18px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      border-bottom: 0;
+      background: var(--bg-subtle);
+    }
+    .tabs-bar::before {
+      content: "WORKSPACE";
+      padding: 0 10px 8px;
+      color: var(--text-faint);
+      font: 600 10px/1 var(--font-mono);
+      letter-spacing: 0.12em;
+    }
+    .tab-btn {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 10px;
+      justify-content: flex-start;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      text-align: left;
+    }
+    .tab-btn:hover { background: var(--surface); border-color: transparent; }
+    .tab-btn.active { color: var(--text); background: var(--surface-raised); border-color: var(--border); }
+    main {
+      grid-column: 2;
+      grid-row: 2;
+      max-width: none;
+      margin: 0;
+      padding: 24px clamp(18px, 3vw, 40px) 48px;
+      overflow: auto;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+    .view.entering { opacity: 0; transform: translateY(5px); filter: blur(2px); }
+    .view.active { opacity: 1; transform: none; filter: none; transition: opacity var(--motion) var(--ease-out), transform var(--motion) var(--ease-out), filter var(--motion) var(--ease-out); }
+    .panel {
+      padding: 0 0 22px;
+      margin-bottom: 24px;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      background: transparent;
+    }
+    .panel-header { margin-bottom: 18px; padding-bottom: 0; border: 0; }
+    .panel-title { font-size: 18px; letter-spacing: -0.025em; }
+    .form-row { gap: 10px; }
+    label { font-family: var(--font-mono); letter-spacing: 0.015em; }
+    input, select, textarea {
+      min-height: 38px;
+      border-radius: 7px;
+      background: var(--surface);
+      transition: border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out);
+    }
+    textarea { resize: vertical; user-select: text; }
+    .table-container { border-radius: 9px; box-shadow: 0 1px 0 oklch(100% 0 0 / 0.025) inset; }
+    th { height: 38px; letter-spacing: 0.08em; }
+    td { height: 44px; }
+    tbody tr { transition: background var(--motion-fast) var(--ease-out); }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+    .stat-card { border: 0; border-radius: 0; border-right: 1px solid var(--border); padding: 18px 20px; }
+    .stat-card:last-child { border-right: 0; }
+    .stat-value { font-size: 20px; letter-spacing: -0.035em; }
+    .search-results-list { gap: 0; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+    .search-result-card { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: var(--surface); transition: background var(--motion-fast) var(--ease-out); }
+    .search-result-card:last-child { border-bottom: 0; }
+    .search-result-card:hover { border-color: var(--border); background: var(--surface-raised); }
+    .modal-backdrop { background: oklch(8% 0.01 158 / 0.72); transition: opacity 140ms var(--ease-out); }
+    .modal { opacity: 0; transform: translateY(6px) scale(0.985); filter: blur(3px); transform-origin: center; transition: opacity var(--motion) var(--ease-out), transform var(--motion) var(--ease-out), filter var(--motion) var(--ease-out); }
+    .modal-backdrop.open .modal { opacity: 1; transform: none; filter: none; }
+    #toast { border-radius: 8px; transform: translateY(8px) scale(0.98); transition: opacity 160ms var(--ease-out), transform 200ms var(--ease-out); }
+    #toast.show { transform: none; }
+    @media (max-width: 980px) {
+      :root { --rail-w: 184px; }
+      .header-center { display: none; }
+    }
+    @media (max-width: 700px) {
+      body { display: flex; overflow: auto; }
+      header { position: sticky; flex-wrap: wrap; height: auto; min-height: 64px; padding: 12px; }
+      .brand { min-width: 0; }
+      .header-actions { margin-left: auto; }
+      .tabs-bar { position: sticky; top: 64px; z-index: 90; flex-direction: row; padding: 8px 12px; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      .tabs-bar::before { display: none; }
+      .tab-btn { width: auto; white-space: nowrap; }
+      main { padding: 18px 12px 40px; overflow: visible; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .stat-card { border-right: 0; border-bottom: 1px solid var(--border); }
+      .stat-card:last-child { border-bottom: 0; }
+      .modal { width: calc(100% - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; padding: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    }
   </style>
 </head>
 <body>
@@ -473,7 +668,7 @@
   <!-- Header -->
   <header>
     <a href="#" class="brand">
-      <div class="brand-logo">⬡</div>
+      <div class="brand-logo">Q</div>
       <div class="brand-title">qenlo<span>DB</span> Desktop</div>
     </a>
 
@@ -488,20 +683,19 @@
     </div>
 
     <div class="header-actions">
-      <button onclick="pickAndOpenFolder()">📂 Open Directory</button>
-      <button onclick="openModal('modal-create')">✨ New Collection</button>
-      <button onclick="flushCollection()" title="Sync WAL to Snapshot">💾 Flush</button>
-      <button onclick="openModal('modal-export')">📦 Export</button>
-      <button onclick="toggleTheme()" id="theme-btn" title="Toggle Theme">🌓</button>
+      <button onclick="pickAndOpenFolder()">Open</button>
+      <button onclick="openModal('modal-create')">New collection</button>
+      <button onclick="flushCollection()" title="Sync WAL to snapshot">Flush</button>
+      <button onclick="toggleTheme()" id="theme-btn" aria-label="Toggle color theme" title="Toggle color theme">Theme</button>
     </div>
   </header>
 
   <!-- Navigation Tabs -->
-  <nav class="tabs-bar">
-    <button class="tab-btn active" onclick="switchTab('records')">📋 Browse Records</button>
-    <button class="tab-btn" onclick="switchTab('search')">⚡ Vector Search Studio</button>
-    <button class="tab-btn" onclick="switchTab('storage')">💾 Storage & WAL</button>
-    <button class="tab-btn" onclick="switchTab('diagnostics')">📊 Diagnostics & Engine</button>
+  <nav class="tabs-bar" aria-label="Browser workspace">
+    <button class="tab-btn active" onclick="switchTab('records')">Records</button>
+    <button class="tab-btn" onclick="switchTab('search')">Vector search</button>
+    <button class="tab-btn" onclick="switchTab('storage')">Storage and WAL</button>
+    <button class="tab-btn" onclick="switchTab('diagnostics')">Diagnostics</button>
   </nav>
 
   <!-- Main Content Views -->
@@ -513,7 +707,7 @@
           <div class="panel-title">Filter & Predicates</div>
           <div style="display:flex; gap:8px;">
             <button class="primary" onclick="openModal('modal-add')">+ Add Record</button>
-            <button onclick="loadRecords()">🔄 Refresh</button>
+            <button onclick="loadRecords()">Refresh</button>
           </div>
         </div>
 
@@ -560,8 +754,8 @@
       <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 14px;">
         <div style="font-size:12px; color:var(--text-muted);" id="pagination-info">Showing 0 of 0 records</div>
         <div style="display:flex; gap:8px;">
-          <button id="btn-prev" onclick="changePage(-1)" disabled>◀ Previous</button>
-          <button id="btn-next" onclick="changePage(1)" disabled>Next ▶</button>
+          <button id="btn-prev" onclick="changePage(-1)" disabled>Previous</button>
+          <button id="btn-next" onclick="changePage(1)" disabled>Next</button>
         </div>
       </div>
     </div>
@@ -570,10 +764,10 @@
     <div id="view-search" class="view">
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">⚡ Cosine Vector Query Studio</div>
+          <div class="panel-title">Exact vector search</div>
           <div style="display:flex; gap:8px;">
-            <button onclick="generateRandomQueryVector()">🎲 Random Vector</button>
-            <button onclick="normalizeQueryInput()">✨ Normalize</button>
+            <button onclick="generateRandomQueryVector()">Generate vector</button>
+            <button onclick="normalizeQueryInput()">Normalize</button>
           </div>
         </div>
 
@@ -591,7 +785,7 @@
             <label>Filter User ID</label>
             <input type="number" id="search-filter-user" placeholder="Optional">
           </div>
-          <button class="primary" style="height: 38px;" onclick="runSearch()">⚡ Run Search</button>
+          <button class="primary" style="height: 38px;" onclick="runSearch()">Run search</button>
         </div>
       </div>
 
@@ -624,7 +818,7 @@
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">On-Disk Storage Files</div>
-          <button class="primary" onclick="flushCollection()">💾 Flush & Compact</button>
+          <button class="primary" onclick="flushCollection()">Flush and compact</button>
         </div>
         <div class="table-container">
           <table>
@@ -674,7 +868,7 @@
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">Create New Collection</div>
-        <button class="modal-close" onclick="closeModal('modal-create')">✕</button>
+        <button class="modal-close" aria-label="Close create collection dialog" onclick="closeModal('modal-create')">×</button>
       </div>
       <div class="form-group" style="margin-bottom: 14px;">
         <label>Directory Path</label>
@@ -696,7 +890,7 @@
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">Add Record</div>
-        <button class="modal-close" onclick="closeModal('modal-add')">✕</button>
+        <button class="modal-close" aria-label="Close add record dialog" onclick="closeModal('modal-add')">×</button>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -731,7 +925,7 @@
     <div class="modal" style="max-width: 680px;">
       <div class="modal-header">
         <div class="modal-title">Record Inspector #<span id="inspect-id"></span></div>
-        <button class="modal-close" onclick="closeModal('modal-inspect')">✕</button>
+        <button class="modal-close" aria-label="Close record inspector" onclick="closeModal('modal-inspect')">×</button>
       </div>
       <div class="form-row" style="margin-bottom: 16px;">
         <div>User ID: <strong id="inspect-user" class="mono"></strong></div>
@@ -743,7 +937,7 @@
         <textarea id="inspect-vector-json" rows="8" readonly class="mono"></textarea>
       </div>
       <div class="modal-footer">
-        <button onclick="navigator.clipboard.writeText(document.getElementById('inspect-vector-json').value); showToast('Copied to clipboard');">📋 Copy Vector</button>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('inspect-vector-json').value); showToast('Copied to clipboard');">Copy vector</button>
         <button class="primary" onclick="closeModal('modal-inspect')">Close</button>
       </div>
     </div>
@@ -787,8 +981,17 @@
       if (tab === 'diagnostics') loadDiagnostics();
     }
 
-    function openModal(id) { document.getElementById(id).classList.add('open'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function openModal(id) {
+      const backdrop = document.getElementById(id);
+      backdrop.classList.add('open');
+      backdrop.setAttribute('aria-hidden', 'false');
+      backdrop.querySelector('input, textarea, button')?.focus();
+    }
+    function closeModal(id) {
+      const backdrop = document.getElementById(id);
+      backdrop.classList.remove('open');
+      backdrop.setAttribute('aria-hidden', 'true');
+    }
 
     async function invokeBackend(cmd, args = {}) {
       if (isTauri) {
@@ -882,7 +1085,7 @@
             <td><span class="badge ${r.live ? 'badge-live' : 'badge-tombstone'}">${r.live ? 'Active' : 'Tombstone'}</span></td>
             <td><span class="vec-preview-text">${preview}</span></td>
             <td style="text-align: right;">
-              <button onclick="inspectRecord(${r.id})">🔍 Inspect</button>
+              <button onclick="inspectRecord(${r.id})">Inspect</button>
             </td>
           `;
           tbody.appendChild(tr);
@@ -1054,6 +1257,16 @@
       loadRecords();
     }
 
+    document.querySelectorAll('.modal-backdrop').forEach((modal) => {
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.setAttribute('aria-hidden', 'true');
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        document.querySelectorAll('.modal-backdrop.open').forEach((modal) => closeModal(modal.id));
+      }
+    });
     updateStatus().then(() => loadRecords());
   </script>
 </body>

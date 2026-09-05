@@ -17,19 +17,19 @@ pub struct Theme {
 }
 
 pub const QENLO_THEME: Theme = Theme {
-    bg: Color::Rgb(18, 22, 20),
-    surface: Color::Rgb(27, 34, 30),
-    surface_raised: Color::Rgb(36, 45, 40),
-    border: Color::Rgb(43, 53, 48),
-    border_strong: Color::Rgb(68, 83, 75),
-    text: Color::Rgb(247, 245, 240),
-    text_muted: Color::Rgb(155, 165, 159),
-    text_faint: Color::Rgb(106, 117, 112),
-    accent: Color::Rgb(239, 139, 121),
-    accent_dark: Color::Rgb(181, 60, 47),
-    ok: Color::Rgb(112, 225, 161),
-    bad: Color::Rgb(255, 154, 145),
-    warning: Color::Rgb(245, 166, 35),
+    bg: Color::Rgb(17, 22, 19),
+    surface: Color::Rgb(24, 31, 27),
+    surface_raised: Color::Rgb(34, 43, 38),
+    border: Color::Rgb(55, 67, 60),
+    border_strong: Color::Rgb(87, 103, 94),
+    text: Color::Rgb(239, 238, 232),
+    text_muted: Color::Rgb(174, 181, 175),
+    text_faint: Color::Rgb(122, 133, 126),
+    accent: Color::Rgb(233, 137, 111),
+    accent_dark: Color::Rgb(181, 76, 54),
+    ok: Color::Rgb(128, 213, 160),
+    bad: Color::Rgb(239, 125, 119),
+    warning: Color::Rgb(224, 181, 92),
 };
 
 impl Theme {
