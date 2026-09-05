@@ -1,0 +1,19 @@
+{
+  "checks": [
+    {
+      "name": "api_key",
+      "status": "pass"
+    },
+    {
+      "details": "user: akshatsingh14372@outlook.com",
+      "name": "api_connectivity",
+      "status": "pass"
+    },
+    {
+      "details": "local_key: true, synced_to_cloud: true",
+      "name": "ssh_key",
+      "status": "pass"
+    }
+  ],
+  "healthy": true
+}

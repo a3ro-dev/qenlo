@@ -1,0 +1,10 @@
+phase,repetition,mutation_ns,first_search_ns,actual_backend,rebuilt,generation,upload_bytes,allocation_bytes,result_count,deleted_id_absent
+add-one,0,2924800,1320400,Cpu,true,129,0,,10,true
+delete-one,0,3113800,1932000,Cpu,true,130,0,,10,true
+add-batch,0,4845700,2841200,Cpu,true,133,0,,10,true
+delete-batch,0,5974200,3422700,Cpu,true,136,0,,10,true
+add-one,1,6983100,4058100,Cpu,true,137,0,,10,true
+delete-one,1,8461000,5573900,Cpu,true,138,0,,10,true
+add-batch,1,3957600,2088700,Cpu,true,141,0,,10,true
+delete-batch,1,4038200,2071900,Cpu,true,144,0,,10,true
+reopen,0,9740400,2116100,Cpu,true,144,0,,10,true

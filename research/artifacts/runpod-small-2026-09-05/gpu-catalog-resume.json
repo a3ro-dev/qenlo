@@ -1,0 +1,1105 @@
+[
+  {
+    "available": false,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "MI300X",
+    "gpuId": "AMD Instinct MI300X OAM",
+    "memoryInGb": 192,
+    "secureCloud": true,
+    "securePricePerHr": 2.39
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 1.19,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "CA-MTL-3",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-MO-1",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "A100 PCIe",
+    "gpuId": "NVIDIA A100 80GB PCIe",
+    "memoryInGb": 80,
+    "secureCloud": true,
+    "securePricePerHr": 1.59,
+    "stockStatus": "Low"
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 1,
+    "displayName": "A100 SXM 40GB",
+    "gpuId": "NVIDIA A100-SXM4-40GB",
+    "memoryInGb": 40,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 1.39,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-MD-1",
+        "stockStatus": "Medium"
+      },
+      {
+        "dataCenterId": "US-MO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-WA-1",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "A100 SXM",
+    "gpuId": "NVIDIA A100-SXM4-80GB",
+    "memoryInGb": 80,
+    "secureCloud": true,
+    "securePricePerHr": 1.59,
+    "stockStatus": "Medium"
+  },
+  {
+    "available": true,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "CA-MTL-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EU-SE-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-MO-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "A40",
+    "gpuId": "NVIDIA A40",
+    "memoryInGb": 48,
+    "secureCloud": true,
+    "securePricePerHr": 0.49,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 5.98,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-NC-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-NE-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-TX-6",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "B200",
+    "gpuId": "NVIDIA B200",
+    "memoryInGb": 180,
+    "secureCloud": true,
+    "securePricePerHr": 6.79,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 6.94,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-NL-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-WA-2",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "B300",
+    "gpuId": "NVIDIA B300 SXM6 AC",
+    "memoryInGb": 288,
+    "secureCloud": true,
+    "securePricePerHr": 7.89,
+    "stockStatus": "Low"
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.13,
+    "displayName": "RTX 3070",
+    "gpuId": "NVIDIA GeForce RTX 3070",
+    "memoryInGb": 8,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.17,
+    "displayName": "RTX 3080",
+    "gpuId": "NVIDIA GeForce RTX 3080",
+    "memoryInGb": 10,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.18,
+    "displayName": "RTX 3080 Ti",
+    "gpuId": "NVIDIA GeForce RTX 3080 Ti",
+    "memoryInGb": 12,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.22,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-CZ-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX 3090",
+    "gpuId": "NVIDIA GeForce RTX 3090",
+    "memoryInGb": 24,
+    "secureCloud": true,
+    "securePricePerHr": 0.5
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.27,
+    "displayName": "RTX 3090 Ti",
+    "gpuId": "NVIDIA GeForce RTX 3090 Ti",
+    "memoryInGb": 24,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.19,
+    "displayName": "RTX 4070 Ti",
+    "gpuId": "NVIDIA GeForce RTX 4070 Ti",
+    "memoryInGb": 12,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.27,
+    "displayName": "RTX 4080",
+    "gpuId": "NVIDIA GeForce RTX 4080",
+    "memoryInGb": 16,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.28,
+    "displayName": "RTX 4080 SUPER",
+    "gpuId": "NVIDIA GeForce RTX 4080 SUPER",
+    "memoryInGb": 16,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 0.34,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "CA-MTL-3",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EU-CZ-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-NO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-IL-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-NC-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-TX-3",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX 4090",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "memoryInGb": 24,
+    "secureCloud": true,
+    "securePricePerHr": 0.74,
+    "stockStatus": "Low"
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.39,
+    "displayName": "RTX 5080",
+    "gpuId": "NVIDIA GeForce RTX 5080",
+    "memoryInGb": 16,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 0.69,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-CZ-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EUR-NO-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX 5090",
+    "gpuId": "NVIDIA GeForce RTX 5090",
+    "memoryInGb": 32,
+    "secureCloud": true,
+    "securePricePerHr": 0.99,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 2.69,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "AP-IN-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "AP-IN-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "AP-JP-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "CA-MTL-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EU-FR-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EU-NL-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-3",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-NO-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-GA-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-MO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-NE-1",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "H100 SXM",
+    "gpuId": "NVIDIA H100 80GB HBM3",
+    "memoryInGb": 80,
+    "secureCloud": true,
+    "securePricePerHr": 3.49,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 2.59,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-GA-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "H100 NVL",
+    "gpuId": "NVIDIA H100 NVL",
+    "memoryInGb": 94,
+    "secureCloud": true,
+    "securePricePerHr": 3.19,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 1.99,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "H100 PCIe",
+    "gpuId": "NVIDIA H100 PCIe",
+    "memoryInGb": 80,
+    "secureCloud": true,
+    "securePricePerHr": 2.89,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 3.59,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "AP-JP-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "CA-MTL-3",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "CA-MTL-4",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EU-FR-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EUR-IS-4",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-5",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-CO-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-GA-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-NC-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-PA-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "H200 SXM",
+    "gpuId": "NVIDIA H200",
+    "memoryInGb": 141,
+    "secureCloud": true,
+    "securePricePerHr": 4.59,
+    "stockStatus": "Low"
+  },
+  {
+    "available": false,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "US-MD-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "H200 NVL",
+    "gpuId": "NVIDIA H200 NVL",
+    "memoryInGb": 143,
+    "secureCloud": true,
+    "securePricePerHr": 3.79
+  },
+  {
+    "available": true,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-GA-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-MO-2",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "L4",
+    "gpuId": "NVIDIA L4",
+    "memoryInGb": 24,
+    "secureCloud": true,
+    "securePricePerHr": 0.49,
+    "stockStatus": "Low"
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.69,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "L40",
+    "gpuId": "NVIDIA L40",
+    "memoryInGb": 48,
+    "secureCloud": true,
+    "securePricePerHr": 0.82
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 0.79,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-NL-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "OC-AU-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-IL-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-MO-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-NC-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-TX-3",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-TX-4",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "L40S",
+    "gpuId": "NVIDIA L40S",
+    "memoryInGb": 48,
+    "secureCloud": true,
+    "securePricePerHr": 1.09,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX 2000 Ada",
+    "gpuId": "NVIDIA RTX 2000 Ada Generation",
+    "memoryInGb": 16,
+    "secureCloud": true,
+    "securePricePerHr": 0.24,
+    "stockStatus": "Low"
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.2,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX 4000 Ada",
+    "gpuId": "NVIDIA RTX 4000 Ada Generation",
+    "memoryInGb": 20,
+    "secureCloud": true,
+    "securePricePerHr": 0.28
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.18,
+    "displayName": "RTX 4000 Ada SFF",
+    "gpuId": "NVIDIA RTX 4000 SFF Ada Generation",
+    "memoryInGb": 20,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.49,
+    "displayName": "RTX 5000 Ada",
+    "gpuId": "NVIDIA RTX 5000 Ada Generation",
+    "memoryInGb": 32,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.74,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-IL-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-KS-3",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-WA-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX 6000 Ada",
+    "gpuId": "NVIDIA RTX 6000 Ada Generation",
+    "memoryInGb": 48,
+    "secureCloud": true,
+    "securePricePerHr": 0.84
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.12,
+    "displayName": "RTX A2000",
+    "gpuId": "NVIDIA RTX A2000",
+    "memoryInGb": 6,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.17,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-GA-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX A4000",
+    "gpuId": "NVIDIA RTX A4000",
+    "memoryInGb": 16,
+    "secureCloud": true,
+    "securePricePerHr": 0.25
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 0.19,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "RTX A4500",
+    "gpuId": "NVIDIA RTX A4500",
+    "memoryInGb": 20,
+    "secureCloud": true,
+    "securePricePerHr": 0.25,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 0.16,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "CA-MTL-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EU-SE-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-IL-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX A5000",
+    "gpuId": "NVIDIA RTX A5000",
+    "memoryInGb": 24,
+    "secureCloud": true,
+    "securePricePerHr": 0.27,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 0.33,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "CA-MTL-3",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "EU-SE-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-TX-1",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "RTX A6000",
+    "gpuId": "NVIDIA RTX A6000",
+    "memoryInGb": 48,
+    "secureCloud": true,
+    "securePricePerHr": 0.53,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Medium"
+      }
+    ],
+    "displayName": "RTX PRO 4000",
+    "gpuId": "NVIDIA RTX PRO 4000 Blackwell",
+    "memoryInGb": 24,
+    "secureCloud": true,
+    "securePricePerHr": 0.57,
+    "stockStatus": "Medium"
+  },
+  {
+    "available": true,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Medium"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "RTX PRO 4500",
+    "gpuId": "NVIDIA RTX PRO 4500 Blackwell",
+    "memoryInGb": 32,
+    "secureCloud": true,
+    "securePricePerHr": 0.72,
+    "stockStatus": "Medium"
+  },
+  {
+    "available": false,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX PRO 4500 SE",
+    "gpuId": "NVIDIA RTX PRO 4500 Blackwell Server Edition",
+    "memoryInGb": 32,
+    "secureCloud": true,
+    "securePricePerHr": 0.72
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.82,
+    "displayName": "RTX PRO 5000",
+    "gpuId": "NVIDIA RTX PRO 5000 Blackwell",
+    "memoryInGb": 48,
+    "secureCloud": true,
+    "securePricePerHr": 0.96
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 1.64,
+    "displayName": "RTX PRO 6000 MaxQ",
+    "gpuId": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+    "memoryInGb": 96,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 1.69,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "CA-MTL-3",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EU-CZ-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EU-NL-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "Medium"
+      },
+      {
+        "dataCenterId": "US-CA-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-KS-2",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-MO-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-NC-1",
+        "stockStatus": "none"
+      },
+      {
+        "dataCenterId": "US-NC-2",
+        "stockStatus": "Medium"
+      },
+      {
+        "dataCenterId": "US-NE-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-PA-1",
+        "stockStatus": "Low"
+      }
+    ],
+    "displayName": "RTX PRO 6000",
+    "gpuId": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+    "memoryInGb": 96,
+    "secureCloud": true,
+    "securePricePerHr": 2.09,
+    "stockStatus": "Medium"
+  },
+  {
+    "available": true,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-NE-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-PA-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-WA-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "PRO 6000 MIG 24GB",
+    "gpuId": "NVIDIA RTX PRO 6000 Blackwell Server Edition MIG 1g.24gb",
+    "memoryInGb": 24,
+    "secureCloud": true,
+    "securePricePerHr": 0.59,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": false,
+    "communityPricePerHr": null,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EUR-IS-2",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-NE-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-PA-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "US-WA-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "PRO 6000 MIG 48GB",
+    "gpuId": "NVIDIA RTX PRO 6000 Blackwell Server Edition MIG 2g.48gb",
+    "memoryInGb": 48,
+    "secureCloud": true,
+    "securePricePerHr": 1.09,
+    "stockStatus": "Low"
+  },
+  {
+    "available": true,
+    "communityCloud": true,
+    "communityPricePerHr": 1.69,
+    "dataCenterAvailability": [
+      {
+        "dataCenterId": "EU-CZ-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EU-RO-1",
+        "stockStatus": "Low"
+      },
+      {
+        "dataCenterId": "EUR-IS-1",
+        "stockStatus": "none"
+      }
+    ],
+    "displayName": "RTX PRO 6000 WK",
+    "gpuId": "NVIDIA RTX PRO 6000 Blackwell Workstation Edition",
+    "memoryInGb": 96,
+    "secureCloud": true,
+    "securePricePerHr": 2.19,
+    "stockStatus": "Low"
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.19,
+    "displayName": "Tesla V100",
+    "gpuId": "Tesla V100-PCIE-16GB",
+    "memoryInGb": 16,
+    "secureCloud": false,
+    "securePricePerHr": null
+  },
+  {
+    "available": false,
+    "communityCloud": true,
+    "communityPricePerHr": 0.23,
+    "displayName": "V100 SXM2",
+    "gpuId": "Tesla V100-SXM2-16GB",
+    "memoryInGb": 16,
+    "secureCloud": false,
+    "securePricePerHr": null
+  }
+]

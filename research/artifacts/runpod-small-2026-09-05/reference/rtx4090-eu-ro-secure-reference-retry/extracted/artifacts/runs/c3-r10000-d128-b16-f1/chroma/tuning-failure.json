@@ -1,0 +1,9 @@
+{
+  "status": "tuning-failed",
+  "build_ns": 1456939870,
+  "readiness_and_tuning_ns": 8540134,
+  "tuning_recall_at_10": 0.8,
+  "recall_target": 0.99,
+  "heldout_queries_run": 0,
+  "ef_search": 128
+}

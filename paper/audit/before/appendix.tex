@@ -1,0 +1,73 @@
+\section{Artifact and protocol details}
+\label{sec:artifact}
+
+\subsection{Claim-to-artifact ledger}
+The table below lists the evidence required for each headline claim. The machine-readable version is \path{paper/tables/claim-to-artifact.csv}.
+
+\begin{table}[H]
+\centering\small
+\caption{Headline claims and authoritative local evidence.}
+\label{tab:ledger}
+\begin{tabular}{p{.06\linewidth}p{.48\linewidth}p{.38\linewidth}}
+\toprule
+ID & Claim & Evidence \\
+\midrule
+C1 & All corrected 100k-by-768 rows completed at oracle recall 1.0. & \texttt{performance-matrix.csv}; corrected supplement archive and 74-entry checksum manifest. \\
+C2 & WGPU P95 is 0.897 ms for 100k-by-768, batch one, \(k=1\). & Corrected configuration, workload \texttt{d4}, engine \texttt{current-gpu}. \\
+C3 & PyTorch CUDA is faster than WGPU in both corrected 768-dimensional cells. & Corrected \texttt{d4}/\texttt{d5} WGPU and \texttt{torch-cuda} rows. \\
+C4 & The revised selector wins five and loses seven of 12 baseline pairs. & Qualified paired-comparison section of \texttt{performance-report.md}. \\
+C5 & Current mobile performance is unmeasured. & Campaign scope and absence of Android/iOS host records in the matrix. \\
+C6 & Final known spend is \$0.9400778694 and no pods remain. & Final billing capture, deletion records, and terminal pod-list check. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Artifact locations and hashes}
+The campaign root is \texttt{research/artifacts/runpod-small-2026-09-05}. Its reduced outputs are:
+\begin{itemize}
+\item \texttt{report/performance-matrix.csv}, one flat row per engine/workload/status;
+\item \texttt{report/performance-matrix.json}, the machine-readable equivalent;
+\item \texttt{report/performance-report.md}, qualified pair summaries;
+\item \texttt{ledger.jsonl}, creation, polling, billing, deletion, and cleanup events.
+\end{itemize}
+
+The original current source archive is identified by SHA-256 prefix \texttt{730c0500}; it is preserved under a hash-qualified filename after the admission defect was found. The corrected source archive uses prefix \texttt{bb195fed}, and the frozen pre-change archive uses \texttt{f37e744c}. The corrected supplement archive uses \texttt{9e322d61}; all 74 manifest entries were verified locally. Full hashes are recorded in \path{paper/REPRODUCE.md} and the campaign manifests.
+
+\subsection{Correctness rules}
+The oracle normalizes finite inputs and computes cosine distance with FP64 accumulation. Each engine receives the same corpus split, queries, filter, and \(k\). Results are compared under ascending distance then ascending unsigned identifier. Tied cutoffs accept only the deterministic members selected by that order. Rows with non-finite outputs, missing identifiers, stale generation, incorrect deletion visibility, or recall below the predeclared target do not qualify.
+
+Native CPU and WGPU are exhaustive FP32-storage engines; exhaustive does not mean bit-identical to the FP64 oracle. Chroma and USearch are approximate and qualify by measured recall. Device-resident tensor timing is separate from the host completed-call field.
+
+\subsection{Lifecycle semantics}
+An add or delete first changes canonical state and generation. A resident WGPU update is published only for that generation. Searches holding an older plan fail or rebuild; they never mix vector and liveness generations. Deletion cells explicitly test that the removed identifier is absent. Reopen reconstructs resident derived state from the durable canonical snapshot and WAL.
+
+\subsection{Failure taxonomy}
+\begin{description}
+\item[Unavailable.] The requested GPU/data-center/cloud configuration could not be provisioned at the live quote. No substitute hardware is assigned to that row.
+\item[Failed.] The engine or correctness gate ran and rejected the cell. This includes Chroma recall-gate failures and pre-fix storage admission.
+\item[Invalid harness.] The orchestration command was malformed, so no measurement is eligible. Cost and reason remain in the ledger.
+\item[Completed, unqualified.] The engine produced output but failed a declared semantic criterion. Such a row remains visible and is excluded from paired claims.
+\end{description}
+
+\subsection{Resource scopes}
+\texttt{peak\_process\_rss\_bytes} is a process high-water mark. \texttt{qenlo\_allocation\_bytes} is backend-attributable owned memory where available. Upload and readback fields count per completed call. Build time records binary or index preparation outside query latency. Missing measurements are empty, not zero. A zero is emitted only when the measured scope performed no work.
+
+\subsection{Reproduction commands}
+Local correctness work should use one build job and at most two numerical threads:
+\begin{verbatim}
+set CARGO_BUILD_JOBS=1
+set RAYON_NUM_THREADS=2
+cargo test -p qenlo --lib -- --test-threads=1
+cargo test -p qenlo-bench --no-default-features -- --test-threads=1
+py -3 scripts/analyze_small_campaign.py \
+  --campaign research/artifacts/runpod-small-2026-09-05 \
+  --output research/artifacts/runpod-small-2026-09-05/report
+py -3 scripts/generate_small_paper_tables.py
+\end{verbatim}
+
+The Runpod controller is \texttt{scripts/runpod\_small\_campaign.ps1}. It refuses a campaign when the daily operational allowance or cleanup checks fail. Re-running paid work should use new result directories and current live prices; retained artifacts must not be overwritten.
+
+\section{Additional result notes}
+The real-embedding cell uses a retained 100k-by-384 AG News fixture with provenance and checksum, not a remote dataset downloaded at run time. This avoids silently changing preprocessing, query partition, identifiers, or normalization. Future campaigns should publish that exact immutable fixture to content-addressed object storage and download it on the pod; the present run transferred the checksummed prepared artifact because no immutable public URL existed.
+
+The matrix does not include macOS MPS measurements. The tensor API supports explicit MPS selection in code, but support and performance are separate claims. Likewise, a Kotlin/JVM bridge is not evidence of an Android package, and an Apple simulator artifact is not an iOS-device result. Those platform rows stay open until their native artifacts execute on the named targets.

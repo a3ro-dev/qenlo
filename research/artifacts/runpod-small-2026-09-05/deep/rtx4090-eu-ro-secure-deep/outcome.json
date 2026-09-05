@@ -1,0 +1,37 @@
+{
+  "podId": "g8yvxsywuojbbi",
+  "configuration": {
+    "name": "rtx4090-eu-ro-secure-deep",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.74,
+    "role": "deep"
+  },
+  "error": "Remote workload exited with code -1.",
+  "status": "failed_or_unavailable",
+  "createResponse": {
+    "containerDiskInGb": 30,
+    "costPerHr": 0.74,
+    "desiredStatus": "RUNNING",
+    "env": [
+      "NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics",
+      "NVIDIA_VISIBLE_DEVICES=all",
+      "PUBLIC_KEY=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILmIaesn4lqEhT1Z+mkRCLpryPG89K+36JQlje8hlDOz akshatsingh14372@outlook.com\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0oZl8bJCsQ7Q9bmfcEGQe1Y2aPyWYj2KJEhipZOiRwbXsIiYx4Z/q9fB9ibNvU26/2fHqvD3hO2GIQht301ZOyn9GfssDaVZkWWaQVMkfIo7EpYObSw25vYmT895Z4E2UCBKR0PuE2cXksmryv1MC+wnf52bBff62ThCNffE1kM86s+4UbV4Ld4cWiwx+FbJjmFINQp6ya6x/9UJ5GQDefbmC3SeIRoZtIV+GJ80ZIVICOuy5yAnU/5u3FFN2qlIpxXzWoyqN2kZW9lUZ70feJ4pc5l8hjA23mKj9N8FgTiu/rdjJlWcjZp6u+jb+9DmSDYODwyCxMjVLFayAZ9BX runpodctl-ssh-key"
+    ],
+    "gpuCount": 1,
+    "id": "g8yvxsywuojbbi",
+    "imageName": "runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404",
+    "lastStatusChange": "Rented by User: Sat Sep 05 2026 15:21:20 GMT+0000 (Coordinated Universal Time)",
+    "machine": {
+      "gpuDisplayName": "RTX 4090",
+      "location": "RO"
+    },
+    "memoryInGb": 62,
+    "name": "qenlo-small-rtx4090-eu-ro-secure-deep",
+    "ports": "22/tcp",
+    "vcpuCount": 12,
+    "volumeInGb": 0,
+    "volumeMountPath": "/workspace"
+  }
+}

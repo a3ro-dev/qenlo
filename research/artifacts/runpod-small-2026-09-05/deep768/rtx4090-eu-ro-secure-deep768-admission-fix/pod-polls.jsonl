@@ -1,0 +1,195 @@
+{
+  "containerDiskInGb": 30,
+  "costPerHr": 0.74,
+  "createdAt": "2026-09-05 17:01:37.87 +0000 UTC",
+  "desiredStatus": "RUNNING",
+  "env": {
+    "NVIDIA_DRIVER_CAPABILITIES": "compute,utility,graphics",
+    "NVIDIA_VISIBLE_DEVICES": "all",
+    "PUBLIC_KEY": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILmIaesn4lqEhT1Z+mkRCLpryPG89K+36JQlje8hlDOz akshatsingh14372@outlook.com\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0oZl8bJCsQ7Q9bmfcEGQe1Y2aPyWYj2KJEhipZOiRwbXsIiYx4Z/q9fB9ibNvU26/2fHqvD3hO2GIQht301ZOyn9GfssDaVZkWWaQVMkfIo7EpYObSw25vYmT895Z4E2UCBKR0PuE2cXksmryv1MC+wnf52bBff62ThCNffE1kM86s+4UbV4Ld4cWiwx+FbJjmFINQp6ya6x/9UJ5GQDefbmC3SeIRoZtIV+GJ80ZIVICOuy5yAnU/5u3FFN2qlIpxXzWoyqN2kZW9lUZ70feJ4pc5l8hjA23mKj9N8FgTiu/rdjJlWcjZp6u+jb+9DmSDYODwyCxMjVLFayAZ9BX runpodctl-ssh-key"
+  },
+  "gpuCount": 1,
+  "id": "893x3u4r7ivbso",
+  "imageName": "runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404",
+  "lastStatusChange": "Rented by User: Sat Sep 05 2026 17:01:37 GMT+0000 (Coordinated Universal Time)",
+  "memoryInGb": 62,
+  "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+  "ports": [
+    "22/tcp"
+  ],
+  "runtimeStatus": "running",
+  "ssh": {
+    "id": "893x3u4r7ivbso",
+    "ip": "213.173.102.232",
+    "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+    "port": 35572,
+    "ssh_command": "ssh -i C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key root@213.173.102.232 -p 35572",
+    "ssh_key": {
+      "exists": true,
+      "fingerprint": "SHA256:hQcmNtutRAMEYnLSNnnkS6QoputJPnOGjCbf3MtRbgA",
+      "in_account": true,
+      "path": "C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key",
+      "source": "runpodctl doctor"
+    }
+  },
+  "uptimeSeconds": 63,
+  "vcpuCount": 12,
+  "volumeInGb": 0,
+  "volumeMountPath": "/workspace"
+}
+{
+  "containerDiskInGb": 30,
+  "costPerHr": 0.74,
+  "createdAt": "2026-09-05 17:01:37.87 +0000 UTC",
+  "desiredStatus": "RUNNING",
+  "env": {
+    "NVIDIA_DRIVER_CAPABILITIES": "compute,utility,graphics",
+    "NVIDIA_VISIBLE_DEVICES": "all",
+    "PUBLIC_KEY": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILmIaesn4lqEhT1Z+mkRCLpryPG89K+36JQlje8hlDOz akshatsingh14372@outlook.com\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0oZl8bJCsQ7Q9bmfcEGQe1Y2aPyWYj2KJEhipZOiRwbXsIiYx4Z/q9fB9ibNvU26/2fHqvD3hO2GIQht301ZOyn9GfssDaVZkWWaQVMkfIo7EpYObSw25vYmT895Z4E2UCBKR0PuE2cXksmryv1MC+wnf52bBff62ThCNffE1kM86s+4UbV4Ld4cWiwx+FbJjmFINQp6ya6x/9UJ5GQDefbmC3SeIRoZtIV+GJ80ZIVICOuy5yAnU/5u3FFN2qlIpxXzWoyqN2kZW9lUZ70feJ4pc5l8hjA23mKj9N8FgTiu/rdjJlWcjZp6u+jb+9DmSDYODwyCxMjVLFayAZ9BX runpodctl-ssh-key"
+  },
+  "gpuCount": 1,
+  "id": "893x3u4r7ivbso",
+  "imageName": "runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404",
+  "lastStatusChange": "Rented by User: Sat Sep 05 2026 17:01:37 GMT+0000 (Coordinated Universal Time)",
+  "memoryInGb": 62,
+  "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+  "ports": [
+    "22/tcp"
+  ],
+  "runtimeStatus": "running",
+  "ssh": {
+    "id": "893x3u4r7ivbso",
+    "ip": "213.173.102.232",
+    "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+    "port": 35572,
+    "ssh_command": "ssh -i C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key root@213.173.102.232 -p 35572",
+    "ssh_key": {
+      "exists": true,
+      "fingerprint": "SHA256:hQcmNtutRAMEYnLSNnnkS6QoputJPnOGjCbf3MtRbgA",
+      "in_account": true,
+      "path": "C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key",
+      "source": "runpodctl doctor"
+    }
+  },
+  "uptimeSeconds": 123,
+  "vcpuCount": 12,
+  "volumeInGb": 0,
+  "volumeMountPath": "/workspace"
+}
+{
+  "containerDiskInGb": 30,
+  "costPerHr": 0.74,
+  "createdAt": "2026-09-05 17:01:37.87 +0000 UTC",
+  "desiredStatus": "RUNNING",
+  "env": {
+    "NVIDIA_DRIVER_CAPABILITIES": "compute,utility,graphics",
+    "NVIDIA_VISIBLE_DEVICES": "all",
+    "PUBLIC_KEY": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILmIaesn4lqEhT1Z+mkRCLpryPG89K+36JQlje8hlDOz akshatsingh14372@outlook.com\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0oZl8bJCsQ7Q9bmfcEGQe1Y2aPyWYj2KJEhipZOiRwbXsIiYx4Z/q9fB9ibNvU26/2fHqvD3hO2GIQht301ZOyn9GfssDaVZkWWaQVMkfIo7EpYObSw25vYmT895Z4E2UCBKR0PuE2cXksmryv1MC+wnf52bBff62ThCNffE1kM86s+4UbV4Ld4cWiwx+FbJjmFINQp6ya6x/9UJ5GQDefbmC3SeIRoZtIV+GJ80ZIVICOuy5yAnU/5u3FFN2qlIpxXzWoyqN2kZW9lUZ70feJ4pc5l8hjA23mKj9N8FgTiu/rdjJlWcjZp6u+jb+9DmSDYODwyCxMjVLFayAZ9BX runpodctl-ssh-key"
+  },
+  "gpuCount": 1,
+  "id": "893x3u4r7ivbso",
+  "imageName": "runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404",
+  "lastStatusChange": "Rented by User: Sat Sep 05 2026 17:01:37 GMT+0000 (Coordinated Universal Time)",
+  "memoryInGb": 62,
+  "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+  "ports": [
+    "22/tcp"
+  ],
+  "runtimeStatus": "running",
+  "ssh": {
+    "id": "893x3u4r7ivbso",
+    "ip": "213.173.102.232",
+    "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+    "port": 35572,
+    "ssh_command": "ssh -i C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key root@213.173.102.232 -p 35572",
+    "ssh_key": {
+      "exists": true,
+      "fingerprint": "SHA256:hQcmNtutRAMEYnLSNnnkS6QoputJPnOGjCbf3MtRbgA",
+      "in_account": true,
+      "path": "C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key",
+      "source": "runpodctl doctor"
+    }
+  },
+  "uptimeSeconds": 154,
+  "vcpuCount": 12,
+  "volumeInGb": 0,
+  "volumeMountPath": "/workspace"
+}
+{
+  "containerDiskInGb": 30,
+  "costPerHr": 0.74,
+  "createdAt": "2026-09-05 17:01:37.87 +0000 UTC",
+  "desiredStatus": "RUNNING",
+  "env": {
+    "NVIDIA_DRIVER_CAPABILITIES": "compute,utility,graphics",
+    "NVIDIA_VISIBLE_DEVICES": "all",
+    "PUBLIC_KEY": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILmIaesn4lqEhT1Z+mkRCLpryPG89K+36JQlje8hlDOz akshatsingh14372@outlook.com\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0oZl8bJCsQ7Q9bmfcEGQe1Y2aPyWYj2KJEhipZOiRwbXsIiYx4Z/q9fB9ibNvU26/2fHqvD3hO2GIQht301ZOyn9GfssDaVZkWWaQVMkfIo7EpYObSw25vYmT895Z4E2UCBKR0PuE2cXksmryv1MC+wnf52bBff62ThCNffE1kM86s+4UbV4Ld4cWiwx+FbJjmFINQp6ya6x/9UJ5GQDefbmC3SeIRoZtIV+GJ80ZIVICOuy5yAnU/5u3FFN2qlIpxXzWoyqN2kZW9lUZ70feJ4pc5l8hjA23mKj9N8FgTiu/rdjJlWcjZp6u+jb+9DmSDYODwyCxMjVLFayAZ9BX runpodctl-ssh-key"
+  },
+  "gpuCount": 1,
+  "id": "893x3u4r7ivbso",
+  "imageName": "runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404",
+  "lastStatusChange": "Rented by User: Sat Sep 05 2026 17:01:37 GMT+0000 (Coordinated Universal Time)",
+  "memoryInGb": 62,
+  "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+  "ports": [
+    "22/tcp"
+  ],
+  "runtimeStatus": "running",
+  "ssh": {
+    "id": "893x3u4r7ivbso",
+    "ip": "213.173.102.232",
+    "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+    "port": 35572,
+    "ssh_command": "ssh -i C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key root@213.173.102.232 -p 35572",
+    "ssh_key": {
+      "exists": true,
+      "fingerprint": "SHA256:hQcmNtutRAMEYnLSNnnkS6QoputJPnOGjCbf3MtRbgA",
+      "in_account": true,
+      "path": "C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key",
+      "source": "runpodctl doctor"
+    }
+  },
+  "uptimeSeconds": 184,
+  "vcpuCount": 12,
+  "volumeInGb": 0,
+  "volumeMountPath": "/workspace"
+}
+{
+  "containerDiskInGb": 30,
+  "costPerHr": 0.74,
+  "createdAt": "2026-09-05 17:01:37.87 +0000 UTC",
+  "desiredStatus": "RUNNING",
+  "env": {
+    "NVIDIA_DRIVER_CAPABILITIES": "compute,utility,graphics",
+    "NVIDIA_VISIBLE_DEVICES": "all",
+    "PUBLIC_KEY": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILmIaesn4lqEhT1Z+mkRCLpryPG89K+36JQlje8hlDOz akshatsingh14372@outlook.com\nssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0oZl8bJCsQ7Q9bmfcEGQe1Y2aPyWYj2KJEhipZOiRwbXsIiYx4Z/q9fB9ibNvU26/2fHqvD3hO2GIQht301ZOyn9GfssDaVZkWWaQVMkfIo7EpYObSw25vYmT895Z4E2UCBKR0PuE2cXksmryv1MC+wnf52bBff62ThCNffE1kM86s+4UbV4Ld4cWiwx+FbJjmFINQp6ya6x/9UJ5GQDefbmC3SeIRoZtIV+GJ80ZIVICOuy5yAnU/5u3FFN2qlIpxXzWoyqN2kZW9lUZ70feJ4pc5l8hjA23mKj9N8FgTiu/rdjJlWcjZp6u+jb+9DmSDYODwyCxMjVLFayAZ9BX runpodctl-ssh-key"
+  },
+  "gpuCount": 1,
+  "id": "893x3u4r7ivbso",
+  "imageName": "runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404",
+  "lastStatusChange": "Rented by User: Sat Sep 05 2026 17:01:37 GMT+0000 (Coordinated Universal Time)",
+  "memoryInGb": 62,
+  "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+  "ports": [
+    "22/tcp"
+  ],
+  "runtimeStatus": "running",
+  "ssh": {
+    "id": "893x3u4r7ivbso",
+    "ip": "213.173.102.232",
+    "name": "qenlo-small-rtx4090-eu-ro-secure-deep768-admission-fix",
+    "port": 35572,
+    "ssh_command": "ssh -i C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key root@213.173.102.232 -p 35572",
+    "ssh_key": {
+      "exists": true,
+      "fingerprint": "SHA256:hQcmNtutRAMEYnLSNnnkS6QoputJPnOGjCbf3MtRbgA",
+      "in_account": true,
+      "path": "C:\\Users\\akshat\\.runpod\\ssh\\runpodctl-ssh-key",
+      "source": "runpodctl doctor"
+    }
+  },
+  "uptimeSeconds": 214,
+  "vcpuCount": 12,
+  "volumeInGb": 0,
+  "volumeMountPath": "/workspace"
+}

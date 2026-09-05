@@ -1,0 +1,122 @@
+[
+  {
+    "name": "rtx2000-eu-ro-secure-pilot",
+    "gpuId": "NVIDIA RTX 2000 Ada Generation",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.24,
+    "role": "pilot"
+  },
+  {
+    "name": "l4-eu-ro-secure",
+    "gpuId": "NVIDIA L4",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.49,
+    "role": "common"
+  },
+  {
+    "name": "l4-eur-is-secure",
+    "gpuId": "NVIDIA L4",
+    "dataCenter": "EUR-IS-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.49,
+    "role": "common"
+  },
+  {
+    "name": "a40-ca-mtl-secure",
+    "gpuId": "NVIDIA A40",
+    "dataCenter": "CA-MTL-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.49,
+    "role": "common"
+  },
+  {
+    "name": "a40-eu-se-secure",
+    "gpuId": "NVIDIA A40",
+    "dataCenter": "EU-SE-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.49,
+    "role": "common"
+  },
+  {
+    "name": "rtx3090-eu-cz-community",
+    "gpuId": "NVIDIA GeForce RTX 3090",
+    "dataCenter": "EU-CZ-1",
+    "cloud": "COMMUNITY",
+    "quotedUsdPerHour": 0.22,
+    "role": "common"
+  },
+  {
+    "name": "rtx4090-eu-ro-community",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "dataCenter": "EU-RO-1",
+    "cloud": "COMMUNITY",
+    "quotedUsdPerHour": 0.34,
+    "role": "reference"
+  },
+  {
+    "name": "rtx4090-eur-is-community",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "dataCenter": "EUR-IS-1",
+    "cloud": "COMMUNITY",
+    "quotedUsdPerHour": 0.34,
+    "role": "common"
+  },
+  {
+    "name": "a6000-eu-se-community",
+    "gpuId": "NVIDIA RTX A6000",
+    "dataCenter": "EU-SE-1",
+    "cloud": "COMMUNITY",
+    "quotedUsdPerHour": 0.33,
+    "role": "reference-fallback"
+  },
+  {
+    "name": "a6000-us-tx-community",
+    "gpuId": "NVIDIA RTX A6000",
+    "dataCenter": "US-TX-1",
+    "cloud": "COMMUNITY",
+    "quotedUsdPerHour": 0.33,
+    "role": "common"
+  },
+  {
+    "name": "rtx4090-eu-ro-secure-reference-retry",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.74,
+    "role": "reference"
+  },
+  {
+    "name": "rtx4090-eu-ro-secure-deep",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.74,
+    "role": "deep"
+  },
+  {
+    "name": "rtx4090-eu-ro-secure-deep768-invalid-harness",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.74,
+    "role": "deep768-invalid"
+  },
+  {
+    "name": "rtx4090-eu-ro-secure-deep768-retry",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.74,
+    "role": "deep768"
+  },
+  {
+    "name": "rtx4090-eu-ro-secure-deep768-admission-fix",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.74,
+    "role": "deep768"
+  }
+]

@@ -1,0 +1,7 @@
+eligible,chosen_backend,fastest_backend,chosen_p95_ms,fastest_p95_ms,absolute_p95_regret_ms,relative_p95_regret,route_correct
+2000,cpu,cpu,0.5198,0.5198,0.0,0.0,True
+3000,cpu,wgpu-rows,0.9563,0.8144,0.14190000000000003,0.17423870333988214,False
+4000,cpu,wgpu-rows,1.3305,1.0737,0.2567999999999999,0.23917295333892138,False
+6000,wgpu-rows,wgpu-rows,1.6033,1.6033,0.0,0.0,True
+8000,wgpu-rows,wgpu-rows,2.1508,2.1508,0.0,0.0,True
+10000,wgpu-rows,wgpu-rows,2.6041,2.6041,0.0,0.0,True

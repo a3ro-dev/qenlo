@@ -1,0 +1,43 @@
+{
+  "pdf_sha256": "75380b13db339f0c6c86fd4104c014d4eea68c8c9007c9613cb10105e562b96d",
+  "reviewer": "primary agent via view_image",
+  "pages": [
+    {
+      "page": 1,
+      "status": "pass",
+      "findings": "Title, author, abstract, and introduction legible; source and oracle qualifications present."
+    },
+    {
+      "page": 2,
+      "status": "pass",
+      "findings": "Both equations and math notation intact; semantic and tensor text legible."
+    },
+    {
+      "page": 3,
+      "status": "pass",
+      "findings": "Methodology and timing/sample units readable; normal whitespace before next full cohort table."
+    },
+    {
+      "page": 4,
+      "status": "pass",
+      "findings": "Cohort map columns aligned, no stretched text; source identities and common workload table readable."
+    },
+    {
+      "page": 5,
+      "status": "pass",
+      "findings": "All three common-cell panels, logarithmic axes and legend readable; twelve headline rows aligned and complete."
+    },
+    {
+      "page": 6,
+      "status": "pass",
+      "findings": "Corrected engine bars and labels legible; numerical comparison and real-workload qualifications intact."
+    },
+    {
+      "page": 7,
+      "status": "pass",
+      "findings": "Both separate crossover panels and log axes readable; regret equation, bars, labels, caption intact."
+    }
+  ],
+  "overall": "pass",
+  "method": "Each final 120-DPI page image inspected individually; equations, table values, labels, legends, captions and page breaks checked."
+}

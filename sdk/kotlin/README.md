@@ -30,6 +30,19 @@ dependencies {
 
 Native libraries are embedded in the JAR and automatically extracted via JNA on `linux-x64`, `windows-x64`, and `darwin-arm64`.
 
+Collections use exhaustive CPU search by default. A desktop artifact built with portable GPU support can opt into automatic routing or require the GPU:
+
+```kotlin
+val options = CollectionOptions(
+    backend = ExecutionMode.AUTOMATIC,
+    gpuFilterMode = GpuFilterMode.GPU_PREDICATE,
+    gpuAllocationBudgetBytes = 512uL * 1024uL * 1024uL,
+)
+val db = QenloCollection.memory(384, options)
+```
+
+Automatic mode exposes the actual route and fallback in `ExecutionReport`. Required-GPU mode fails during construction when the native artifact or host cannot provide the backend.
+
 ---
 
 ## Quickstart
@@ -135,4 +148,3 @@ db.deleteBatch(listOf(10uL, 11uL))
 ## License
 
 Dual-licensed under **MIT** or **Apache-2.0** at your option.
-

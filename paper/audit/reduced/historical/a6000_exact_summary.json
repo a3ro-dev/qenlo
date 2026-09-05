@@ -1,0 +1,74 @@
+[
+  {
+    "system": "faiss_gpu_flat_ip",
+    "eligible": 1000,
+    "samples": 500,
+    "p50_ms": 0.067188,
+    "p95_ms": 0.085716,
+    "p99_ms": 0.09522612999999996,
+    "qps_from_mean": 14446.14616836053
+  },
+  {
+    "system": "qenlo_cuda_buffered_prototype",
+    "eligible": 1000,
+    "samples": 500,
+    "p50_ms": 0.077524,
+    "p95_ms": 0.09754090000000001,
+    "p99_ms": 0.1154729899999999,
+    "qps_from_mean": 12303.056667362282
+  },
+  {
+    "system": "faiss_gpu_flat_ip",
+    "eligible": 10000,
+    "samples": 500,
+    "p50_ms": 0.127181,
+    "p95_ms": 0.13734995000000003,
+    "p99_ms": 0.15051807,
+    "qps_from_mean": 7853.548658160738
+  },
+  {
+    "system": "qenlo_cuda_buffered_prototype",
+    "eligible": 10000,
+    "samples": 500,
+    "p50_ms": 0.143804,
+    "p95_ms": 0.15572240000000004,
+    "p99_ms": 0.174115,
+    "qps_from_mean": 6910.552407998573
+  },
+  {
+    "system": "faiss_gpu_flat_ip",
+    "eligible": 100000,
+    "samples": 500,
+    "p50_ms": 0.775451,
+    "p95_ms": 0.788721,
+    "p99_ms": 0.80007272,
+    "qps_from_mean": 1286.0316224681947
+  },
+  {
+    "system": "qenlo_cuda_buffered_prototype",
+    "eligible": 100000,
+    "samples": 500,
+    "p50_ms": 0.555869,
+    "p95_ms": 0.56727745,
+    "p99_ms": 0.5762769699999999,
+    "qps_from_mean": 1796.7485549434136
+  },
+  {
+    "system": "faiss_gpu_flat_ip",
+    "eligible": 1000000,
+    "samples": 500,
+    "p50_ms": 6.273588500000001,
+    "p95_ms": 6.3474642,
+    "p99_ms": 6.43565615,
+    "qps_from_mean": 158.6482194430421
+  },
+  {
+    "system": "qenlo_cuda_buffered_prototype",
+    "eligible": 1000000,
+    "samples": 500,
+    "p50_ms": 4.65075,
+    "p95_ms": 4.66828005,
+    "p99_ms": 4.73640119,
+    "qps_from_mean": 214.40820091265576
+  }
+]

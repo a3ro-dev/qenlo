@@ -1,38 +1,26 @@
-# Qenlo paper
+# Qenlo research paper
 
-This directory contains the evidence-audit manuscript. `paper.tex` is the
-canonical source; `main.tex` is a compatibility entry point that inputs it.
-The current PDF is an author draft, not an anonymous conference-formatted
-submission. Apply the target venue's current style and anonymity rules only
-when preparing the actual submission package.
+The definitive synthesis is [qenlo-final-research-paper.pdf](output/pdf/qenlo-final-research-paper.pdf). It integrates the September 5 small-collection campaign with the historical routing, eligibility preparation, Android, Intel Arc, A6000, real-embedding, and external-engine evidence.
 
-## Build
+The thesis is conditional execution: eligible work, preparation, predicate representation, batching, selection, runtime ownership, and mutation/residency state matter alongside collection size and device class. The archive supports this engineering conclusion; it does not validate a universal threshold or an adaptive router.
 
-From this directory:
+## Important audit corrections
 
-```powershell
-python ../research/scripts/analyze_results.py
-python ../research/scripts/generate_plots.py
-pdflatex -interaction=nonstopmode -halt-on-error paper.tex
-bibtex paper
-pdflatex -interaction=nonstopmode -halt-on-error paper.tex
-pdflatex -interaction=nonstopmode -halt-on-error paper.tex
-```
+- `current-gpu` is a matrix role. The S1/S2 archives contain the lane-minimum candidate; the local shader retains the simpler selector. The corrected 0.897/0.896 ms results are experimental-archive measurements, not verified final-local-selector performance.
+- There are 182 matrix rows: 131 completed, 42 failed or unavailable, seven failed, and two invalid-harness. Only 130 are qualified; the completed USearch D2 row fails recall.
+- Lifecycle search latency excludes mutation. Reopen's 52.169 ms opening and 101.296 ms first search are separate timers.
+- External flat/tensor replays prefilter their matrices outside query timing. Their build field also omits the initial metadata traversal.
+- Final USD 0.9400778694252952 is captured account daily spend, not independently attributable campaign cost.
+- Historical endpoint revisions differ. The controlled localization sweep remains separate.
 
-The compiled, visually verified PDF is copied to
-`output/pdf/qenlo-routing-filtered-vector-search.pdf` after validation.
+## Contents
 
-## Evidence boundaries
+- `paper.tex`, `appendix.tex`, `references.bib`: manuscript, detailed evidence, audited citations.
+- `tables/claim-to-artifact.json`: combined full ledger; CSV provides an index.
+- `audit/`: historical, campaign, citation, and source-contract audits; verifier results and preserved pre-edit manuscripts.
+- `figures/final/`: twelve generated PDF/PNG figure pairs. Original top-level figures are preserved.
+- `scripts/`: paper-only reduction, verification, table/figure generation, ledger, and isolated-build helpers.
+- `audit/figure-sources.json`: each generator's exact input paths and hashes.
+- `audit/build-verification.json` and `audit/verification-final.json`: build, text, and visual verification records.
 
-- The shipped Rust/WGSL backend owns the 100k x 384 Windows and Intel Arc
-  observations.
-- Every 1M x 768 CUDA prototype row is exploratory PyTorch code, not a shipped
-  Qenlo backend.
-- The RTX 4090 eligibility-materialization ablation is a separate Runpod cohort
-  and is not pooled with the RTX 4050 crossover.
-- Static-router regret is a six-cell P95 counterfactual. No calibrated-policy
-  held-out regret result is claimed.
-- FAISS leads that strict cell. The paper does not claim equivalence or a
-  universal performance advantage.
-- Raw samples, failures, checksums, and environment captures remain in
-  `benchmark-results/`; failed systems are not silently removed.
+See [REPRODUCE.md](REPRODUCE.md) for the complete offline authoring workflow. It does not run benchmarks, modify product code, provision infrastructure, or overwrite retained research artifacts. Prior manuscript sources are preserved in `audit/before/`; prior PDFs and historical figures remain untouched.

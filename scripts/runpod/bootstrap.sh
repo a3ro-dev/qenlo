@@ -91,4 +91,4 @@ cargo run --release -p qenlo-bench --features gpu-wgpu -- run \
 
 echo "compatibility=passed" >> "$OUT/status.txt"
 echo "wgpu_backend=$WGPU_BACKEND" >> "$OUT/status.txt"
-find "$OUT" -type f -print0 | sort -z | xargs -0 sha256sum > "$OUT/SHA256SUMS"
+find "$OUT" -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > "$OUT/SHA256SUMS"

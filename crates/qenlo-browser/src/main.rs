@@ -2,14 +2,19 @@ pub mod server;
 pub mod state;
 pub mod tui;
 
+use crate::state::{BrowserSession, SharedState};
+use clap::Parser;
 use std::path::PathBuf;
 use std::sync::Arc;
-use clap::Parser;
 use tokio::sync::RwLock;
-use crate::state::{BrowserSession, SharedState};
 
 #[derive(Parser, Debug)]
-#[command(name = "qenlo-browser", author, version, about = "QenloDB Collection Browser: Embedded Web UI and Claude Code-style TUI")]
+#[command(
+    name = "qenlo-browser",
+    author,
+    version,
+    about = "QenloDB Collection Browser: Embedded Web UI and Claude Code-style TUI"
+)]
 struct Cli {
     /// Path to a .qenlo directory or .qn snapshot file to open
     #[arg(value_name = "PATH")]
@@ -49,12 +54,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if let Some(path) = &cli.path {
         if cli.create && !path.exists() {
-            println!("Creating new collection at {} with dimension {}", path.display(), cli.dimension);
+            println!(
+                "Creating new collection at {} with dimension {}",
+                path.display(),
+                cli.dimension
+            );
             let _ = session.create_collection(path, cli.dimension).await;
         } else {
             match session.open_collection(path, Some(cli.dimension)).await {
                 Ok(stats) => {
-                    println!("Opened collection {} (dim: {}, rows: {})", path.display(), stats.dimension, stats.rows);
+                    println!(
+                        "Opened collection {} (dim: {}, rows: {})",
+                        path.display(),
+                        stats.dimension,
+                        stats.rows
+                    );
                 }
                 Err(e) => {
                     eprintln!("Warning: Could not open {}: {}", path.display(), e);

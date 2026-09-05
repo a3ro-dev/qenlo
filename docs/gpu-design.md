@@ -11,7 +11,7 @@ CPU HNSW implementation; its graph does not run on the GPU.
 
 ```mermaid
 flowchart LR
-    A[Canonical normalized vectors and metadata] -->|prepare after mutation| B[Resident GPU chunks]
+    A[Canonical normalized vectors and metadata] -->|prepare or bounded update| B[Resident GPU chunks]
     Q[Normalized query batch and eligibility] --> C[Parallel dot products]
     A -->|optional derived index| I[IVF lists / SQ8 codes]
     I -->|candidate rows| C
@@ -34,15 +34,19 @@ with AND, and always excludes tombstones. User IDs and timestamps travel as two
 32-bit words. Signed timestamp ordering flips the high word's sign bit before
 unsigned comparison, preserving the complete signed 64-bit range.
 
-The selection kernel has 256 threads. Each thread scans its share of the scores
-and keeps a local minimum. A tree reduction elects the smallest distance, with
-the full unsigned 64-bit ID breaking computed-distance ties. The winner is
-written to a candidate buffer and its score invalidated. Repeating this `k`
-times yields exact top-k; empty slots have a sentinel that the host discards.
-The total selection work is still O(rows × k), with k bounded to 64.
+The selection kernel has 256 threads. Each thread scans its stripe once and keeps
+its minimum in a register. A tree reduction elects the smallest distance, with the
+full unsigned 64-bit ID breaking computed-distance ties. The winner is written to
+a candidate buffer and its score invalidated. On the next iteration only the lane
+that supplied that winner rescans its stripe; every other lane's minimum remains
+valid. Empty slots have a sentinel that the host discards. Selection work is
+O(rows + 256 × k) for the reductions plus rescans of at most `ceil(rows / 256)`
+items per emitted result, with k bounded to 64.
 
-Only `16 × k` bytes return per chunk (160 bytes for k=10), not the full distance
-array. The CPU merges those small lists. This is sufficient: an item outside a
+Only `16 × k` result bytes return per chunk (160 bytes for k=10), not the full
+distance array. Adapters with timestamp-query support return another 32 bytes
+per chunk for phase diagnostics. The CPU merges the candidate lists. This is
+sufficient: an item outside a
 chunk's top-k cannot enter the global top-k because that chunk already contains
 k better items under the same ordering.
 
@@ -59,12 +63,16 @@ currently completes readback before the next starts.
 
 Vectors, IDs and metadata stay resident between queries. Query, eligibility,
 score, candidate, selection, and staging buffers live in a persistent scratch arena
-that grows when a larger batch requires it. Allocation admission includes
+that grows when a larger batch requires it. Resource bind groups are created with
+that arena and reused until it grows, rather than allocated per completed call.
+When the adapter supports timestamp queries, the arena also owns a 32-byte
+resolve buffer and a 32-byte mapped readback buffer. The query set itself is a
+driver object and is not included in the byte total. Allocation admission includes
 resident buffers, scores, candidates, readback and conservative transfer staging;
 the default budget is 512 MiB. This is tracked buffer allocation, not physical
-VRAM residency. Canonical CPU storage and the temporary flattened preparation
-copy also need host RAM. Increasing the GPU budget does not solve host memory
-pressure.
+VRAM residency; driver-private pipeline and bind-group memory is outside the byte
+count. Canonical CPU storage and the temporary flattened preparation copy also need
+host RAM. Increasing the GPU budget does not solve host memory pressure.
 
 `search_batch` normalizes and uploads up to 128 queries and dispatches them as one
 GPU workload. Every response observes the same canonical generation. An optional
@@ -73,9 +81,20 @@ exact kernel. IVF-Flat reranks all probed eligible rows. IVF-SQ8 scores those ro
 with per-vector symmetric scalar codes, retains up to `32 × k`, then performs the
 same exact FP32 GPU rerank. Canonical vectors remain FP32 and authoritative.
 
+While exact-GPU state is prepared, a deletion changes the owning chunk's host
+live mask and an append uploads canonical suffix rows. Appends may create at most
+eight extra chunks before the next search consolidates them through full
+preparation. Budget failure, device failure, or enabled IVF also uses full
+preparation. The collection write lock covers canonical publication and the
+derived update, so a search cannot combine generations.
+
 The benchmark times completed API calls, including CPU eligibility, transfer,
 dispatch, synchronization, readback and CPU merging. Preparation is separately
-reported. No isolated GPU timestamp measurement is claimed. A generation-bound
+reported. On adapters with timestamp-query support, scoring and selection are
+also reported from beginning/end timestamps on separate compute passes. Their
+sum is device work, not completed-call latency; it excludes queueing, transfer,
+synchronization and host merging. Unsupported adapters report both fields as
+unavailable. A generation-bound
 `EligibilityPlan` performs the default host predicate traversal once and retains
 the selected row, mask, or shader-predicate representation and diagnostics.
 GPU-required mode returns errors. Automatic mode uses a matching hardware-bound

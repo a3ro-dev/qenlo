@@ -730,16 +730,24 @@ fn wal_path(path: &Path, generation: u64, extension: &str) -> PathBuf {
 
 fn check_admission(dimension: usize, rows: u64, max_load_bytes: u64) -> Result<(), StorageError> {
     let dimension = u32::try_from(dimension).map_err(|_| StorageError::LoadLimitExceeded)?;
-    let row_bytes = u64::from(dimension)
+    let canonical_row_bytes = u64::from(dimension)
         .checked_mul(4)
         .and_then(|bytes| bytes.checked_add(32))
         .ok_or(StorageError::LoadLimitExceeded)?;
+    // Exact CPU search materializes a second row-major view whose stride is rounded
+    // to 16 floats for 64-byte alignment. Admit that first-query allocation up front.
+    let scan_row_bytes = u64::from(dimension)
+        .checked_add(15)
+        .map(|values| values / 16)
+        .and_then(|values| values.checked_mul(16 * 4))
+        .ok_or(StorageError::LoadLimitExceeded)?;
     let file_bytes = rows
-        .checked_mul(row_bytes)
+        .checked_mul(canonical_row_bytes)
         .and_then(|bytes| bytes.checked_add(HEADER_BYTES + CHECKSUM_BYTES))
         .ok_or(StorageError::LoadLimitExceeded)?;
-    let admission_bytes = row_bytes
-        .checked_add(512)
+    let admission_bytes = canonical_row_bytes
+        .checked_add(scan_row_bytes)
+        .and_then(|bytes| bytes.checked_add(512))
         .and_then(|bytes| rows.checked_mul(bytes))
         .ok_or(StorageError::LoadLimitExceeded)?;
     if rows > u64::from(u32::MAX) || file_bytes > max_load_bytes || admission_bytes > max_load_bytes
@@ -1186,25 +1194,33 @@ mod tests {
     fn write_and_open_share_admission_limits_before_publication() {
         let path = temp_dir("write-budget");
         let mut store = populated_store();
-        // Two 2D rows need 2 * (32 + 8 + 512) admission bytes.
+        // Two 2D rows need canonical rows plus a 64-byte aligned scan row and indexes:
+        // 2 * (32 + 8 + 64 + 512) = 1,232 bytes.
         assert!(matches!(
-            create_with_limit(&path, &store, 1103),
+            create_with_limit(&path, &store, 1231),
             Err(StorageError::LoadLimitExceeded)
         ));
         assert!(!path.exists());
-        drop(create_with_limit(&path, &store, 1104).unwrap());
-        drop(open_with_limit(&path, 1104).unwrap());
+        drop(create_with_limit(&path, &store, 1232).unwrap());
+        drop(open_with_limit(&path, 1232).unwrap());
         let previous = store.generation();
         store.add(3, 1, 0, [1.0, 0.0]).unwrap();
         assert!(matches!(
-            write_snapshot_with_limit(&path, &store, 1104),
+            write_snapshot_with_limit(&path, &store, 1232),
             Err(StorageError::LoadLimitExceeded)
         ));
         assert!(!snapshot_path(&path, store.generation(), ".pending").exists());
         assert_eq!(
-            open_with_limit(&path, 1104).unwrap().store.generation(),
+            open_with_limit(&path, 1232).unwrap().store.generation(),
             previous
         );
+        // At 768 dimensions the aligned first-query matrix is another 3,072 bytes;
+        // a flat 512-byte bookkeeping allowance alone is not conservative.
+        assert!(matches!(
+            check_admission(768, 1, 6687),
+            Err(StorageError::LoadLimitExceeded)
+        ));
+        check_admission(768, 1, 6688).unwrap();
         assert!(matches!(
             check_admission(usize::MAX, u64::MAX, u64::MAX),
             Err(StorageError::LoadLimitExceeded)

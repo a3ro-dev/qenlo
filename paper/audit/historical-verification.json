@@ -1,0 +1,22 @@
+{
+  "all_ok": true,
+  "checks": {
+    "a6000_samples": {
+      "errors": {},
+      "ok": true
+    },
+    "crossover_cpu": {
+      "errors": {},
+      "ok": true
+    },
+    "eligibility_archive": {
+      "errors": {},
+      "ok": true
+    },
+    "windows_cpu_endpoints": {
+      "errors": {},
+      "ok": true
+    }
+  },
+  "schema": "qenlo-historical-raw-verification-v1"
+}

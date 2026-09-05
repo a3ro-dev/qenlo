@@ -61,7 +61,8 @@ when reproducing a result on a machine with more than one GPU.
 
 ## inspect with qenloDB browser
 
-Just like *DB Browser for SQLite* allows developers to inspect `.sqlite` files, **QenloDB Browser** brings radical transparency to embedded vector search: inspect stored unit vectors, observe tombstones and uncompacted WAL segments, run live cosine queries, and view SIMD execution timings without black-box servers.
+QenloDB Browser inspects stored unit vectors, tombstones, uncompacted WAL segments,
+runs live cosine queries, and displays execution timings.
 
 ```powershell
 # Claude Code-style interactive Terminal UI (TUI)
@@ -146,10 +147,11 @@ here, so full power-loss durability is not guaranteed on Windows. process-crash
 tests do not prove sudden-power-loss safety. filesystem sync behavior still
 matters on Unix.
 
-the default load admission budget is 512 MiB. the same check rejects durable
-writes that would be impossible to reopen under that budget. it estimates payload
-plus per-row bookkeeping, not allocator usage or RSS. larger collections require
-an explicit choice:
+the default canonical load admission budget is 512 MiB. the same check rejects
+durable writes that would be impossible to reopen under that budget. it estimates
+the canonical row payload, the 64-byte-aligned exact-CPU scan view created on first
+use, and 512 bytes per row for metadata indexes and bookkeeping. it is conservative
+accounting, not allocator usage or RSS. larger collections require an explicit choice:
 
 ```rust
 use qenlo::{Collection, CollectionConfig, StorageOptions};
@@ -163,13 +165,21 @@ async fn open_larger_collection() -> Result<Collection, qenlo::Error> {
 }
 ```
 
-`create_with_options` accepts the same options. keep them in host configuration.
+`create_with_options` and `Collection::new_with_options` accept the same options.
+keep them in host configuration.
 loading decodes one row at a time, but the full canonical store and metadata
 indexes remain resident. canonical snapshots are decoded from validated read-only
 memory maps. durable transactions validate O(batch) state and append checksummed
 immutable WAL files under an atomic manifest; `flush`/`close` compact them into a
 full canonical snapshot. batch input and normalized vectors coexist during validation.
 compaction and restart replay remain synchronous.
+
+GPU allocation has a separate `CollectionConfig::gpu_allocation_budget_bytes`
+cap. it covers Qenlo-owned resident device buffers and the largest scratch arena
+admitted so far, including score, eligibility, candidate, and readback buffers.
+it does not include host canonical memory, driver allocations, or physical VRAM
+residency. a host that needs one process-wide cap must budget both scopes and its
+own inputs; Qenlo reports the tracked GPU scope as `qenlo_allocation_bytes`.
 
 ## concurrency and derived indexes
 
@@ -185,8 +195,10 @@ open and search can also perform synchronous I/O or CPU work; there are no hidde
 collection workers.
 
 `RebuildPolicy::OnSearch` is the default. `RebuildPolicy::Explicit` returns
-`IndexNotPrepared` until `prepare().await` succeeds. mutations invalidate the
-prepared generation. `index.qidx` persists only readiness metadata, not a USearch
+`IndexNotPrepared` until `prepare().await` succeeds. A prepared exact-GPU backend
+applies tombstone changes in place and can append at most eight bounded chunks;
+the ninth append wave, a budget failure, or any IVF configuration invalidates it
+and uses the normal rebuild path. `index.qidx` persists only readiness metadata, not a USearch
 graph or GPU buffers. restart always rebuilds. missing, corrupt, or stale derived
 metadata cannot remove canonical rows.
 
@@ -212,9 +224,9 @@ rule is not a universal crossover.
 true batches contain up to 128 queries in one GPU workload. `set_gpu_ivf` enables
 deterministic IVF-Flat candidate generation; `set_gpu_ivf_sq8` adds an SQ8 coarse
 stage. both retain canonical FP32 vectors and perform an exact FP32 GPU rerank.
-capability reporting and device-loss handling exist. kernel
-timestamps are not measured; host-observed execution durations are not isolated
-kernel timings.
+capability reporting and device-loss handling exist. completed-call timing remains
+the comparison scope. adapters with wgpu timestamp-query support also report
+isolated device scoring and selection; other adapters mark those fields unavailable.
 
 reports include operation IDs, actual backend, generation, preparation reason,
 lock wait, CPU path, ANN parameters, transfer counts, and commit context. missing
@@ -233,18 +245,19 @@ cargo run -p qenlo-bench -- run --dataset smoke.qds --output smoke-results --dim
 ```
 
 use fresh dataset/output paths. the [benchmark protocol](docs/benchmark-protocol.md)
-defines the 100k/1m, 384/768-dimensional workload matrix, disjoint query sets,
-selectivity, recall gates, raw samples, and nearest-rank percentiles. these
+defines the small-collection workload matrix, disjoint query sets, selectivity,
+recall gates, raw samples, and nearest-rank percentiles. these
 commands are smoke workloads, not evidence of scale performance.
 
-one deterministic correctness fixture measured recall@10 of 1.0 for exact CPU
-and USearch across nine filters, 16 queries each, and 2,048 vectors at 32
-dimensions, including empty and fewer-than-k cases. this does not establish
-0.95 or 0.99 recall on arbitrary embeddings or the larger matrix. The retained
-[2026-08-28 real-data results](docs/results-2026-08-28.md) include a 100k × 384
-all-row cell where the RTX 4050 exact GPU predicate path is 5.14× lower P95 than
-Qenlo exact CPU, plus a selective 1% cell where the GPU is slower. The
-predeclared 1m × 768 gate remains untested.
+the September 5, 2026 campaign retains 182 rows: 131 completed, 42 unavailable,
+seven failed, and two invalid-harness rows. on one RTX 4090/Vulkan host, exact
+WGPU P95 was 0.897 ms for 100k × 768, batch one, k=1, and 0.896 ms for batch
+eight, k=64, at 10% eligibility. PyTorch CUDA was faster in both cells. all
+corrected rows reached FP64-oracle recall 1.0. the lane-minimum selector won five
+and lost seven of 12 qualified frozen-baseline pairs, so it is not a universal
+optimization. see the [campaign report](research/artifacts/runpod-small-2026-09-05/report/performance-report.md)
+and [paper](paper/output/pdf/qenlo-small-collection-vector-search.pdf). mobile
+performance remains unmeasured for this revision.
 
 the Windows setup previously hit an MSVC 14.29 compiler crash in USearch's native
 dependency. the local workaround is explicit rather than forced on consumers:
@@ -257,7 +270,7 @@ cargo test -p qenlo --features usearch
 
 see [contributing](CONTRIBUTING.md) for full commands,
 [the device lab](docs/device-lab.md) for the Linux, Windows, macOS, Android,
-iOS, and telemetry packages, [roadmap status](docs/implementation-status.md) for
+iOS, and optional results-service packages, [roadmap status](docs/implementation-status.md) for
 implemented versus research-only milestones, and [verification](docs/verification.md)
 for recorded results and platform limits.
 [Measured 2026-08-28 results](docs/results-2026-08-28.md) contains the real-data
@@ -268,9 +281,13 @@ synthetic metadata, oracle results and query order, with recall validation.
 [architecture](docs/architecture.md) explains the storage/index boundary;
 [security](SECURITY.md) describes the local trust model.
 
-## anonymous telemetry policy
+## networking and diagnostics
 
-Qenlo collects anonymous installation, execution, and hardware environment telemetry (operating system, CPU architecture, SDK version, and search duration metrics) transmitted securely to `https://api.gobitsnbytes.org/qenlo/telemetry`. This telemetry is strictly anonymous, privacy-preserving, and mandatory across all SDK installations and language bindings (there is no opt-out) in order to monitor release stability, diagnose GPU driver regressions, and optimize embedded vector routing algorithms.
+The Rust core and language SDKs start no background worker and make no network
+request. Search responses include local execution reports. Applications may export
+those reports through infrastructure they own. The optional `qenlo-telemetry`
+service is a separately deployed, authenticated results collector; installing or
+using a Qenlo collection does not enable it.
 
 ## license
 

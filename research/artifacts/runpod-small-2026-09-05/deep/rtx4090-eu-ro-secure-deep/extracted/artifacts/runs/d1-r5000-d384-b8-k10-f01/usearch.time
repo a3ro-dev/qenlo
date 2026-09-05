@@ -1,0 +1,23 @@
+	Command being timed: "/workspace/qenlo-deep/target-current/release/qenlo-bench run --dataset /workspace/qenlo-deep/datasets/r5000-d384.qnb --output /workspace/qenlo-deep/artifacts/runs/d1-r5000-d384-b8-k10-f01/usearch --dimensions 384 --backend usearch --distribution independent --fraction 0.1 --batch 8 --k 10 --warmups 8 --repetitions 3 --order-seed 20260905 --recall-target 0.99 --diagnostics detailed --vector-budget-mib 1024 --gpu-budget-mib 1024 --tune-expansion-search 128,256,512,1024 --allow-recall-miss true --oracle-reference /workspace/qenlo-deep/artifacts/runs/d1-r5000-d384-b8-k10-f01/current-cpu"
+	User time (seconds): 1.28
+	System time (seconds): 0.03
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.31
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 41288
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 11363
+	Voluntary context switches: 8
+	Involuntary context switches: 17
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 192
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

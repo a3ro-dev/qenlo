@@ -1,12 +1,12 @@
-use std::sync::Arc;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use serde_json::{json, Value};
-use tokio::sync::RwLock;
-use tower::ServiceExt;
 use qenlo_browser::server::app_router;
 use qenlo_browser::state::{BrowserSession, SharedState};
+use serde_json::{Value, json};
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use tower::ServiceExt;
 
 #[tokio::test]
 async fn test_rest_api_full_flow() {

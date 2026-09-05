@@ -1,0 +1,14 @@
+{
+  "createResponse": null,
+  "configuration": {
+    "name": "l4-eur-is-secure",
+    "gpuId": "NVIDIA L4",
+    "dataCenter": "EUR-IS-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.49,
+    "role": "common"
+  },
+  "error": "runpodctl failed: pod create --name qenlo-small-l4-eur-is-secure --image runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404 --gpu-id NVIDIA L4 --data-center-ids EUR-IS-1 --cloud-type SECURE --container-disk-in-gb 30 --volume-in-gb 0 --ports 22/tcp --env {\"NVIDIA_DRIVER_CAPABILITIES\":\"compute,utility,graphics\",\"NVIDIA_VISIBLE_DEVICES\":\"all\"}: ",
+  "podId": null,
+  "status": "failed_or_unavailable"
+}

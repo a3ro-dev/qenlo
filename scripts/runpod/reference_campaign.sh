@@ -107,5 +107,5 @@ for replicate in $(seq 0 19); do
 done
 
 python3 "$REPO/research/scripts/analyze_runpod_campaign.py" --input "$OUT" --output "$OUT/analysis"
-find "$OUT" -type f -print0 | sort -z | xargs -0 sha256sum > "$OUT/SHA256SUMS"
+find "$OUT" -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > "$OUT/SHA256SUMS"
 echo "reference_campaign=complete" > "$OUT/COMPLETE"

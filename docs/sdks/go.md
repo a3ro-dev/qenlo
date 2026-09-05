@@ -1,6 +1,7 @@
-# Go Driver
+# Go SDK
 
-CGO-free and FFI-backed Go package for embedding Qenlo inside Go microservices and CLI tools.
+cgo bindings for embedding Qenlo in Go services and command-line tools. The
+package links the shared native ABI; it is not CGO-free.
 
 ## Installation
 
@@ -37,7 +38,7 @@ func main() {
         log.Fatal(err)
     }
 
-    resp, err := db.Search([]float32{0.1, 0.7, 0.5}, qenlo.Filter{UserID: 42}, 5)
+    resp, err := db.Search([]float32{0.1, 0.7, 0.5}, qenlo.Filter{UserID: qenlo.Uint64(42)}, 5)
     if err != nil {
         log.Fatal(err)
     }
@@ -45,3 +46,9 @@ func main() {
     fmt.Printf("Matches found: %d\n", len(resp.Results))
 }
 ```
+
+CPU is the default. Desktop artifacts compiled with portable GPU support accept
+`NewWithOptions`, `CreateWithOptions`, `OpenWithOptions`, and
+`ImportQNWithOptions`. Use `Automatic` to permit a reported fallback or
+`GPURequired` to fail if the GPU route is unavailable. The allocation budget is
+set with `GPUAllocationBudgetBytes`.

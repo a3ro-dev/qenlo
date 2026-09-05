@@ -1,0 +1,14 @@
+{
+  "configurations": 14,
+  "reserveUsd": 1.0,
+  "operationalAllowanceUsd": 3.6547731598839165,
+  "status": "dry-run-complete",
+  "sourceDigests": {
+    "Deep768": "a119dd08f0d02ca8669aa486003a0d3abe7735e112639929f6615dde572c6186",
+    "Current": "730c050065e6786972a7be4f9bcb619168becdc943ce1122d1583c61f66409e3",
+    "Real": "ba87a322b6846ce225ce54140cf00ac33250271447ef8f9f83df246131719cba",
+    "Workload": "72ec871cbb10be72a8e91c6ac6d9b6f62b241834bcf133b031f6000449ba4718",
+    "Baseline": "f37e744c7ee4054a74c4b4181f2dde61dade4d677bbc5493b9a36b61d165a45d"
+  },
+  "spendSinceMidnightIstUsd": 0.3452268401160835
+}

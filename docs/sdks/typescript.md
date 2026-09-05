@@ -29,3 +29,10 @@ db.add({
 const response = db.search([0.1, 0.7, 0.5], { userId: 42n }, 5);
 console.log(`Matched ID: ${response.results[0]?.id}`);
 ```
+
+Construction defaults to exhaustive CPU search. Desktop native artifacts built
+with portable GPU support accept `{ backend: "automatic" }` or
+`{ backend: "gpu-required" }`, plus `gpuFilterMode` and
+`gpuAllocationBudgetBytes`. Automatic mode exposes the actual route and fallback
+in the returned execution report; required mode fails instead of silently using
+CPU.

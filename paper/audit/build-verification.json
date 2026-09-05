@@ -1,0 +1,53 @@
+{
+  "isolated_build": "D:\\qenloDB\\paper\\tmp\\clean-20260905-235039",
+  "commands": [
+    {
+      "command": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "paper.tex"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "bibtex",
+        "paper"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "paper.tex"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "paper.tex"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "paper.tex"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "issues": [],
+  "compile_passed": true,
+  "visual_inspection": "passed all 22 final page images",
+  "final_pdf": "D:\\qenloDB\\paper\\output\\pdf\\qenlo-final-research-paper.pdf",
+  "pdf_sha256": "75380b13db339f0c6c86fd4104c014d4eea68c8c9007c9613cb10105e562b96d"
+}

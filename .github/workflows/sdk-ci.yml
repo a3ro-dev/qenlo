@@ -63,8 +63,10 @@ jobs:
 
       - name: Build and test the shared ABI
         run: |
+          cmp crates/qenlo-ffi/qenlo.h sdk/go/native/qenlo.h
           cargo test --locked -p qenlo-ffi
-          cargo build --locked --release -p qenlo-ffi
+          cargo test --locked -p qenlo-ffi --features gpu-wgpu
+          cargo build --locked --release -p qenlo-ffi --features gpu-wgpu
 
       - name: Export native library paths
         shell: bash
@@ -95,6 +97,14 @@ jobs:
           python -m pip install --disable-pip-version-check build
           QENLO_WHEEL_TAG=${{ matrix.wheel_tag }} python -m build sdk/python --wheel
           python -c "import zipfile,glob; p=glob.glob('sdk/python/dist/*.whl')[0]; z=zipfile.ZipFile(p); assert any(n.endswith('${{ matrix.native }}') for n in z.namelist()), z.namelist()"
+
+      - name: Python optional tensor conformance
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu torch
+          export PYTHONPATH="$GITHUB_WORKSPACE/sdk/python/src"
+          python -m pytest sdk/python/tests/test_torch_index.py -q
 
       - name: TypeScript type and runtime conformance
         working-directory: sdk/typescript

@@ -1,0 +1,11 @@
+{
+  "absoluteBudgetUsd": 5.0,
+  "billingDelayPossible": true,
+  "finalKnownSpendUsd": 0.9400778694252952,
+  "campaignPodsRemaining": 0,
+  "status": "finished",
+  "operationalCeilingUsd": 4.0,
+  "finishedUtc": "2026-09-05T17:06:04.9915979Z",
+  "startedSpendUsd": 0.9096019977878312,
+  "reserveUsd": 1.0
+}

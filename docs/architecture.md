@@ -74,10 +74,22 @@ sudden-power-loss durability is not claimed. CRC32 is not authentication.
 
 the default `StorageOptions::max_load_bytes` is 512 MiB. both read and durable
 write admission check snapshot size and the estimate
-`rows * (32 + 4 * dimension + 512)` with checked arithmetic. the final 512 bytes
-per row allow for bookkeeping. this includes tombstones, is not measured RSS,
-and does not reserve memory. the host supplies options on create/open; they are
-not a persisted machine policy.
+`rows * (32 + 4 * dimension + 64 * ceil(dimension / 16) + 512)` with checked
+arithmetic. the aligned term accounts for the disposable exact-CPU scan matrix
+that may appear on the first query; the final 512 bytes per row allow for metadata
+indexes and bookkeeping. this includes tombstones, is not measured RSS, and does
+not reserve memory. the host supplies options on create/open; they are not a
+persisted machine policy.
+
+`CollectionConfig::gpu_allocation_budget_bytes` is a separate device-allocation
+scope. exact GPU preparation rejects resident vector/ID/metadata buffers plus the
+admitted scratch arena when their checked total exceeds this cap. scratch includes
+query, eligibility, score, selected-candidate and readback buffers and grows to the
+largest admitted batch. host canonical memory, preparation copies, driver-private
+allocations and physical residency are outside this number. automatic mode reports
+an exact-CPU fallback after a GPU budget failure; required-GPU mode returns the
+failure. hosts requiring a process-wide limit must account for both Qenlo scopes and
+their own inputs.
 
 loading keeps one decoded row outside the growing canonical store. directory
 selection and pruning retain only the generation candidates they need. no second
@@ -103,6 +115,14 @@ GPU queries also take a per-collection gate so simultaneous use of the persisten
 scratch arena cannot multiply the budget. mutation waits for readers. there are no collection background
 workers or speculative MVCC versions. `search_batch` holds one canonical generation
 and becomes one GPU workload when GPU routing is selected.
+
+For prepared exact-GPU state, deletion updates the owning chunk's host live mask;
+the next query uploads that mask through the existing bounded eligibility arena.
+Appends upload suffix rows as at most eight additional chunks. The ninth append
+wave consolidates through the full preparation path. Budget failure, device error,
+and IVF configuration also choose full preparation. The collection write lock
+publishes the canonical mutation and its derived update as one visible generation,
+so readers cannot mix old vectors with new tombstones.
 
 synchronous methods block. do not block a single-thread executor on mutation
 while an earlier GPU future needs that executor to finish. put contended
@@ -136,7 +156,9 @@ generation with exact FP32 GPU reranking: CPU-mask, eligible-row, or GPU-predica
 filtering; signed timestamps; bounded chunks and candidate readback; persistent
 scratch admission; true query batches; capability and device-loss reporting.
 required failures and automatic fallback are explicit. IVF configuration is derived
-state and is rebuilt after mutation; there is no custom GPU ANN graph. On a hybrid machine, the high-performance adapter
+state and is rebuilt after mutation; there is no custom GPU ANN graph. Exact-GPU
+state uses bounded suffix chunks and live-mask updates between consolidating rebuilds.
+On a hybrid machine, the high-performance adapter
 request is observable in the returned capabilities and benchmark manifest; the
 2026-08-28 Windows measurements used the discrete NVIDIA GeForce RTX 4050 rather
 than the integrated Intel UHD adapter. Callers should treat the reported actual
@@ -146,8 +168,9 @@ adapter as part of the performance result.
 
 operation IDs are process-local correlation, not durable transaction IDs. reports
 name the actual backend, preparation reason, lock wait, commit context, CPU path,
-ANN parameters, transfer counts, and unavailable measurements. GPU execution
-timing is host-observed, not isolated kernel timestamp telemetry. detailed
+ANN parameters, transfer counts, and unavailable measurements. GPU completed-call
+timing is host-observed. adapters with wgpu timestamp-query support also report
+isolated scoring and selection device time. detailed
 eligibility diagnostics add a scan and affect overhead.
 
 the library installs no global subscriber. default spans omit vectors,

@@ -1,0 +1,10 @@
+phase,repetition,mutation_ns,first_search_ns,actual_backend,rebuilt,generation,upload_bytes,allocation_bytes,result_count,deleted_id_absent
+add-one,0,9620300,831300,Wgpu,false,129,712,1587108,10,true
+delete-one,0,9887200,911600,Wgpu,false,130,712,1587108,10,true
+add-batch,0,8716700,1050300,Wgpu,false,133,788,1587384,10,true
+delete-batch,0,4334800,1116000,Wgpu,false,136,788,1587384,10,true
+add-one,1,4420400,1119800,Wgpu,false,137,856,1587476,10,true
+delete-one,1,4795800,1303100,Wgpu,false,138,856,1587476,10,true
+add-batch,1,2879300,1467700,Wgpu,false,141,932,1587752,10,true
+delete-batch,1,3705900,1365900,Wgpu,false,144,932,1587752,10,true
+reopen,0,385088000,771695000,Wgpu,true,144,13188,1587752,10,true

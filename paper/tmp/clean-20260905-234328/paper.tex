@@ -1,0 +1,212 @@
+\documentclass[10pt]{article}
+\usepackage[margin=0.85in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,float,graphicx,microtype,array,longtable,url,xcolor}
+\microtypesetup{expansion=false}
+\usepackage{xurl}
+\emergencystretch=2em
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage[colorlinks=true,allcolors=blue!45!black,breaklinks=true]{hyperref}
+\usepackage[numbers,sort&compress]{natbib}
+\makeatletter
+\let\tableinput\@@input
+\makeatother
+\newcommand{\qenlo}{Qenlo}
+\newcommand{\E}{E}
+\newcommand{\D}{D}
+\newcommand{\B}{B}
+\newcommand{\fig}[3]{\begin{figure}[H]\centering\includegraphics[width=\linewidth]{figures/final/#1.pdf}\caption{#2}\label{#3}\end{figure}}
+\title{Exact Filtered Vector Search Across Execution Environments:\\Eligibility, Small Collections, and Completed-Call Cost}
+\author{Akshat Singh Kushwaha\\\texttt{akshatsingh14372@outlook.com}\\\url{https://github.com/a3ro-dev/qenlo}}
+\date{September 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Filtered vector search chooses an execution route after a predicate restricts the candidates. We study that decision in Qenlo, an embedded vector store with exhaustive CPU, portable WGPU, and optional tensor execution. The evidence spans historical Windows crossover and eligibility-preparation experiments, Android and Intel Arc device records, A6000 research prototypes, external engines, and a new 1K--100K collection campaign. Cohorts remain separate by source, device, dataset, predicate, and timing boundary. On a historical RTX 4050, CPU and compact-row WGPU exchange the lead between 2,000 and 3,000 eligible 384-dimensional vectors; a static 4,096-row rule incurs up to 23.9\% descriptive P95 regret. A separate RTX 4090 ablation reduces sparse-cell P95 by 10.5--32.3\% with one-pass eligibility preparation. In the corrected experimental archive, RTX 4090 WGPU completes 100K-by-768 search in 0.897 ms P95 at batch one and 0.896 ms at batch eight with 10\% eligibility; tensor CUDA takes 0.671 and 0.384 ms. All twelve corrected engine rows have FP64-oracle recall 1.0. These timings use a selector candidate subsequently rejected after five wins and seven losses in twelve frozen-baseline pairs; they are not measurements of the final local selector. Tested warm post-mutation searches avoid resident-state rebuilds, whereas reopen incurs preparation. ANN wins, correctness failures, unavailable devices, and aggregate-only mobile evidence remain visible. Eligible work, preparation, representation, batching, selection, and device state jointly inform routing; the archive does not establish a transferable threshold or validate an adaptive production router.
+\end{abstract}
+
+\section{Introduction and research questions}
+A filtered query over 100,000 vectors may score only one hundred candidates. The remaining work can be dominated by finding those candidates, dispatching a device, selecting results, or returning them through an application interface. Conversely, an unfiltered batch may amortize dispatch enough to favor exhaustive GPU execution even for a modest collection. Collection size and GPU availability alone provide an incomplete description of the execution problem.
+
+Qenlo supplies a concrete system in which to examine this boundary. Canonical records are shared by rebuildable search structures; changing routes should preserve the logical result contract. The archive contains several generations of implementation and experiment design. Earlier studies emphasize eligible cardinality, predicate representation, and routing regret. The September 5 campaign adds small collections, tensor adapters, resource diagnostics, lifecycle measurements, and a rejected selector. This paper preserves those findings without treating historical or candidate results as measurements of the final source tree.
+
+We ask three questions. Under what measured conditions does the preferred exhaustive route change? How much of a completed call comes from eligibility preparation, selection, synchronization, or derived-state preparation rather than scoring? What deployment conclusions survive differences in numerical accuracy, APIs, persistence, runtime ownership, and evidence quality?
+
+The contribution is a systems study, not a new asymptotic nearest-neighbor algorithm. It combines a localized historical crossover, an eligibility-materialization ablation, a failure-preserving small-collection campaign, and heterogeneous-device observations. A claim ledger records which measurements support each conclusion. A rejected optimization retains scientific value, while its latency does not become a promise about the retained implementation.
+
+\section{System model and semantic contracts}
+Let the live canonical collection at generation $g$ contain normalized FP32 vectors $x_i\in\mathbb{R}^D$, public identifiers $i$, and metadata $m_i$. A predicate $P$ defines
+\begin{equation}
+ S_P(g)=\{i:\ i\text{ is live at }g\ \land\ P(m_i)\},\qquad E=|S_P(g)|.
+\end{equation}
+For query $q$, exhaustive search evaluates eligible rows and returns up to $k$ results ordered within each implementation by computed cosine distance and identifier. The ideal cosine distance is
+\begin{equation}
+ d(q,x_i)=1-\frac{q^\top x_i}{\|q\|_2\|x_i\|_2}.
+\end{equation}
+A batch contains $B$ queries. Scoring work scales with $BED$, but that expression omits predicate traversal, memory access, selection, and completed-call overhead.
+
+\paragraph{Exhaustiveness and numerical agreement.}
+We use ``exact'' in the algorithmic sense of exhaustive candidate coverage. Stored FP32 values, CPU accumulation, GPU arithmetic, and an FP64 reference need not yield identical rankings near ties. Oracle recall is reported independently. Historical dense native rows have recall@10 of 0.99998 despite exhaustive execution; corrected small-campaign rows have recall 1.0. Neither proves universal FP64 equivalence. ANN remains approximate even when observed recall is one. Deterministic engine ordering does not prove common FP64-oracle tie membership.
+
+\paragraph{Canonical and derived state.}
+The Rust store owns vectors, identifiers, metadata, tombstones, and generation. CPU scan layouts, WGPU residency, ANN indexes, and eligibility plans are derived state. Canonical vectors are FP32, normalized with an FP64 norm accumulator at ingestion and query boundaries. Restoration validates stored bytes without renormalizing them. Durable collections add snapshot and write-ahead-log behavior; in-memory benchmark collections have no durable generation. Source inspection supports these mechanisms, not universal power-loss durability or arbitrary concurrent or crash schedules.
+
+\section{Execution paths}
+\paragraph{CPU and portable GPU.}
+Historical CPU artifacts describe FP64 accumulation with AVX2/FMA where available. Audited current CPU code also uses a bounded FP32 candidate stage with FP64 rescoring and reference fallback. Not every CPU arithmetic operation is FP64. These are Qenlo implementations, not bounds on optimized CPU performance. WGPU uses WGSL shaders and native graphics backends. WebGPU and WGSL specify a programming model, not performance portability \citep{webgpu,wgsl}; positive execution evidence is limited to named devices.
+
+Resident GPU vectors use compact eligible rows, dense masks, or supported shader predicates. Bounded chunks emit candidates for host merging. Under a common total order, an item outside its chunk's top $k$ cannot enter the global top $k$, since at least $k$ items in that chunk precede it. This standard reduction explains bounded readback; it does not remove floating-point differences.
+
+\paragraph{Eligibility compilation.}
+An \texttt{EligibilityPlan} binds a predicate result to generation and records eligible count, representation, row IDs, and preparation diagnostics. One-pass compilation avoids counting eligibility and traversing it again to materialize rows. A bounded cache keyed by generation and predicate reuses plans only while that identity remains valid. Exact row execution validates ordering, bounds, liveness, and predicate membership. The historical ablation holds GPU scoring fixed across two-pass, one-pass, and warmed cached paths; it does not recalibrate the earlier laptop's crossover.
+
+\paragraph{Tensor execution.}
+The optional Python \texttt{TorchIndex} owns vector and ID tensors and supports CPU, CUDA, and MPS selection in source; only CPU and CUDA have measurements in this paper. The repository's conformance test is CPU-focused, so source-level device support should not be read as positive evidence for every CUDA or MPS device. A collection-derived snapshot records its generation and rejects staleness at search entry during sequential use. It neither holds a native collection lock throughout computation nor rechecks afterward; concurrent mutation guarantees are unestablished. A detached array index has no durable collection identity. Both are derived computation, not another durable database. Replays prepare filtered matrices before query timing. Tensor allocation fields exclude allocator and library overhead.
+
+\paragraph{Mutation and route observability.}
+Resident updates append rows or update liveness without rebuilding when capacity and layout permit; rebuild remains the fallback. CPU-only operation avoids GPU initialization. Required-GPU mode returns errors on failure, while automatic mode records fallback. Static routing and hardware-bound profiles exist, but no retained experiment validates a calibrated profile on held-out decisions. File-backed commits validate and stage durability before publication; this statement does not apply to in-memory collections.
+
+\section{Methodology and evidence boundaries}
+A comparison needs source and archive identity, hardware and software, dataset and query partition, $N,D,B,k,E/N$, predicate representation and semantics, API, timing, and correctness gate. Numerical observations stay within named cohorts; cross-cohort conclusions are qualitative synthesis. Historical endpoints with differing revisions remain descriptive context, not controlled ablations.
+
+\paragraph{Timing.}
+Native timing starts at the host search call and ends with host-visible ordered results, including in-call eligibility, transfers, dispatch, synchronization, readback, and merge. Load, construction, warmup, and oracle work are excluded. External small-campaign adapters also return host-visible identifiers and distances but receive a prefiltered canonical matrix. Their build field includes matrix and index construction; the metadata traversal creating eligible IDs precedes that timer. Even \texttt{build\_and\_filter\_prepare\_ns} omits part of preparation. Chroma includes Python collection bindings and serialization. These are scoped completed calls, not identical database APIs.
+
+CUDA events are separate from host calls. Scoring, selection, and backend diagnostics overlap: summing them or subtracting them from P95 invents an unmeasured phase. Lifecycle records separate mutation, collection opening, and first search. Throughput fields including validation in their wall interval are not inverse query latency and are not used for cross-engine QPS rankings.
+
+\paragraph{Samples and correctness.}
+New synthetic cells generally use three repetitions of 64 evaluation queries: 192 batch-one calls, 24 batch-eight calls, or three batch-64 calls. The real fixture uses 5,000 queries per repetition and 939 batch-16 calls across three runs. Matrix \texttt{sample\_count} means native batch calls but external replay repetitions; Table~\ref{tab:headline} restores common calls and runs notation. Per-run nearest-rank percentiles are reduced by the lower median. Replays preserve native query order and truth and validate membership, distances, eligibility, and recall outside timing. Repeated queries are not independent deployment workloads.
+
+Historical Windows and eligibility cells use five runs of 5,000 held-out calls, $k=10$, $B=1$, and 200 warmups; the statistic is median run P95. A6000 tables summarize per-call distributions within cells; synthetic A6000 has 500 calls per system and cell. Android and Arc provide aggregate percentiles. No figure claims significance or draws error bars. Lines are guides. Sequential execution, post-hoc choices, and small run counts limit causal and statistical interpretation.
+
+\section{Evidence cohorts and source identity}\label{sec:cohorts}
+\begin{table}[H]\centering\small
+\caption{Cohort map. Observations describe archive volume, not independent replications. Codes identify source roles below.}
+\begin{tabular}{p{.24\linewidth}p{.23\linewidth}p{.22\linewidth}p{.19\linewidth}}
+\toprule Cohort & Hardware / data & Scope & Evidence \\
+\midrule
+Small S0/S1/S2 & Ada, A40, 4090; generated, AG News & 1K--100K, 128--768D & 182 status rows \\
+Localization H1 & RTX 4050/DX12; AG News & 100K, 384D, $E=2$K--10K & 300,000 raw calls \\
+Endpoints H0 & RTX 4050; AG News & 100K, sparse/dense & 225,000 raw calls \\
+Eligibility H2 & RTX 4090/Vulkan; AG News & 100K, 384D, three modes & 300,000 raw calls \\
+Linux H3 & Cloud CPU; AG News & 100K, 384D, seven engines & 10,500 raw calls \\
+A6000 real H4 & CUDA; TopK ModernBERT & 1M, 768D, strict predicate & 20,000 raw calls \\
+A6000 synthetic H5 & CUDA; generated FP32 & 1M, 768D, four $E$ & 4,000 raw calls \\
+Android H6 & Mali-G615/Vulkan & 10K/100K, 384D & 21 aggregate cells \\
+Intel Arc H7 & Arc/Vulkan & 10K/100K, 384D & 21 aggregate cells \\
+\bottomrule\end{tabular}\end{table}
+S0 is frozen archive \texttt{f37e744c}; S1 experimental archive \texttt{730c0500}; S2 corrected supplement \texttt{bb195fed}. S1/S2 contain the lane-minimum candidate. Local WGSL is byte-identical to S0's simpler selector. Manifests refer to dirty-worktree context around HEAD \texttt{b22d3b5}; archive hashes, not that commit alone, identify measured code. Matrix label \texttt{current-gpu} is an artifact key, not final local behavior.
+
+H1 records common revision \texttt{3e2a4a9}, with dirty worktree; configurations/outputs are part of identity. H0 has several revisions. H2 is archive \texttt{26e0ccc0}. H3 is \texttt{bb51987}, mirrored and counted once. H4/H5 have different A6000 environments and research CUDA implementations. H6/H7 identify device-lab run IDs rather than reconstructible executable archives.
+
+Windows data derive from DTU AG News embeddings \citep{nielsen2022agnews}; Linux uses a separately prepared fixture. Equal names do not imply equal bytes or partitions. The small campaign retains its real fixture/checksums. A6000 uses TopK Bench's million-vector 768D ModernBERT corpus \citep{topkbench}; strict/provider-compatible predicates are separate. Appendix~\ref{sec:artifact} expands provenance and exclusions.
+\section{Small-collection campaign}
+\subsection{Coverage and common sweep}
+The matrix has 182 rows: 131 completed, 42 \texttt{failed\_or\_unavailable}, seven failed, and two invalid-harness. Only 130 are qualified. Completed USearch batch-64 remains visible at recall 0.3453125. The manifest has fifteen configurations: ten primary offers plus five reference/deep/retry/fix follow-ups, neither fifteen device replications nor ten successful devices. Available RTX 2000 Ada, two A40 configurations, and reference RTX 4090 produced results; unavailable L4, RTX 3090, A6000, and community offers remain visible.
+\begin{table}[H]\centering\small
+\caption{Common synthetic workloads, $k=10$. Six selected cells, not a factorial sweep.}
+\begin{tabular}{lrrrr}\toprule Cell & $N$ & $D$ & $B$ & $E/N$ \\\midrule
+C1 & 1,000 & 128 & 1 & 100\% \\
+C2 & 1,000 & 384 & 16 & 1\% \\
+C3 & 10,000 & 128 & 16 & 100\% \\
+C4 & 10,000 & 384 & 1 & 1\% \\
+C5 & 100,000 & 128 & 1 & 1\% \\
+C6 & 100,000 & 384 & 16 & 100\% \\
+\bottomrule\end{tabular}\end{table}
+\fig{small_common}{S1 \texttt{730c0500}, synthetic common cells, native completed-call P95. Panels are separate hosts. WGPU uses the candidate; no interpolation/error bars. Current-CPU rows are absent on A40, so those panels do not establish CPU/GPU pairs. All displayed FP64 recalls are 1.0. Vertical axis is logarithmic.}{fig:small-common}
+On reference RTX 4090, CPU wins C1, C2, C4, C5; WGPU wins dense batched C3/C6. At C5, 100K total rows leave 1K eligible: CPU takes 0.0341 ms P95 versus WGPU's 0.0953 ms. At C6, WGPU takes 4.0479 ms versus CPU's 68.0575 ms. Dimension, batching, and eligibility differ; these are route observations, not isolated size effects. A40 configurations must not supply a pooled device curve.
+
+\subsection{Corrected 100K-by-768 supplement}
+S2 ran on Linux, RTX 4090/Vulkan, driver 580.159.04, AMD Ryzen Threadripper 7960X. Generated data record CRC32 \texttt{50b69280}. Table~\ref{tab:headline} verifies all twelve rows against raw records/matrix. They used the candidate subsequently rejected by local source.
+\begin{table}[H]\centering\small
+\caption{S2, 100K$\times$768, completed-call ms. FP64 recall 1.0 throughout. Calls/runs counts batch calls across runs; replays follow native batches. External matrices are prefiltered outside timing.}\label{tab:headline}
+\begin{tabular}{llrrrr}\toprule Workload & Engine & P50 & P95 & Recall & Calls/runs \\\midrule
+\tableinput{tables/final/headline}
+\bottomrule\end{tabular}\end{table}
+\fig{small_768}{S2 \texttt{bb195fed}, RTX 4090/Vulkan, generated 100K$\times$768. Host-call P95, logarithmic horizontal axes, no error bars. Eligibility/batching differ between panels. WGPU is the rejected candidate; all FP64 recalls 1.0. FAISS Flat, NumPy, Torch use prefiltered matrices.}{fig:small-768}
+Unfiltered batch-one WGPU is 10.49 times faster than native CPU at P95; Torch CUDA is 1.34 times faster than WGPU. At 10\% eligibility and batch eight, these ratios are 31.91 and 2.33. They describe archived calls. Fresh matched runs are required to attach WGPU numbers to the final full-rescan selector. Tensor latency excludes deployment/persistence costs around a matrix.
+
+\subsection{Real embeddings}
+S1 real AG News has $N=100$K, $D=384$, $B=16$, $k=10$, $E/N=1\%$. WGPU P95 is 0.171958 ms, CPU 0.941633 ms, FAISS Flat 0.242735 ms, NumPy 0.749214 ms, Torch CPU 0.268323 ms, Torch CUDA 0.351387 ms; all FP64 recalls are 1.0. WGPU leads Torch CUDA here, reversing their order in distinct S2 synthetic cells. This change across workload/source conditions does not isolate its cause. One fixture cannot establish robustness to models, geometry, or correlated metadata. ANN rows remain with recall in Appendix~\ref{sec:tables}.
+
+\section{Historical crossover and eligibility preparation}
+\subsection{A localized exhaustive winner reversal}
+Matched H1 searches 100K$\times$384 AG News on RTX 4050/DX12 at $B=1,k=10$. CPU takes 0.5198 ms P95 versus compact-row WGPU's 0.6340 ms at $E=2$K. At 3K, WGPU takes 0.8144 ms versus CPU's 0.9563 ms and remains faster through 10K. The reversal is bracketed by $(2\mathrm{K},3\mathrm{K})$, not a fitted threshold. All localization recalls are 1.0. Compact-row timing includes duplicated count/materialize traversal.
+\fig{phase_map}{Separate historical panels. Left: H1 \texttt{3e2a4a9}, RTX 4050/DX12, AG News 100K$\times$384, $B=1,k=10$, compact rows, median five-run P95, FP64 recall 1.0. Older endpoint revisions omitted. Right: H5 A6000 research CUDA/FAISS, generated 1M$\times$768, prefiltered rows, $B=1,k=10$, P95 over 500 calls/system/cell; unordered top-10 agreement without independent FP64 oracle. Logarithmic axes; lines guide the eye, not fitted laws.}{fig:cross}
+The shipped rule chooses CPU for $E<4,096$ and batches below eight. Counterfactually applied to six H1 cells, it misroutes 3K and 4K, with relative P95 regret of 17.4\% and 23.9\%. For cell $c$ and valid measured routes $\mathcal{R}_c$,
+\begin{equation}
+R(c)=\frac{T_{\pi(c),95}}{\min_{r\in\mathcal{R}_c}T_{r,95}}-1.
+\end{equation}
+These compare separate run-level percentiles, not paired queries. Equal weighting of six post-hoc cells is not an application distribution. A profile mechanism in code does not prove adaptive routing reduces regret.
+\fig{routing_regret}{H1 RTX 4050, same 100K$\times$384 compact-row cells and FP64 recall 1.0 as Figure~\ref{fig:cross}. Completed-call P95 regret uses median five-run results and frozen 4,096-row rule. Annotations give relative regret. Descriptive counterfactual; no routing traces/confidence bars.}{fig:regret}
+
+\subsection{One-pass and cached eligibility}
+H2 uses a separate RTX 4090/Vulkan, Ryzen 9 7950X, driver 570.211.01. Its 100K$\times$384 AG News ablation fixes scoring/queries across five runs per mode at $E\in\{1\mathrm{K},4\mathrm{K},6\mathrm{K},100\mathrm{K}\}$. One-pass lowers P95 from 0.131736 to 0.117870 ms at 1K, 0.305281 to 0.208009 at 4K, and 0.401130 to 0.271618 at 6K: 10.5--32.3\% reductions. Warmed cache lowers sparse values by 24.3--57.3\%. Dense improvement is smaller: 1.786170 to 1.720476 ms one-pass or 1.596024 cached.
+\fig{eligibility_ablation}{H2 \texttt{26e0ccc0}, RTX 4090/Vulkan, 100K$\times$384 AG News, $B=1,k=10$. Median five-run completed-call P95, 25,000 calls/point. Sparse FP64 recall 1.0; dense 0.99998. Sequential modes, logarithmic axes, guide lines, no uncertainty intervals.}{fig:eligibility}
+Cache benefit requires identical predicate/generation; mutation invalidates that premise. Without matched CPU cells, on another host, H2 cannot relocate H1's crossover. It directly establishes that duplicated eligibility work affects a completed call.
+
+\section{Predicate representation and batching}
+H0 dense GPU endpoints share a recorded GPU revision: shader predicates take 3.2404 ms P95, compact rows 4.2428, and masks 4.4591. At 1K eligible rows, compact rows take 0.6766 ms and shader predicates 2.8832 ms, but the sparse records differ in revision. That difference is context, not a causal representation ablation. The CPU and dense-GPU endpoints also differ. Figure~\ref{fig:representations} preserves these limitations rather than merging H0 with H1.
+\fig{windows_strategies}{H0 RTX 4050/DX12, 100K$\times$384 AG News, $B=1,k=10$, five runs/25,000 calls per row, completed-call P95. Dense WGPU forms share \texttt{f1ccc4d}; CPU/sparse records include other revisions. Exhaustive sparse/dense FP64 recall 1.0/0.99998; USearch ANN 0.99224. Descriptive context; no causal cross-revision speedup.}{fig:representations}
+Batching affects dispatch amortization and selection; representation affects host preparation and device work. C1--C6 supports both as routing features but changes them together with dimension and selectivity. Device-lab batches use another reporting schema. No same-host factorial study isolates all interactions, and no fixed-$E$, varying-$N$ study establishes eligibility as a statistically superior predictor to size.
+
+\section{ANN and external-engine comparisons}
+\subsection{Chroma qualification and historical competitors}
+Seven qualified S1 pairs favor candidate WGPU over Chroma HNSW, with P95 ratios 3.700--3233.136. All seven paired Chroma recalls are 1.0. The maximum is real AG News: Chroma 555.964 ms versus WGPU 0.171958. Three attempts fail the gate before held-out timing: C3/C6 at expansion 128 and deep D2 at 512. Completed USearch D2 has recall 0.3453125 at 83.3133 ms and is unqualified. These rows remain visible.
+\fig{small_chroma}{S1 \texttt{730c0500}, seven qualified configuration/workload pairs on A40/RTX 4090, $k=10$; IDs map to matrix/appendix. Logarithmic axis: Chroma/native candidate-WGPU completed-call P95 ratio. Chroma recall printed. Python API, ANN, persistence/filter boundaries differ. Three gate failures excluded from ratios, retained in ledger; no error bars.}{fig:chroma}
+H0 Chroma dense reaches 1.1303 ms P95 at recall 0.99414 versus WGPU predicate 3.2404 at 0.99998. Tuned USearch expansion 128 takes 3.6245 at 0.99224. These are operating points with revision/API qualifications, not ANN frontiers. H3 Linux favors FAISS HNSW at 1.4939 ms/0.9994 over Qenlo CPU 12.9014/1.0. Chroma, USearch, FAISS Flat, Milvus Lite, and LanceDB remain in the appendix. These boundaries preclude universal rankings.
+
+\subsection{A6000 real and synthetic evidence}
+H4 strict TopK yields $E=10,026$ from 1M 768D rows. FAISS GPU Flat leads qualified methods at 0.132222 ms P95, then research CUDA prototype 0.170722 and NumPy 0.197311. Each has 5,000 calls and FP64 recall 1.0. cuVS's 0.384636 ms is disqualified by recall 0.9. The prototype misses the retained gate requiring twofold CPU advantage. Eligibility is pre-materialized; the prototype is Python/PyTorch CUDA, not shipped Rust/WGPU.
+H5 fresh-seed synthetic differs: FAISS leads at $E=1$K/10K; the buffered prototype leads at 100K (0.5673 versus 0.7887 ms) and 1M (4.6683 versus 6.3475). The reversal is between measured 10K/100K points. Correctness is unordered top-10 agreement, not an FP64 oracle. This is formulation-specific. Native WGPU had no usable A6000 Vulkan ICD and no native timing in that cohort.
+\section{Mutation, reopen, and resource accounting}
+S1 lifecycle uses a durable 10K$\times$384 collection on RTX 4090, $B=1,k=10$, unfiltered. First-search P95 after add-one, delete-one, add-batch, delete-batch is 0.598, 0.631, 0.740, 0.819 ms. Mutation is excluded and has separate P95 near 22 ms. Three observations/type report zero rebuilds; immediate-deletion checks pass. Reopen takes 52.169 ms to open and, separately, 101.296 ms for first search with one rebuild. Neither is a combined timer. One observation cannot characterize reopen tail latency.
+\fig{small_lifecycle}{S1 reference RTX 4090, durable 10K$\times$384, unfiltered $B=1,k=10$. Bars are first-search latency after mutation/reopen, excluding mutation/opening. Three observations per mutation type give P95; reopen is one observation. Rebuild annotations are fractions, not probabilities. Deletion checks pass. Logarithmic horizontal axis, no error bars.}{fig:lifecycle}
+S2 unfiltered WGPU reports 311.181 MB of owned accelerator allocation and a 1.203675 GB process RSS high-water mark. Batch eight reports 314.909 MB and 1.174577 GB, respectively. Units are decimal. RSS includes process and runtime peaks; owned buffers omit driver and runtime allocations. Neither is physical VRAM telemetry. Upload and readback counts are 403,136 and 48 bytes unfiltered, and 517,120 and 65,792 bytes for batch eight. Residency and per-call transfer are separate scopes.
+\fig{small_resources}{S2 \texttt{bb195fed}, RTX 4090/Vulkan, generated 100K$\times$768, FP64 recall 1.0. Left: $B=8,k=64,E/N=10\%$, raw phase medians versus call P95. Nested scopes are not additive. Right: two corrected WGPU workloads, zoomed linear latency axis, decimal owned-allocation MB. Different workloads do not establish a memory/latency law or efficiency score. No error bars.}{fig:resources}
+Batch-eight median scoring is 0.072 ms, selection 0.613, backend execution 0.826; call P95 is 0.896. Selection exceeds scoring in these diagnostics. That motivates investigation but does not prove another selector improves latency. Capacity, initialization, and warm-state validity remain deployment costs even when arithmetic is inexpensive.
+
+\section{Mobile and heterogeneous devices}
+H6 records physical Android: Android 16 (API 36), MediaTek MT6897, Mali-G615 MC6 with Vulkan, app 0.1.0. All 21 aggregate cells report recall@10=1.0 without fallback or failure. CPU wins the 10K quick batch-one cell (5.767 versus WGPU's 12.487 ms P95); WGPU wins the 100K full cell (16.975 versus 29.436) and soak cell (17.678 versus 27.019). Size and suite change together, so this is a qualitative reversal rather than a mobile crossover bracket.
+\fig{android_matched}{H6 physical Mali-G615/Vulkan, generated 384D, $k=10$, app 0.1.0; commit unrecorded. Supplied aggregate percentiles: quick/full/soak use 16/64/512 samples/cell. All recalls 1.0; IVF remains approximate. Raw calls and controlled thermal/power records absent. No error bars or current-revision mobile claim.}{fig:android}
+At 100K Android soak, IVF-Flat takes 21.453 ms P95 and IVF-SQ8 37.090, slower than exhaustive WGPU at those settings. Dense WGPU batch eight reports 11.131 ms; the batch statistic is not per-query normalized. It suggests amortization, not an eightfold per-query gain. Power source is absent and thermal state is uninterpreted ``0''.
+
+H7 Intel Arc soak reports CPU 16.486 ms P95, exhaustive WGPU 4.444, IVF-Flat 2.704, IVF-SQ8 22.797 at 100K$\times$384. All recalls are 1.0 over 512 samples/cell. Arc adds non-NVIDIA execution evidence and another negative for universal exhaustive dominance: IVF-Flat wins. One externally labeled ``full'' report embeds \texttt{suite=quick}; JSON is authoritative. Historical Android runs and Kotlin/JVM bindings do not establish current Android packaging. Simulator/macOS builds do not establish physical iOS performance; no iOS-device/MPS timing is retained.
+
+\section{Negative results and rejected optimization}
+Lane-minimum selection retains each lane's minimum and rescans only the winning lane. It reduces repeated scans but changes local state and synchronization. Twelve qualified S0/S1 pairs yield five wins and seven losses, with frozen-baseline to candidate P95 ratios from 0.617 to 1.295. The retained implementation uses the simpler full-rescan selector. Less nominal work did not consistently reduce completed latency. Archives contain other changes too: paired revisions do not prove every difference is solely caused by selection.
+\fig{small_selector}{S0 \texttt{f37e744c} versus S1 \texttt{730c0500}, twelve qualified WGPU configuration/workload pairs, FP64-oracle-qualified completed-call P95. Exact workloads/ratios in appendix. Above one favors candidate: five wins, seven losses. RTX 2000 Ada, A40, RTX 4090; no significance test, error bars, or pooled device effect.}{fig:selector}
+Four pre-fix 100K$\times$768 failures remain: a 2 GiB benchmark budget did not override 512 MiB default in-memory admission. Corrected source/results have distinct hashes, not retroactive qualification. Two malformed workload-label invocations are invalid harness rows, not slow engines. Chroma gates, unqualified USearch, cuVS recall/runtime failures, and unavailable Vulkan paths remain evidence. Controller completion alone is insufficient qualification.
+
+Final known daily Runpod spend is \$0.9400778694252952, with zero campaign pods remaining, ten creations and ten verified deletions. No campaign volume was retained. This is account/day billing, not per-query or clean marginal campaign cost; billing lag is possible. No cloud work was rerun for authoring.
+
+\section{Deployment implications}
+CPU fits tiny eligible work where accelerator fixed costs dominate. WGPU can help dense/batched work with valid residency. Tensor execution may fit applications already owning its runtime, but package footprint and persistence-integration cost were not measured. Snapshot generation/mutation state must be checked before amortizing preparation.
+An explanatory decomposition is
+\begin{equation}
+T_{\mathrm{call}}=T_{\mathrm{prepare}}+T_{\mathrm{route}}+T_{\mathrm{execute}}+T_{\mathrm{return}}.
+\end{equation}
+These conceptual nonoverlapping boundaries are not sums of overlapping counters. Execution depends on $E,D,B,k$, representation, and device; preparation also depends on reuse, generation, residency. No coefficients are fitted. This organizes observations without a transferable latency law.
+The reversals and preparation ablation support the central engineering inference: size/GPU presence is insufficient for routing. They do not validate a multidimensional predictor. Decisions require the named adapter/API, recall and mutation conditions. Cloud results cannot select a mobile default.
+
+\section{Threats to validity}
+The archive grew sequentially, not as a randomized factorial study. Dirty trees limit attribution despite hashes/configurations. H0 is cross-revision context; H1 is post-hoc, one laptop/dimension/batch/corpus, independent synthetic metadata. H2 is sequential, lacks CPU cells, and cannot recalibrate H1. C1--C6 confound size, dimension, batching, eligibility. S2 uses a rejected selector whose final replacement was not rerun in corrected cells.
+Three-run small, five-run historical, and single-reopen data do not support narrow intervals or broad significance. Repeated queries are not independent workloads. Aggregate device data cannot yield raw distributions; thermal/power controls are incomplete. Prototype agreement is weaker than an FP64 oracle. Reference checks do not prove all ties or workloads agree.
+Adapters differ in filtering, selection, normalization, threading, persistence, API. NumPy uses full lexicographic sorting, not an optimal top-$k$ baseline. Corrected FAISS is CPU Flat; historical A6000 is GPU Flat. Memory scopes differ and omit peak total accelerator use. Concurrency, energy, device loss, cache churn, adversarial predicates, and crash schedules were not benchmarked. Native sweeps lack ANN frontiers/filter-aware baselines. No fastest-database claim follows.
+
+\section{Related work and novelty boundary}
+FAISS describes optimized exhaustive/approximate CPU/GPU search and selection \citep{johnson2019billion,douze2024faiss}. HNSW provides graph ANN \citep{malkov2020hnsw}. DiskANN/SPANN address storage-aware regimes \citep{subramanya2019diskann,chen2021spann}; Filtered-DiskANN/ACORN modify graph access under predicates \citep{gollapudi2023filtered,patel2024acorn}.
+Filtered-ANN studies establish that attributes, selectivity, query/data conditions, tuning, and implementation affect method choice \citep{iff2026fanns,li2025attribute,shi2025unified}. System analyses examine filtering plans and approximate/exhaustive alternatives \citep{amanbayev2026systems}; the latter two studies are preprints. ``Selective scans sometimes win'' is not novel. Qenlo's narrower contribution is the CPU/portable-GPU completed-call boundary, eligibility compilation and generation-bound state, and small-collection resource/lifecycle evidence. It lacks broad FANNS coverage and claims no new ANN algorithm.
+
+\section{Conclusions}
+A matched RTX 4050 sweep localizes CPU/WGPU reversal and static-policy regret. A separate ablation shows eligibility preparation changes completed latency. Small-collection results add fast experimental WGPU/tensor paths, CPU wins on selective cells, resource costs, and a rejected selector. Android, Arc, A6000 extend observations within separate correctness/platform boundaries.
+Routing should account for eligibility, representation, batching, runtime, state. Evidence does not establish a universal threshold, numerical-equivalence theorem, or adaptive router's held-out advantage. Final local selection needs new matched measurements before inheriting corrected experimental latencies.
+
+\section*{Reproducibility statement}
+Retained evidence only: no product/benchmark changes or experimental reruns. Ledgers preserve claims, revisions/hashes, environments, provenance, timing, counts, correctness, memory, qualification, exclusions. Paper-only scripts regenerate reductions/tables and PDF/PNG figures without replacing raw evidence or historical figures. Appendix~\ref{sec:artifact} and \path{paper/REPRODUCE.md} describe audit/clean build.
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+\clearpage
+\appendix
+\input{appendix}
+\end{document}

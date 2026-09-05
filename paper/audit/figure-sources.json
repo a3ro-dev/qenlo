@@ -1,0 +1,138 @@
+[
+  {
+    "figure": "small_768",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv",
+        "sha256": "93e3557ded9e3776db170f34a689085c20868d795e4b07746f811a0befc900bb"
+      }
+    ],
+    "interpretation": "RTX 4090 corrected archive bb195fed; 100K x 768; no error bars; external filters prepared outside call; all oracle recall 1."
+  },
+  {
+    "figure": "small_common",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv",
+        "sha256": "93e3557ded9e3776db170f34a689085c20868d795e4b07746f811a0befc900bb"
+      }
+    ],
+    "interpretation": "Paired cells within each configuration only; dimensions/batches/selectivity differ across C1-C6. No interpolation or error bars; source 730c0500."
+  },
+  {
+    "figure": "small_selector",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv",
+        "sha256": "93e3557ded9e3776db170f34a689085c20868d795e4b07746f811a0befc900bb"
+      }
+    ],
+    "interpretation": "12 qualified frozen-source/candidate pairs; descriptive; paired archive hashes differ; no uncertainty bars."
+  },
+  {
+    "figure": "small_resources",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv",
+        "sha256": "93e3557ded9e3776db170f34a689085c20868d795e4b07746f811a0befc900bb"
+      }
+    ],
+    "interpretation": "Corrected RTX 4090, d4/d5. Phase bars are nested scopes and unlike statistics, never summed. Allocation excludes process RSS; two distinct workloads, no fitted relationship."
+  },
+  {
+    "figure": "small_lifecycle",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv",
+        "sha256": "93e3557ded9e3776db170f34a689085c20868d795e4b07746f811a0befc900bb"
+      }
+    ],
+    "interpretation": "Source 730c0500, reference RTX 4090 10K x 384 B1 k10. Three observations/mutation and one reopen. Mutation and opening durations excluded; raw harness timers supersede broad matrix timing_scope. No error bars."
+  },
+  {
+    "figure": "small_chroma",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv",
+        "sha256": "93e3557ded9e3776db170f34a689085c20868d795e4b07746f811a0befc900bb"
+      }
+    ],
+    "interpretation": "Seven qualified same-configuration/workload pairs; ANN recall printed; three gate failures excluded from ratios but retained in ledger. Distinct database and filter/API boundaries."
+  },
+  {
+    "figure": "routing_regret",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/data/processed/static_router_regret.csv",
+        "sha256": "f8f3a4178338274b63874bea767872245d5be1a04a70ce830a73a040b9165557"
+      }
+    ],
+    "interpretation": "Historical cohort; original generator and original figure preserved. Lines are guides only. See manuscript caption for cohort and timing."
+  },
+  {
+    "figure": "eligibility_ablation",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/data/processed/eligibility_ablation_summary.csv",
+        "sha256": "0a32d40ddbf4994f3dd8509718537a48e99444b729fcb8648c28c0b73365d814"
+      }
+    ],
+    "interpretation": "Historical cohort; original generator and original figure preserved. Lines are guides only. See manuscript caption for cohort and timing."
+  },
+  {
+    "figure": "windows_strategies",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/data/processed/windows_summary.csv",
+        "sha256": "f793add11ced3a1be4285d37f16d6379eeb1fbe65060a455a2896b6fec7f4bbd"
+      }
+    ],
+    "interpretation": "Historical cohort; original generator and original figure preserved. Lines are guides only. See manuscript caption for cohort and timing."
+  },
+  {
+    "figure": "android_matched",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/data/processed/android_device_lab.csv",
+        "sha256": "6104c123dec97c24b354237d9fcb76cc3c84749f5a9ec4625835f4ac080976cb"
+      }
+    ],
+    "interpretation": "Historical cohort; original generator and original figure preserved. Lines are guides only. See manuscript caption for cohort and timing."
+  },
+  {
+    "figure": "linux_library_context",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/data/processed/linux_library_summary.csv",
+        "sha256": "540ec885642418e40da21411e505e29efeda129daf3e7fc02502c1a354b38f6c"
+      }
+    ],
+    "interpretation": "Historical cohort; original generator and original figure preserved. Lines are guides only. See manuscript caption for cohort and timing."
+  },
+  {
+    "figure": "phase_map",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/data/processed/native_crossover_summary.csv",
+        "sha256": "9da5249622de1fa0728d30abfddfba91da27b3ebfa4cefa701c08734591d2788"
+      },
+      {
+        "path": "research/data/processed/a6000_exact_summary.csv",
+        "sha256": "258e9e0d7c3374746d6e3695c8a76d1f4581ba7e0dcf5676c68b841cda6c0b0b"
+      }
+    ],
+    "interpretation": "Separate panels, not pooled. Native matched revision 3e2a4a9 only; older endpoints deliberately omitted. A6000 pooled per-call descriptive P95 within cell, cross-implementation agreement only. Lines guide eyes."
+  }
+]

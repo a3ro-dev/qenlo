@@ -7,6 +7,8 @@ use std::{
     ptr, slice,
 };
 
+#[cfg(feature = "gpu-wgpu")]
+use qenlo::{BackendSelection, GpuFilterMode};
 use qenlo::{Collection, CollectionConfig, Filter, Measurement, NewRecord, TimestampRange};
 use serde::Serialize;
 
@@ -18,6 +20,24 @@ thread_local! {
 pub struct QenloCollection {
     collection: Collection,
     dimension: usize,
+}
+
+/// Owned, generation-bound live-row snapshot for typed SDK integrations.
+#[repr(C)]
+pub struct QenloSnapshot {
+    generation: u64,
+    rows: usize,
+    dimension: usize,
+    ids: Vec<u64>,
+    vectors: Vec<f32>,
+}
+
+/// Owned typed search output. Result arrays and report share one completed call.
+#[repr(C)]
+pub struct QenloSearchResults {
+    ids: Vec<u64>,
+    distances: Vec<f32>,
+    report: JsonReport,
 }
 
 #[derive(Serialize)]
@@ -32,7 +52,7 @@ struct JsonSearch {
     report: JsonReport,
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 struct JsonReport {
     operation_id: String,
     requested_backend: String,
@@ -121,6 +141,44 @@ fn ffi_pointer(
     }
 }
 
+fn ffi_snapshot_pointer(
+    operation: impl FnOnce() -> Result<QenloSnapshot, String>,
+) -> *mut QenloSnapshot {
+    match catch_unwind(AssertUnwindSafe(operation)) {
+        Ok(Ok(snapshot)) => {
+            clear_error();
+            Box::into_raw(Box::new(snapshot))
+        }
+        Ok(Err(error)) => {
+            set_error(error);
+            ptr::null_mut()
+        }
+        Err(_) => {
+            set_error("Qenlo panicked across the native boundary");
+            ptr::null_mut()
+        }
+    }
+}
+
+fn ffi_search_pointer(
+    operation: impl FnOnce() -> Result<QenloSearchResults, String>,
+) -> *mut QenloSearchResults {
+    match catch_unwind(AssertUnwindSafe(operation)) {
+        Ok(Ok(results)) => {
+            clear_error();
+            Box::into_raw(Box::new(results))
+        }
+        Ok(Err(error)) => {
+            set_error(error);
+            ptr::null_mut()
+        }
+        Err(_) => {
+            set_error("Qenlo panicked across the native boundary");
+            ptr::null_mut()
+        }
+    }
+}
+
 fn json_pointer<T: Serialize>(operation: impl FnOnce() -> Result<T, String>) -> *mut c_char {
     match catch_unwind(AssertUnwindSafe(operation)) {
         Ok(Ok(value)) => match serde_json::to_string(&value)
@@ -150,6 +208,37 @@ fn json_pointer<T: Serialize>(operation: impl FnOnce() -> Result<T, String>) -> 
 unsafe fn collection<'a>(value: *mut QenloCollection) -> Result<&'a QenloCollection, String> {
     // SAFETY: validated for null here; ownership remains with the caller.
     unsafe { value.as_ref() }.ok_or_else(|| "collection pointer is null".to_owned())
+}
+
+unsafe fn snapshot<'a>(value: *mut QenloSnapshot) -> Result<&'a QenloSnapshot, String> {
+    // SAFETY: validated for null here; ownership remains with the caller.
+    unsafe { value.as_ref() }.ok_or_else(|| "snapshot pointer is null".to_owned())
+}
+
+unsafe fn search_results<'a>(
+    value: *mut QenloSearchResults,
+) -> Result<&'a QenloSearchResults, String> {
+    // SAFETY: validated for null here; ownership remains with the caller.
+    unsafe { value.as_ref() }.ok_or_else(|| "search results pointer is null".to_owned())
+}
+
+unsafe fn output_values<'a, T>(
+    value: *mut T,
+    len: usize,
+    required: usize,
+    name: &str,
+) -> Result<&'a mut [T], String> {
+    if len < required {
+        return Err(format!("{name} output needs {required} values, got {len}"));
+    }
+    if required == 0 {
+        return Ok(&mut []);
+    }
+    if value.is_null() {
+        return Err(format!("{name} output pointer is null"));
+    }
+    // SAFETY: caller promises `len` writable values and `required <= len`.
+    Ok(unsafe { slice::from_raw_parts_mut(value, required) })
 }
 
 unsafe fn floats<'a>(value: *const f32, len: usize) -> Result<&'a [f32], String> {
@@ -185,6 +274,57 @@ unsafe fn path(value: *const c_char) -> Result<String, String> {
         .map_err(|error| format!("path is not UTF-8: {error}"))
 }
 
+fn collection_config(
+    dimension: usize,
+    backend: u32,
+    _gpu_filter_mode: u32,
+    gpu_allocation_budget_bytes: u64,
+) -> Result<CollectionConfig, String> {
+    let backend = match backend {
+        0 => qenlo::BackendSelection::CpuExact,
+        #[cfg(feature = "gpu-wgpu")]
+        1 => BackendSelection::Automatic(gpu_filter_mode_value(_gpu_filter_mode)?),
+        #[cfg(feature = "gpu-wgpu")]
+        2 => BackendSelection::WgpuRequired(gpu_filter_mode_value(_gpu_filter_mode)?),
+        #[cfg(not(feature = "gpu-wgpu"))]
+        1 | 2 => {
+            return Err(
+                "native artifact was built without portable GPU support; use backend 0 or install a desktop GPU artifact"
+                    .into(),
+            );
+        }
+        value => {
+            return Err(format!(
+                "unknown backend value {value}; expected 0, 1, or 2"
+            ));
+        }
+    };
+    Ok(CollectionConfig {
+        dimension,
+        backend,
+        gpu_allocation_budget_bytes,
+    })
+}
+
+#[cfg(feature = "gpu-wgpu")]
+fn gpu_filter_mode_value(value: u32) -> Result<GpuFilterMode, String> {
+    match value {
+        0 => Ok(GpuFilterMode::CpuMask),
+        1 => Ok(GpuFilterMode::CpuEligibleRows),
+        2 => Ok(GpuFilterMode::GpuPredicate),
+        value => Err(format!(
+            "unknown GPU filter mode {value}; expected 0, 1, or 2"
+        )),
+    }
+}
+
+fn owned(collection: Collection, dimension: usize) -> QenloCollection {
+    QenloCollection {
+        collection,
+        dimension,
+    }
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn qenlo_collection_new(dimension: usize) -> *mut QenloCollection {
     ffi_pointer(|| {
@@ -195,6 +335,26 @@ pub extern "C" fn qenlo_collection_new(dimension: usize) -> *mut QenloCollection
             collection,
             dimension,
         })
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn qenlo_collection_new_configured(
+    dimension: usize,
+    backend: u32,
+    gpu_filter_mode: u32,
+    gpu_allocation_budget_bytes: u64,
+) -> *mut QenloCollection {
+    ffi_pointer(|| {
+        let config = collection_config(
+            dimension,
+            backend,
+            gpu_filter_mode,
+            gpu_allocation_budget_bytes,
+        )?;
+        pollster::block_on(Collection::new(config))
+            .map(|collection| owned(collection, dimension))
+            .map_err(|error| error.to_string())
     })
 }
 
@@ -223,6 +383,33 @@ pub unsafe extern "C" fn qenlo_collection_create(
 }
 
 #[unsafe(no_mangle)]
+/// Create a durable configured collection at a UTF-8 filesystem path.
+///
+/// # Safety
+/// `path_ptr` must point to a readable NUL-terminated string for this call.
+pub unsafe extern "C" fn qenlo_collection_create_configured(
+    path_ptr: *const c_char,
+    dimension: usize,
+    backend: u32,
+    gpu_filter_mode: u32,
+    gpu_allocation_budget_bytes: u64,
+) -> *mut QenloCollection {
+    ffi_pointer(|| {
+        // SAFETY: forwarded caller contract.
+        let path = unsafe { path(path_ptr) }?;
+        let config = collection_config(
+            dimension,
+            backend,
+            gpu_filter_mode,
+            gpu_allocation_budget_bytes,
+        )?;
+        pollster::block_on(Collection::create(path, config))
+            .map(|collection| owned(collection, dimension))
+            .map_err(|error| error.to_string())
+    })
+}
+
+#[unsafe(no_mangle)]
 /// Open a durable collection at a UTF-8 filesystem path.
 ///
 /// # Safety
@@ -247,6 +434,33 @@ pub unsafe extern "C" fn qenlo_collection_open(
 }
 
 #[unsafe(no_mangle)]
+/// Open a durable configured collection at a UTF-8 filesystem path.
+///
+/// # Safety
+/// `path_ptr` must point to a readable NUL-terminated string for this call.
+pub unsafe extern "C" fn qenlo_collection_open_configured(
+    path_ptr: *const c_char,
+    dimension: usize,
+    backend: u32,
+    gpu_filter_mode: u32,
+    gpu_allocation_budget_bytes: u64,
+) -> *mut QenloCollection {
+    ffi_pointer(|| {
+        // SAFETY: forwarded caller contract.
+        let path = unsafe { path(path_ptr) }?;
+        let config = collection_config(
+            dimension,
+            backend,
+            gpu_filter_mode,
+            gpu_allocation_budget_bytes,
+        )?;
+        pollster::block_on(Collection::open(path, config))
+            .map(|collection| owned(collection, dimension))
+            .map_err(|error| error.to_string())
+    })
+}
+
+#[unsafe(no_mangle)]
 /// Import a portable `.qn` file into a mutable in-memory collection.
 ///
 /// # Safety
@@ -267,6 +481,33 @@ pub unsafe extern "C" fn qenlo_collection_import_qn(
             collection,
             dimension,
         })
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Import a portable `.qn` file into a configured mutable collection.
+///
+/// # Safety
+/// `path_ptr` must point to a readable NUL-terminated string for this call.
+pub unsafe extern "C" fn qenlo_collection_import_qn_configured(
+    path_ptr: *const c_char,
+    dimension: usize,
+    backend: u32,
+    gpu_filter_mode: u32,
+    gpu_allocation_budget_bytes: u64,
+) -> *mut QenloCollection {
+    ffi_pointer(|| {
+        // SAFETY: forwarded caller contract.
+        let path = unsafe { path(path_ptr) }?;
+        let config = collection_config(
+            dimension,
+            backend,
+            gpu_filter_mode,
+            gpu_allocation_budget_bytes,
+        )?;
+        pollster::block_on(Collection::import_qn(path, config))
+            .map(|collection| owned(collection, dimension))
+            .map_err(|error| error.to_string())
     })
 }
 
@@ -372,6 +613,66 @@ pub unsafe extern "C" fn qenlo_delete_batch(
     })
 }
 
+#[derive(Clone, Copy)]
+struct SearchRequest {
+    handle: *mut QenloCollection,
+    query: *const f32,
+    query_len: usize,
+    has_user_id: bool,
+    user_id: u64,
+    has_lower: bool,
+    lower: i64,
+    has_upper: bool,
+    upper: i64,
+    k: usize,
+}
+
+unsafe fn execute_search(request: SearchRequest) -> Result<QenloSearchResults, String> {
+    // SAFETY: forwarded caller contracts.
+    let handle = unsafe { collection(request.handle) }?;
+    let query = unsafe { floats(request.query, request.query_len) }?;
+    let filter = Filter::new(
+        request.has_user_id.then_some(request.user_id),
+        TimestampRange::new(
+            request.has_lower.then_some(request.lower),
+            request.has_upper.then_some(request.upper),
+        ),
+    );
+    let response = pollster::block_on(handle.collection.search(query, &filter, request.k))
+        .map_err(|error| error.to_string())?;
+    let mut ids = Vec::with_capacity(response.results.len());
+    let mut distances = Vec::with_capacity(response.results.len());
+    for hit in response.results {
+        ids.push(hit.id);
+        distances.push(hit.distance);
+    }
+    Ok(QenloSearchResults {
+        ids,
+        distances,
+        report: JsonReport {
+            operation_id: response.report.operation_id.to_string(),
+            requested_backend: format!("{:?}", response.report.requested_backend),
+            actual_backend: format!("{:?}", response.report.actual_backend),
+            algorithm: format!("{:?}", response.report.algorithm),
+            filter_execution: format!("{:?}", response.report.filter_execution),
+            index_generation: response.report.index_generation.to_string(),
+            rebuilt: response.report.rebuilt,
+            routing_reason: response.report.routing_reason,
+            fallback_reason: response.report.fallback_reason,
+            total_duration_ns: duration_ns(response.report.total_duration),
+            lock_wait_ns: duration_ns(response.report.lock_wait),
+            eligible_rows: measured(&response.report.eligible_rows).map(|v| v.to_string()),
+            upload_bytes: measured(&response.report.upload_bytes).map(|v| v.to_string()),
+            readback_bytes: measured(&response.report.readback_bytes).map(|v| v.to_string()),
+            allocation_bytes: measured(&response.report.qenlo_allocation_bytes)
+                .map(|v| v.to_string()),
+            dispatch_count: measured(&response.report.dispatch_count),
+            candidates: measured(&response.report.candidates).map(|v| v.to_string()),
+            batch_size: response.report.batch_size,
+        },
+    })
+}
+
 #[unsafe(no_mangle)]
 /// Search and return an owned UTF-8 JSON response.
 ///
@@ -393,46 +694,281 @@ pub unsafe extern "C" fn qenlo_search(
 ) -> *mut c_char {
     json_pointer(|| {
         // SAFETY: forwarded caller contracts.
+        let response = unsafe {
+            execute_search(SearchRequest {
+                handle,
+                query,
+                query_len,
+                has_user_id,
+                user_id,
+                has_lower,
+                lower,
+                has_upper,
+                upper,
+                k,
+            })
+        }?;
+        Ok(JsonSearch {
+            results: response
+                .ids
+                .into_iter()
+                .zip(response.distances)
+                .map(|(id, distance)| JsonHit {
+                    id: id.to_string(),
+                    distance,
+                })
+                .collect(),
+            report: response.report,
+        })
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Search once and return typed result buffers plus the matching report.
+///
+/// # Safety
+/// `handle` must be live and `query` must reference `query_len` readable
+/// `f32` values. Free a non-null result with [`qenlo_search_results_free`].
+pub unsafe extern "C" fn qenlo_search_results_new(
+    handle: *mut QenloCollection,
+    query: *const f32,
+    query_len: usize,
+    has_user_id: bool,
+    user_id: u64,
+    has_lower: bool,
+    lower: i64,
+    has_upper: bool,
+    upper: i64,
+    k: usize,
+) -> *mut QenloSearchResults {
+    ffi_search_pointer(|| {
+        // SAFETY: forwarded caller contracts.
+        unsafe {
+            execute_search(SearchRequest {
+                handle,
+                query,
+                query_len,
+                has_user_id,
+                user_id,
+                has_lower,
+                lower,
+                has_upper,
+                upper,
+                k,
+            })
+        }
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Return the number of typed hits.
+///
+/// # Safety
+/// `results` must be live and `rows` must be writable.
+pub unsafe extern "C" fn qenlo_search_results_len(
+    results: *mut QenloSearchResults,
+    rows: *mut usize,
+) -> i32 {
+    ffi_status(|| {
+        // SAFETY: forwarded caller contracts.
+        let results = unsafe { search_results(results) }.map_err(qenlo::Error::Storage)?;
+        let rows = unsafe { rows.as_mut() }
+            .ok_or_else(|| qenlo::Error::Storage("rows output pointer is null".into()))?;
+        *rows = results.ids.len();
+        Ok(())
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Copy IDs and distances from one completed typed search.
+///
+/// # Safety
+/// `results` must be live. Output pointers must each describe the supplied
+/// writable lengths.
+pub unsafe extern "C" fn qenlo_search_results_copy(
+    results: *mut QenloSearchResults,
+    ids: *mut u64,
+    ids_len: usize,
+    distances: *mut f32,
+    distances_len: usize,
+) -> i32 {
+    ffi_status(|| {
+        // SAFETY: forwarded caller contracts.
+        let results = unsafe { search_results(results) }.map_err(qenlo::Error::Storage)?;
+        let ids = unsafe { output_values(ids, ids_len, results.ids.len(), "ids") }
+            .map_err(qenlo::Error::Storage)?;
+        let distances = unsafe {
+            output_values(
+                distances,
+                distances_len,
+                results.distances.len(),
+                "distances",
+            )
+        }
+        .map_err(qenlo::Error::Storage)?;
+        ids.copy_from_slice(&results.ids);
+        distances.copy_from_slice(&results.distances);
+        Ok(())
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Return report JSON for the same completed typed search.
+///
+/// # Safety
+/// `results` must be live. Free a non-null result with [`qenlo_string_free`].
+pub unsafe extern "C" fn qenlo_search_results_report_json(
+    results: *mut QenloSearchResults,
+) -> *mut c_char {
+    json_pointer(|| {
+        // SAFETY: forwarded caller contract.
+        Ok(unsafe { search_results(results) }?.report.clone())
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Free typed search results.
+///
+/// # Safety
+/// `results` must be null or a live allocation returned by
+/// [`qenlo_search_results_new`], transferred exactly once.
+pub unsafe extern "C" fn qenlo_search_results_free(results: *mut QenloSearchResults) {
+    if !results.is_null() {
+        // SAFETY: caller transfers a live allocation returned by this library exactly once.
+        drop(unsafe { Box::from_raw(results) });
+    }
+}
+
+#[unsafe(no_mangle)]
+/// Capture live rows matching a canonical filter in one generation.
+///
+/// # Safety
+/// `handle` must be live. Free a non-null result with [`qenlo_snapshot_free`].
+pub unsafe extern "C" fn qenlo_snapshot_new(
+    handle: *mut QenloCollection,
+    has_user_id: bool,
+    user_id: u64,
+    has_lower: bool,
+    lower: i64,
+    has_upper: bool,
+    upper: i64,
+) -> *mut QenloSnapshot {
+    ffi_snapshot_pointer(|| {
+        // SAFETY: forwarded caller contract.
         let handle = unsafe { collection(handle) }?;
-        let query = unsafe { floats(query, query_len) }?;
         let filter = Filter::new(
             has_user_id.then_some(user_id),
             TimestampRange::new(has_lower.then_some(lower), has_upper.then_some(upper)),
         );
-        let response = pollster::block_on(handle.collection.search(query, &filter, k))
+        let captured = handle
+            .collection
+            .canonical_snapshot(&filter)
             .map_err(|error| error.to_string())?;
-        Ok(JsonSearch {
-            results: response
-                .results
-                .into_iter()
-                .map(|hit| JsonHit {
-                    id: hit.id.to_string(),
-                    distance: hit.distance,
-                })
-                .collect(),
-            report: JsonReport {
-                operation_id: response.report.operation_id.to_string(),
-                requested_backend: format!("{:?}", response.report.requested_backend),
-                actual_backend: format!("{:?}", response.report.actual_backend),
-                algorithm: format!("{:?}", response.report.algorithm),
-                filter_execution: format!("{:?}", response.report.filter_execution),
-                index_generation: response.report.index_generation.to_string(),
-                rebuilt: response.report.rebuilt,
-                routing_reason: response.report.routing_reason,
-                fallback_reason: response.report.fallback_reason,
-                total_duration_ns: duration_ns(response.report.total_duration),
-                lock_wait_ns: duration_ns(response.report.lock_wait),
-                eligible_rows: measured(&response.report.eligible_rows).map(|v| v.to_string()),
-                upload_bytes: measured(&response.report.upload_bytes).map(|v| v.to_string()),
-                readback_bytes: measured(&response.report.readback_bytes).map(|v| v.to_string()),
-                allocation_bytes: measured(&response.report.qenlo_allocation_bytes)
-                    .map(|v| v.to_string()),
-                dispatch_count: measured(&response.report.dispatch_count),
-                candidates: measured(&response.report.candidates).map(|v| v.to_string()),
-                batch_size: response.report.batch_size,
-            },
+        let rows = captured.records.len();
+        let mut ids = Vec::with_capacity(rows);
+        let mut vectors = Vec::with_capacity(rows.saturating_mul(captured.dimension));
+        for record in captured.records {
+            ids.push(record.id());
+            vectors.extend_from_slice(record.vector());
+        }
+        Ok(QenloSnapshot {
+            generation: captured.generation,
+            rows,
+            dimension: captured.dimension,
+            ids,
+            vectors,
         })
     })
+}
+
+#[unsafe(no_mangle)]
+/// Read typed snapshot metadata into caller-owned scalar outputs.
+///
+/// # Safety
+/// All pointers must be live and writable for this call.
+pub unsafe extern "C" fn qenlo_snapshot_info(
+    value: *mut QenloSnapshot,
+    generation: *mut u64,
+    rows: *mut usize,
+    dimension: *mut usize,
+) -> i32 {
+    ffi_status(|| {
+        // SAFETY: forwarded caller contracts.
+        let value = unsafe { snapshot(value) }.map_err(qenlo::Error::Storage)?;
+        let generation = unsafe { generation.as_mut() }
+            .ok_or_else(|| qenlo::Error::Storage("generation output pointer is null".into()))?;
+        let rows = unsafe { rows.as_mut() }
+            .ok_or_else(|| qenlo::Error::Storage("rows output pointer is null".into()))?;
+        let dimension = unsafe { dimension.as_mut() }
+            .ok_or_else(|| qenlo::Error::Storage("dimension output pointer is null".into()))?;
+        *generation = value.generation;
+        *rows = value.rows;
+        *dimension = value.dimension;
+        Ok(())
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Copy snapshot IDs and row-major normalized vectors into caller buffers.
+///
+/// # Safety
+/// `value` must be live. Output pointers must describe writable buffers of the
+/// supplied lengths and must not overlap the snapshot allocation.
+pub unsafe extern "C" fn qenlo_snapshot_copy(
+    value: *mut QenloSnapshot,
+    ids: *mut u64,
+    ids_len: usize,
+    vectors: *mut f32,
+    vectors_len: usize,
+) -> i32 {
+    ffi_status(|| {
+        // SAFETY: forwarded caller contracts.
+        let value = unsafe { snapshot(value) }.map_err(qenlo::Error::Storage)?;
+        let ids = unsafe { output_values(ids, ids_len, value.ids.len(), "ids") }
+            .map_err(qenlo::Error::Storage)?;
+        let vectors =
+            unsafe { output_values(vectors, vectors_len, value.vectors.len(), "vectors") }
+                .map_err(qenlo::Error::Storage)?;
+        ids.copy_from_slice(&value.ids);
+        vectors.copy_from_slice(&value.vectors);
+        Ok(())
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Read the current canonical generation without JSON conversion.
+///
+/// # Safety
+/// `handle` must be live and `generation` must be writable for this call.
+pub unsafe extern "C" fn qenlo_collection_generation(
+    handle: *mut QenloCollection,
+    generation: *mut u64,
+) -> i32 {
+    ffi_status(|| {
+        // SAFETY: forwarded caller contracts.
+        let handle = unsafe { collection(handle) }.map_err(qenlo::Error::Storage)?;
+        let generation = unsafe { generation.as_mut() }
+            .ok_or_else(|| qenlo::Error::Storage("generation output pointer is null".into()))?;
+        let stats = handle.collection.stats();
+        if stats.closed {
+            return Err(qenlo::Error::Closed);
+        }
+        *generation = stats.generation;
+        Ok(())
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Free a generation-bound snapshot handle.
+///
+/// # Safety
+/// `value` must be null or a live allocation returned by [`qenlo_snapshot_new`],
+/// transferred exactly once and never used afterward.
+pub unsafe extern "C" fn qenlo_snapshot_free(value: *mut QenloSnapshot) {
+    if !value.is_null() {
+        // SAFETY: caller transfers a live allocation returned by this library exactly once.
+        drop(unsafe { Box::from_raw(value) });
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -558,7 +1094,94 @@ mod tests {
     }
 
     #[test]
-    fn native_boundary_preserves_semantics_and_reports_telemetry() {
+    fn configured_constructor_preserves_cpu_and_rejects_unsupported_values() {
+        let cpu = qenlo_collection_new_configured(2, 0, 2, 1024);
+        assert!(!cpu.is_null());
+        // SAFETY: the test transfers this live handle once.
+        unsafe { qenlo_collection_free(cpu) };
+
+        let invalid = qenlo_collection_new_configured(2, 99, 2, 1024);
+        assert!(invalid.is_null());
+        assert!(unsafe { take_string(qenlo_last_error()) }.contains("unknown backend"));
+
+        #[cfg(not(feature = "gpu-wgpu"))]
+        {
+            let gpu = qenlo_collection_new_configured(2, 2, 2, 1024);
+            assert!(gpu.is_null());
+            assert!(unsafe { take_string(qenlo_last_error()) }.contains("without portable GPU"));
+        }
+        #[cfg(feature = "gpu-wgpu")]
+        {
+            let automatic = qenlo_collection_new_configured(2, 1, 2, 1024);
+            assert!(!automatic.is_null());
+            // SAFETY: the test transfers this live handle once.
+            unsafe { qenlo_collection_free(automatic) };
+        }
+    }
+
+    #[test]
+    fn typed_search_buffers_share_one_completed_report() {
+        let handle = qenlo_collection_new(2);
+        let ids = [9, 2];
+        let users = [7, 7];
+        let timestamps = [0, 0];
+        let vectors = [1.0, 0.0, 1.0, 0.0];
+        // SAFETY: arrays and handles remain live for each call and owned handles are freed once.
+        unsafe {
+            assert_eq!(
+                qenlo_add_batch(
+                    handle,
+                    ids.as_ptr(),
+                    users.as_ptr(),
+                    timestamps.as_ptr(),
+                    vectors.as_ptr(),
+                    2,
+                    2,
+                ),
+                0
+            );
+            let results = qenlo_search_results_new(
+                handle,
+                vectors.as_ptr(),
+                2,
+                false,
+                0,
+                false,
+                0,
+                false,
+                0,
+                2,
+            );
+            assert!(!results.is_null());
+            let mut rows = 0;
+            assert_eq!(qenlo_search_results_len(results, &mut rows), 0);
+            assert_eq!(rows, 2);
+            let mut copied_ids = [0; 2];
+            let mut copied_distances = [0.0; 2];
+            assert_eq!(
+                qenlo_search_results_copy(
+                    results,
+                    copied_ids.as_mut_ptr(),
+                    copied_ids.len(),
+                    copied_distances.as_mut_ptr(),
+                    copied_distances.len(),
+                ),
+                0
+            );
+            assert_eq!(copied_ids, [2, 9]);
+            assert_eq!(copied_distances, [0.0, 0.0]);
+            let report: serde_json::Value =
+                serde_json::from_str(&take_string(qenlo_search_results_report_json(results)))
+                    .unwrap();
+            assert_eq!(report["index_generation"], "2");
+            assert_eq!(report["batch_size"], 1);
+            qenlo_search_results_free(results);
+            qenlo_collection_free(handle);
+        }
+    }
+
+    #[test]
+    fn native_boundary_preserves_semantics_and_reports_execution() {
         let handle = qenlo_collection_new(2);
         assert!(!handle.is_null());
         let ids = [9, 2];
@@ -634,6 +1257,72 @@ mod tests {
             qenlo_collection_free(imported);
         }
         std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn typed_snapshot_is_filtered_generation_bound_and_bulk_copied() {
+        let handle = qenlo_collection_new(2);
+        let ids = [u64::MAX, 7, 3];
+        let users = [4, 4, 9];
+        let timestamps = [-2, 8, 1];
+        let vectors = [1.0, 0.0, 0.0, 1.0, -1.0, 0.0];
+        // SAFETY: all pointers describe live arrays and every owned handle is freed once.
+        unsafe {
+            assert_eq!(
+                qenlo_add_batch(
+                    handle,
+                    ids.as_ptr(),
+                    users.as_ptr(),
+                    timestamps.as_ptr(),
+                    vectors.as_ptr(),
+                    3,
+                    2,
+                ),
+                0
+            );
+            let captured = qenlo_snapshot_new(handle, true, 4, true, -3, true, 9);
+            assert!(!captured.is_null());
+            let (mut generation, mut rows, mut dimension) = (0, 0, 0);
+            assert_eq!(
+                qenlo_snapshot_info(captured, &mut generation, &mut rows, &mut dimension),
+                0
+            );
+            assert_eq!((generation, rows, dimension), (3, 2, 2));
+            let mut copied_ids = [0; 2];
+            let mut copied_vectors = [0.0; 4];
+            assert_eq!(
+                qenlo_snapshot_copy(
+                    captured,
+                    copied_ids.as_mut_ptr(),
+                    copied_ids.len(),
+                    copied_vectors.as_mut_ptr(),
+                    copied_vectors.len(),
+                ),
+                0
+            );
+            assert_eq!(copied_ids, [u64::MAX, 7]);
+            assert_eq!(copied_vectors, [1.0, 0.0, 0.0, 1.0]);
+
+            assert_eq!(qenlo_delete(handle, u64::MAX), 0);
+            let mut current = 0;
+            assert_eq!(qenlo_collection_generation(handle, &mut current), 0);
+            assert_eq!(current, 4);
+            // The owned snapshot remains the exact generation captured before mutation.
+            copied_ids.fill(0);
+            assert_eq!(
+                qenlo_snapshot_copy(
+                    captured,
+                    copied_ids.as_mut_ptr(),
+                    copied_ids.len(),
+                    copied_vectors.as_mut_ptr(),
+                    copied_vectors.len(),
+                ),
+                0
+            );
+            assert_eq!(copied_ids, [u64::MAX, 7]);
+            qenlo_snapshot_free(captured);
+            qenlo_collection_free(handle);
+        }
     }
 
     #[test]

@@ -1,0 +1,19 @@
+{
+  "maximumCostUsd": 0.2858333333333333333333333333,
+  "podId": "zci681b7bfmgmm",
+  "sourceDigests": {
+    "Baseline": "f37e744c7ee4054a74c4b4181f2dde61dade4d677bbc5493b9a36b61d165a45d",
+    "Current": "730c050065e6786972a7be4f9bcb619168becdc943ce1122d1583c61f66409e3"
+  },
+  "configuration": {
+    "name": "a40-ca-mtl-secure",
+    "gpuId": "NVIDIA A40",
+    "dataCenter": "CA-MTL-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.49,
+    "role": "common"
+  },
+  "mode": "common",
+  "status": "complete",
+  "liveUsdPerHour": 0.49
+}

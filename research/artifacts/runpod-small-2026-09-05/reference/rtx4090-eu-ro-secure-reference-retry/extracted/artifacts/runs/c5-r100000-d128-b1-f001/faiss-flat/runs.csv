@@ -1,0 +1,4 @@
+engine,run,batches,queries,p50_completed_ns,p95_completed_ns,p99_completed_ns,wall_ns,qps,k,recall_at_k,recall_at_10
+faiss-flat,0,64,64,27551,30518,34634,4205236,15219.122065919724,10,1.0,1.0
+faiss-flat,1,64,64,27051,30126,63038,3980526,16078.277092022512,10,1.0,1.0
+faiss-flat,2,64,64,26970,29816,31348,3895577,16428.88845477833,10,1.0,1.0

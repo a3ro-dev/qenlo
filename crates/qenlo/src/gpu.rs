@@ -18,7 +18,11 @@ const WORKGROUP_SIZE: u64 = 256;
 const SCORE_ROWS_PER_WORKGROUP: u64 = 8;
 // ponytail: one workgroup selects each chunk's top-k; hierarchical selection if this dominates.
 const MAX_CHUNK_ROWS: u64 = 131_072;
+pub(crate) const MAX_INCREMENTAL_CHUNKS: u32 = 8;
 const DEVICE_TIMEOUT: Duration = Duration::from_secs(30);
+const TIMESTAMP_COUNT: u32 = 4;
+const TIMESTAMP_BYTES: u64 = TIMESTAMP_COUNT as u64 * 8;
+const TIMESTAMP_BUFFER_BYTES: u64 = TIMESTAMP_BYTES * 2;
 
 /// Capabilities of the adapter selected for this collection, not physical VRAM usage.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -35,7 +39,7 @@ pub struct GpuCapabilities {
     pub max_storage_buffer_binding_size: u64,
     /// Maximum compute workgroups along one dimension.
     pub max_compute_workgroups_per_dimension: u32,
-    /// Whether timestamp queries are supported; this prototype does not enable them.
+    /// Whether timestamp queries are supported and enabled for phase measurements.
     pub timestamp_queries_supported: bool,
     /// Configured bound on buffers and conservative transfer staging estimates.
     pub allocation_budget_bytes: u64,
@@ -108,6 +112,10 @@ pub(crate) struct GpuExecution {
     pub upload_enqueue: Duration,
     /// Host wait plus mapped-range parsing and merge time after submission.
     pub readback_completion: Duration,
+    /// Device time spent in the scoring passes, when timestamp queries are supported.
+    pub scoring: Option<Duration>,
+    /// Device time spent in the selection passes, when timestamp queries are supported.
+    pub selection: Option<Duration>,
 }
 
 #[derive(Debug)]
@@ -155,6 +163,14 @@ struct Scratch {
     selected: wgpu::Buffer,
     staging: wgpu::Buffer,
     candidates_group: wgpu::BindGroup,
+    resource_groups: Vec<wgpu::BindGroup>,
+    timestamps: Option<TimestampScratch>,
+}
+
+struct TimestampScratch {
+    query_set: wgpu::QuerySet,
+    resolve: wgpu::Buffer,
+    staging: wgpu::Buffer,
 }
 
 pub(crate) struct GpuExact {
@@ -173,6 +189,8 @@ pub(crate) struct GpuExact {
     scratch: Mutex<Scratch>,
     health: DeviceHealth,
     capabilities: GpuCapabilities,
+    timestamp_period_ns: Option<f32>,
+    incremental_chunks: u32,
 }
 
 impl GpuExact {
@@ -211,19 +229,28 @@ impl GpuExact {
         let resident_bytes = row_bytes
             .checked_mul(rows as u64)
             .ok_or_else(|| GpuError::InvalidInput("allocation size overflow".into()))?;
-        let fixed_scratch = dimension as u64 * 8 + 64 * CANDIDATE_BYTES * 2 + PARAM_BYTES * 2;
-        let minimum = resident_bytes
-            .checked_add((fixed_scratch + 12).max(row_bytes))
-            .ok_or_else(|| GpuError::InvalidInput("allocation size overflow".into()))?;
-        ensure_budget(minimum, budget)?;
         let instance = gpu_instance();
         let adapter = select_adapter(&instance).await?;
         let adapter_limits = adapter.limits();
         validate_limits(&adapter_limits, dimension)?;
         let capabilities = adapter_capabilities(&adapter, budget);
+        let timestamp_features = if capabilities.timestamp_queries_supported {
+            wgpu::Features::TIMESTAMP_QUERY
+        } else {
+            wgpu::Features::empty()
+        };
+        let fixed_search_peak =
+            search_peak_bytes(dimension, 0, 1, capabilities.timestamp_queries_supported)?;
+        let one_row_search_peak =
+            search_peak_bytes(dimension, 1, 1, capabilities.timestamp_queries_supported)?;
+        let minimum = resident_bytes
+            .checked_add(one_row_search_peak.max(row_bytes))
+            .ok_or_else(|| GpuError::InvalidInput("allocation size overflow".into()))?;
+        ensure_budget(minimum, budget)?;
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
                 label: Some("qenlo exact-search device"),
+                required_features: timestamp_features,
                 required_limits: adapter_limits.clone(),
                 ..Default::default()
             })
@@ -292,7 +319,7 @@ impl GpuExact {
             .min(MAX_CHUNK_ROWS)
             .min(u32::MAX as u64 / dimension as u64)
             // Reserve upload staging during rebuild and worst-case k=64 query scratch.
-            .min((budget - resident_bytes - fixed_scratch) / 12)
+            .min((budget - resident_bytes - fixed_search_peak) / 12)
             .min((budget - resident_bytes) / row_bytes)
             .min(u32::MAX as u64) as usize;
         if rows_per_chunk == 0 {
@@ -336,16 +363,29 @@ impl GpuExact {
             health.check()?;
         }
 
-        let scratch_bytes = scratch_bytes(dimension, rows_per_chunk, 1)?;
-        ensure_budget(resident_bytes + scratch_bytes, budget)?;
-        let scratch = create_scratch(
-            &device,
-            &group1_layout,
+        let search_peak = search_peak_bytes(
             dimension,
             rows_per_chunk,
             1,
+            capabilities.timestamp_queries_supported,
+        )?;
+        ensure_budget(resident_bytes + search_peak, budget)?;
+        let scratch = create_scratch(
+            &device,
+            &group0_layout,
+            &group1_layout,
+            &chunks,
+            ScratchShape {
+                dimension,
+                rows_per_chunk,
+                batch_capacity: 1,
+                timestamps: capabilities.timestamp_queries_supported,
+            },
             &health,
         )?;
+        let timestamp_period_ns = capabilities
+            .timestamp_queries_supported
+            .then(|| queue.get_timestamp_period());
 
         Ok(Self {
             device,
@@ -363,7 +403,171 @@ impl GpuExact {
             scratch: Mutex::new(scratch),
             health,
             capabilities,
+            timestamp_period_ns,
+            incremental_chunks: 0,
         })
+    }
+
+    fn try_update(
+        &mut self,
+        store: &qenlo_core::CoreStore,
+        changed_ids: &[u64],
+    ) -> Result<bool, GpuError> {
+        self.health.check()?;
+        let previous_rows = self.rows as usize;
+        if store.dimension() != self.dimension as usize || store.len() < previous_rows {
+            return Ok(false);
+        }
+
+        let added_rows = store.len() - previous_rows;
+        let added_chunks = if added_rows == 0 {
+            0
+        } else {
+            added_rows.div_ceil(self.max_chunk_rows as usize) as u32
+        };
+        if self.incremental_chunks.saturating_add(added_chunks) > MAX_INCREMENTAL_CHUNKS {
+            return Ok(false);
+        }
+
+        let row_bytes = self.dimension as u64 * 4 + 24;
+        let added_bytes = row_bytes
+            .checked_mul(added_rows as u64)
+            .ok_or_else(|| GpuError::InvalidInput("incremental allocation size overflow".into()))?;
+        let (scratch_buffers, search_peak) = {
+            let scratch = self
+                .scratch
+                .lock()
+                .map_err(|_| GpuError::Device("GPU scratch arena lock poisoned".into()))?;
+            (
+                scratch_buffer_bytes(
+                    self.dimension as usize,
+                    self.max_chunk_rows as usize,
+                    scratch.batch_capacity,
+                    self.timestamp_period_ns.is_some(),
+                )?,
+                search_peak_bytes(
+                    self.dimension as usize,
+                    self.max_chunk_rows as usize,
+                    scratch.batch_capacity,
+                    self.timestamp_period_ns.is_some(),
+                )?,
+            )
+        };
+        let new_resident = self
+            .resident_bytes
+            .checked_add(added_bytes)
+            .ok_or_else(|| GpuError::InvalidInput("incremental allocation size overflow".into()))?;
+        let upload_staging = row_bytes
+            .checked_mul(added_rows.min(self.max_chunk_rows as usize) as u64)
+            .ok_or_else(|| GpuError::InvalidInput("incremental allocation size overflow".into()))?;
+        let update_peak = new_resident
+            .checked_add(scratch_buffers)
+            .and_then(|bytes| bytes.checked_add(upload_staging))
+            .ok_or_else(|| GpuError::InvalidInput("incremental allocation size overflow".into()))?;
+        let query_peak = new_resident
+            .checked_add(search_peak)
+            .ok_or_else(|| GpuError::InvalidInput("incremental allocation size overflow".into()))?;
+        let required = update_peak.max(query_peak);
+        ensure_budget(required, self.budget)?;
+
+        let mut additions = Vec::with_capacity(added_chunks as usize);
+        for start in (previous_rows..store.len()).step_by(self.max_chunk_rows as usize) {
+            let end = (start + self.max_chunk_rows as usize).min(store.len());
+            let mut vectors = Vec::with_capacity((end - start) * self.dimension as usize);
+            let mut ids = Vec::with_capacity(end - start);
+            let mut users = Vec::with_capacity(end - start);
+            let mut timestamps = Vec::with_capacity(end - start);
+            let mut live = Vec::with_capacity(end - start);
+            for slot in start..end {
+                let record = store
+                    .record(slot as u32)
+                    .expect("canonical suffix contains every appended row");
+                vectors.extend_from_slice(record.vector());
+                ids.push(record.id());
+                users.push(record.user_id());
+                timestamps.push(record.timestamp());
+                live.push(u32::from(record.is_live()));
+            }
+            additions.push(Chunk {
+                row_base: start as u32,
+                rows: (end - start) as u32,
+                vectors: uploaded(
+                    &self.device,
+                    &self.queue,
+                    "qenlo incremental vectors",
+                    &vectors,
+                    &self.health,
+                )?,
+                users: uploaded(
+                    &self.device,
+                    &self.queue,
+                    "qenlo incremental users",
+                    &pack_u64(&users),
+                    &self.health,
+                )?,
+                timestamps: uploaded(
+                    &self.device,
+                    &self.queue,
+                    "qenlo incremental timestamps",
+                    &pack_i64(&timestamps),
+                    &self.health,
+                )?,
+                ids: uploaded(
+                    &self.device,
+                    &self.queue,
+                    "qenlo incremental ids",
+                    &pack_u64(&ids),
+                    &self.health,
+                )?,
+                live,
+            });
+            self.queue.submit([]);
+            poll_wait(&self.device)?;
+            self.health.check()?;
+        }
+
+        for &id in changed_ids {
+            let Some(slot) = store.slot_of(id) else {
+                return Ok(false);
+            };
+            if slot < self.rows {
+                let record = store.record(slot).expect("canonical ID slot is valid");
+                let Some(chunk) = self.chunks.iter_mut().find(|chunk| {
+                    slot >= chunk.row_base && slot < chunk.row_base.saturating_add(chunk.rows)
+                }) else {
+                    return Ok(false);
+                };
+                chunk.live[(slot - chunk.row_base) as usize] = u32::from(record.is_live());
+            }
+        }
+
+        if !additions.is_empty() {
+            let mut scratch = self
+                .scratch
+                .lock()
+                .map_err(|_| GpuError::Device("GPU scratch arena lock poisoned".into()))?;
+            let groups = additions
+                .iter()
+                .map(|chunk| {
+                    create_resource_group(
+                        &self.device,
+                        &self.group0_layout,
+                        chunk,
+                        &scratch.query,
+                        &scratch.eligibility,
+                        &scratch.scores,
+                        &scratch.params,
+                    )
+                })
+                .collect::<Vec<_>>();
+            scratch.resource_groups.extend(groups);
+            self.chunks.extend(additions);
+        }
+        self.rows = store.len() as u32;
+        self.resident_bytes += added_bytes;
+        self.incremental_chunks += added_chunks;
+        self.health.check()?;
+        Ok(true)
     }
 
     pub(crate) async fn search(
@@ -422,26 +626,33 @@ impl GpuExact {
             .map_err(|_| GpuError::Device("GPU scratch arena lock poisoned".into()))?;
         if queries.len() > scratch.batch_capacity {
             let capacity = queries.len().next_power_of_two().min(MAX_BATCH);
-            let bytes = scratch_bytes(
+            let bytes = search_peak_bytes(
                 self.dimension as usize,
                 self.max_chunk_rows as usize,
                 capacity,
+                self.timestamp_period_ns.is_some(),
             )?;
             ensure_budget(self.resident_bytes + bytes, self.budget)?;
             *scratch = create_scratch(
                 &self.device,
+                &self.group0_layout,
                 &self.group1_layout,
-                self.dimension as usize,
-                self.max_chunk_rows as usize,
-                capacity,
+                &self.chunks,
+                ScratchShape {
+                    dimension: self.dimension as usize,
+                    rows_per_chunk: self.max_chunk_rows as usize,
+                    batch_capacity: capacity,
+                    timestamps: self.timestamp_period_ns.is_some(),
+                },
                 &self.health,
             )?;
         }
         let allocation_bytes = self.resident_bytes
-            + scratch_bytes(
+            + search_peak_bytes(
                 self.dimension as usize,
                 self.max_chunk_rows as usize,
                 scratch.batch_capacity,
+                self.timestamp_period_ns.is_some(),
             )?;
         ensure_budget(allocation_bytes, self.budget)?;
         let flattened;
@@ -471,7 +682,7 @@ impl GpuExact {
             .collect::<Vec<_>>();
         let result_bytes = queries.len() as u64 * k as u64 * CANDIDATE_BYTES;
 
-        for chunk in &self.chunks {
+        for (chunk_index, chunk) in self.chunks.iter().enumerate() {
             let (mode, eligibility) = chunk_eligibility(filter, chunk);
             let dispatch_items = if mode == 1 {
                 eligibility.len() as u32
@@ -494,7 +705,12 @@ impl GpuExact {
                 filter,
             );
             execution.upload_bytes += eligibility_upload.len() as u64 * 4 + PARAM_BYTES;
-            execution.readback_bytes += result_bytes;
+            execution.readback_bytes += result_bytes
+                + if scratch.timestamps.is_some() {
+                    TIMESTAMP_BYTES
+                } else {
+                    0
+                };
             let upload_started = web_time::Instant::now();
             self.queue
                 .write_buffer(&scratch.eligibility, 0, bytes_of(eligibility_upload));
@@ -503,42 +719,65 @@ impl GpuExact {
             execution.upload_enqueue += upload_started.elapsed();
             self.health.check()?;
 
-            let group0 = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("qenlo exact resources"),
-                layout: &self.group0_layout,
-                entries: &[
-                    binding(0, &chunk.vectors),
-                    binding(1, &chunk.users),
-                    binding(2, &chunk.timestamps),
-                    binding(3, &chunk.ids),
-                    binding(4, &scratch.query),
-                    binding(5, &scratch.eligibility),
-                    binding(6, &scratch.scores),
-                    binding(7, &scratch.params),
-                ],
-            });
             let mut encoder = self
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                     label: Some("qenlo exact batch commands"),
                 });
             {
-                let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                    label: Some("qenlo exact batch search"),
-                    timestamp_writes: None,
+                let timestamp_writes = scratch.timestamps.as_ref().map(|timestamps| {
+                    wgpu::ComputePassTimestampWrites {
+                        query_set: &timestamps.query_set,
+                        beginning_of_pass_write_index: Some(0),
+                        end_of_pass_write_index: Some(1),
+                    }
                 });
-                pass.set_bind_group(0, &group0, &[]);
+                let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                    label: Some("qenlo exact scoring"),
+                    timestamp_writes,
+                });
+                pass.set_bind_group(0, &scratch.resource_groups[chunk_index], &[]);
                 pass.set_bind_group(1, &scratch.candidates_group, &[]);
+                pass.set_pipeline(&self.score_pipeline);
                 if dispatch_items != 0 {
-                    pass.set_pipeline(&self.score_pipeline);
                     pass.dispatch_workgroups(
                         dispatch_items.div_ceil(SCORE_ROWS_PER_WORKGROUP as u32),
                         queries.len() as u32,
                         1,
                     );
                 }
+            }
+            {
+                let timestamp_writes = scratch.timestamps.as_ref().map(|timestamps| {
+                    wgpu::ComputePassTimestampWrites {
+                        query_set: &timestamps.query_set,
+                        beginning_of_pass_write_index: Some(2),
+                        end_of_pass_write_index: Some(3),
+                    }
+                });
+                let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                    label: Some("qenlo exact selection"),
+                    timestamp_writes,
+                });
+                pass.set_bind_group(0, &scratch.resource_groups[chunk_index], &[]);
+                pass.set_bind_group(1, &scratch.candidates_group, &[]);
                 pass.set_pipeline(&self.select_pipeline);
                 pass.dispatch_workgroups(queries.len() as u32, 1, 1);
+            }
+            if let Some(timestamps) = &scratch.timestamps {
+                encoder.resolve_query_set(
+                    &timestamps.query_set,
+                    0..TIMESTAMP_COUNT,
+                    &timestamps.resolve,
+                    0,
+                );
+                encoder.copy_buffer_to_buffer(
+                    &timestamps.resolve,
+                    0,
+                    &timestamps.staging,
+                    0,
+                    TIMESTAMP_BYTES,
+                );
             }
             encoder.copy_buffer_to_buffer(&scratch.selected, 0, &scratch.staging, 0, result_bytes);
             self.queue.submit([encoder.finish()]);
@@ -577,6 +816,38 @@ impl GpuExact {
             }
             drop(mapped);
             scratch.staging.unmap();
+            if let (Some(timestamps), Some(period_ns)) =
+                (&scratch.timestamps, self.timestamp_period_ns)
+            {
+                map_wait_range(&self.device, &timestamps.staging, TIMESTAMP_BYTES).inspect_err(
+                    |error| {
+                        self.health.fail(error.to_string());
+                        self.device.destroy();
+                    },
+                )?;
+                self.health.check()?;
+                let mapped = timestamps
+                    .staging
+                    .slice(..TIMESTAMP_BYTES)
+                    .get_mapped_range()
+                    .map_err(|error| GpuError::Device(error.to_string()))?;
+                let values = mapped
+                    .as_chunks::<8>()
+                    .0
+                    .iter()
+                    .map(|bytes| u64::from_le_bytes(*bytes))
+                    .collect::<Vec<_>>();
+                execution.scoring = Some(
+                    execution.scoring.unwrap_or_default()
+                        + timestamp_duration(values[0], values[1], period_ns),
+                );
+                execution.selection = Some(
+                    execution.selection.unwrap_or_default()
+                        + timestamp_duration(values[2], values[3], period_ns),
+                );
+                drop(mapped);
+                timestamps.staging.unmap();
+            }
             execution.readback_completion += readback_started.elapsed();
         }
         Ok((merged, execution))
@@ -863,6 +1134,19 @@ impl GpuBackend {
             ));
         }
         Ok(())
+    }
+
+    pub(crate) fn try_update(
+        &mut self,
+        store: &qenlo_core::CoreStore,
+        changed_ids: &[u64],
+    ) -> bool {
+        if self.ivf_config.is_some() {
+            return false;
+        }
+        self.exact
+            .as_mut()
+            .is_some_and(|exact| exact.try_update(store, changed_ids).unwrap_or(false))
     }
 
     pub(crate) async fn search(
@@ -1159,10 +1443,23 @@ fn gpu_phases(execution: web_time::Duration, details: &GpuExecution) -> super::P
         upload: super::Measurement::Available(details.upload_enqueue),
         execution: super::Measurement::Available(execution),
         readback: super::Measurement::Available(details.readback_completion),
-        selection: super::Measurement::Unavailable(super::Unavailable {
-            reason: "included in GPU execution".into(),
-        }),
+        scoring: duration_measurement(details.scoring, "adapter lacks timestamp-query support"),
+        selection: duration_measurement(details.selection, "adapter lacks timestamp-query support"),
     }
+}
+
+fn duration_measurement(
+    value: Option<Duration>,
+    unavailable: &str,
+) -> super::Measurement<Duration> {
+    value.map_or_else(
+        || {
+            super::Measurement::Unavailable(super::Unavailable {
+                reason: unavailable.into(),
+            })
+        },
+        super::Measurement::Available,
+    )
 }
 
 fn storage_entry(binding: u32, read_only: bool) -> wgpu::BindGroupLayoutEntry {
@@ -1203,10 +1500,11 @@ fn buffer(
     Ok(result)
 }
 
-fn scratch_bytes(
+fn scratch_buffer_bytes(
     dimension: usize,
     rows_per_chunk: usize,
     batch_capacity: usize,
+    timestamps: bool,
 ) -> Result<u64, GpuError> {
     let batch = batch_capacity as u64;
     let query = dimension as u64 * 4 * batch;
@@ -1218,29 +1516,60 @@ fn scratch_bytes(
         .and_then(|bytes| bytes.checked_add(scores))
         .and_then(|bytes| bytes.checked_add(candidates))
         .and_then(|bytes| bytes.checked_add(PARAM_BYTES))
+        .and_then(|bytes| {
+            bytes.checked_add(if timestamps {
+                TIMESTAMP_BUFFER_BYTES
+            } else {
+                0
+            })
+        })
         .ok_or_else(|| GpuError::InvalidInput("scratch allocation size overflow".into()))
+}
+
+fn search_peak_bytes(
+    dimension: usize,
+    rows_per_chunk: usize,
+    batch_capacity: usize,
+    timestamps: bool,
+) -> Result<u64, GpuError> {
+    let buffers = scratch_buffer_bytes(dimension, rows_per_chunk, batch_capacity, timestamps)?;
+    let upload_staging = (dimension as u64 * 4 * batch_capacity as u64)
+        .checked_add(rows_per_chunk as u64 * 4)
+        .and_then(|bytes| bytes.checked_add(PARAM_BYTES))
+        .ok_or_else(|| GpuError::InvalidInput("search staging size overflow".into()))?;
+    buffers
+        .checked_add(upload_staging)
+        .ok_or_else(|| GpuError::InvalidInput("search peak size overflow".into()))
+}
+
+#[derive(Clone, Copy)]
+struct ScratchShape {
+    dimension: usize,
+    rows_per_chunk: usize,
+    batch_capacity: usize,
+    timestamps: bool,
 }
 
 fn create_scratch(
     device: &wgpu::Device,
+    resources_layout: &wgpu::BindGroupLayout,
     candidates_layout: &wgpu::BindGroupLayout,
-    dimension: usize,
-    rows_per_chunk: usize,
-    batch_capacity: usize,
+    chunks: &[Chunk],
+    shape: ScratchShape,
     health: &DeviceHealth,
 ) -> Result<Scratch, GpuError> {
-    let batch = batch_capacity as u64;
+    let batch = shape.batch_capacity as u64;
     let query = buffer(
         device,
         "qenlo query arena",
-        dimension as u64 * 4 * batch,
+        shape.dimension as u64 * 4 * batch,
         wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         health,
     )?;
     let eligibility = buffer(
         device,
         "qenlo eligibility arena",
-        rows_per_chunk as u64 * 4,
+        shape.rows_per_chunk as u64 * 4,
         wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         health,
     )?;
@@ -1254,7 +1583,7 @@ fn create_scratch(
     let scores = buffer(
         device,
         "qenlo scores arena",
-        rows_per_chunk as u64 * 4 * batch,
+        shape.rows_per_chunk as u64 * 4 * batch,
         wgpu::BufferUsages::STORAGE,
         health,
     )?;
@@ -1277,9 +1606,42 @@ fn create_scratch(
         layout: candidates_layout,
         entries: &[binding(0, &selected)],
     });
+    let resource_groups = chunks
+        .iter()
+        .map(|chunk| {
+            create_resource_group(
+                device,
+                resources_layout,
+                chunk,
+                &query,
+                &eligibility,
+                &scores,
+                &params,
+            )
+        })
+        .collect();
+    let timestamps = shape.timestamps.then(|| TimestampScratch {
+        query_set: device.create_query_set(&wgpu::QuerySetDescriptor {
+            label: Some("qenlo phase timestamps"),
+            ty: wgpu::QueryType::Timestamp,
+            count: TIMESTAMP_COUNT,
+        }),
+        resolve: device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("qenlo timestamp resolve"),
+            size: TIMESTAMP_BYTES,
+            usage: wgpu::BufferUsages::QUERY_RESOLVE | wgpu::BufferUsages::COPY_SRC,
+            mapped_at_creation: false,
+        }),
+        staging: device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("qenlo timestamp readback"),
+            size: TIMESTAMP_BYTES,
+            usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        }),
+    });
     health.check()?;
     Ok(Scratch {
-        batch_capacity,
+        batch_capacity: shape.batch_capacity,
         query,
         eligibility,
         params,
@@ -1287,7 +1649,38 @@ fn create_scratch(
         selected,
         staging,
         candidates_group,
+        resource_groups,
+        timestamps,
     })
+}
+
+fn create_resource_group(
+    device: &wgpu::Device,
+    layout: &wgpu::BindGroupLayout,
+    chunk: &Chunk,
+    query: &wgpu::Buffer,
+    eligibility: &wgpu::Buffer,
+    scores: &wgpu::Buffer,
+    params: &wgpu::Buffer,
+) -> wgpu::BindGroup {
+    device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("qenlo exact resources"),
+        layout,
+        entries: &[
+            binding(0, &chunk.vectors),
+            binding(1, &chunk.users),
+            binding(2, &chunk.timestamps),
+            binding(3, &chunk.ids),
+            binding(4, query),
+            binding(5, eligibility),
+            binding(6, scores),
+            binding(7, params),
+        ],
+    })
+}
+
+fn timestamp_duration(start: u64, end: u64, period_ns: f32) -> Duration {
+    Duration::from_secs_f64(end.wrapping_sub(start) as f64 * period_ns as f64 / 1_000_000_000.0)
 }
 
 fn uploaded<T: Copy>(
@@ -1568,6 +1961,25 @@ mod tests {
         )))
     }
 
+    fn timestamp_readback(exact: &GpuExact) -> u64 {
+        if exact.capabilities.timestamp_queries_supported {
+            TIMESTAMP_BYTES
+        } else {
+            0
+        }
+    }
+
+    fn assert_timestamp_phases(exact: &GpuExact, report: &GpuExecution) {
+        assert_eq!(
+            report.scoring.is_some(),
+            exact.capabilities.timestamp_queries_supported
+        );
+        assert_eq!(
+            report.selection.is_some(),
+            exact.capabilities.timestamp_queries_supported
+        );
+    }
+
     #[test]
     fn signed_i64_word_order_reference_handles_extremes() {
         fn key(value: i64) -> (u32, u32) {
@@ -1599,6 +2011,42 @@ mod tests {
                 required: 11,
                 budget: 10
             })
+        ));
+    }
+
+    #[test]
+    fn search_peak_includes_native_queue_write_staging() {
+        let buffers = scratch_buffer_bytes(2, 1, 1, false).unwrap();
+        assert_eq!(
+            search_peak_bytes(2, 1, 1, false).unwrap(),
+            buffers + 8 + 4 + PARAM_BYTES
+        );
+        assert_eq!(
+            scratch_buffer_bytes(2, 1, 1, true).unwrap(),
+            buffers + TIMESTAMP_BUFFER_BYTES
+        );
+    }
+
+    #[test]
+    fn initialization_rejects_budget_that_omits_first_query_staging() {
+        let Some(probe) = tiny_gpu() else {
+            return;
+        };
+        let budget_without_staging = (2 * 4 + 24)
+            + scratch_buffer_bytes(2, 1, 1, probe.capabilities.timestamp_queries_supported)
+                .unwrap();
+        drop(probe);
+        assert!(matches!(
+            block_on(GpuExact::new(
+                2,
+                &[1.0, 0.0],
+                &[1],
+                &[1],
+                &[0],
+                &[true],
+                Some(budget_without_staging),
+            )),
+            Err(GpuError::OverBudget { .. })
         ));
     }
 
@@ -1653,7 +2101,8 @@ mod tests {
             block_on(exact.search(&[1.0, 0.0], 2, FilterMode::Mask(&[true, true])))
                 .expect("available adapter completes exact search");
         assert_eq!(hits.iter().map(|hit| hit.id).collect::<Vec<_>>(), [20, 10]);
-        assert_eq!(report.readback_bytes, 32);
+        assert_eq!(report.readback_bytes, 32 + timestamp_readback(&exact));
+        assert_timestamp_phases(&exact, &report);
 
         let (batch, report) = block_on(exact.search_batch(
             &[&[1.0, 0.0], &[0.0, 1.0]],
@@ -1669,7 +2118,8 @@ mod tests {
             batch[1].iter().map(|hit| hit.id).collect::<Vec<_>>(),
             [10, 20]
         );
-        assert_eq!(report.readback_bytes, 64);
+        assert_eq!(report.readback_bytes, 64 + timestamp_readback(&exact));
+        assert_timestamp_phases(&exact, &report);
 
         let (hits, _) = block_on(exact.search(&[1.0, 0.0], 2, FilterMode::EligibleRows(&[1])))
             .expect("eligible-list search completes");
@@ -1777,7 +2227,11 @@ mod tests {
                             "{filter:?}"
                         );
                         assert!(report.allocation_bytes <= exact.budget);
-                        assert_eq!(report.readback_bytes, 8 * CANDIDATE_BYTES);
+                        assert_eq!(
+                            report.readback_bytes,
+                            8 * CANDIDATE_BYTES + timestamp_readback(&exact)
+                        );
+                        assert_timestamp_phases(&exact, &report);
                     }
                 }
             }
@@ -1819,7 +2273,11 @@ mod tests {
         ))
         .unwrap();
         assert_eq!(hits.iter().map(|hit| hit.id).collect::<Vec<_>>(), [1, 2, 3]);
-        assert_eq!(report.readback_bytes, 2 * 3 * CANDIDATE_BYTES);
+        assert_eq!(
+            report.readback_bytes,
+            2 * (3 * CANDIDATE_BYTES + timestamp_readback(&exact))
+        );
+        assert_timestamp_phases(&exact, &report);
         assert!(report.allocation_bytes <= exact.budget);
     }
 
@@ -1917,7 +2375,11 @@ mod tests {
                         );
                         assert!((hit.distance as f64 - distance).abs() < 2e-6);
                     }
-                    assert_eq!(report.readback_bytes, k as u64 * CANDIDATE_BYTES);
+                    assert_eq!(
+                        report.readback_bytes,
+                        k as u64 * CANDIDATE_BYTES + timestamp_readback(&exact)
+                    );
+                    assert_timestamp_phases(&exact, &report);
                     assert!(report.allocation_bytes <= exact.budget);
                 }
             }

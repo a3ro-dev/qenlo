@@ -2,18 +2,18 @@ pub mod app;
 pub mod theme;
 pub mod ui;
 
-use std::io::stdout;
-use std::time::Duration;
+use self::app::App;
+use crate::state::SharedState;
 use crossterm::{
     event::{Event, EventStream},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use futures::StreamExt;
-use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
-use crate::state::SharedState;
-use self::app::App;
+use ratatui::backend::CrosstermBackend;
+use std::io::stdout;
+use std::time::Duration;
 
 pub async fn run_tui(shared_state: SharedState) -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;

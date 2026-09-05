@@ -1,0 +1,101 @@
+{
+  "schema": "qenlo-visual-page-review-v1",
+  "review_date": "2026-09-05",
+  "pdf": {
+    "path": "paper/output/pdf/qenlo-final-research-paper.pdf",
+    "sha256": "75380b13db339f0c6c86fd4104c014d4eea68c8c9007c9613cb10105e562b96d",
+    "render_directory": "paper/tmp/final-pages",
+    "pages_reviewed": [8, 9, 10, 11, 12, 13, 14]
+  },
+  "overall": {
+    "status": "pass",
+    "figures_and_text_visible": true,
+    "clipping_or_overflow_observed": false,
+    "misleading_scale_observed": false,
+    "major_issue": null
+  },
+  "pages": [
+    {
+      "page": 8,
+      "status": "pass",
+      "findings": [
+        "Section 7.2 text is readable with no clipping or overfull lines.",
+        "Eligibility-ablation chart has readable title, legend, markers, labels, and logarithmic x/y axes.",
+        "Caption identifies H2, archive prefix, RTX 4090/Vulkan, 100K x 384 AG News, B=1, k=10, P95 unit, recall, sequential modes, logarithmic axes, guide lines, and absence of uncertainty intervals.",
+        "The guide lines are visually continuous between measured points; caption calls them guide lines and does not present a fitted law.",
+        "Section 8 begins cleanly at the bottom with adequate separation; no orphaned heading or clipped text."
+      ],
+      "scale_assessment": "Logarithmic axes are explicitly labeled and appropriate for the 1K--100K range; no misleading scale."
+    },
+    {
+      "page": 9,
+      "status": "pass",
+      "findings": [
+        "Windows strategy figure panels and all bar annotations are visible; small labels remain legible at rendered resolution.",
+        "Figure 6 caption states RTX 4050/DX12, 100K x 384 AG News, B=1, k=10, five runs/25,000 calls, completed-call P95, dense WGPU revision, sparse revision qualification, recall, and descriptive cross-revision limitation.",
+        "Chroma comparison chart has readable workload labels, ratio axis, and logarithmic scale annotation in the caption.",
+        "Figure 7 caption identifies S1 revision, A40/RTX 4090, k=10, ratio definition, Chroma recall, API/ANN/persistence/filter boundary differences, retained gate failures, and no error bars.",
+        "Section 9 heading and subsection heading are not stranded; no clipping or legend loss."
+      ],
+      "scale_assessment": "Both charts use log scales where stated; large Chroma ratios are represented consistently and are not presented as a linear visual comparison."
+    },
+    {
+      "page": 10,
+      "status": "pass",
+      "findings": [
+        "A6000 text clearly distinguishes strict real TopK from synthetic CUDA prototype and reports qualification limits.",
+        "Mutation/reopen chart labels all five bars, rebuild annotations, axis title, and logarithmic horizontal axis.",
+        "Figure 8 caption identifies S1, RTX 4090, durable 10K x 384, unfiltered B=1/k=10, first-search boundary, three observations for mutation types, one reopen observation, rebuild interpretation, and deletion checks.",
+        "Resource accounting paragraph distinguishes owned accelerator allocation, process RSS high-water mark, physical VRAM, upload/readback, and batch scope.",
+        "No clipping, bad page break, or unreadable annotation observed."
+      ],
+      "scale_assessment": "The log x-axis is explicitly named; rebuild values are annotations rather than a second quantitative axis."
+    },
+    {
+      "page": 11,
+      "status": "pass",
+      "findings": [
+        "Phase timing chart shows scoring, selection, backend, and completed-call categories with readable labels.",
+        "Resource scatter has readable workload labels and allocation axis; caption explicitly says the latency axis is a zoomed linear axis and warns that workloads do not establish a memory/latency law or score.",
+        "Figure 9 caption identifies S2 archive prefix, RTX 4090/Vulkan, 100K x 768, FP64 recall, B=8/k=64, phase medians versus call P95, nested scopes, workload separation, and no error bars.",
+        "Android figure panels have readable legends, titles, bar labels, and captions; Figure 10 states aggregate supplied data and missing raw/thermal/power records.",
+        "No clipping, overlap, or misleading legend observed."
+      ],
+      "scale_assessment": "The zoomed scatter range could exaggerate small differences if unlabeled, but the caption explicitly identifies the zoom and warns against a law or score; acceptable."
+    },
+    {
+      "page": 12,
+      "status": "pass",
+      "findings": [
+        "Intel Arc paragraph reports CPU/WGPU/IVF values, recall, sample count, non-NVIDIA status, and quick/full labeling caveat without clipping.",
+        "Negative-results figure has readable 12-row labels, ratio axis, and visible ratio-one reference line.",
+        "Figure 11 caption identifies S0/S1 revisions, qualified WGPU pairs, FP64-oracle-qualified completed-call P95, exact workloads/ratios, five wins/seven losses, devices, and no significance/error bars/pooled effect.",
+        "Campaign failure and cost paragraphs preserve pre-fix failures, invalid harness rows, Chroma/USearch/cuVS/Vulkan failures, cost, zero resources, and billing caveat.",
+        "No clipping or page-break defect observed."
+      ],
+      "scale_assessment": "Linear ratio axis with a visible ratio-one reference is appropriate; no misleading scale."
+    },
+    {
+      "page": 13,
+      "status": "pass",
+      "findings": [
+        "Deployment implications, threats to validity, related work, and conclusions are fully visible and readable.",
+        "Equation (4) is centered, legible, and referenced by surrounding text.",
+        "Threats section explicitly distinguishes cohorts, repetitions, oracle quality, timing/API boundaries, memory scopes, and untested ANN/device claims.",
+        "Related-work paragraph is concise and does not overstate novelty.",
+        "No overfull lines, clipped text, bad section break, or missing citations visible on this page."
+      ],
+      "scale_assessment": "No chart on this page; no scale issue."
+    },
+    {
+      "page": 14,
+      "status": "pass",
+      "findings": [
+        "Reproducibility statement is readable and not clipped.",
+        "References 1--11 continue below the reproducibility statement with readable authors, titles, venues, DOI/URL fields, and no clipped entries.",
+        "The page has ordinary lower-page whitespace after the final reference; no premature termination or layout defect is visible."
+      ],
+      "scale_assessment": "No chart or scale issue."
+    }
+  ]
+}

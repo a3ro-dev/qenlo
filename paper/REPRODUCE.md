@@ -1,80 +1,66 @@
-# Reproducing the paper
+# Reproducing the definitive Qenlo paper
 
-Use immutable tag `paper-adaptive-routing-v1`. The tag contains the exact Rust
-source, `Cargo.lock`, analysis and plotting scripts, paper source, processed data,
-and retained raw archives used by this revision.
+Run these commands from the repository root. They read retained artifacts and write only paper authoring or verification outputs. Do not rerun a paid experiment or a product benchmark to reproduce this manuscript.
 
-## Verify code and retained results
+## Dependencies
 
-```sh
-cargo test --workspace --no-default-features -- --test-threads=1
-cargo test -p qenlo-bench --no-default-features
-cargo test -p qenlo --features gpu-wgpu -- --test-threads=1
-python -m unittest discover -s scripts -p "test_*.py"
-python scripts/verify_strict_research_gate.py --help
-python research/scripts/analyze_results.py
-python research/scripts/generate_plots.py
+The audited local build uses Python 3.14 with NumPy, pandas, matplotlib, Pillow, and pypdf; MiKTeX pdfLaTeX/BibTeX; and Poppler `pdftoppm`, `pdftotext`, and `pdfinfo`. Standard LaTeX packages include geometry, amsmath, amssymb, booktabs, float, graphicx, microtype, array, longtable, url/xurl, xcolor, hyperref, and natbib. The bundled desktop Python is an alternative only if these plotting dependencies are installed there. The scripts are analysis/authoring tools, not library performance tests.
+
+## Audit retained evidence
+
+```powershell
+python paper/scripts/verify_campaign_claims.py
+python paper/audit/verify_historical_raw.py
+python paper/scripts/reduce_final_evidence.py
+python paper/scripts/inventory_evidence.py
 ```
 
-## Re-run the CUDA development and held-out cohorts
+The campaign verifier checks CSV/JSON equality, raw corrected timings and phases, lifecycle timers, source roles, all retained result archives/checksum manifests, and qualified pair counts. Expected results: 182 rows, eight result archives, nine checksum manifests, 1,053 checked entries, four self-manifest entries skipped, 12 selector pairs (5 wins/7 losses), seven qualified Chroma pairs, and one completed-unqualified USearch row. These are integrity and descriptive checks, not significance tests.
 
-On a single RTX A6000 CUDA 12.8 host with Python 3.12, PyTorch 2.9.1, NumPy 2.x, and `faiss-gpu-cu12==1.14.1.post1`:
+The reducer writes to `paper/audit/reduced/` and checks parsed CSV equality against retained originals. Android is reproduced from supplied aggregate records; unavailable raw distributions cannot be recreated. Historical endpoint and localization source revisions are kept distinct. Duplicate archive mirrors are counted once.
 
-```sh
-python research/scripts/run_cuda_synthetic_matrix.py --output research/data/raw/a6000-tuning --seed 20260902
-python research/scripts/run_cuda_synthetic_matrix.py --output research/data/raw/a6000-heldout --seed 20260903
+## Regenerate numerical tables, figures, and ledger
+
+```powershell
+python paper/scripts/generate_final_tables.py
+python paper/scripts/generate_final_figures.py
+python paper/scripts/assemble_claim_ledger.py
 ```
 
-Each output directory must be new. Do not overwrite the retained run. The script generates normalized FP32 vectors, uses 100 queries, 50 warmups, five repetitions, and E={1k,10k,100k,1M}. Timing includes query upload, GPU execution, synchronization, and ten-ID readback; preparation is excluded.
+The numerical tables use the verified campaign matrix and regenerated historical CSVs. The figure script reuses historical plotting functions with output redirected into `paper/figures/final/`; the native crossover panel deliberately omits incompatible older endpoint revisions. Existing top-level figures are never overwritten. It writes PDF and reviewable PNG for all twelve current figures and records exact input paths/hashes in `paper/audit/figure-sources.json`.
 
-## Re-run the native crossover sweep
+The full claim ledger embeds historical, campaign, semantic-source, and citation components and all 182 matrix rows. Missing information is not silently filled with nearby cohort values. The CSV is a short index into the JSON.
 
-Using the prepared `data/ag-news/ag-news-100k-384.qnb` corpus on the recorded RTX 4050/Vulkan host, run both `cpu` and `gpu-rows` backends for eligible counts 2000, 3000, 4000, 6000, 8000, and 10000. Each invocation uses:
+## Source and result identity
 
-```sh
-cargo run --release -p qenlo-bench --features gpu-wgpu -- run \
-  --dataset data/ag-news/ag-news-100k-384.qnb --output NEW_OUTPUT_DIR \
-  --dimensions 384 --backend BACKEND --distribution independent --fraction 1 \
-  --eligible-count ELIGIBLE --batch 1 --warmups 200 --repetitions 5 \
-  --recall-target 0.95
+| Role | Retained SHA-256 |
+|---|---|
+| S0 frozen source | `f37e744c7ee4054a74c4b4181f2dde61dade4d677bbc5493b9a36b61d165a45d` |
+| S1 experimental source | `730c050065e6786972a7be4f9bcb619168becdc943ce1122d1583c61f66409e3` |
+| S2 corrected source | `bb195fedb6519c26598c6c103e7e182982c2eddd0a06d9c2cf54eb5cb5ceeb19` |
+| S2 corrected results | `9e322d615c0bbed44616faa831493ca030dd49bbce7fe0c4386f49e3b8532fc0` |
+| H2 eligibility ablation | `26e0ccc057c59c0fb4687f8d85a923e88b7bb25257e4e551e22cffe13c1b821f` |
+
+S1 is preserved by its hash-qualified source filename beneath `research/artifacts/runpod-small-2026-09-05/`. S2 results are under `deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts.tar.gz` and have 74 non-self manifest entries. Both S1/S2 contain the selector candidate; the local WGSL equals the simpler S0 shader. The dirty Git HEAD alone cannot identify these executable archives.
+
+## Clean build and render
+
+```powershell
+python paper/scripts/build_final_paper.py
+python paper/scripts/verify_final_pdf.py
 ```
 
-Use new output directories. The retained samples and exact commands are recorded under `research/data/raw/2026-09-02-native-crossover`.
+The builder creates a new timestamped directory under `paper/tmp/`, copies only source/bibliography/figure/table inputs, and executes pdfLaTeX, BibTeX, and three resolving pdfLaTeX passes. It cannot consume stale auxiliary files from `paper/`. It rejects unresolved citations/references, missing files, duplicate labels, overfull horizontal/vertical boxes, and ignored TeX errors. Only a passing build is copied to:
 
-## Re-run the eligibility-materialization ablation
+`paper/output/pdf/qenlo-final-research-paper.pdf`
 
-Do not run this campaign on an uncontrolled laptop if the paper result is the
-target. On a Vulkan-capable NVIDIA Runpod, prepare the retained AG News corpus,
-copy the tagged repository, then run:
+The PDF verifier extracts layout-preserving text, checks headline values and reference/figure/table markers, renders every page at 120 DPI, and records the PDF hash, page count, and pixel hashes. It does not certify visual quality automatically. Every rendered page must be inspected for clipping, labels, legends, tables, equations, references, and page breaks. After edits, rebuild and re-inspect changed rendered pages; identical pixel output can retain its recorded review. Final visual records are tied to the delivered PDF and per-page render hashes.
 
-```sh
-export QENLO_REMOTE_ROOT=/workspace/qenlo-phase1
-bash scripts/runpod/bootstrap.sh compatibility
-bash scripts/runpod/phase1-eligibility-ablation.sh
-```
+## Scope and archival cautions
 
-The script writes new cell directories and never overwrites the committed raw
-archive. The authoritative archive is
-`research/artifacts/qenlo-phase1-eligibility-2026-09-04.tar.gz`, SHA-256
-`26e0ccc057c59c0fb4687f8d85a923e88b7bb25257e4e551e22cffe13c1b821f`.
-It includes exact commands, source patch, environment capture, raw calls,
-complete-run summaries, oracle output, failures, and internal checksums.
-
-## Compile
-
-The Android device-lab cohort was supplied as schema-v1 app output. Its exact run IDs and transcription limitations are recorded in `research/data/raw/2026-09-02-android/PROVENANCE.md`; the 21-cell table is `research/data/processed/android_device_lab.csv`.
-
-```sh
-cd paper
-pdflatex paper.tex
-bibtex paper
-pdflatex paper.tex
-pdflatex paper.tex
-cp paper.pdf output/pdf/qenlo-routing-filtered-vector-search.pdf
-```
-
-The validated revision was compiled with MiKTeX pdfTeX 1.40.28 and visually
-checked from Poppler page renders. `scripts/runpod/bootstrap.sh reference` pins
-the paper-analysis Python packages used in the retained Linux reproduction
-environment. Tectonic remains an alternative: run
-`tectonic paper.tex --keep-logs` from the `paper` directory.
+- Do not invoke the older `scripts/generate_small_paper_tables.py` in this final workflow: it writes the superseded six-claim CSV. It remains unchanged as historical authoring code.
+- Do not overwrite source archives, raw samples, historical plots, or earlier PDFs.
+- There is no script here to run cloud workloads or publish an artifact.
+- USD 0.9400778694252952 is captured daily account spend; billing lag and unrelated usage prevent clean campaign-only attribution.
+- Completed-call, device phases, process RSS, and owned accelerator/tensor allocations have different scopes. No efficiency score combines them.
+- Current mobile packaging, physical iOS/MPS performance, final-selector corrected-cell latency, calibrated routing, ANN frontiers, and energy/concurrency remain untested.

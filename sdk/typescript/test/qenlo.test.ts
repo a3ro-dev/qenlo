@@ -12,7 +12,7 @@ const records: readonly RecordInput[] = [
   { id: 6n, userId: 7n, timestamp: 20n, vector: [0, 0, 1] },
 ];
 
-test("typed filters, deterministic ordering, and telemetry", () => {
+test("typed filters, deterministic ordering, and execution report", () => {
   using db = Collection.memory(3);
   db.addBatch(records);
   const response = db.search([1, 0, 0], { userId: 7n, timestampLower: -5n, timestampUpper: 20n });
@@ -70,6 +70,9 @@ test("portable .qn round trip", () => {
 });
 
 test("validation and lifecycle failures are typed", () => {
+  assert.throws(() => Collection.memory(3, { backend: "invalid" as "cpu" }), RangeError);
+  assert.throws(() => Collection.memory(3, { gpuFilterMode: "invalid" as "gpu-predicate" }), RangeError);
+  assert.throws(() => Collection.memory(3, { gpuAllocationBudgetBytes: 0n }), RangeError);
   const db = Collection.memory(3);
   assert.throws(() => db.add({ id: 1n, userId: 1n, timestamp: 0n, vector: [1] }), RangeError);
   assert.throws(() => db.search([1, 0, 0], {}, 0), RangeError);

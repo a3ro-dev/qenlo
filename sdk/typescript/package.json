@@ -1,6 +1,6 @@
 {
   "name": "@a3ro.dev/qenlo",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "Type-safe TypeScript SDK for the embedded Qenlo vector database",
   "type": "module",
   "main": "dist/index.js",

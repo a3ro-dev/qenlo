@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "pdf": "paper/output/pdf/qenlo-final-research-paper.pdf",
+  "pdf_sha256": "75380b13db339f0c6c86fd4104c014d4eea68c8c9007c9613cb10105e562b96d",
+  "pages": 22,
+  "figures_pdf_png_pairs": 12,
+  "audited_claim_records": 36,
+  "campaign_matrix_rows": 182,
+  "completed_rows": 131,
+  "qualified_rows": 130,
+  "archive_files_inventoried": 1819,
+  "checked_campaign_checksum_entries": 1053,
+  "clean_build": true,
+  "unresolved_citations": 0,
+  "unresolved_references": 0,
+  "missing_figures": 0,
+  "overfull_boxes": 0,
+  "pdf_text_checks": "pass",
+  "page_by_page_visual_review": "pass",
+  "visual_reviews": [
+    {
+      "file": "paper/audit/visual-pages-01-07.json",
+      "sha256": "705f3e13dcf152c8ec1067d10a9b0ffff1032b9a4ff3eac55f77c117a88f29a3"
+    },
+    {
+      "file": "paper/audit/visual-pages-08-14.json",
+      "sha256": "ada95c70cb373774b4c342f6cc5e1d4da342e10a269b416dff754386bc3fee58"
+    },
+    {
+      "file": "paper/audit/visual-pages-15-22.json",
+      "sha256": "fffdc064f632478a5e46316fc6cf753f1abe20003bd66b31be1879275a5b5a4d"
+    }
+  ],
+  "historical_figures": "preserved; regenerated copies in figures/final",
+  "scope": "Only manuscript, paper generators, ledgers, and verification artifacts changed; no product/benchmark implementation or cloud execution."
+}

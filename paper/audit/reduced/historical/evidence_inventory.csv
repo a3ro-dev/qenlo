@@ -1,0 +1,8 @@
+cohort,timed_observations,evidence_form
+Windows native endpoints,225000,raw per-call
+Windows native crossover,300000,raw per-call
+Linux library cohort,10500,raw per-call
+A6000 synthetic held-out,4000,raw per-call
+A6000 real strict gate,20000,raw per-call
+Android device lab,4144,author-supplied aggregates
+Runpod eligibility ablation,300000,raw per-call archive

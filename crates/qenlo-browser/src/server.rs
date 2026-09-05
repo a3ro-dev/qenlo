@@ -1,15 +1,15 @@
-use std::net::SocketAddr;
+use crate::state::SharedState;
 use axum::{
+    Router,
     extract::{Path as AxPath, Query, State},
     http::StatusCode,
     response::{Html, IntoResponse, Json},
     routing::{get, post},
-    Router,
 };
+use qenlo::{Filter, Mutation, NewRecord, TimestampRange};
 use serde::Deserialize;
 use serde_json::json;
-use crate::state::SharedState;
-use qenlo::{Filter, Mutation, NewRecord, TimestampRange};
+use std::net::SocketAddr;
 
 const INDEX_HTML: &str = include_str!("web/index.html");
 
@@ -92,7 +92,11 @@ pub fn app_router(state: SharedState) -> Router {
         .with_state(state)
 }
 
-pub async fn run_server(state: SharedState, host: &str, port: u16) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run_server(
+    state: SharedState,
+    host: &str,
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error>> {
     let app = app_router(state);
     let addr: SocketAddr = format!("{host}:{port}").parse()?;
     println!("⬡ QenloDB Web Browser running on http://{}", addr);
@@ -115,7 +119,10 @@ async fn open_collection(
     Json(payload): Json<OpenRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let mut session = state.write().await;
-    match session.open_collection(&payload.path, payload.dimension).await {
+    match session
+        .open_collection(&payload.path, payload.dimension)
+        .await
+    {
         Ok(stats) => Ok(Json(json!({
             "status": "ok",
             "dimension": stats.dimension,
@@ -132,7 +139,10 @@ async fn create_collection(
     Json(payload): Json<CreateRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let mut session = state.write().await;
-    match session.create_collection(&payload.path, payload.dimension).await {
+    match session
+        .create_collection(&payload.path, payload.dimension)
+        .await
+    {
         Ok(stats) => Ok(Json(json!({
             "status": "ok",
             "dimension": stats.dimension,
@@ -173,7 +183,10 @@ async fn get_record_by_id(
     let session = state.read().await;
     match session.get_record(id) {
         Ok(Some(record)) => Ok(Json(record)),
-        Ok(None) => Err((StatusCode::NOT_FOUND, Json(json!({ "error": format!("Record #{id} not found") })))),
+        Ok(None) => Err((
+            StatusCode::NOT_FOUND,
+            Json(json!({ "error": format!("Record #{id} not found") })),
+        )),
         Err(e) => Err((StatusCode::BAD_REQUEST, Json(json!({ "error": e })))),
     }
 }
@@ -236,7 +249,9 @@ async fn flush_collection(
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let session = state.read().await;
     match session.flush() {
-        Ok(()) => Ok(Json(json!({ "status": "ok", "message": "Collection flushed and synced" }))),
+        Ok(()) => Ok(Json(
+            json!({ "status": "ok", "message": "Collection flushed and synced" }),
+        )),
         Err(e) => Err((StatusCode::BAD_REQUEST, Json(json!({ "error": e })))),
     }
 }

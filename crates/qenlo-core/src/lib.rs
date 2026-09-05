@@ -945,7 +945,9 @@ fn dot_implementation() -> fn(&[f32], &[f32]) -> f64 {
     dot_scalar
 }
 
-fn fp32_dot_implementation() -> Option<fn(&[f32], &[f32]) -> f32> {
+type Fp32Dot = fn(&[f32], &[f32]) -> f32;
+
+fn fp32_dot_implementation() -> Option<Fp32Dot> {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     if cpu_distance_path() == CpuDistancePath::Fp32Avx2FmaCertified {
         // SAFETY: selected only after runtime AVX2 and FMA detection.

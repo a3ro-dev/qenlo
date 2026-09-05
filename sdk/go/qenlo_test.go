@@ -15,7 +15,7 @@ func fixture() []Record {
 	}
 }
 
-func TestTypedFilterOrderingAndTelemetry(t *testing.T) {
+func TestTypedFilterOrderingAndExecutionReport(t *testing.T) {
 	db, err := New(3)
 	if err != nil {
 		t.Fatal(err)
@@ -123,6 +123,12 @@ func TestPortableQNRoundTrip(t *testing.T) {
 }
 
 func TestValidationAndLifecycle(t *testing.T) {
+	if _, err := NewWithOptions(3, Options{Backend: ExecutionMode(99)}); err == nil {
+		t.Fatal("expected execution mode validation error")
+	}
+	if _, err := NewWithOptions(3, Options{GPUFilter: GPUFilterMode(99)}); err == nil {
+		t.Fatal("expected GPU filter validation error")
+	}
 	db, _ := New(3)
 	if err := db.Add(Record{ID: 1, UserID: 1, Vector: []float32{1}}); err == nil {
 		t.Fatal("expected dimension error")

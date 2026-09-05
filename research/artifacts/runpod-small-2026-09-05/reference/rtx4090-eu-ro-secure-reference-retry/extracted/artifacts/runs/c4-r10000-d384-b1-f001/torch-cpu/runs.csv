@@ -1,0 +1,4 @@
+engine,run,batches,queries,p50_completed_ns,p95_completed_ns,p99_completed_ns,wall_ns,qps,k,recall_at_k,recall_at_10
+torch-cpu,0,64,64,91932,97803,99476,9682890,6609.596928189828,10,1.0,1.0
+torch-cpu,1,64,64,93535,99526,100528,9761949,6556.067850794959,10,1.0,1.0
+torch-cpu,2,64,64,93204,99626,120726,9743294,6568.620427547398,10,1.0,1.0

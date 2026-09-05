@@ -33,15 +33,48 @@ def _library_path() -> Path:
 
 LIB: Final = ctypes.CDLL(str(_library_path()))
 Handle = ctypes.c_void_p
+Snapshot = ctypes.c_void_p
+SearchResults = ctypes.c_void_p
 
 LIB.qenlo_collection_new.argtypes = [ctypes.c_size_t]
 LIB.qenlo_collection_new.restype = Handle
+LIB.qenlo_collection_new_configured.argtypes = [
+    ctypes.c_size_t,
+    ctypes.c_uint32,
+    ctypes.c_uint32,
+    ctypes.c_uint64,
+]
+LIB.qenlo_collection_new_configured.restype = Handle
 LIB.qenlo_collection_create.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
 LIB.qenlo_collection_create.restype = Handle
+LIB.qenlo_collection_create_configured.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_size_t,
+    ctypes.c_uint32,
+    ctypes.c_uint32,
+    ctypes.c_uint64,
+]
+LIB.qenlo_collection_create_configured.restype = Handle
 LIB.qenlo_collection_open.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
 LIB.qenlo_collection_open.restype = Handle
+LIB.qenlo_collection_open_configured.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_size_t,
+    ctypes.c_uint32,
+    ctypes.c_uint32,
+    ctypes.c_uint64,
+]
+LIB.qenlo_collection_open_configured.restype = Handle
 LIB.qenlo_collection_import_qn.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
 LIB.qenlo_collection_import_qn.restype = Handle
+LIB.qenlo_collection_import_qn_configured.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_size_t,
+    ctypes.c_uint32,
+    ctypes.c_uint32,
+    ctypes.c_uint64,
+]
+LIB.qenlo_collection_import_qn_configured.restype = Handle
 LIB.qenlo_add.argtypes = [
     Handle,
     ctypes.c_uint64,
@@ -78,6 +111,54 @@ LIB.qenlo_search.argtypes = [
     ctypes.c_size_t,
 ]
 LIB.qenlo_search.restype = ctypes.c_void_p
+LIB.qenlo_search_results_new.argtypes = list(LIB.qenlo_search.argtypes)
+LIB.qenlo_search_results_new.restype = SearchResults
+LIB.qenlo_search_results_len.argtypes = [
+    SearchResults,
+    ctypes.POINTER(ctypes.c_size_t),
+]
+LIB.qenlo_search_results_len.restype = ctypes.c_int32
+LIB.qenlo_search_results_copy.argtypes = [
+    SearchResults,
+    ctypes.POINTER(ctypes.c_uint64),
+    ctypes.c_size_t,
+    ctypes.POINTER(ctypes.c_float),
+    ctypes.c_size_t,
+]
+LIB.qenlo_search_results_copy.restype = ctypes.c_int32
+LIB.qenlo_search_results_report_json.argtypes = [SearchResults]
+LIB.qenlo_search_results_report_json.restype = ctypes.c_void_p
+LIB.qenlo_search_results_free.argtypes = [SearchResults]
+LIB.qenlo_search_results_free.restype = None
+LIB.qenlo_snapshot_new.argtypes = [
+    Handle,
+    ctypes.c_bool,
+    ctypes.c_uint64,
+    ctypes.c_bool,
+    ctypes.c_int64,
+    ctypes.c_bool,
+    ctypes.c_int64,
+]
+LIB.qenlo_snapshot_new.restype = Snapshot
+LIB.qenlo_snapshot_info.argtypes = [
+    Snapshot,
+    ctypes.POINTER(ctypes.c_uint64),
+    ctypes.POINTER(ctypes.c_size_t),
+    ctypes.POINTER(ctypes.c_size_t),
+]
+LIB.qenlo_snapshot_info.restype = ctypes.c_int32
+LIB.qenlo_snapshot_copy.argtypes = [
+    Snapshot,
+    ctypes.POINTER(ctypes.c_uint64),
+    ctypes.c_size_t,
+    ctypes.POINTER(ctypes.c_float),
+    ctypes.c_size_t,
+]
+LIB.qenlo_snapshot_copy.restype = ctypes.c_int32
+LIB.qenlo_snapshot_free.argtypes = [Snapshot]
+LIB.qenlo_snapshot_free.restype = None
+LIB.qenlo_collection_generation.argtypes = [Handle, ctypes.POINTER(ctypes.c_uint64)]
+LIB.qenlo_collection_generation.restype = ctypes.c_int32
 LIB.qenlo_stats.argtypes = [Handle]
 LIB.qenlo_stats.restype = ctypes.c_void_p
 LIB.qenlo_export_qn.argtypes = [Handle, ctypes.c_char_p]

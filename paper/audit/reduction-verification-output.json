@@ -1,0 +1,43 @@
+{
+  "native_crossover": 6,
+  "static_router_regret": 6,
+  "eligibility_ablation": 12,
+  "a6000_synthetic": 8,
+  "windows": 9,
+  "linux": 7,
+  "a6000_strict": 4,
+  "inventory": 7
+}
+{
+  "small_matrix_identical": true,
+  "small_rows": 182,
+  "historical": {
+    "a6000_exact_summary.csv": {
+      "identical": true
+    },
+    "a6000_strict_summary.csv": {
+      "identical": true
+    },
+    "android_device_lab.csv": {
+      "identical": true
+    },
+    "eligibility_ablation_summary.csv": {
+      "identical": true
+    },
+    "evidence_inventory.csv": {
+      "identical": true
+    },
+    "linux_library_summary.csv": {
+      "identical": true
+    },
+    "native_crossover_summary.csv": {
+      "identical": true
+    },
+    "static_router_regret.csv": {
+      "identical": true
+    },
+    "windows_summary.csv": {
+      "identical": true
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "podId": "aogijfywki4cwh",
+  "status": "complete",
+  "maximumCostUsd": 0.4316666666666666666666666667,
+  "mode": "deep768",
+  "liveUsdPerHour": 0.74,
+  "validWorkload": false,
+  "invalidReason": "harness passed internal cell labels as qenlo-bench positional arguments; no benchmark executed",
+  "sourceDigests": {
+    "Deep768": "651441e80fab2a46ccf8601630cfcebde37e190f342e6c3ed9a8191ddf13c6c0",
+    "Real": "ba87a322b6846ce225ce54140cf00ac33250271447ef8f9f83df246131719cba",
+    "Baseline": "f37e744c7ee4054a74c4b4181f2dde61dade4d677bbc5493b9a36b61d165a45d",
+    "Workload": "72ec871cbb10be72a8e91c6ac6d9b6f62b241834bcf133b031f6000449ba4718",
+    "Current": "730c050065e6786972a7be4f9bcb619168becdc943ce1122d1583c61f66409e3"
+  },
+  "configuration": {
+    "name": "rtx4090-eu-ro-secure-deep768",
+    "gpuId": "NVIDIA GeForce RTX 4090",
+    "dataCenter": "EU-RO-1",
+    "cloud": "SECURE",
+    "quotedUsdPerHour": 0.74,
+    "role": "deep768"
+  }
+}

@@ -35,8 +35,10 @@ jobs:
         with: { python-version: "3.13" }
       - name: Build and test native ABI
         run: |
+          cmp crates/qenlo-ffi/qenlo.h sdk/go/native/qenlo.h
           cargo test --locked -p qenlo-ffi
-          cargo build --locked --release -p qenlo-ffi
+          cargo test --locked -p qenlo-ffi --features gpu-wgpu
+          cargo build --locked --release -p qenlo-ffi --features gpu-wgpu
       - name: Build platform wheel
         shell: bash
         run: |
@@ -151,7 +153,10 @@ jobs:
           rustup target add aarch64-apple-darwin x86_64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
       - name: Build Apple static libraries
         run: |
-          for target in aarch64-apple-darwin x86_64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
+          for target in aarch64-apple-darwin x86_64-apple-darwin; do
+            cargo build --locked --release -p qenlo-ffi --features gpu-wgpu --target "$target"
+          done
+          for target in aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios; do
             cargo build --locked --release -p qenlo-ffi --target "$target"
           done
           mkdir -p target/apple/{macos,ios,simulator}

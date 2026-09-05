@@ -1,0 +1,10 @@
+system,search_type,eligible,dimension,runs,samples,p95_ms,recall_at_10
+CPU exhaustive FP64 accum.,exhaustive,1000,384,5,25000,0.2304,1.0
+WGPU compact rows,exhaustive,1000,384,5,25000,0.6766,1.0
+WGPU predicate,exhaustive,1000,384,5,25000,2.8832,1.0
+CPU exhaustive FP64 accum.,exhaustive,100000,384,5,25000,16.6567,0.9999800000000001
+WGPU compact rows,exhaustive,100000,384,5,25000,4.2428,0.9999800000000001
+WGPU mask,exhaustive,100000,384,5,25000,4.4591,0.9999800000000001
+WGPU predicate,exhaustive,100000,384,5,25000,3.2404,0.9999800000000001
+USearch HNSW ef=128,ANN,100000,384,5,25000,3.6245,0.9922400000000001
+Chroma HNSW ef=128,ANN,100000,384,5,25000,1.1303,0.9941400000000001

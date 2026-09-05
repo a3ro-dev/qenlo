@@ -31,6 +31,39 @@ use qenlo_bench::{
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
+struct SourceState {
+    git_revision: String,
+    git_worktree_dirty: String,
+    bundle_sha256: String,
+}
+
+fn source_state() -> SourceState {
+    let git_revision = std::process::Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_owned())
+        .unwrap_or_else(|| "unavailable".into());
+    let git_worktree_dirty = std::process::Command::new("git")
+        .args(["status", "--porcelain"])
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| (!output.stdout.is_empty()).to_string())
+        .unwrap_or_else(|| "unavailable".into());
+    let bundle_sha256 = std::env::var("QENLO_SOURCE_BUNDLE_SHA256")
+        .ok()
+        .filter(|value| value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()))
+        .map(|value| value.to_ascii_lowercase())
+        .unwrap_or_else(|| "unavailable".into());
+    SourceState {
+        git_revision,
+        git_worktree_dirty,
+        bundle_sha256,
+    }
+}
+
 struct CountingAllocator;
 
 static ALLOCATION_COUNT: AtomicU64 = AtomicU64::new(0);
@@ -105,12 +138,17 @@ run     --dataset PATH --output NEW_DIRECTORY [--dimensions 16|384|768]
         [--order-seed U64]
         [--router-profile KEY_VALUE_FILE]
         [--user-id U64]
-        [--batch 1|8|32] [--warmups 8] [--repetitions 3]
+        [--batch 1|8|16|32|64] [--k 1|10|64]
+        [--warmups 8] [--repetitions 3]
         [--recall-target 0.95|0.99] [--expansion-search 128]
         [--tune-expansion-search 128,256,512,1024]
         [--allow-recall-miss true|false]
         [--oracle-reference COMPLETED_EXACT_CPU_DIRECTORY]
         [--diagnostics disabled|basic|detailed]
+        [--vector-budget-mib 512] [--gpu-budget-mib 512]
+lifecycle --dataset PATH --output NEW_DIRECTORY [--dimensions 16|384|768]
+        [--backend cpu|gpu-mask|gpu-rows|gpu-predicate|automatic]
+        [--repetitions 3] [--write-batch 8]
         [--vector-budget-mib 512] [--gpu-budget-mib 512]
 
 Defaults are small synthetic smoke workloads, NOT scale measurements.
@@ -118,7 +156,7 @@ Reference protocol: --rows 100k or 1m, --dimensions 384 or 768,
 --tuning 1000 --evaluation 5000; run --warmups 200 --repetitions 5.
 All vectors come from disjoint source-row intervals; imported content may repeat.
 Each batch uses one shared filter. --user-id adds equality AND a bounded timestamp
-range; --fraction then applies within that user's population. k=10.
+range; --fraction then applies within that user's population. k is bounded at 64.
 Raw CSV samples, timing/recall summaries and configuration.txt are retained.
 Vector budget is a payload estimate, not an RSS/allocator limit. External dataset
 downloads and distinct-filter batches
@@ -215,7 +253,8 @@ fn run_cli(args: Vec<String>) -> Result<()> {
             Ok(())
         }
         "run" => block_on(run_cell(path, dimension, options)),
-        _ => Err("expected prepare or run; use --help".into()),
+        "lifecycle" => block_on(run_lifecycle(path, dimension, options)),
+        _ => Err("expected prepare, run or lifecycle; use --help".into()),
     }
 }
 
@@ -237,6 +276,271 @@ fn block_on<F: Future>(future: F) -> F::Output {
             Poll::Pending => std::thread::park(),
         }
     }
+}
+
+async fn run_lifecycle(
+    path: PathBuf,
+    dimension: usize,
+    mut options: BTreeMap<String, String>,
+) -> Result<()> {
+    let output = PathBuf::from(options.remove("--output").ok_or("--output is required")?);
+    let backend_name = take(&mut options, "--backend", "cpu");
+    let repetitions = count(&take(&mut options, "--repetitions", "3"))?;
+    let write_batch = count(&take(&mut options, "--write-batch", "8"))?;
+    if repetitions == 0 || write_batch == 0 || write_batch > 64 {
+        return Err("--repetitions must be nonzero and --write-batch must be in 1..=64".into());
+    }
+    let vector_budget = (count(&take(&mut options, "--vector-budget-mib", "512"))? as u64)
+        .checked_mul(1 << 20)
+        .ok_or("vector budget overflow")?;
+    let gpu_budget = (count(&take(&mut options, "--gpu-budget-mib", "512"))? as u64)
+        .checked_mul(1 << 20)
+        .ok_or("GPU budget overflow")?;
+    exhausted(options)?;
+    let config = CollectionConfig {
+        dimension,
+        backend: backend(&backend_name)?,
+        gpu_allocation_budget_bytes: gpu_budget,
+    };
+    let data = dataset::load(&path, dimension, vector_budget)?;
+    std::fs::create_dir(&output)?;
+    let durable = output.join("collection");
+    let collection = Collection::create(&durable, config.clone()).await?;
+    let build_started = Instant::now();
+    for chunk in data.corpus.chunks(4_096) {
+        let rows = chunk
+            .iter()
+            .map(|row| NewRecord {
+                id: row.id,
+                user_id: row.user_id,
+                timestamp: row.timestamp_micros,
+                vector: row.vector.clone(),
+            })
+            .collect::<Vec<_>>();
+        collection.add_batch(&rows)?;
+    }
+    let build_ns = build_started.elapsed().as_nanos();
+    let prepare_started = Instant::now();
+    collection.prepare().await?;
+    let initial_prepare_ns = prepare_started.elapsed().as_nanos();
+    let query = data
+        .evaluation
+        .first()
+        .ok_or("dataset has no evaluation query")?;
+    let warm = collection.search(query, &Filter::ALL, 10).await?;
+    if warm.results.is_empty() {
+        return Err("lifecycle fixture unexpectedly returned no warm result".into());
+    }
+
+    let mut samples = BufWriter::new(File::create_new(output.join("lifecycle.csv"))?);
+    writeln!(
+        samples,
+        "phase,repetition,mutation_ns,first_search_ns,actual_backend,rebuilt,generation,upload_bytes,allocation_bytes,result_count,deleted_id_absent"
+    )?;
+    let mut phase_search_ns = BTreeMap::<String, Vec<u128>>::new();
+    let mut next_id = data.spec.corpus as u64;
+    for repetition in 0..repetitions {
+        let add_id = next_id;
+        next_id += 1;
+        let mutation_started = Instant::now();
+        collection.add(add_id, u64::MAX - 1, repetition as i64, &data.tuning[0])?;
+        let mutation_ns = mutation_started.elapsed().as_nanos();
+        let search_started = Instant::now();
+        let response = collection.search(query, &Filter::ALL, 10).await?;
+        let search_ns = search_started.elapsed().as_nanos();
+        phase_search_ns
+            .entry("add-one".into())
+            .or_default()
+            .push(search_ns);
+        write_lifecycle_row(
+            &mut samples,
+            "add-one",
+            repetition,
+            mutation_ns,
+            search_ns,
+            &response,
+            true,
+        )?;
+
+        let mutation_started = Instant::now();
+        collection.delete(add_id)?;
+        let mutation_ns = mutation_started.elapsed().as_nanos();
+        let search_started = Instant::now();
+        let response = collection.search(query, &Filter::ALL, 10).await?;
+        let search_ns = search_started.elapsed().as_nanos();
+        let deleted_id_absent = response.results.iter().all(|hit| hit.id != add_id);
+        if !deleted_id_absent {
+            return Err("deleted ID was returned by the first post-delete search".into());
+        }
+        phase_search_ns
+            .entry("delete-one".into())
+            .or_default()
+            .push(search_ns);
+        write_lifecycle_row(
+            &mut samples,
+            "delete-one",
+            repetition,
+            mutation_ns,
+            search_ns,
+            &response,
+            deleted_id_absent,
+        )?;
+
+        let batch_ids = (next_id..next_id + write_batch as u64).collect::<Vec<_>>();
+        next_id += write_batch as u64;
+        let batch = batch_ids
+            .iter()
+            .enumerate()
+            .map(|(offset, &id)| NewRecord {
+                id,
+                user_id: u64::MAX - 2,
+                timestamp: offset as i64,
+                vector: data.tuning[offset % data.tuning.len()].clone(),
+            })
+            .collect::<Vec<_>>();
+        let mutation_started = Instant::now();
+        collection.add_batch(&batch)?;
+        let mutation_ns = mutation_started.elapsed().as_nanos();
+        let search_started = Instant::now();
+        let response = collection.search(query, &Filter::ALL, 10).await?;
+        let search_ns = search_started.elapsed().as_nanos();
+        phase_search_ns
+            .entry("add-batch".into())
+            .or_default()
+            .push(search_ns);
+        write_lifecycle_row(
+            &mut samples,
+            "add-batch",
+            repetition,
+            mutation_ns,
+            search_ns,
+            &response,
+            true,
+        )?;
+
+        let mutation_started = Instant::now();
+        collection.delete_batch(&batch_ids)?;
+        let mutation_ns = mutation_started.elapsed().as_nanos();
+        let search_started = Instant::now();
+        let response = collection.search(query, &Filter::ALL, 10).await?;
+        let search_ns = search_started.elapsed().as_nanos();
+        let deleted_id_absent = response
+            .results
+            .iter()
+            .all(|hit| !batch_ids.contains(&hit.id));
+        if !deleted_id_absent {
+            return Err("deleted batch ID was returned by the first post-delete search".into());
+        }
+        phase_search_ns
+            .entry("delete-batch".into())
+            .or_default()
+            .push(search_ns);
+        write_lifecycle_row(
+            &mut samples,
+            "delete-batch",
+            repetition,
+            mutation_ns,
+            search_ns,
+            &response,
+            deleted_id_absent,
+        )?;
+    }
+    samples.flush()?;
+    collection.flush()?;
+    collection.close()?;
+    let reopen_started = Instant::now();
+    let reopened = Collection::open(&durable, config).await?;
+    let reopen_ns = reopen_started.elapsed().as_nanos();
+    let search_started = Instant::now();
+    let response = reopened.search(query, &Filter::ALL, 10).await?;
+    let reopen_first_search_ns = search_started.elapsed().as_nanos();
+    write_lifecycle_row(
+        &mut samples,
+        "reopen",
+        0,
+        reopen_ns,
+        reopen_first_search_ns,
+        &response,
+        true,
+    )?;
+    samples.flush()?;
+    reopened.close()?;
+
+    let source = source_state();
+    let mut summary = BufWriter::new(File::create_new(output.join("summary.txt"))?);
+    writeln!(summary, "status=completed")?;
+    writeln!(summary, "format=qenlo-lifecycle-v1")?;
+    writeln!(summary, "git_revision={}", source.git_revision)?;
+    writeln!(summary, "git_worktree_dirty={}", source.git_worktree_dirty)?;
+    writeln!(summary, "source_bundle_sha256={}", source.bundle_sha256)?;
+    writeln!(summary, "backend={backend_name}")?;
+    writeln!(summary, "rows={}", data.spec.corpus)?;
+    writeln!(summary, "dimensions={dimension}")?;
+    writeln!(summary, "repetitions={repetitions}")?;
+    writeln!(summary, "write_batch={write_batch}")?;
+    writeln!(summary, "build_ns={build_ns}")?;
+    writeln!(summary, "initial_prepare_ns={initial_prepare_ns}")?;
+    writeln!(summary, "reopen_ns={reopen_ns}")?;
+    writeln!(summary, "reopen_first_search_ns={reopen_first_search_ns}")?;
+    writeln!(
+        summary,
+        "timing_scope=completed synchronous mutation then completed first search"
+    )?;
+    writeln!(summary, "filter_scope=unfiltered")?;
+    writeln!(
+        summary,
+        "host_rss_bytes=unavailable:measure process externally"
+    )?;
+    for (phase, values) in phase_search_ns {
+        let durations = values
+            .iter()
+            .map(|&value| std::time::Duration::from_nanos(value.min(u64::MAX as u128) as u64))
+            .collect::<Vec<_>>();
+        writeln!(
+            summary,
+            "{phase}_p50_first_search_ns={}",
+            nearest_rank_percentile(&durations, 0.5)
+                .ok_or("lifecycle phase has no samples")?
+                .as_nanos()
+        )?;
+        writeln!(
+            summary,
+            "{phase}_p95_first_search_ns={}",
+            nearest_rank_percentile(&durations, 0.95)
+                .ok_or("lifecycle phase has no samples")?
+                .as_nanos()
+        )?;
+    }
+    summary.flush()?;
+    println!(
+        "completed lifecycle {}: rows={} dimension={} backend={backend_name}",
+        output.display(),
+        data.spec.corpus,
+        dimension
+    );
+    Ok(())
+}
+
+fn write_lifecycle_row(
+    output: &mut impl Write,
+    phase: &str,
+    repetition: usize,
+    mutation_ns: u128,
+    search_ns: u128,
+    response: &qenlo::SearchResponse,
+    deleted_id_absent: bool,
+) -> Result<()> {
+    writeln!(
+        output,
+        "{phase},{repetition},{mutation_ns},{search_ns},{:?},{},{},{},{},{},{deleted_id_absent}",
+        response.report.actual_backend,
+        response.report.rebuilt,
+        response.report.index_generation,
+        csv_value(bytes(response.report.upload_bytes.clone())),
+        csv_value(bytes(response.report.qenlo_allocation_bytes.clone())),
+        response.results.len()
+    )?;
+    Ok(())
 }
 
 fn shuffle(order: &mut [usize], mut seed: u64) {
@@ -446,8 +750,12 @@ async fn run_cell(
         .map(|value| value.parse::<u64>())
         .transpose()?;
     let batch = count(&take(&mut options, "--batch", "1"))?;
-    if ![1, 8, 32].contains(&batch) {
-        return Err("--batch must be 1, 8 or 32".into());
+    if ![1, 8, 16, 32, 64].contains(&batch) {
+        return Err("--batch must be 1, 8, 16, 32 or 64".into());
+    }
+    let k = count(&take(&mut options, "--k", "10"))?;
+    if !(1..=64).contains(&k) {
+        return Err("--k must be between 1 and 64".into());
     }
     let warmups = count(&take(&mut options, "--warmups", "8"))?;
     let repetitions = count(&take(&mut options, "--repetitions", "3"))?;
@@ -517,16 +825,10 @@ async fn run_cell(
     let load_duration = load_started.elapsed();
     std::fs::create_dir(&output)?;
     let mut manifest = BufWriter::new(File::create_new(output.join("configuration.txt"))?);
-    let git_revision = std::process::Command::new("git")
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .ok()
-        .filter(|out| out.status.success())
-        .map(|out| String::from_utf8_lossy(&out.stdout).trim().to_owned())
-        .unwrap_or_else(|| "unavailable".into());
+    let source = source_state();
     writeln!(
         manifest,
-        "format=qenlo-bench-run-v2\nstatus=incomplete-until-summary-exists\ndataset={}\ndataset_crc32={:08x}\nsource=prepared-f32-rows-see-preparation-record\nseed={}\norder_seed={}\nrows={}\ndimensions={}\ncorpus_range=0..{}\ntuning_range={}..{}\nevaluation_range={}..{}\nbackend={}\ngpu_row_preparation={}\nmetadata={}\nfraction_requested={}\neligible_count={}\neligible_fraction_actual={}\nbatch={}\nfilter_mode=shared\nk=10\nwarmup_queries={}\nrepetitions={}\nrecall_target={}\nexpansion_search={}\nvector_budget_bytes={}\ngpu_budget_bytes={}\nplatform={}-{}\npackage_version={}\ngit_revision={}\npercentile=nearest-rank\nquery_latency=batch-call-completion\nqps_window=includes-driver-validation-and-csv\nhost_rss_bytes=unavailable:no-portable-process-measurement\nprocess_allocator_scope=gross-process-wide-rust-allocator-traffic-during-completed-call\nprocess_allocated_bytes=gross-not-live-or-peak-bytes\nvector_budget_scope=source-plus-normalized-corpus-payload-only\ngpu_allocation_scope=qenlo-owned-not-physical-vram\nmissing_csv_measurement=empty:not-reported-by-backend\nscale_gate=untested-by-this-single-cell\nload_ns={}",
+        "format=qenlo-bench-run-v3\nstatus=incomplete-until-summary-exists\ndataset={}\ndataset_crc32={:08x}\nsource=prepared-f32-rows-see-preparation-record\nseed={}\norder_seed={}\nrows={}\ndimensions={}\ncorpus_range=0..{}\ntuning_range={}..{}\nevaluation_range={}..{}\nbackend={}\ngpu_row_preparation={}\nmetadata={}\nfraction_requested={}\neligible_count={}\neligible_fraction_actual={}\nbatch={}\nfilter_mode=shared\nk={}\nwarmup_queries={}\nrepetitions={}\nrecall_target={}\nexpansion_search={}\nvector_budget_bytes={}\ngpu_budget_bytes={}\nplatform={}-{}\npackage_version={}\ngit_revision={}\npercentile=nearest-rank\nquery_latency=batch-call-completion\nqps_window=includes-driver-validation-and-csv\nhost_rss_bytes=unavailable:no-portable-process-measurement\nprocess_allocator_scope=gross-process-wide-rust-allocator-traffic-during-completed-call\nprocess_allocated_bytes=gross-not-live-or-peak-bytes\nvector_budget_scope=source-plus-normalized-corpus-payload-only\ngpu_allocation_scope=qenlo-owned-not-physical-vram\nmissing_csv_measurement=empty:not-reported-by-backend\nscale_gate=untested-by-this-single-cell\nload_ns={}",
         path.display(),
         data.checksum,
         data.spec.seed,
@@ -545,6 +847,7 @@ async fn run_cell(
         eligible,
         eligible as f64 / data.spec.corpus as f64,
         batch,
+        k,
         warmups,
         repetitions,
         target,
@@ -554,7 +857,7 @@ async fn run_cell(
         std::env::consts::OS,
         std::env::consts::ARCH,
         env!("CARGO_PKG_VERSION"),
-        git_revision,
+        source.git_revision,
         load_duration.as_nanos()
     )?;
     writeln!(
@@ -570,14 +873,8 @@ async fn run_cell(
             .unwrap_or_else(|| "not-applicable".into())
     )?;
     writeln!(manifest, "diagnostics={diagnostics_name}\nsubscriber=none")?;
-    let dirty = std::process::Command::new("git")
-        .args(["status", "--porcelain", "--untracked-files=no"])
-        .output()
-        .ok()
-        .filter(|out| out.status.success())
-        .map(|out| (!out.stdout.is_empty()).to_string())
-        .unwrap_or_else(|| "unavailable".into());
-    writeln!(manifest, "git_worktree_dirty={dirty}")?;
+    writeln!(manifest, "git_worktree_dirty={}", source.git_worktree_dirty)?;
+    writeln!(manifest, "source_bundle_sha256={}", source.bundle_sha256)?;
     writeln!(
         manifest,
         "filter_user_id={}\nfilter_timestamp_from={}\nfilter_timestamp_to={}\nfraction_scope={}\nreplay_format=qenlo-csv-v1",
@@ -611,11 +908,16 @@ async fn run_cell(
     }
     replay_metadata.flush()?;
     let build_started = Instant::now();
-    let collection = Collection::new(CollectionConfig {
-        dimension,
-        backend: requested,
-        gpu_allocation_budget_bytes: gpu_budget,
-    })
+    let collection = Collection::new_with_options(
+        CollectionConfig {
+            dimension,
+            backend: requested,
+            gpu_allocation_budget_bytes: gpu_budget,
+        },
+        qenlo::StorageOptions {
+            max_load_bytes: vector_budget,
+        },
+    )
     .await?;
     collection.set_diagnostics(diagnostics);
     #[cfg(feature = "gpu-wgpu")]
@@ -665,7 +967,7 @@ async fn run_cell(
     let oracle_started = Instant::now();
     let reference_truth = oracle_reference
         .as_ref()
-        .map(|path| replay::load(path, &data, distribution, oracle_filter, eligible))
+        .map(|path| replay::load(path, &data, distribution, oracle_filter, eligible, k))
         .transpose()?;
     if let Some(path) = &oracle_reference {
         writeln!(
@@ -690,7 +992,7 @@ async fn run_cell(
                 oracle
                     .as_ref()
                     .unwrap()
-                    .search(query, 10)
+                    .search(query, k)
                     .map(|hits| hits.into_iter().map(|hit| hit.id).collect())
             })
             .collect::<std::result::Result<_, _>>()?
@@ -708,7 +1010,7 @@ async fn run_cell(
     let mut tuning_samples = BufWriter::new(File::create_new(output.join("tuning.csv"))?);
     writeln!(
         tuning_samples,
-        "expansion_search,query_count,recall_at_10,wall_ns"
+        "expansion_search,query_count,k,recall_at_k,recall_at_10,wall_ns"
     )?;
     let mut selected_expansion = None;
     for candidate in expansions {
@@ -719,21 +1021,26 @@ async fn run_cell(
         let mut tuning_recall = 0.0;
         let tuning_started = Instant::now();
         for (query, expected) in data.tuning.iter().zip(&tuning_truth) {
-            let response = collection.search(query, &filter, 10).await?;
+            let response = collection.search(query, &filter, k).await?;
             validate_scores(&data.corpus, query, &response.results)?;
             let actual: Vec<_> = response.results.iter().map(|hit| hit.id).collect();
             if actual.len() != expected.len() {
                 return Err("backend returned fewer results than min(k, eligible_count)".into());
             }
-            validate_results(&data.corpus, oracle_filter, &actual)?;
-            tuning_recall += recall_at_k(expected, &actual, 10)?;
+            validate_results(&data.corpus, oracle_filter, &actual, k)?;
+            tuning_recall += recall_at_k(expected, &actual, k)?;
         }
         tuning_recall /= data.tuning.len() as f64;
         last_tuning_recall = Some(tuning_recall);
         writeln!(
             tuning_samples,
-            "{candidate},{},{tuning_recall},{}",
+            "{candidate},{},{k},{tuning_recall},{},{}",
             data.tuning.len(),
+            if k == 10 {
+                tuning_recall.to_string()
+            } else {
+                String::new()
+            },
             tuning_started.elapsed().as_nanos()
         )?;
         tuning_samples.flush()?;
@@ -770,7 +1077,7 @@ async fn run_cell(
                 oracle
                     .as_ref()
                     .unwrap()
-                    .search(query, 10)
+                    .search(query, k)
                     .map(|hits| hits.into_iter().map(|hit| hit.id).collect())
             })
             .collect::<std::result::Result<_, _>>()?
@@ -786,17 +1093,17 @@ async fn run_cell(
     let oracle_time = oracle_started.elapsed();
     for i in 0..warmups {
         let query = data.tuning[i % data.tuning.len()].as_slice();
-        collection.search_batch(&[query], &filter, 10).await?;
+        collection.search_batch(&[query], &filter, k).await?;
     }
     let mut samples = BufWriter::new(File::create_new(output.join("samples.csv"))?);
     writeln!(
         samples,
-        "run,batch_index,query_indices,query_count,batch_latency_ns,recall_at_10,result_count,eligible_count,upload_bytes,readback_bytes,max_qenlo_allocation_bytes,process_allocation_count,process_allocated_bytes,upload_enqueue_ns,readback_completion_ns,backend_execution_ns,actual_backend,backend_counts,lock_wait_ns,cpu_distance_path,routing_reasons,fallback,gpu_row_preparation,predicate_traversals,row_materialization_ns,materialized_rows,row_cache_hit,eligibility_predicate_kind,eligibility_representation,eligibility_generation,corpus_rows,eligibility_transfer_bytes,eligible_contiguous_runs"
+        "run,batch_index,query_indices,query_count,batch_latency_ns,k,recall_at_k,recall_at_10,result_count,eligible_count,upload_bytes,readback_bytes,max_qenlo_allocation_bytes,process_allocation_count,process_allocated_bytes,upload_enqueue_ns,readback_completion_ns,backend_execution_ns,device_scoring_ns,device_selection_ns,actual_backend,backend_counts,lock_wait_ns,cpu_distance_path,routing_reasons,fallback,gpu_row_preparation,predicate_traversals,row_materialization_ns,materialized_rows,row_cache_hit,eligibility_predicate_kind,eligibility_representation,eligibility_generation,corpus_rows,eligibility_transfer_bytes,eligible_contiguous_runs"
     )?;
     let mut runs = BufWriter::new(File::create_new(output.join("runs.csv"))?);
     writeln!(
         runs,
-        "run,batches,queries,p50_batch_ns,p95_batch_ns,p99_batch_ns,wall_ns,qps,recall_at_10,recall_target_passed"
+        "run,batches,queries,p50_batch_ns,p95_batch_ns,p99_batch_ns,wall_ns,qps,k,recall_at_k,recall_at_10,recall_target_passed"
     )?;
     let mut p95s = Vec::new();
     let mut all_recall = 0.0;
@@ -814,7 +1121,7 @@ async fn run_cell(
                 .collect();
             let allocations_before = AllocationSnapshot::now();
             let call_started = Instant::now();
-            let responses = collection.search_batch(&queries, &filter, 10).await?;
+            let responses = collection.search_batch(&queries, &filter, k).await?;
             let latency = call_started.elapsed();
             let call_allocations = AllocationSnapshot::now().since(allocations_before);
             if responses.len() != queries.len() {
@@ -868,6 +1175,12 @@ async fn run_cell(
             let backend_execution_ns = duration_ns(&first_report.phases.execution)
                 .map(|value| value.to_string())
                 .unwrap_or_default();
+            let device_scoring_ns = duration_ns(&first_report.phases.scoring)
+                .map(|value| value.to_string())
+                .unwrap_or_default();
+            let device_selection_ns = duration_ns(&first_report.phases.selection)
+                .map(|value| value.to_string())
+                .unwrap_or_default();
             let mut recall = 0.0;
             let mut results = 0;
             let mut upload = Some(0_u64);
@@ -883,9 +1196,9 @@ async fn run_cell(
                 if ids.len() != truth[index].len() {
                     return Err("backend returned fewer results than min(k, eligible_count)".into());
                 }
-                validate_results(&data.corpus, oracle_filter, &ids)?;
+                validate_results(&data.corpus, oracle_filter, &ids, k)?;
                 validate_scores(&data.corpus, &data.evaluation[index], &response.results)?;
-                let query_recall = recall_at_k(&truth[index], &ids, 10)?;
+                let query_recall = recall_at_k(&truth[index], &ids, k)?;
                 if response.report.actual_backend != qenlo::BackendKind::Usearch
                     && query_recall != 1.0
                     && !exact_cosine_tie_compatible(
@@ -893,7 +1206,7 @@ async fn run_cell(
                         &data.evaluation[index],
                         oracle_filter,
                         &ids,
-                        10,
+                        k,
                         1e-5,
                     )?
                 {
@@ -945,10 +1258,15 @@ async fn run_cell(
                 .join(";");
             writeln!(
                 samples,
-                "{run},{batch_index},{indices},{},{},{},{results},{eligible},{},{},{},{},{},{upload_enqueue_ns},{readback_completion_ns},{backend_execution_ns},{actual_backend},{counts},{lock_wait_ns},{cpu_distance_path},{routing_reasons},{fallback},{gpu_row_preparation},{predicate_traversals},{row_materialization_ns},{materialized_rows},{row_cache_hit},{eligibility_predicate_kind},{eligibility_representation},{eligibility_generation},{corpus_rows},{eligibility_transfer_bytes},{eligible_contiguous_runs}",
+                "{run},{batch_index},{indices},{},{},{k},{},{},{results},{eligible},{},{},{},{},{},{upload_enqueue_ns},{readback_completion_ns},{backend_execution_ns},{device_scoring_ns},{device_selection_ns},{actual_backend},{counts},{lock_wait_ns},{cpu_distance_path},{routing_reasons},{fallback},{gpu_row_preparation},{predicate_traversals},{row_materialization_ns},{materialized_rows},{row_cache_hit},{eligibility_predicate_kind},{eligibility_representation},{eligibility_generation},{corpus_rows},{eligibility_transfer_bytes},{eligible_contiguous_runs}",
                 queries.len(),
                 latency.as_nanos(),
                 recall / queries.len() as f64,
+                if k == 10 {
+                    (recall / queries.len() as f64).to_string()
+                } else {
+                    String::new()
+                },
                 csv_value(upload),
                 csv_value(readback),
                 csv_value(allocated),
@@ -966,7 +1284,7 @@ async fn run_cell(
         all_passed &= recall_passes(run_recall, target);
         writeln!(
             runs,
-            "{run},{},{},{},{},{},{},{},{},{}",
+            "{run},{},{},{},{},{},{},{},{k},{},{},{}",
             latencies.len(),
             order.len(),
             percentile(0.50).as_nanos(),
@@ -975,6 +1293,11 @@ async fn run_cell(
             wall.as_nanos(),
             order.len() as f64 / wall.as_secs_f64(),
             run_recall,
+            if k == 10 {
+                run_recall.to_string()
+            } else {
+                String::new()
+            },
             recall_passes(run_recall, target)
         )?;
     }
@@ -984,18 +1307,30 @@ async fn run_cell(
     let mut summary = File::create_new(output.join("summary.txt"))?;
     writeln!(
         summary,
-        "status=completed\nbuild_ns={}\nreadiness_ns={}\noracle_and_tuning_ns={}\ntuning_recall_at_10={}\nevaluation_recall_at_10={}\nrecall_target_passed={}\nmedian_run_p95_batch_ns={}\nmedian_convention=lower-middle\nfilter_violations=0\nscale_performance_claim=none",
+        "status=completed\nbuild_ns={}\nreadiness_ns={}\noracle_and_tuning_ns={}\nk={}\ntuning_recall_at_k={}\nevaluation_recall_at_k={}\ntuning_recall_at_10={}\nevaluation_recall_at_10={}\nrecall_target_passed={}\nmedian_run_p95_batch_ns={}\nmedian_convention=lower-middle\nfilter_violations=0\nscale_performance_claim=none",
         build_time.as_nanos(),
         readiness_time.as_nanos(),
         oracle_time.as_nanos(),
+        k,
         tuning_recall,
         all_recall / repetitions as f64,
+        if k == 10 {
+            tuning_recall.to_string()
+        } else {
+            "not-applicable".into()
+        },
+        if k == 10 {
+            (all_recall / repetitions as f64).to_string()
+        } else {
+            "not-applicable".into()
+        },
         all_passed,
         median.as_nanos()
     )?;
     println!(
-        "completed {}: recall@10={} target_passed={} median-run-P95-batch={}ns; no scale claim",
+        "completed {}: recall@{}={} target_passed={} median-run-P95-batch={}ns; no scale claim",
         output.display(),
+        k,
         all_recall / repetitions as f64,
         all_passed,
         median.as_nanos()
@@ -1038,8 +1373,13 @@ fn validate_scores(
     Ok(())
 }
 
-fn validate_results(records: &[OracleRecord], filter: OracleFilter, ids: &[u64]) -> Result<()> {
-    if ids.len() > 10 {
+fn validate_results(
+    records: &[OracleRecord],
+    filter: OracleFilter,
+    ids: &[u64],
+    k: usize,
+) -> Result<()> {
+    if ids.len() > k {
         return Err("backend returned more than k results".into());
     }
     let mut unique = HashSet::new();

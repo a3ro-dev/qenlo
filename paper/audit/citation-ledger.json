@@ -1,0 +1,397 @@
+{
+  "audit_date": "2026-09-05",
+  "repository_revision_checked": "HEAD",
+  "manuscript_sources": [
+    "paper/paper.tex",
+    "paper/appendix.tex",
+    "paper/references.bib",
+    "paper/audit/references-before.bib"
+  ],
+  "historical_references_checked": [
+    {
+      "revision": "3faf32e",
+      "path": "paper/references.bib",
+      "observation": "Used iff2025fanns for arXiv:2507.21989."
+    },
+    {
+      "revision": "f10f71a",
+      "path": "paper/references.bib",
+      "observation": "Core bibliography otherwise materially matches current pre-audit file."
+    }
+  ],
+  "current_manuscript_citations": [
+    "amanbayev2026systems",
+    "chen2021spann",
+    "douze2024faiss",
+    "gollapudi2023filtered",
+    "iff2026fanns",
+    "johnson2019billion",
+    "li2025attribute",
+    "malkov2020hnsw",
+    "nielsen2022agnews",
+    "patel2024acorn",
+    "shi2025unified",
+    "subramanya2019diskann",
+    "topkbench",
+    "webgpu",
+    "wgsl"
+  ],
+  "entries": [
+    {
+      "key": "johnson2019billion",
+      "type": "article",
+      "source": "https://doi.org/10.1109/TBDATA.2019.2921572",
+      "verified_metadata": {
+        "authors": [
+          "Jeff Johnson",
+          "Matthijs Douze",
+          "Herv\u00c3\u00a9 J\u00c3\u00a9gou"
+        ],
+        "title": "Billion-Scale Similarity Search with GPUs",
+        "venue": "IEEE Transactions on Big Data",
+        "volume": "7",
+        "issue": "3",
+        "pages": "535-547",
+        "year": 2021,
+        "doi": "10.1109/TBDATA.2019.2921572"
+      },
+      "status": "verified",
+      "discrepancies": [
+        "BibTeX key contains 2019 although journal publication is 2021; preserved for compatibility."
+      ],
+      "scope": "GPU similarity search and k-selection prior work; not evidence for Qenlo timings."
+    },
+    {
+      "key": "douze2024faiss",
+      "type": "article",
+      "source": "https://arxiv.org/abs/2401.08281",
+      "verified_metadata": {
+        "authors": [
+          "Matthijs Douze",
+          "Alexandr Guzhva",
+          "Chengqi Deng",
+          "Jeff Johnson",
+          "Gergely Szilvasy",
+          "Pierre-Emmanuel Mazar\u00c3\u00a9",
+          "Maria Lomeli",
+          "Lucas Hosseini",
+          "Herv\u00c3\u00a9 J\u00c3\u00a9gou"
+        ],
+        "title": "The Faiss library",
+        "venue": "arXiv",
+        "arxiv": "2401.08281",
+        "year": 2024
+      },
+      "status": "verified",
+      "discrepancies": [
+        "The arXiv record has later revisions; the bibliography cites the 2024 work by its stable identifier."
+      ],
+      "scope": "Faiss design and benchmark context."
+    },
+    {
+      "key": "malkov2020hnsw",
+      "type": "article",
+      "source": "https://doi.org/10.1109/TPAMI.2018.2889473",
+      "verified_metadata": {
+        "authors": [
+          "Yu A. Malkov",
+          "D. A. Yashunin"
+        ],
+        "title": "Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs",
+        "venue": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+        "volume": "42",
+        "issue": "4",
+        "pages": "824-836",
+        "year": 2020,
+        "doi": "10.1109/TPAMI.2018.2889473"
+      },
+      "status": "verified",
+      "discrepancies": [],
+      "scope": "HNSW approximate search context."
+    },
+    {
+      "key": "subramanya2019diskann",
+      "type": "inproceedings",
+      "source": "https://papers.nips.cc/paper_files/paper/2019/hash/09853c7fb1d3f8ee67a61b6bf4a7f8e6-Abstract.html",
+      "verified_metadata": {
+        "authors": [
+          "Suhas Jayaram Subramanya",
+          "Fnu Devvrit",
+          "Harsha Vardhan Simhadri",
+          "Ravishankar Krishnaswamy",
+          "Rohan Kadekodi"
+        ],
+        "title": "DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node",
+        "venue": "Advances in Neural Information Processing Systems",
+        "volume": "32",
+        "year": 2019
+      },
+      "status": "verified",
+      "discrepancies": [
+        "Historical BibTeX misspelled Krishnaswamy as Krishnawamy; corrected."
+      ],
+      "scope": "Storage-aware ANN prior work."
+    },
+    {
+      "key": "chen2021spann",
+      "type": "inproceedings",
+      "source": "https://papers.nips.cc/paper/2021/hash/299dc35e747eb77177d9cea10a802da2-Abstract.html",
+      "verified_metadata": {
+        "authors": [
+          "Qi Chen",
+          "Bing Zhao",
+          "Haidong Wang",
+          "Mingqin Li",
+          "Chuanjie Liu",
+          "Zengzhong Li",
+          "Mao Yang",
+          "Jingdong Wang"
+        ],
+        "title": "SPANN: Highly-efficient Billion-scale Approximate Nearest Neighbor Search",
+        "venue": "Advances in Neural Information Processing Systems",
+        "volume": "34",
+        "pages": "5199-5212",
+        "year": 2021
+      },
+      "status": "verified",
+      "discrepancies": [
+        "Historical title used \u00e2\u20ac\u02dcnearest neighborhood\u00e2\u20ac\u2122; corrected to the proceedings title \u00e2\u20ac\u02dcnearest neighbor\u00e2\u20ac\u2122."
+      ],
+      "scope": "Memory/disk hybrid ANN prior work."
+    },
+    {
+      "key": "gollapudi2023filtered",
+      "type": "inproceedings",
+      "source": "https://doi.org/10.1145/3543507.3583552",
+      "verified_metadata": {
+        "authors": [
+          "Siddharth Gollapudi",
+          "Neel Karia",
+          "Varun Sivashankar",
+          "Ravishankar Krishnaswamy",
+          "Nikit Begwani",
+          "Swapnil Raz",
+          "Yiyong Lin",
+          "Yin Zhang",
+          "Neelam Mahapatro",
+          "Premkumar Srinivasan",
+          "Amit Singh",
+          "Harsha Vardhan Simhadri"
+        ],
+        "title": "Filtered-DiskANN: Graph Algorithms for Approximate Nearest Neighbor Search with Filters",
+        "venue": "Proceedings of the ACM Web Conference 2023",
+        "pages": "3406-3416",
+        "year": 2023,
+        "doi": "10.1145/3543507.3583552"
+      },
+      "status": "verified",
+      "discrepancies": [
+        "Historical BibTeX listed only eight of twelve authors; corrected."
+      ],
+      "scope": "Filtered ANN graph algorithms; no support for Qenlo exactness or timing claims."
+    },
+    {
+      "key": "patel2024acorn",
+      "type": "article",
+      "source": "https://doi.org/10.1145/3654923",
+      "verified_metadata": {
+        "authors": [
+          "Liana Patel",
+          "Peter Kraft",
+          "Carlos Guestrin",
+          "Matei Zaharia"
+        ],
+        "title": "ACORN: Performant and Predicate-Agnostic Search Over Vector Embeddings and Structured Data",
+        "venue": "Proceedings of the ACM on Management of Data",
+        "volume": "2",
+        "issue": "3",
+        "article": "120",
+        "pages": "120:1-120:27",
+        "year": 2024,
+        "doi": "10.1145/3654923"
+      },
+      "status": "verified",
+      "discrepancies": [
+        "Historical BibTeX omitted article pages and publisher; corrected."
+      ],
+      "scope": "Predicate-agnostic hybrid ANN context."
+    },
+    {
+      "key": "webgpu",
+      "type": "standard",
+      "source": "https://www.w3.org/TR/webgpu/",
+      "verified_metadata": {
+        "publisher": "W3C GPU for the Web Working Group",
+        "title": "WebGPU",
+        "status": "Candidate Recommendation Draft",
+        "date": "2026-08-20",
+        "accessed": "2026-09-05"
+      },
+      "status": "verified",
+      "discrepancies": [
+        "This is a living W3C document; it is not a peer-reviewed performance source."
+      ],
+      "scope": "WebGPU API semantics and portability only."
+    },
+    {
+      "key": "wgsl",
+      "type": "standard",
+      "source": "https://www.w3.org/TR/WGSL/",
+      "verified_metadata": {
+        "publisher": "W3C GPU for the Web Working Group",
+        "title": "WebGPU Shading Language",
+        "status": "Candidate Recommendation Draft",
+        "date": "2026-08-17",
+        "accessed": "2026-09-05"
+      },
+      "status": "verified",
+      "discrepancies": [
+        "This is a living W3C document; it is not a peer-reviewed performance source."
+      ],
+      "scope": "WGSL shader-language semantics only."
+    },
+    {
+      "key": "topkbench",
+      "type": "software_fixture",
+      "source": "https://github.com/topk-io/bench/tree/398ce7d72dea7ad765ada54c5daa014c498efb52",
+      "verified_metadata": {
+        "project": "TopK Bench",
+        "commit": "398ce7d72dea7ad765ada54c5daa014c498efb52",
+        "accessed": "2026-09-05"
+      },
+      "status": "pinned_fixture",
+      "discrepancies": [
+        "Not a peer-reviewed paper; cite only for fixture/software provenance."
+      ],
+      "scope": "TopK Bench real-vector fixture provenance."
+    },
+    {
+      "key": "nielsen2022agnews",
+      "type": "dataset",
+      "source": "https://doi.org/10.11583/DTU.21286923.v1",
+      "verified_metadata": {
+        "author": "Beatrix Miranda Ginn Nielsen",
+        "title": "Pretrained sentence BERT models AG News embeddings",
+        "publisher": "Technical University of Denmark",
+        "version": "1",
+        "year": 2023,
+        "doi": "10.11583/DTU.21286923.v1"
+      },
+      "status": "verified",
+      "discrepancies": [
+        "Historical key suffix and metadata used 2022; DataCite publicationYear and issued date are 2023. Key retained for compatibility."
+      ],
+      "scope": "AG News embedding dataset provenance."
+    },
+    {
+      "key": "iff2026fanns",
+      "type": "inproceedings",
+      "source": "https://doi.org/10.1145/3805712.3809731",
+      "secondary_source": "https://dblp.org/rec/conf/sigir/IffBCKBH26.html",
+      "verified_metadata": {
+        "authors": [
+          "Patrick Iff",
+          "Paul Br\u00c3\u00bcgger",
+          "Marcin Chrapek",
+          "David Kochergin",
+          "Maciej Besta",
+          "Torsten Hoefler"
+        ],
+        "title": "Benchmarking Filtered Approximate Nearest Neighbor Search Algorithms on Transformer-based Embedding Vectors",
+        "venue": "Proceedings of the 49th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+        "pages": "610-622",
+        "year": 2026,
+        "doi": "10.1145/3805712.3809731"
+      },
+      "status": "verified",
+      "discrepancies": [
+        "Earlier revision used arXiv:2507.21989 under key iff2025fanns; current key uses the published SIGIR record."
+      ],
+      "scope": "Recent filtered-ANN benchmark context; not a Qenlo experiment."
+    },
+    {
+      "key": "li2025attribute",
+      "type": "article",
+      "source": "https://doi.org/10.1145/3769763",
+      "verified_metadata": {
+        "authors": [
+          "Mocheng Li",
+          "Xiao Yan",
+          "Baotong Lu",
+          "Yue Zhang",
+          "James Cheng",
+          "Chenhao Ma"
+        ],
+        "title": "Attribute Filtering in Approximate Nearest Neighbor Search: An In-depth Experimental Study",
+        "venue": "Proceedings of the ACM on Management of Data",
+        "volume": "3",
+        "issue": "6",
+        "article": "298",
+        "pages": "298:1-298:26",
+        "year": 2025,
+        "doi": "10.1145/3769763"
+      },
+      "status": "verified_optional",
+      "discrepancies": [
+        "The paper has a later corrigendum DOI 10.1145/3803528; this entry points to the original article and should be paired with the corrigendum if the manuscript relies on corrected details."
+      ],
+      "scope": "Unified filtered-ANN taxonomy and broad component study; currently uncited."
+    },
+    {
+      "key": "shi2025unified",
+      "type": "article",
+      "source": "https://arxiv.org/abs/2509.07789",
+      "verified_metadata": {
+        "authors": [
+          "Jiayang Shi",
+          "Yuzheng Cai",
+          "Weiguo Zheng"
+        ],
+        "title": "Filtered Approximate Nearest Neighbor Search: A Unified Benchmark and Systematic Experimental Study",
+        "venue": "arXiv",
+        "arxiv": "2509.07789",
+        "year": 2025
+      },
+      "status": "verified_preprint",
+      "discrepancies": [
+        "Preprint status must be retained; do not present as peer-reviewed consensus."
+      ],
+      "scope": "Selectivity, tuning, dataset dependence, and benchmark methodology context."
+    },
+    {
+      "key": "amanbayev2026systems",
+      "type": "article",
+      "source": "https://arxiv.org/abs/2602.11443",
+      "verified_metadata": {
+        "authors": [
+          "Abylay Amanbayev",
+          "Brian Tsan",
+          "Tri Dang",
+          "Florin Rusu"
+        ],
+        "title": "Filtered Approximate Nearest Neighbor Search in Vector Databases: System Design and Performance Analysis",
+        "venue": "arXiv",
+        "arxiv": "2602.11443",
+        "year": 2026
+      },
+      "status": "verified_preprint",
+      "discrepancies": [
+        "Preprint status must be retained; do not present as peer-reviewed consensus."
+      ],
+      "scope": "Vector database filtering, optimizer, and system-boundary context."
+    }
+  ],
+  "pre_revision_manuscript_citations": [
+    "johnson2019billion",
+    "douze2024faiss",
+    "malkov2020hnsw",
+    "subramanya2019diskann",
+    "chen2021spann",
+    "gollapudi2023filtered",
+    "patel2024acorn",
+    "iff2026fanns",
+    "shi2025unified",
+    "amanbayev2026systems"
+  ],
+  "final_usage_note": "All 15 bibliography entries are cited by the integrated final manuscript; li2025attribute supports workload-dependent filtered-ANN related work."
+}

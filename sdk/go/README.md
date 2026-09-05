@@ -4,6 +4,18 @@ Type-safe cgo bindings for **Qenlo** — the embedded, durable vector database w
 
 Qenlo provides exact filtered cosine vector search with atomic commits, write-ahead logging (WAL), portable `.qn` snapshot files, and zero background services.
 
+Collection construction defaults to exhaustive CPU search. Desktop native artifacts built with portable GPU support can request automatic routing or require the GPU explicitly:
+
+```go
+db, err := qenlo.NewWithOptions(384, qenlo.Options{
+	Backend:                  qenlo.Automatic,
+	GPUFilter:                qenlo.GPUFilterPredicate,
+	GPUAllocationBudgetBytes: 512 * 1024 * 1024,
+})
+```
+
+`Automatic` reports the route and fallback in each execution report. `GPURequired` fails during collection construction if the native artifact or host cannot provide the backend. Mobile and CPU-only packages do not acquire desktop GPU dependencies.
+
 ## Installation
 
 ```bash
@@ -149,4 +161,3 @@ if errors.As(err, &qerr) {
 ## License
 
 Dual-licensed under **MIT** or **Apache-2.0** at your option.
-

@@ -9,7 +9,7 @@ private let records = [
     QenloRecord(id: 6, userID: 7, timestamp: 20, vector: [0, 0, 1]),
 ]
 
-@Test func typedFilterOrderingAndTelemetry() throws {
+@Test func typedFilterOrderingAndExecutionReport() throws {
     let db = try QenloCollection(memoryDimension: 3); defer { try? db.close() }
     try db.addBatch(records)
     let response = try db.search([1, 0, 0], filter: .init(userID: 7, timestampLower: -5, timestampUpper: 20))
@@ -50,6 +50,12 @@ private let records = [
 }
 
 @Test func validationAndLifecycle() throws {
+    #expect(throws: QenloError.self) {
+        try QenloCollection(
+            memoryDimension: 3,
+            configuration: .init(gpuAllocationBudgetBytes: 0)
+        )
+    }
     let db = try QenloCollection(memoryDimension: 3)
     #expect(throws: QenloError.self) { try db.add(.init(id: 1, userID: 1, timestamp: 0, vector: [1])) }
     #expect(throws: QenloError.self) { try db.search([1, 0, 0], k: 0) }

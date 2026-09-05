@@ -7,6 +7,34 @@ public struct QenloError: Error, Equatable, Sendable, CustomStringConvertible {
     public init(_ message: String) { self.message = message }
 }
 
+public enum QenloExecutionMode: UInt32, Sendable {
+    case cpu = 0
+    case automatic = 1
+    case gpuRequired = 2
+}
+
+public enum QenloGPUFilterMode: UInt32, Sendable {
+    case cpuMask = 0
+    case cpuEligibleRows = 1
+    case gpuPredicate = 2
+}
+
+public struct QenloCollectionConfiguration: Sendable, Equatable {
+    public var backend: QenloExecutionMode
+    public var gpuFilterMode: QenloGPUFilterMode
+    public var gpuAllocationBudgetBytes: UInt64
+
+    public init(
+        backend: QenloExecutionMode = .cpu,
+        gpuFilterMode: QenloGPUFilterMode = .gpuPredicate,
+        gpuAllocationBudgetBytes: UInt64 = 512 * 1024 * 1024
+    ) {
+        self.backend = backend
+        self.gpuFilterMode = gpuFilterMode
+        self.gpuAllocationBudgetBytes = gpuAllocationBudgetBytes
+    }
+}
+
 public struct QenloRecord: Sendable, Equatable {
     public let id: UInt64
     public let userID: UInt64
@@ -102,31 +130,53 @@ public final class QenloCollection: @unchecked Sendable {
     private let lock = NSRecursiveLock()
     private var handle: OpaquePointer?
 
-    public init(memoryDimension dimension: Int) throws {
+    public init(memoryDimension dimension: Int, configuration: QenloCollectionConfiguration = .init()) throws {
         guard dimension > 0 else { throw QenloError("dimension must be positive") }
+        guard configuration.gpuAllocationBudgetBytes > 0 else { throw QenloError("gpu allocation budget must be positive") }
         self.dimension = dimension
-        self.handle = qenlo_collection_new(dimension)
+        self.handle = qenlo_collection_new_configured(
+            dimension, configuration.backend.rawValue, configuration.gpuFilterMode.rawValue,
+            configuration.gpuAllocationBudgetBytes
+        )
         guard handle != nil else { throw QenloError(Self.lastError()) }
     }
 
-    public init(create path: URL, dimension: Int) throws {
+    public init(create path: URL, dimension: Int, configuration: QenloCollectionConfiguration = .init()) throws {
         guard dimension > 0 else { throw QenloError("dimension must be positive") }
+        guard configuration.gpuAllocationBudgetBytes > 0 else { throw QenloError("gpu allocation budget must be positive") }
         self.dimension = dimension
-        self.handle = path.path.withCString { qenlo_collection_create($0, dimension) }
+        self.handle = path.path.withCString {
+            qenlo_collection_create_configured(
+                $0, dimension, configuration.backend.rawValue, configuration.gpuFilterMode.rawValue,
+                configuration.gpuAllocationBudgetBytes
+            )
+        }
         guard handle != nil else { throw QenloError(Self.lastError()) }
     }
 
-    public init(open path: URL, dimension: Int) throws {
+    public init(open path: URL, dimension: Int, configuration: QenloCollectionConfiguration = .init()) throws {
         guard dimension > 0 else { throw QenloError("dimension must be positive") }
+        guard configuration.gpuAllocationBudgetBytes > 0 else { throw QenloError("gpu allocation budget must be positive") }
         self.dimension = dimension
-        self.handle = path.path.withCString { qenlo_collection_open($0, dimension) }
+        self.handle = path.path.withCString {
+            qenlo_collection_open_configured(
+                $0, dimension, configuration.backend.rawValue, configuration.gpuFilterMode.rawValue,
+                configuration.gpuAllocationBudgetBytes
+            )
+        }
         guard handle != nil else { throw QenloError(Self.lastError()) }
     }
 
-    public init(importQN path: URL, dimension: Int) throws {
+    public init(importQN path: URL, dimension: Int, configuration: QenloCollectionConfiguration = .init()) throws {
         guard dimension > 0 else { throw QenloError("dimension must be positive") }
+        guard configuration.gpuAllocationBudgetBytes > 0 else { throw QenloError("gpu allocation budget must be positive") }
         self.dimension = dimension
-        self.handle = path.path.withCString { qenlo_collection_import_qn($0, dimension) }
+        self.handle = path.path.withCString {
+            qenlo_collection_import_qn_configured(
+                $0, dimension, configuration.backend.rawValue, configuration.gpuFilterMode.rawValue,
+                configuration.gpuAllocationBudgetBytes
+            )
+        }
         guard handle != nil else { throw QenloError(Self.lastError()) }
     }
 
@@ -186,7 +236,7 @@ public final class QenloCollection: @unchecked Sendable {
                 try Self.take(qenlo_search(handle, values.baseAddress, query.count, filter.userID != nil, filter.userID ?? 0, filter.timestampLower != nil, filter.timestampLower ?? 0, filter.timestampUpper != nil, filter.timestampUpper ?? 0, k))
             }
             let wire = try JSONDecoder().decode(WireSearch.self, from: Data(json.utf8))
-            guard let operation = UInt64(wire.report.operationID), let generation = UInt64(wire.report.indexGeneration), let total = UInt64(wire.report.totalDurationNanoseconds), let wait = UInt64(wire.report.lockWaitNanoseconds) else { throw QenloError("invalid 64-bit telemetry from native library") }
+            guard let operation = UInt64(wire.report.operationID), let generation = UInt64(wire.report.indexGeneration), let total = UInt64(wire.report.totalDurationNanoseconds), let wait = UInt64(wire.report.lockWaitNanoseconds) else { throw QenloError("invalid 64-bit execution report from native library") }
             return QenloSearchResponse(
                 results: try wire.results.map { guard let id = UInt64($0.id) else { throw QenloError("invalid result ID") }; return .init(id: id, distance: $0.distance) },
                 report: .init(operationID: operation, requestedBackend: wire.report.requestedBackend, actualBackend: wire.report.actualBackend, algorithm: wire.report.algorithm, filterExecution: wire.report.filterExecution, indexGeneration: generation, rebuilt: wire.report.rebuilt, routingReason: wire.report.routingReason, fallbackReason: wire.report.fallbackReason, totalDurationNanoseconds: total, lockWaitNanoseconds: wait, eligibleRows: wire.report.eligibleRows.flatMap(UInt64.init), uploadBytes: wire.report.uploadBytes.flatMap(UInt64.init), readbackBytes: wire.report.readbackBytes.flatMap(UInt64.init), allocationBytes: wire.report.allocationBytes.flatMap(UInt64.init), dispatchCount: wire.report.dispatchCount, candidates: wire.report.candidates.flatMap(UInt64.init), batchSize: wire.report.batchSize)

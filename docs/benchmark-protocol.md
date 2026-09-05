@@ -146,7 +146,10 @@ untested.
 
 `configuration.txt` retains split ranges, seed, source and prepared CRC32, requested
 backend, metadata distribution, fraction/count, batch, target, ANN expansion,
-budgets, platform/architecture, package version, git revision and metric conventions.
+budgets, platform/architecture, package version, Git revision, dirty-worktree state,
+exact uploaded source-bundle SHA-256 (when supplied), and metric conventions. Paid
+campaigns must set `QENLO_SOURCE_BUNDLE_SHA256`; a Git revision alone does not identify
+an uncommitted implementation.
 also archive your compiler version, feature flags, build profile, dirty diff,
 GPU driver/adapter, power settings and machine specifications with a published run.
 On the measured hybrid host, wgpu enumerated Intel UHD Graphics (integrated) and
@@ -187,7 +190,7 @@ the example performs a real search under a scoped subscriber and exports traces
 and bounded-category metrics. query spans finish before shutdown. the helper caps
 the trace queue at 32 spans and drops overflow; requests have explicit timeouts.
 the test compares instrumented search results to uninstrumented results, floods
-the queue, checks captured telemetry for sensitive input, connects to a collector
+the queue, checks captured diagnostic data for sensitive input, connects to a collector
 that accepts but never responds, and bounds shutdown. exporter failure is never
 converted into a search error.
 

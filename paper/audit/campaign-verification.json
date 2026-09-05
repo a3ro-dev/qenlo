@@ -1,0 +1,14 @@
+{
+  "status": "ok",
+  "matrix_rows": 182,
+  "checksum_manifests": 9,
+  "checksum_entries_verified": 1053,
+  "checksum_self_entries_skipped": 4,
+  "result_archives": 8,
+  "selector_pairs": {
+    "wins": 5,
+    "losses": 7
+  },
+  "chroma_pairs": 7,
+  "completed_unqualified": "usearch:d2-r25000-d384-b64-k10-f1"
+}

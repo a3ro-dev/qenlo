@@ -106,6 +106,7 @@ impl UsearchBackend {
                 upload: Measurement::unavailable("CPU backend"),
                 execution: Measurement::Available(execution),
                 readback: Measurement::unavailable("CPU backend"),
+                scoring: Measurement::unavailable("USearch does not expose scoring separately"),
                 selection: Measurement::Available(selection),
             },
             upload_bytes: Measurement::Available(0),

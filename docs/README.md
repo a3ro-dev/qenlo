@@ -1,48 +1,20 @@
-# Qenlo
+# Qenlo documentation
 
-> **Embedded vector search that explains its work.**
+Qenlo is a durable, in-process vector-search library for roughly 1k--100k vectors. Canonical Rust records define IDs, metadata, tombstones, and generations. CPU, WGPU, USearch, and PyTorch structures are derived execution choices.
 
-Qenlo is a lightweight, embeddable vector database built in Rust for native applications and edge devices. It keeps canonical vectors and metadata local, applies relational/temporal filters before ranking, and returns an execution report with every search.
+## Start here
 
----
+- [Quickstart](quickstart.md)
+- [Architecture](architecture.md)
+- [GPU design](gpu-design.md)
+- [Feature and packaging status](feature-matrix.md)
+- [Trade-offs](trade-offs.md)
+- [Benchmark protocol](benchmark-protocol.md)
+- [September 2026 implementation status](implementation-status.md)
+- [QenloDB browser](browser.md)
 
-## Key Guarantees
+## Platform evidence
 
-* **Exact Filtered Search**: Hard scalar metadata filtering (user ID, tenant, visibility, time ranges) is evaluated *prior* to vector scoring, preventing recall collapse.
-* **Zero Background Servers**: Runs embedded directly inside your Python, Node.js, Go, Rust, Kotlin, or Swift process without running daemon services.
-* **Portable `.qn` Format**: Single-file, zero-copy memory-mappable snapshot format for vector distribution and offline models.
-* **Crash-Safe Durability**: Transactional write-ahead log (WAL) and atomic snapshots with checksum validation.
-* **Transparent Execution Reports**: Every search yields timing, scanned candidates, filter rejections, and hardware acceleration path details.
+Rust and the native ABI are exercised locally and in CI. Current performance evidence covers Windows and Linux-hosted Vulkan GPUs. Kotlin/JVM is not Android packaging evidence. Apple simulator, Apple device, Android package, and physical mobile performance checks remain separate release gates.
 
----
-
-## Architecture at a Glance
-
-| Component | Responsibility | Performance Target |
-| :--- | :--- | :--- |
-| **Core Engine** | Memory layout, SIMD cosine/dot distance, bitmask filtering | < 5 ms for 100k vectors |
-| **Storage Subsystem** | WAL replay, snapshot generation, `.qn` serialization | Crash-safe atomic commits |
-| **FFI Boundary** | C-ABI with zero panics across dynamic libraries | Zero overhead foreign calls |
-| **SDKs** | Python, TypeScript, Go, Kotlin, Swift idiomatic bindings | Type-safe ergonomics |
-
----
-
-## Supported Platforms
-
-* **Linux**: `x86_64` (glibc / musl) & `aarch64` (ARM64)
-* **macOS**: Apple Silicon (`arm64`) & Intel (`x86_64`)
-* **Windows**: `x86_64` & `ARM64`
-* **Android**: `arm64-v8a`, `armeabi-v7a`, `x86_64`
-* **iOS**: `arm64`, simulator `x86_64`
-
----
-
-## Quick Navigation
-
-* [Quickstart Guide](quickstart.md) — Get running in 5 minutes
-* [QenloDB Browser](browser.md) — Web, Claude Code TUI, and Desktop collection inspector
-* [Core Concepts](concepts.md) — Data model, filters, and records
-* [Feature Comparison Matrix](feature-matrix.md) — Technical comparison vs. pgvector, Milvus/Pinecone, Chroma/SQLite-VSS
-* [Python SDK](sdks/python.md) — Prebuilt wheels and API reference
-* [TypeScript SDK](sdks/typescript.md) — Node.js and Electron bindings
-* [Architecture Specification](architecture.md) — Deep dive into engine internals
+The core and SDKs start no background worker and make no network request. The optional telemetry collector is a separate service controlled by the host application.

@@ -1,8 +1,8 @@
+use qenlo::{Collection, CollectionConfig, CollectionStats, Filter, Mutation, StorageOptions};
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use serde::{Deserialize, Serialize};
-use qenlo::{Collection, CollectionConfig, CollectionStats, Filter, Mutation, StorageOptions};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecordDto {
@@ -97,23 +97,29 @@ impl BrowserSession {
         }
     }
 
-    pub async fn open_collection(&mut self, path: impl AsRef<Path>, dimension: Option<usize>) -> Result<CollectionStats, String> {
+    pub async fn open_collection(
+        &mut self,
+        path: impl AsRef<Path>,
+        dimension: Option<usize>,
+    ) -> Result<CollectionStats, String> {
         let path = path.as_ref().to_path_buf();
-        
+
         // If dimension is not provided, check if we can infer or default
         let dim = dimension.unwrap_or(self.dimension);
         let config = CollectionConfig::cpu_exact(dim);
-        
+
         // Close previous if open
         if let Some(c) = self.collection.take() {
             let _ = c.close();
         }
 
         let collection = if path.extension().map_or(false, |ext| ext == "qn") {
-            Collection::import_qn(&path, config).await
+            Collection::import_qn(&path, config)
+                .await
                 .map_err(|e| format!("Failed to import .qn file: {e}"))?
         } else {
-            Collection::open(&path, config).await
+            Collection::open(&path, config)
+                .await
                 .map_err(|e| format!("Failed to open collection at {}: {e}", path.display()))?
         };
 
@@ -126,7 +132,11 @@ impl BrowserSession {
         Ok(stats)
     }
 
-    pub async fn create_collection(&mut self, path: impl AsRef<Path>, dimension: usize) -> Result<CollectionStats, String> {
+    pub async fn create_collection(
+        &mut self,
+        path: impl AsRef<Path>,
+        dimension: usize,
+    ) -> Result<CollectionStats, String> {
         let path = path.as_ref().to_path_buf();
         let config = CollectionConfig::cpu_exact(dimension);
 
@@ -134,7 +144,8 @@ impl BrowserSession {
             let _ = c.close();
         }
 
-        let collection = Collection::create(&path, config).await
+        let collection = Collection::create(&path, config)
+            .await
             .map_err(|e| format!("Failed to create collection at {}: {e}", path.display()))?;
 
         let stats = collection.stats();
@@ -151,7 +162,8 @@ impl BrowserSession {
             let _ = c.close();
         }
 
-        let collection = Collection::new(config).await
+        let collection = Collection::new(config)
+            .await
             .map_err(|e| format!("Failed to create in-memory collection: {e}"))?;
 
         let stats = collection.stats();
@@ -194,17 +206,28 @@ impl BrowserSession {
         }
     }
 
-    pub fn scan_records(&self, offset: usize, limit: usize, filter: Option<&Filter>) -> Result<PaginatedRecords, String> {
-        let collection = self.collection.as_ref().ok_or_else(|| "No collection open".to_string())?;
+    pub fn scan_records(
+        &self,
+        offset: usize,
+        limit: usize,
+        filter: Option<&Filter>,
+    ) -> Result<PaginatedRecords, String> {
+        let collection = self
+            .collection
+            .as_ref()
+            .ok_or_else(|| "No collection open".to_string())?;
         let (records, total) = collection.scan_records(offset, limit, filter);
-        
-        let dtos = records.into_iter().map(|r| RecordDto {
-            id: r.id(),
-            user_id: r.user_id(),
-            timestamp: r.timestamp(),
-            vector: r.vector().to_vec(),
-            live: r.is_live(),
-        }).collect();
+
+        let dtos = records
+            .into_iter()
+            .map(|r| RecordDto {
+                id: r.id(),
+                user_id: r.user_id(),
+                timestamp: r.timestamp(),
+                vector: r.vector().to_vec(),
+                live: r.is_live(),
+            })
+            .collect();
 
         Ok(PaginatedRecords {
             records: dtos,
@@ -215,7 +238,10 @@ impl BrowserSession {
     }
 
     pub fn get_record(&self, id: u64) -> Result<Option<RecordDto>, String> {
-        let collection = self.collection.as_ref().ok_or_else(|| "No collection open".to_string())?;
+        let collection = self
+            .collection
+            .as_ref()
+            .ok_or_else(|| "No collection open".to_string())?;
         Ok(collection.get_record(id).map(|r| RecordDto {
             id: r.id(),
             user_id: r.user_id(),
@@ -225,28 +251,42 @@ impl BrowserSession {
         }))
     }
 
-    pub async fn search(&self, query: &[f32], filter: &Filter, k: usize) -> Result<SearchResponseDto, String> {
-        let collection = self.collection.as_ref().ok_or_else(|| "No collection open".to_string())?;
-        let response = collection.search(query, filter, k).await
+    pub async fn search(
+        &self,
+        query: &[f32],
+        filter: &Filter,
+        k: usize,
+    ) -> Result<SearchResponseDto, String> {
+        let collection = self
+            .collection
+            .as_ref()
+            .ok_or_else(|| "No collection open".to_string())?;
+        let response = collection
+            .search(query, filter, k)
+            .await
             .map_err(|e| format!("Search failed: {e}"))?;
 
-        let hits = response.results.into_iter().map(|res| {
-            let record = collection.get_record(res.id).map(|r| RecordDto {
-                id: r.id(),
-                user_id: r.user_id(),
-                timestamp: r.timestamp(),
-                vector: r.vector().to_vec(),
-                live: r.is_live(),
-            });
-            // Cosine distance is in [0, 2], similarity is 1.0 - distance
-            let similarity = (1.0 - res.distance).max(-1.0).min(1.0);
-            SearchHitDto {
-                id: res.id,
-                distance: res.distance,
-                similarity,
-                record,
-            }
-        }).collect();
+        let hits = response
+            .results
+            .into_iter()
+            .map(|res| {
+                let record = collection.get_record(res.id).map(|r| RecordDto {
+                    id: r.id(),
+                    user_id: r.user_id(),
+                    timestamp: r.timestamp(),
+                    vector: r.vector().to_vec(),
+                    live: r.is_live(),
+                });
+                // Cosine distance is in [0, 2], similarity is 1.0 - distance
+                let similarity = (1.0 - res.distance).max(-1.0).min(1.0);
+                SearchHitDto {
+                    id: res.id,
+                    distance: res.distance,
+                    similarity,
+                    record,
+                }
+            })
+            .collect();
 
         let cpu_path = response.report.cpu_distance_path.map(|p| format!("{p:?}"));
         let eligible = match response.report.eligible_rows {
@@ -265,33 +305,57 @@ impl BrowserSession {
         })
     }
 
-    pub fn add_record(&self, id: u64, user_id: u64, timestamp: i64, vector: &[f32]) -> Result<(), String> {
-        let collection = self.collection.as_ref().ok_or_else(|| "No collection open".to_string())?;
-        collection.add(id, user_id, timestamp, vector)
+    pub fn add_record(
+        &self,
+        id: u64,
+        user_id: u64,
+        timestamp: i64,
+        vector: &[f32],
+    ) -> Result<(), String> {
+        let collection = self
+            .collection
+            .as_ref()
+            .ok_or_else(|| "No collection open".to_string())?;
+        collection
+            .add(id, user_id, timestamp, vector)
             .map_err(|e| format!("Insert failed: {e}"))
     }
 
     pub fn delete_record(&self, id: u64) -> Result<(), String> {
-        let collection = self.collection.as_ref().ok_or_else(|| "No collection open".to_string())?;
-        collection.delete(id)
+        let collection = self
+            .collection
+            .as_ref()
+            .ok_or_else(|| "No collection open".to_string())?;
+        collection
+            .delete(id)
             .map_err(|e| format!("Delete failed: {e}"))
     }
 
     pub fn commit_mutations(&self, mutations: &[Mutation]) -> Result<qenlo::CommitReport, String> {
-        let collection = self.collection.as_ref().ok_or_else(|| "No collection open".to_string())?;
-        collection.commit(mutations)
+        let collection = self
+            .collection
+            .as_ref()
+            .ok_or_else(|| "No collection open".to_string())?;
+        collection
+            .commit(mutations)
             .map_err(|e| format!("Commit failed: {e}"))
     }
 
     pub fn flush(&self) -> Result<(), String> {
-        let collection = self.collection.as_ref().ok_or_else(|| "No collection open".to_string())?;
-        collection.flush()
-            .map_err(|e| format!("Flush failed: {e}"))
+        let collection = self
+            .collection
+            .as_ref()
+            .ok_or_else(|| "No collection open".to_string())?;
+        collection.flush().map_err(|e| format!("Flush failed: {e}"))
     }
 
     pub fn export_qn(&self, path: impl AsRef<Path>) -> Result<(), String> {
-        let collection = self.collection.as_ref().ok_or_else(|| "No collection open".to_string())?;
-        collection.export_qn(path)
+        let collection = self
+            .collection
+            .as_ref()
+            .ok_or_else(|| "No collection open".to_string())?;
+        collection
+            .export_qn(path)
             .map_err(|e| format!("Export failed: {e}"))
     }
 
@@ -336,7 +400,9 @@ impl BrowserSession {
                 let size = std::fs::metadata(path).map_or(0, |m| m.len());
                 total_bytes = size;
                 files.push(StorageFileDto {
-                    name: path.file_name().map_or("file".to_string(), |n| n.to_string_lossy().to_string()),
+                    name: path
+                        .file_name()
+                        .map_or("file".to_string(), |n| n.to_string_lossy().to_string()),
                     path: path.display().to_string(),
                     size_bytes: size,
                     is_dir: false,
@@ -379,7 +445,11 @@ impl BrowserSession {
         if let Some(path) = &self.path {
             if path.is_dir() {
                 if let Ok(entries) = std::fs::read_dir(path) {
-                    return entries.flatten().filter_map(|e| e.metadata().ok()).map(|m| m.len()).sum();
+                    return entries
+                        .flatten()
+                        .filter_map(|e| e.metadata().ok())
+                        .map(|m| m.len())
+                        .sum();
                 }
             } else if path.is_file() {
                 return std::fs::metadata(path).map_or(0, |m| m.len());

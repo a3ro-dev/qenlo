@@ -34,6 +34,7 @@ pub fn load(
     distribution: MetadataDistribution,
     filter: OracleFilter,
     eligible: usize,
+    k: usize,
 ) -> Result<Truth> {
     let config = properties(&path.join("configuration.txt"))?;
     let summary = properties(&path.join("summary.txt"))?;
@@ -53,7 +54,14 @@ pub fn load(
         .get("recall_target")
         .ok_or("oracle reference has no recall target")?
         .parse()?;
-    for key in ["tuning_recall_at_10", "evaluation_recall_at_10"] {
+    let recall_keys = if summary.contains_key("tuning_recall_at_k") {
+        ["tuning_recall_at_k", "evaluation_recall_at_k"]
+    } else if k == 10 {
+        ["tuning_recall_at_10", "evaluation_recall_at_10"]
+    } else {
+        return Err("oracle reference predates generic recall-at-k fields".into());
+    };
+    for key in recall_keys {
         let recall: f64 = summary
             .get(key)
             .ok_or_else(|| format!("oracle reference has no {key}"))?
@@ -70,7 +78,7 @@ pub fn load(
         ("dimensions", spec.dimension.to_string()),
         ("rows", spec.corpus.to_string()),
         ("seed", spec.seed.to_string()),
-        ("k", "10".into()),
+        ("k", k.to_string()),
         ("corpus_range", format!("0..{}", spec.corpus)),
         (
             "tuning_range",
@@ -154,10 +162,10 @@ pub fn load(
                 .map(str::parse)
                 .collect::<std::result::Result<Vec<u64>, _>>()?
         };
-        if ids.len() != eligible.min(10) {
+        if ids.len() != eligible.min(k) {
             return Err("oracle reference truth cardinality differs from min(k, eligible)".into());
         }
-        validate_results(&data.corpus, filter, &ids)?;
+        validate_results(&data.corpus, filter, &ids, k)?;
         *slot = Some(ids);
     }
     Ok(Truth {
@@ -223,7 +231,17 @@ mod tests {
             );
         }
         std::fs::write(path.join("truth.csv"), &truth).unwrap();
-        assert!(load(&path, &data, MetadataDistribution::Independent, filter, 12).is_ok());
+        assert!(
+            load(
+                &path,
+                &data,
+                MetadataDistribution::Independent,
+                filter,
+                12,
+                10
+            )
+            .is_ok()
+        );
         let output = path.join("replayed");
         super::super::run_cli(vec![
             "run".into(),
@@ -263,7 +281,17 @@ mod tests {
             config.replace("dataset_crc32=", "wrong_crc32="),
         ] {
             std::fs::write(path.join("configuration.txt"), damaged).unwrap();
-            assert!(load(&path, &data, MetadataDistribution::Independent, filter, 12).is_err());
+            assert!(
+                load(
+                    &path,
+                    &data,
+                    MetadataDistribution::Independent,
+                    filter,
+                    12,
+                    10
+                )
+                .is_err()
+            );
         }
         std::fs::write(path.join("configuration.txt"), config).unwrap();
         for damaged in [
@@ -273,11 +301,31 @@ mod tests {
             "split,query_index,ids\ntuning,0,0;0;0;0;0;0;0;0;0;0\n".into(),
         ] {
             std::fs::write(path.join("truth.csv"), damaged).unwrap();
-            assert!(load(&path, &data, MetadataDistribution::Independent, filter, 12).is_err());
+            assert!(
+                load(
+                    &path,
+                    &data,
+                    MetadataDistribution::Independent,
+                    filter,
+                    12,
+                    10
+                )
+                .is_err()
+            );
         }
         std::fs::write(path.join("truth.csv"), truth).unwrap();
         std::fs::write(path.join("metadata.csv"), metadata + "12,0,0\n").unwrap();
-        assert!(load(&path, &data, MetadataDistribution::Independent, filter, 12).is_err());
+        assert!(
+            load(
+                &path,
+                &data,
+                MetadataDistribution::Independent,
+                filter,
+                12,
+                10
+            )
+            .is_err()
+        );
         for name in [
             "data.qnb",
             "configuration.txt",

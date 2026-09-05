@@ -1,0 +1,259 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex.fmt)
+ restricted \write18 enabled.
+entering extended mode
+(paper.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2025-12-24>
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
+Document Class: article 2025/01/22 v1.4n Standard LaTeX document class
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/base\size10.clo))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg)
+) (C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+For additional information on amsmath, use the `?' option.
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty)
+)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty)
+ (C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.
+cfg)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.de
+f)))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/microtype\microtype.st
+y
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty)
+
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/microtype\microtype-pd
+ftex.def)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/microtype\microtype.cf
+g)) (C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
+)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx
+)) (C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/xurl\xurl.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.st
+y)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefin
+ekeys.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.
+sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty)
+
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmd
+s.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.
+sty)))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty)
+
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\getti
+tlestring.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.st
+y)))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.
+sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcal
+c.sty)))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfi
+lecheck.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\unique
+counter.sty)))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/natbib\natbib.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pd
+ftex.def)
+No file paper.aux.
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
+kii
+[Loading MPS to PDF converter (version 2006.09.02).]
+)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-
+base.sty
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/grfext\grfext.sty)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.
+cfg))
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-cmr.cfg)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msa.cfg)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd)
+(C:\Users\akshat\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msb.cfg)
+[1{C:/Users/akshat/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
+
+Package natbib Warning: Citation `webgpu' on page 2 undefined on input line 55.
+
+
+
+Package natbib Warning: Citation `wgsl' on page 2 undefined on input line 55.
+
+[2]
+Underfull \hbox (badness 1127) in paragraph at lines 69--70
+\OT1/cmr/m/n/10 A com-par-i-son needs source and archive iden-tity, hard-ware a
+nd soft-ware, dataset and query par-ti-tion,
+
+LaTeX Warning: Reference `tab:headline' on page 3 undefined on input line 77.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 90--90
+[]|\OT1/cmr/m/n/9 RTX 4090/Vulkan; AG
+
+Underfull \hbox (badness 10000) in paragraph at lines 92--92
+[]|\OT1/cmr/m/n/9 CUDA; TopK Mod-ern-
+[3]
+
+Package natbib Warning: Citation `nielsen2022agnews' on page 4 undefined on inp
+ut line 101.
+
+
+Package natbib Warning: Citation `topkbench' on page 4 undefined on input line 
+101.
+
+
+LaTeX Warning: Reference `sec:artifact' on page 4 undefined on input line 101.
+
+[4]
+
+LaTeX Warning: Reference `tab:headline' on page 5 undefined on input line 119.
+
+(tables/final/headline.tex) [5 <./figures/final/small_common.pdf>]
+
+LaTeX Warning: Reference `sec:tables' on page 6 undefined on input line 129.
+
+[6 <./figures/final/small_768.pdf>]
+
+LaTeX Warning: Reference `fig:cross' on page 7 undefined on input line 140.
+
+
+LaTeX Warning: Reference `fig:cross' on page 7 undefined on input line 140.
+
+[7 <./figures/final/phase_map.pdf> <./figures/final/routing_regret.pdf>]
+
+LaTeX Warning: Reference `fig:representations' on page 8 undefined on input lin
+e 148.
+
+[8 <./figures/final/eligibility_ablation.pdf>] [9 <./figures/final/windows_stra
+tegies.pdf> <./figures/final/small_chroma.pdf>] [10 <./figures/final/small_life
+cycle.pdf>] [11 <./figures/final/small_resources.pdf> <./figures/final/android_
+matched.pdf>] [12 <./figures/final/small_selector.pdf>]
+
+Package natbib Warning: Citation `johnson2019billion' on page 13 undefined on i
+nput line 197.
+
+
+Package natbib Warning: Citation `douze2024faiss' on page 13 undefined on input
+ line 197.
+
+
+Package natbib Warning: Citation `malkov2020hnsw' on page 13 undefined on input
+ line 197.
+
+
+Package natbib Warning: Citation `subramanya2019diskann' on page 13 undefined o
+n input line 197.
+
+
+Package natbib Warning: Citation `chen2021spann' on page 13 undefined on input 
+line 197.
+
+
+Package natbib Warning: Citation `gollapudi2023filtered' on page 13 undefined o
+n input line 197.
+
+
+Package natbib Warning: Citation `patel2024acorn' on page 13 undefined on input
+ line 197.
+
+
+Package natbib Warning: Citation `iff2026fanns' on page 13 undefined on input l
+ine 198.
+
+
+Package natbib Warning: Citation `li2025attribute' on page 13 undefined on inpu
+t line 198.
+
+
+Package natbib Warning: Citation `shi2025unified' on page 13 undefined on input
+ line 198.
+
+
+Package natbib Warning: Citation `amanbayev2026systems' on page 13 undefined on
+ input line 198.
+
+
+LaTeX Warning: Reference `sec:artifact' on page 13 undefined on input line 205.
+
+
+[13] [14]
+No file paper.bbl.
+(appendix.tex (tables/final/common.tex) (tables/final/selector.tex)
+(tables/final/real_small.tex) [15] (tables/final/windows_summary.tex)
+(tables/final/native_crossover_summary.tex)
+(tables/final/eligibility_ablation_summary.tex) [16]
+(tables/final/a6000_strict_summary.tex) (tables/final/a6000_exact_summary.tex)
+(tables/final/linux_library_summary.tex) [17]
+(tables/final/android_device_lab.tex) [18 <./figures/final/linux_library_contex
+t.pdf>]
+ignored error: Infinite glue shrinkage found in box being split [19] [20])
+
+Package natbib Warning: There were undefined citations.
+
+[21] (paper.aux)
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+Package rerunfilecheck Warning: File `paper.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+ )
+(see the transcript file for additional information) <C:\Users\akshat\AppData\L
+ocal\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1000.pk><C:/Users/akshat/App
+Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/
+akshat/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
+<C:/Users/akshat/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/c
+mbx9.pfb><C:/Users/akshat/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsf
+onts/cm/cmmi10.pfb><C:/Users/akshat/AppData/Local/Programs/MiKTeX/fonts/type1/p
+ublic/amsfonts/cm/cmmi5.pfb><C:/Users/akshat/AppData/Local/Programs/MiKTeX/font
+s/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/akshat/AppData/Local/Programs/Mi
+KTeX/fonts/type1/public/amsfonts/cm/cmmi9.pfb><C:/Users/akshat/AppData/Local/Pr
+ograms/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/akshat/AppData
+/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/aksha
+t/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Us
+ers/akshat/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pf
+b><C:/Users/akshat/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
+/cmr9.pfb><C:/Users/akshat/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
+fonts/cm/cmsy10.pfb><C:/Users/akshat/AppData/Local/Programs/MiKTeX/fonts/type1/
+public/amsfonts/cm/cmsy7.pfb><C:/Users/akshat/AppData/Local/Programs/MiKTeX/fon
+ts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/akshat/AppData/Local/Programs/
+MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb><C:/Users/akshat/AppData/Local
+/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on paper.pdf (21 pages, 789520 bytes).
+Transcript written on paper.log.
+
+pdflatex: major issue: So far, you have not checked for MiKTeX updates.

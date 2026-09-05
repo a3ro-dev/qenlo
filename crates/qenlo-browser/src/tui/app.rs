@@ -1,7 +1,9 @@
-use std::time::Instant;
+use crate::state::{
+    BrowserStatus, DiagnosticsDto, RecordDto, SearchHitDto, SharedState, StorageDetailsDto,
+};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use crate::state::{BrowserStatus, DiagnosticsDto, RecordDto, SearchHitDto, SharedState, StorageDetailsDto};
 use qenlo::{Filter, TimestampRange};
+use std::time::Instant;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tab {
@@ -53,13 +55,13 @@ pub struct App {
     pub page_offset: usize,
     pub page_limit: usize,
     pub total_records: usize,
-    
+
     // Modals & Inputs
     pub command_mode: bool,
     pub command_input: String,
     pub filter_mode: bool,
     pub filter_input: String,
-    
+
     pub inspect_modal: Option<RecordDto>,
     pub add_modal: bool,
     pub add_field_idx: usize, // 0: ID, 1: User ID, 2: Timestamp, 3: Vector
@@ -125,7 +127,11 @@ impl App {
             search_active_field: 0,
             storage_details: None,
             diagnostics: None,
-            status_message: Some(("Welcome to QenloDB Browser. Press ? for help, : for commands.".to_string(), Instant::now(), false)),
+            status_message: Some((
+                "Welcome to QenloDB Browser. Press ? for help, : for commands.".to_string(),
+                Instant::now(),
+                false,
+            )),
             should_quit: false,
         };
 
@@ -143,7 +149,7 @@ impl App {
         let (status, scan_res) = {
             let session = shared.read().await;
             let status = session.get_status();
-            
+
             let filter = if !self.filter_input.trim().is_empty() {
                 if let Ok(uid) = self.filter_input.trim().parse::<u64>() {
                     Some(Filter::new(Some(uid), TimestampRange::ALL))
@@ -204,7 +210,9 @@ impl App {
         // Modal: Add Record
         if self.add_modal {
             match key.code {
-                KeyCode::Esc => { self.add_modal = false; }
+                KeyCode::Esc => {
+                    self.add_modal = false;
+                }
                 KeyCode::Tab | KeyCode::Down => {
                     self.add_field_idx = (self.add_field_idx + 1) % 4;
                 }
@@ -290,13 +298,36 @@ impl App {
 
         // Tab Switching
         match key.code {
-            KeyCode::Tab => { self.current_tab = self.current_tab.next(); return; }
-            KeyCode::BackTab => { self.current_tab = self.current_tab.prev(); return; }
-            KeyCode::Char('1') => { self.current_tab = Tab::DataRows; return; }
-            KeyCode::Char('2') => { self.current_tab = Tab::VectorSearch; return; }
-            KeyCode::Char('3') => { self.current_tab = Tab::StorageWal; self.refresh_storage().await; return; }
-            KeyCode::Char('4') => { self.current_tab = Tab::Diagnostics; self.refresh_diagnostics().await; return; }
-            KeyCode::Char('?') => { self.current_tab = Tab::Help; return; }
+            KeyCode::Tab => {
+                self.current_tab = self.current_tab.next();
+                return;
+            }
+            KeyCode::BackTab => {
+                self.current_tab = self.current_tab.prev();
+                return;
+            }
+            KeyCode::Char('1') => {
+                self.current_tab = Tab::DataRows;
+                return;
+            }
+            KeyCode::Char('2') => {
+                self.current_tab = Tab::VectorSearch;
+                return;
+            }
+            KeyCode::Char('3') => {
+                self.current_tab = Tab::StorageWal;
+                self.refresh_storage().await;
+                return;
+            }
+            KeyCode::Char('4') => {
+                self.current_tab = Tab::Diagnostics;
+                self.refresh_diagnostics().await;
+                return;
+            }
+            KeyCode::Char('?') => {
+                self.current_tab = Tab::Help;
+                return;
+            }
             KeyCode::Char(':') => {
                 self.command_mode = true;
                 self.command_input.clear();
@@ -406,7 +437,9 @@ impl App {
             KeyCode::Tab => {
                 self.search_active_field = (self.search_active_field + 1) % 3;
             }
-            KeyCode::Char('r') if key.modifiers.contains(KeyModifiers::CONTROL) || key.modifiers.is_empty() => {
+            KeyCode::Char('r')
+                if key.modifiers.contains(KeyModifiers::CONTROL) || key.modifiers.is_empty() =>
+            {
                 self.generate_random_search_vector();
                 self.set_status("Generated random query vector", false);
             }
@@ -487,7 +520,8 @@ impl App {
         let vector: Vec<f32> = if vec_str.starts_with('[') {
             serde_json::from_str(vec_str).unwrap_or_default()
         } else {
-            vec_str.split(&[',', ' '][..])
+            vec_str
+                .split(&[',', ' '][..])
                 .filter_map(|s| s.parse::<f32>().ok())
                 .collect()
         };
@@ -529,22 +563,32 @@ impl App {
     async fn submit_add_record(&mut self) {
         let id: u64 = match self.add_id.trim().parse() {
             Ok(v) => v,
-            Err(_) => { self.set_status("Invalid ID", true); return; }
+            Err(_) => {
+                self.set_status("Invalid ID", true);
+                return;
+            }
         };
         let user_id: u64 = match self.add_user_id.trim().parse() {
             Ok(v) => v,
-            Err(_) => { self.set_status("Invalid User ID", true); return; }
+            Err(_) => {
+                self.set_status("Invalid User ID", true);
+                return;
+            }
         };
         let ts: i64 = match self.add_ts.trim().parse() {
             Ok(v) => v,
-            Err(_) => { self.set_status("Invalid Timestamp", true); return; }
+            Err(_) => {
+                self.set_status("Invalid Timestamp", true);
+                return;
+            }
         };
-        
+
         let vec_str = self.add_vec.trim();
         let vector: Vec<f32> = if vec_str.starts_with('[') {
             serde_json::from_str(vec_str).unwrap_or_default()
         } else {
-            vec_str.split(&[',', ' '][..])
+            vec_str
+                .split(&[',', ' '][..])
                 .filter_map(|s| s.parse::<f32>().ok())
                 .collect()
         };
@@ -572,7 +616,9 @@ impl App {
 
     async fn execute_command(&mut self, cmd: &str) {
         let parts: Vec<&str> = cmd.trim().split_whitespace().collect();
-        if parts.is_empty() { return; }
+        if parts.is_empty() {
+            return;
+        }
 
         match parts[0] {
             "q" | "quit" | "exit" => {
@@ -609,7 +655,10 @@ impl App {
                 let path = parts[1];
                 let dim: usize = match parts[2].parse() {
                     Ok(d) => d,
-                    Err(_) => { self.set_status("Dimension must be integer", true); return; }
+                    Err(_) => {
+                        self.set_status("Dimension must be integer", true);
+                        return;
+                    }
                 };
                 let shared = self.shared_state.clone();
                 let create_res = {
@@ -619,7 +668,10 @@ impl App {
 
                 match create_res {
                     Ok(_) => {
-                        self.set_status(format!("Created collection at {path} ({dim} dims)"), false);
+                        self.set_status(
+                            format!("Created collection at {path} ({dim} dims)"),
+                            false,
+                        );
                         self.page_offset = 0;
                         self.refresh_data().await;
                         self.refresh_storage().await;
@@ -663,7 +715,10 @@ impl App {
                 self.current_tab = Tab::Help;
             }
             other => {
-                self.set_status(format!("Unknown command: '{other}'. Type :help for commands"), true);
+                self.set_status(
+                    format!("Unknown command: '{other}'. Type :help for commands"),
+                    true,
+                );
             }
         }
     }

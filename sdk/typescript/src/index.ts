@@ -1,49 +1,8 @@
-/**
- * Type-safe Node.js API for Qenlo.
- * 
- * NOTICE:
- * Qenlo collects anonymous installation, execution, and hardware environment
- * telemetry (OS, architecture, SDK version, query timings) transmitted securely
- * to https://api.gobitsnbytes.org/qenlo/telemetry. This telemetry is anonymous
- * and mandatory (no opt-out) to ensure stability, diagnose driver regressions,
- * and optimize query routing algorithms.
- */
+/** Type-safe Node.js API for Qenlo. Importing it starts no network work. */
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import https from "node:https";
 import koffi from "koffi";
-
-const TELEMETRY_ENDPOINT = "https://api.gobitsnbytes.org/qenlo/telemetry";
-let sentTelemetry = false;
-
-function sendTelemetry(eventType = "session"): void {
-  if (sentTelemetry) return;
-  sentTelemetry = true;
-  try {
-    const payload = JSON.stringify({
-      event_type: eventType,
-      sdk: "typescript",
-      version: "0.1.0-alpha.1",
-      platform: process.platform,
-      arch: process.arch,
-      details: { node_version: process.version },
-    });
-    const req = https.request(TELEMETRY_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "qenlo-typescript/0.1.0-alpha.1",
-      },
-      timeout: 3000,
-    });
-    req.on("error", () => {});
-    req.write(payload);
-    req.end();
-  } catch {}
-}
-
-sendTelemetry("session");
 
 export interface RecordInput {
   readonly id: bigint;
@@ -56,6 +15,15 @@ export interface Filter {
   readonly userId?: bigint;
   readonly timestampLower?: bigint;
   readonly timestampUpper?: bigint;
+}
+
+export type ExecutionMode = "cpu" | "automatic" | "gpu-required";
+export type GpuFilterMode = "cpu-mask" | "cpu-rows" | "gpu-predicate";
+
+export interface CollectionOptions {
+  readonly backend?: ExecutionMode;
+  readonly gpuFilterMode?: GpuFilterMode;
+  readonly gpuAllocationBudgetBytes?: bigint;
 }
 
 export interface SearchResult {
@@ -132,10 +100,10 @@ function libraryPath(): string {
 }
 
 const library = koffi.load(libraryPath());
-const collectionNew = library.func("void *qenlo_collection_new(size_t)") as (dimension: number) => Pointer | null;
-const collectionCreate = library.func("void *qenlo_collection_create(const char *, size_t)") as (path: string, dimension: number) => Pointer | null;
-const collectionOpen = library.func("void *qenlo_collection_open(const char *, size_t)") as (path: string, dimension: number) => Pointer | null;
-const collectionImportQn = library.func("void *qenlo_collection_import_qn(const char *, size_t)") as (path: string, dimension: number) => Pointer | null;
+const collectionNew = library.func("void *qenlo_collection_new_configured(size_t, uint32_t, uint32_t, uint64_t)") as (dimension: number, backend: number, filter: number, budget: bigint) => Pointer | null;
+const collectionCreate = library.func("void *qenlo_collection_create_configured(const char *, size_t, uint32_t, uint32_t, uint64_t)") as (path: string, dimension: number, backend: number, filter: number, budget: bigint) => Pointer | null;
+const collectionOpen = library.func("void *qenlo_collection_open_configured(const char *, size_t, uint32_t, uint32_t, uint64_t)") as (path: string, dimension: number, backend: number, filter: number, budget: bigint) => Pointer | null;
+const collectionImportQn = library.func("void *qenlo_collection_import_qn_configured(const char *, size_t, uint32_t, uint32_t, uint64_t)") as (path: string, dimension: number, backend: number, filter: number, budget: bigint) => Pointer | null;
 const nativeAdd = library.func("int32_t qenlo_add(void *, uint64_t, uint64_t, int64_t, const float *, size_t)") as (handle: Pointer, id: bigint, userId: bigint, timestamp: bigint, vector: Float32Array, length: number) => number;
 const nativeAddBatch = library.func("int32_t qenlo_add_batch(void *, const uint64_t *, const uint64_t *, const int64_t *, const float *, size_t, size_t)") as (handle: Pointer, ids: BigUint64Array, users: BigUint64Array, timestamps: BigInt64Array, vectors: Float32Array, rows: number, dimension: number) => number;
 const nativeDelete = library.func("int32_t qenlo_delete(void *, uint64_t)") as (handle: Pointer, id: bigint) => number;
@@ -196,28 +164,41 @@ export class Collection implements Disposable {
     this.dimension = dimension;
   }
 
-  static memory(dimension: number): Collection {
-    Collection.validateDimension(dimension);
-    return new Collection(collectionNew(dimension), dimension);
+  static memory(dimension: number, options: CollectionOptions = {}): Collection {
+    const [backend, filter, budget] = Collection.config(dimension, options);
+    return new Collection(collectionNew(dimension, backend, filter, budget), dimension);
   }
 
-  static create(path: string, dimension: number): Collection {
-    Collection.validateDimension(dimension);
-    return new Collection(collectionCreate(path, dimension), dimension);
+  static create(path: string, dimension: number, options: CollectionOptions = {}): Collection {
+    const [backend, filter, budget] = Collection.config(dimension, options);
+    return new Collection(collectionCreate(path, dimension, backend, filter, budget), dimension);
   }
 
-  static open(path: string, dimension: number): Collection {
-    Collection.validateDimension(dimension);
-    return new Collection(collectionOpen(path, dimension), dimension);
+  static open(path: string, dimension: number, options: CollectionOptions = {}): Collection {
+    const [backend, filter, budget] = Collection.config(dimension, options);
+    return new Collection(collectionOpen(path, dimension, backend, filter, budget), dimension);
   }
 
-  static importQn(path: string, dimension: number): Collection {
-    Collection.validateDimension(dimension);
-    return new Collection(collectionImportQn(path, dimension), dimension);
+  static importQn(path: string, dimension: number, options: CollectionOptions = {}): Collection {
+    const [backend, filter, budget] = Collection.config(dimension, options);
+    return new Collection(collectionImportQn(path, dimension, backend, filter, budget), dimension);
   }
 
   private static validateDimension(dimension: number): void {
     if (!Number.isSafeInteger(dimension) || dimension <= 0) throw new RangeError("dimension must be a positive safe integer");
+  }
+
+  private static config(dimension: number, options: CollectionOptions): [number, number, bigint] {
+    Collection.validateDimension(dimension);
+    const backends: Record<ExecutionMode, number> = { cpu: 0, automatic: 1, "gpu-required": 2 };
+    const filters: Record<GpuFilterMode, number> = { "cpu-mask": 0, "cpu-rows": 1, "gpu-predicate": 2 };
+    const backend = backends[options.backend ?? "cpu"];
+    const filter = filters[options.gpuFilterMode ?? "gpu-predicate"];
+    const budget = options.gpuAllocationBudgetBytes ?? 512n * 1024n * 1024n;
+    if (backend === undefined) throw new RangeError(`unknown backend: ${String(options.backend)}`);
+    if (filter === undefined) throw new RangeError(`unknown GPU filter mode: ${String(options.gpuFilterMode)}`);
+    if (budget <= 0n || budget > 0xffff_ffff_ffff_ffffn) throw new RangeError("gpuAllocationBudgetBytes must be a positive uint64");
+    return [backend, filter, budget];
   }
 
   #openHandle(): Pointer {

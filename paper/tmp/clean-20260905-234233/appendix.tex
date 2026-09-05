@@ -1,0 +1,115 @@
+\section{Detailed retained tables}\label{sec:tables}
+These tables are generated from retained machine-readable evidence. They preserve cohort-specific aggregation; an empty field is not a zero. The full 182-row campaign CSV/JSON includes every failed, unavailable, invalid, and unqualified row. Native versus replay sample units are reconciled in the main table. All latency units below are milliseconds.
+
+\subsection{Common small-collection native rows}
+\begin{table}[H]\centering\small
+\caption{S1 common cells from the matrix. CPU values on A40 are absent for this source role; no substitute baseline-CPU row is silently inserted. Workload definitions appear in the main text. All displayed rows qualify at FP64 recall 1.0.}
+\begin{tabular}{llrr}\toprule Configuration & Cell & CPU P95 & WGPU P95 \\\midrule
+\tableinput{tables/final/common}
+\bottomrule\end{tabular}\end{table}
+
+\subsection{Frozen-baseline versus candidate selection}
+\begin{table}[H]\centering\scriptsize
+\caption{All twelve qualified S0/S1 pairs; ratio is frozen baseline P95 divided by candidate P95. IDs encode rows (r), dimension (d), batch (b), $k$ when nondefault, and eligible fraction (f). The compound cell combines metadata clauses.}
+\begin{tabular}{llr}\toprule Configuration & Workload & Ratio \\\midrule
+\tableinput{tables/final/selector}
+\bottomrule\end{tabular}\end{table}
+
+\subsection{Small real-embedding replay}
+\begin{table}[H]\centering\small
+\caption{S1 AG News, reference RTX 4090, 100K$\times$384, $B=16,k=10,E/N=1\%$. Three runs; 939 calls per native/replayed engine. Chroma and USearch are ANN; all others exhaustive. External flat/tensor matrices are prefiltered.}
+\begin{tabular}{lrr}\toprule Engine & Completed-call P95 & FP64 recall \\\midrule
+\tableinput{tables/final/real_small}
+\bottomrule\end{tabular}\end{table}
+
+\subsection{Historical Windows endpoints and matched localization}
+\begin{table}[H]\centering\small
+\caption{H0: 100K$\times$384, $B=1,k=10$, five runs/25,000 calls per row. Cross-revision endpoint context: dense CPU \texttt{4ae9f1d}, dense WGPU \texttt{f1ccc4d}; sparse CPU/rows \texttt{78e3947}, sparse predicate \texttt{f1ccc4d}. ANN rows retain their own revisions/API.}
+\begin{tabular}{rlrr}\toprule Eligible & System & P95 & FP64 recall \\\midrule
+\tableinput{tables/final/windows_summary}
+\bottomrule\end{tabular}\end{table}
+\begin{table}[H]\centering\small
+\caption{H1: matched recorded revision \texttt{3e2a4a9}, RTX 4050/DX12, AG News, 100K$\times$384, $B=1,k=10$, five runs/25,000 calls per backend/cell. Post-hoc localization; median run P95.}
+\begin{tabular}{rrrr}\toprule Eligible & CPU P95 & Compact WGPU P95 & FP64 recall \\\midrule
+\tableinput{tables/final/native_crossover_summary}
+\bottomrule\end{tabular}\end{table}
+
+\subsection{Historical eligibility ablation}
+\begin{table}[H]\centering\small
+\caption{H2, RTX 4090/Vulkan, 100K$\times$384, $B=1,k=10$. Five runs/25,000 calls per mode/cell, sequential mode execution. Percentiles are medians of run percentiles.}
+\begin{tabular}{rlrrrr}\toprule Eligible & Preparation & P50 & P95 & P99 & FP64 recall \\\midrule
+\tableinput{tables/final/eligibility_ablation_summary}
+\bottomrule\end{tabular}\end{table}
+
+\subsection{Historical A6000 distributions}
+\begin{table}[H]\centering\small
+\caption{H4 strict real TopK, 1M$\times$768, $E=10,026$, $B=1,k=10$, 5,000 calls/system. Shared prefiltered matrix, host completed calls. cuVS fails correctness and is excluded from qualified comparisons. CUDA prototype is unshipped research code.}
+\begin{tabular}{lrrrr}\toprule System & P50 & P95 & P99 & FP64 recall \\\midrule
+\tableinput{tables/final/a6000_strict_summary}
+\bottomrule\end{tabular}\end{table}
+\begin{table}[H]\centering\small
+\caption{H5 generated normalized FP32, 1M$\times$768, $B=1,k=10$, 500 calls/system/cell across five runs. Completed-call distribution percentiles; unordered top-10 agreement, not independent FP64 truth.}
+\begin{tabular}{rlrrr}\toprule Eligible & System & P50 & P95 & P99 \\\midrule
+\tableinput{tables/final/a6000_exact_summary}
+\bottomrule\end{tabular}\end{table}
+
+\subsection{Historical Linux libraries}
+\fig{linux_library_context}{H3 \texttt{bb51987}, Linux CPU library context, separately prepared AG News 100K$\times$384, unfiltered $B=1,k=10$. Three runs/1,500 calls per system; completed library-call P95. Recall accompanies latency; algorithms, persistence, and APIs differ. This figure is descriptive within the host, not a product leaderboard.}{fig:linux}
+\begin{table}[H]\centering\small
+\caption{H3 complete retained library context. ANN recall is part of each operating point; exhaustive engines use different APIs. Native GPU failed Vulkan initialization and has no timed row.}
+\begin{tabular}{llrr}\toprule System & Search & P95 & FP64 recall \\\midrule
+\tableinput{tables/final/linux_library_summary}
+\bottomrule\end{tabular}\end{table}
+
+\subsection{Android aggregate records}
+\begin{table}[H]\centering\scriptsize
+\caption{H6 all 21 supplied Android cells. $D=384,k=10$; B is batch size, n is reported samples. All recall@10 values are 1.0, all fallback counts zero. Automatic rows use selective predicates and are not comparable with dense rows. No raw-call reconstruction is possible.}
+\begin{tabular}{llrrrrrr}\toprule Suite & Cell & Rows & B & n & P50 & P95 & P99 \\\midrule
+\tableinput{tables/final/android_device_lab}
+\bottomrule\end{tabular}\end{table}
+
+\section{Claim ledger and provenance}\label{sec:artifact}
+The definitive machine-readable ledger is \path{paper/tables/claim-to-artifact.json}, with a CSV index at the same stem. It incorporates audited historical, campaign, and system claims and every matrix row. Each measurement records source, revision/hash, environment, data provenance, workload, filter, timing, sample/repetition unit, oracle, memory scope, qualification, and limitations. Unknown provenance is explicit rather than inferred from a nearby cohort. Full machine paths remain outside narrow printed tables for legibility.
+
+\begin{longtable}{L{.17\linewidth}L{.37\linewidth}L{.35\linewidth}}
+\caption{Headline claim families and authoritative artifact locations, relative to the repository. Full hashes and per-row fields are in the ledger.}\\
+\toprule Claim & Result / qualification & Artifact family \\\midrule\endfirsthead
+\toprule Claim & Result / qualification & Artifact family \\\midrule\endhead
+H1/H1-regret & 2K--3K reversal; up to 23.9\% counterfactual regret, one historical laptop & \path{research/data/raw/2026-09-02-native-crossover/}; per-cell samples/runs/configurations \\
+H0 & Historical representation/endpoints; different revisions explicitly separated & \path{benchmarks/2026-08-28/real/} \\
+H2 & One-pass/cache preparation; five sequential runs, no CPU recalibration & \path{research/artifacts/qenlo-phase1-eligibility-2026-09-04.tar.gz} \\
+S2 & Twelve corrected 768D rows, recall 1.0; candidate selector & Campaign \path{deep768/rtx4090-eu-ro-secure-deep768-admission-fix/} \\
+S1-selector & Five wins/seven losses; rejected unconditional optimization & Matrix paired \texttt{baseline-gpu}/\texttt{current-gpu}; source archives \\
+S1-real/ANN & Real fixture; seven qualified Chroma pairs; failed gates and USearch visible & Campaign \path{deep/} and \path{reference/}; matrix and raw samples \\
+S1-lifecycle & Search-only P95; separate mutation/opening; zero/final-one rebuilds & Reference \texttt{lifecycle-current-gpu} samples/summary \\
+S2-resources & Device allocations, process RSS, transfers, nested phases & Corrected native samples, process time logs, matrix \\
+H4/H5 & Real strict negative; synthetic formulation reversal & \path{benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/}; \path{research/data/raw/2026-09-02-a6000-cuda/heldout/} \\
+H3 & Seven CPU library rows, no WGPU timing & \path{benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/} \\
+H6/H7 & Physical Android and Arc, aggregate-only & \path{research/data/raw/2026-09-02-android/}; \path{benchmarks/2026-08-31/device-lab/intel-arc/reports.json} \\
+Accounting & Account daily spend, zero retained campaign resources & Campaign \texttt{ledger.jsonl}, billing captures, \texttt{campaign-summary.json} \\
+Semantics & Current source contracts; not retrospective performance & \path{paper/audit/system-ledger.json} \\
+\bottomrule\end{longtable}
+
+\subsection{Source and result archives}
+The campaign root is \path{research/artifacts/runpod-small-2026-09-05/}. Full identities are:
+\begin{description}
+\item[S0 frozen source.] \path{f37e744c7ee4054a74c4b4181f2dde61dade4d677bbc5493b9a36b61d165a45d}
+\item[S1 experimental source.] \path{730c050065e6786972a7be4f9bcb619168becdc943ce1122d1583c61f66409e3}
+\item[S2 corrected source.] \path{bb195fedb6519c26598c6c103e7e182982c2eddd0a06d9c2cf54eb5cb5ceeb19}
+\item[S2 result archive.] \path{9e322d615c0bbed44616faa831493ca030dd49bbce7fe0c4386f49e3b8532fc0}
+\item[H2 eligibility archive.] \path{26e0ccc057c59c0fb4687f8d85a923e88b7bb25257e4e551e22cffe13c1b821f}
+\end{description}
+S2 result integrity is distinct from S2 source identity. The corrected result manifest has 74 non-self entries. The full campaign verifier checks eight retained result archives and nine checksum manifests, 1,053 entries, skipping four self-manifest entries. It also checks source roles and the local/baseline WGSL identity. Checksums establish byte integrity, not scientific qualification.
+
+\subsection{Discrepancies resolved during authoring}
+The audit reconciled disagreements instead of choosing flattering prose: (i) ``current'' source archives still contain the rejected selector; (ii) the matrix lifecycle scope string is broader than the separate raw timers; (iii) external replay preparation omits eligibility traversal despite its field name; (iv) completed is not identical to qualified; (v) historical endpoint revisions differ; (vi) Intel Arc's embedded quick label overrides an external full label; and (vii) final spend is account/day accounting. Bibliographic corrections include the DTU dataset's publication year, the SPANN title, DiskANN author spelling, and the full Filtered-DiskANN author list. Audit notes retain these resolutions.
+
+\subsection{Excluded evidence and unresolved claims}
+No raw evidence or old figure was deleted. The historical inventory hashes every top-level figure file; regenerated figures live in a separate \path{paper/figures/final/} directory. Older dimension, matched-size, metadata-correlation, and heatmap graphics do not establish unmeasured experiments. Redundant crossover/selectivity plots are superseded by explicitly scoped panels. The old architecture figure is retained, while the paper explains canonical state in equations and prose.
+
+An incomplete historical CPU development run and duplicate cloud mirrors are excluded from counts. H3 native Vulkan initialization failed; there is no GPU latency to rank. Historical Qdrant was deliberately outside the retained comparison because its local-mode search boundary differed; no conclusion about its performance follows. Provider-compatible TopK experiments used an inclusive predicate yielding 10,148 eligible rows and supplied truth, versus strict H4's 10,026 rows and independent oracle. They remain exploratory negative context and are not pooled with H4. Their approximately-one-percent prototype did not beat FAISS; other provider cells had correctness disagreements. cuVS numerical/runtime failures remain failures, not qualified exact results.
+
+The archive does not test a complete multidimensional routing surface, fixed-$E$ varying-$N$, controlled metadata/vector correlation, a tuned filtered-ANN frontier, calibrated held-out routing, concurrency, energy, total VRAM peaks, long-running mutation churn, arbitrary crash recovery, MPS, or physical iOS. Historical mobile results cannot certify the final revision. S2's final-local-selector rerun is absent. These gaps constrain claims rather than licensing extrapolation.
+
+\subsection{Reproduction and audit procedure}
+Paper-only entry points are \path{paper/scripts/reduce_final_evidence.py}, \path{generate_final_tables.py}, \path{generate_final_figures.py}, and \path{verify_campaign_claims.py}. Historical raw checks are in \path{paper/audit/verify_historical_raw.py}. Reductions go to \path{paper/audit/reduced/}; their parsed CSV rows match retained originals. Android values are regenerated from retained aggregate records, not unavailable raw series. Numerical tables and figure inputs are traceable through \path{paper/audit/figure-sources.json}. A clean LaTeX build, citation/reference/box checks, extracted text, and page renders are recorded in the paper verification output. No command in this authoring workflow creates cloud resources or runs a performance benchmark.

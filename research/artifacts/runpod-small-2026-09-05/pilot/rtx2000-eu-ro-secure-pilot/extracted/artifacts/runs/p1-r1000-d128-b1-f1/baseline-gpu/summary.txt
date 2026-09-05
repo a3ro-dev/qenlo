@@ -1,0 +1,11 @@
+status=completed
+build_ns=232321028
+readiness_ns=306305803
+oracle_and_tuning_ns=3963225
+tuning_recall_at_10=1
+evaluation_recall_at_10=1
+recall_target_passed=true
+median_run_p95_batch_ns=151475
+median_convention=lower-middle
+filter_violations=0
+scale_performance_claim=none

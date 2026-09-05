@@ -1,0 +1,23 @@
+	Command being timed: "/workspace/qenlo-deep768/target/release/qenlo-bench run --dataset /workspace/qenlo-deep768/datasets/r100000-d768.qnb --output /workspace/qenlo-deep768/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-gpu --dimensions 768 --backend gpu-rows --distribution independent --fraction 1 --batch 1 --k 1 --warmups 8 --repetitions 3 --order-seed 20260905 --recall-target 0.99 --diagnostics detailed --vector-budget-mib 2048 --gpu-budget-mib 1024 --gpu-row-preparation cached --oracle-reference /workspace/qenlo-deep768/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-cpu"
+	User time (seconds): 1.38
+	System time (seconds): 0.94
+	Percent of CPU this job got: 94%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.45
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1175464
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 324820
+	Voluntary context switches: 331
+	Involuntary context switches: 58
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 3184
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

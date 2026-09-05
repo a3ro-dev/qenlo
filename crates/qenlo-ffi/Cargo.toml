@@ -8,6 +8,10 @@ repository.workspace = true
 publish = false
 description = "Stable C ABI for Qenlo language SDKs"
 
+[features]
+default = []
+gpu-wgpu = ["qenlo/gpu-wgpu"]
+
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]
 

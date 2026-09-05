@@ -1,0 +1,275 @@
+{
+  "audit_scope": "runpod-small-2026-09-05",
+  "audit_method": "Machine-readable matrix, raw summaries, raw samples, configuration manifests, completion records, environment captures, billing ledger, and source archives were cross-checked. No benchmark was re-run.",
+  "reproducible_verifier": {
+    "script": "paper/scripts/verify_campaign_claims.py",
+    "command": "python paper/scripts/verify_campaign_claims.py",
+    "last_result": "ok",
+    "matrix_rows_checked": 182,
+    "result_archives_count": 8,
+    "checksum_manifests_checked": 9,
+    "checksum_entries_verified": 1053,
+    "checksum_self_entries_skipped": 4
+  },
+  "authoritative_matrix": {
+    "csv": "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv",
+    "json": "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.json",
+    "csv_json_row_count": 182,
+    "csv_json_equivalent_on_checked_fields": true,
+    "status_counts": {
+      "completed": 131,
+      "failed_or_unavailable": 42,
+      "failed": 7,
+      "invalid_harness": 2
+    },
+    "qualified_counts": {
+      "true": 130,
+      "false": 52
+    },
+    "qualification_rule": "A completed engine row is qualified only when its reported FP64-oracle recall meets the configured target; failed, unavailable, invalid-harness, or recall-gate rows remain visible and are not promoted to timed comparisons."
+  },
+  "source_archives": [
+    {
+      "artifact": "research/artifacts/runpod-small-2026-09-05/baseline-source.tar.gz",
+      "bundle_sha256": "f37e744c7ee4054a74c4b4181f2dde61dade4d677bbc5493b9a36b61d165a45d",
+      "manifest_role": "baseline",
+      "git_revision": "b22d3b5033cfb578508a4cb76a8022dd3e3e258b",
+      "selector_source": "Simple full-rescan top-k selector"
+    },
+    {
+      "artifact": "research/artifacts/runpod-small-2026-09-05/current-source.tar.gz",
+      "bundle_sha256": "bb195fedb6519c26598c6c103e7e182982c2eddd0a06d9c2cf54eb5cb5ceeb19",
+      "manifest_role": "current experimental candidate",
+      "git_revision": "b22d3b5033cfb578508a4cb76a8022dd3e3e258b",
+      "selector_source": "Lane-minimum candidate selector"
+    },
+    {
+      "artifact": "crates/qenlo/src/gpu_exact.wgsl",
+      "bundle_sha256": "b7cbb4ab957ccfef7c510d90b6a230b53748db74e290e239ee60fa7038b64fe6",
+      "manifest_role": "local worktree inspected during audit",
+      "selector_source": "Simple full-rescan top-k selector; byte-identical to the WGSL member in baseline-source.tar.gz",
+      "qualification_status": "This local source is not used to relabel retained remote rows."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "CAMP-001",
+      "exact_claim": "The reduced campaign contains 182 retained rows: 131 completed, 42 failed_or_unavailable, 7 failed, and 2 invalid_harness.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv", "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.json", "research/artifacts/runpod-small-2026-09-05/report/performance-report.md"],
+      "code_or_archive_revision": "reducer scripts/analyze_small_campaign.py; matrix source hashes retained per row",
+      "hardware_software_environment": "Multiple Runpod NVIDIA hosts; per-configuration environment captures are retained.",
+      "dataset_provenance": "Synthetic and retained real-embedding workloads identified by workload labels; provenance is in each raw configuration and source archive.",
+      "N_dimension_batch_k_eligible_fraction": "Per matrix row; no pooling across rows.",
+      "filter_representation": "Per matrix row (corpus, selected-user-population, or engine-specific replay scope).",
+      "timing_boundary": "Per matrix row; native rows use batch-call-completion, replay rows report their explicit host/API boundary.",
+      "sample_and_repetition_count": "Per matrix row; sample_count is retained.",
+      "correctness_oracle": "Per row; native summaries record recall target and filter violations, replay summaries record their independent truth check.",
+      "memory_scope": "Per row; process RSS and Qenlo-owned allocation are separate fields.",
+      "qualification_status": "Verified accounting; all rows retained, only qualified completed rows used for headline comparisons.",
+      "limitations": "Status accounting is a descriptive archive inventory, not a statistical result."
+    },
+    {
+      "claim_id": "D768-001",
+      "exact_claim": "On a Runpod RTX 4090 Vulkan host, corrected 100000 x 768 rows have FP64-oracle recall 1.0 for every retained engine in both d4 (batch 1, k=1, unfiltered) and d5 (batch 8, k=64, 10% eligible) cells.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d4-r100000-d768-b1-k1-f1/*/summary.*", "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d5-r100000-d768-b8-k64-f01/*/summary.*", "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv"],
+      "code_or_archive_revision": "current source bundle bb195fedb6519c26598c6c103e7e182982c2eddd0a06d9c2cf54eb5cb5ceeb19; corrected archive SHA256 listed in deep768 artifacts/SHA256SUMS",
+      "hardware_software_environment": "NVIDIA GeForce RTX 4090, Vulkan, Linux x86_64; AMD Ryzen Threadripper 7960X host; driver 580.159.04, CUDA 13.0 capture.",
+      "dataset_provenance": "synthetic-uniform-v1, r100000-d768.qnb, dataset CRC32 50b69280; d4 unfiltered, d5 10% corpus eligibility.",
+      "N_dimension_batch_k_eligible_fraction": "d4: N=100000, D=768, B=1, k=1, eligible=1.0; d5: N=100000, D=768, B=8, k=64, eligible=0.1.",
+      "filter_representation": "Native current-gpu uses cached gpu-rows preparation; replay engines use prefiltered canonical eligible rows and report preparation separately.",
+      "timing_boundary": "Native: batch-call-completion. Replay engines: host query input through host-visible IDs and cosine distances; build_and_filter_prepare_ns is reported separately.",
+      "sample_and_repetition_count": "Native d4 sample_count=192 (8 warmup queries, 3 repetitions over 64 evaluation queries); native d5 sample_count=24. Replay engines use 3 repetitions.",
+      "correctness_oracle": "Independent FP64 truth; corrected native summaries report tuning_recall_at_k=1, evaluation_recall_at_k=1, filter_violations=0; replay summaries report minimum and mean recall 1.0.",
+      "memory_scope": "Qenlo-owned accelerator allocation and process RSS high-water mark are separate; replay allocation fields are engine-specific and not additive.",
+      "qualification_status": "Qualified; all 12 corrected rows have recall_at_k=1.0.",
+      "limitations": "One RTX 4090 host and one synthetic 768-dimensional source; summaries explicitly make no scale-performance claim."
+    },
+    {
+      "claim_id": "D768-002",
+      "exact_claim": "Corrected d4 P95 completed-call latency is Qenlo CPU 9.409 ms, Qenlo WGPU 0.897 ms, FAISS Flat 14.800 ms, NumPy 15.343 ms, Torch CPU 18.695 ms, and Torch CUDA 0.671 ms.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv", "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.json", "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d4-r100000-d768-b1-k1-f1/"],
+      "code_or_archive_revision": "current source bundle bb195fedb6519c26598c6c103e7e182982c2eddd0a06d9c2cf54eb5cb5ceeb19",
+      "hardware_software_environment": "RTX 4090/Vulkan for Qenlo; same host and captured environment for replay engines.",
+      "dataset_provenance": "synthetic-uniform-v1, N=100000, D=768.",
+      "N_dimension_batch_k_eligible_fraction": "100000, 768, B=1, k=1, eligible fraction 1.0.",
+      "filter_representation": "Qenlo corpus scope; replay engines prefiltered canonical eligible rows.",
+      "timing_boundary": "P95 of completed host calls; replay host boundary includes materialized IDs and distances, excluding separately reported preparation.",
+      "sample_and_repetition_count": "Qenlo 192 samples; replay 3 repetitions.",
+      "correctness_oracle": "FP64 oracle recall 1.0 for every row.",
+      "memory_scope": "Do not compare replay engine allocation values with Qenlo-owned accelerator bytes as one efficiency metric.",
+      "qualification_status": "Qualified descriptive comparison.",
+      "limitations": "Different runtime APIs and timing boundaries make this a scoped latency comparison, not a universal engine ranking."
+    },
+    {
+      "claim_id": "D768-003",
+      "exact_claim": "Corrected d5 P95 completed-call latency is Qenlo CPU 28.599 ms, Qenlo WGPU 0.896 ms, FAISS Flat 3.055 ms, NumPy 6.202 ms, Torch CPU 2.936 ms, and Torch CUDA 0.384 ms.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv", "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d5-r100000-d768-b8-k64-f01/"],
+      "code_or_archive_revision": "current source bundle bb195fedb6519c26598c6c103e7e182982c2eddd0a06d9c2cf54eb5cb5ceeb19",
+      "hardware_software_environment": "RTX 4090/Vulkan host captured in environment.txt.",
+      "dataset_provenance": "synthetic-uniform-v1, N=100000, D=768, 10% corpus eligibility.",
+      "N_dimension_batch_k_eligible_fraction": "100000, 768, B=8, k=64, eligible fraction 0.1.",
+      "filter_representation": "Qenlo cached gpu-rows; external replay engines use prefiltered canonical eligible rows.",
+      "timing_boundary": "Completed host-call P95; replay includes host-visible materialization and excludes separate preparation.",
+      "sample_and_repetition_count": "Qenlo 24 samples; replay 3 repetitions.",
+      "correctness_oracle": "FP64 oracle recall 1.0 for every row.",
+      "memory_scope": "Attributable Qenlo accelerator allocation is reported separately from process RSS and external-engine allocations.",
+      "qualification_status": "Qualified descriptive comparison.",
+      "limitations": "Batch eight and k=64 are one operating point; no general batch scaling law is established."
+    },
+    {
+      "claim_id": "RESOURCE-001",
+      "exact_claim": "For corrected d5 WGPU, Qenlo-owned accelerator allocation is 314.909 MB, process RSS high-water mark is 1.174577 GB, device scoring is 0.072 ms, selection is 0.613 ms, and backend execution is 0.826 ms; corrected d4 allocation is 311.181 MB and RSS is 1.203675 GB.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv", "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-gpu/samples.csv", "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-gpu/samples.csv"],
+      "code_or_archive_revision": "current source bundle bb195fedb6519c26598c6c103e7e182982c2eddd0a06d9c2cf54eb5cb5ceeb19",
+      "hardware_software_environment": "RTX 4090 Vulkan host.",
+      "dataset_provenance": "Corrected d4/d5 synthetic-uniform-v1 cells.",
+      "N_dimension_batch_k_eligible_fraction": "d4 100000/768/B1/k1/100%; d5 100000/768/B8/k64/10%.",
+      "filter_representation": "Cached gpu-rows preparation.",
+      "timing_boundary": "Phase fields are host-observed diagnostics; completed-call P95 remains the end-to-end boundary.",
+      "sample_and_repetition_count": "Phase medians are reduced from raw samples; d4 192 and d5 24 completed-call samples.",
+      "correctness_oracle": "Recall 1.0 and zero filter violations.",
+      "memory_scope": "Qenlo-owned allocation is not physical VRAM; process RSS is process-wide high-water mark. They must not be combined.",
+      "qualification_status": "Qualified resource observation.",
+      "limitations": "Phase timings are host-observed and may overlap queue, dispatch, synchronization, and mapping costs."
+    },
+    {
+      "claim_id": "LIFE-001",
+      "exact_claim": "On the 10000 x 384 unfiltered RTX 4090 WGPU lifecycle run, add-one, delete-one, add-batch, and delete-batch first-search P95 values are 0.598, 0.631, 0.740, and 0.819 ms respectively; mutation cells rebuilt zero times, deletion checks passed, reopen took 52.169 ms, and the separate first search after reopen took 101.296 ms with one rebuilt resident state.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/summary.txt", "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/lifecycle.csv", "crates/qenlo-bench/src/main.rs:451-467"],
+      "code_or_archive_revision": "current experimental candidate source bundle 730c050065e6786972a7be4f9bcb619168becdc943ce1122d1583c61f66409e3",
+      "hardware_software_environment": "RTX 4090/Vulkan host; lifecycle format qenlo-lifecycle-v1.",
+      "dataset_provenance": "Unfiltered synthetic lifecycle corpus; N=10000, D=384.",
+      "N_dimension_batch_k_eligible_fraction": "N=10000, D=384, mutation write batch=8, search B=1, k=10, eligible fraction 1.0.",
+      "filter_representation": "Unfiltered.",
+      "timing_boundary": "Mutation rows report mutation_ns and a separate first_search_ns. The harness records reopen_ns for Collection::open and then starts a new timer for search; the matrix lifecycle:reopen P95 is the search-only 101.296 ms field, while 52.169 ms is the separate open cost.",
+      "sample_and_repetition_count": "3 repetitions for each mutation phase; one reopen observation.",
+      "correctness_oracle": "10-result shape and immediate-deletion checks; deleted_id_absent=true in all delete rows.",
+      "memory_scope": "Per-row allocation bytes are diagnostic; host RSS is explicitly unavailable in lifecycle summary.",
+      "qualification_status": "Qualified lifecycle observation.",
+      "limitations": "A single host and one unfiltered workload; mutation latency is separate from first-search latency."
+    },
+    {
+      "claim_id": "SELECTOR-001",
+      "exact_claim": "The lane-minimum selector candidate wins 5 and loses 7 of 12 qualified frozen-baseline pairs; it is rejected as an unconditional replacement, while the durable/local implementation retains the simpler full-rescan selector.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv", "research/artifacts/runpod-small-2026-09-05/report/performance-report.md", "research/artifacts/runpod-small-2026-09-05/current-source.tar.gz", "research/artifacts/runpod-small-2026-09-05/baseline-source.tar.gz", "crates/qenlo/src/gpu_exact.wgsl"],
+      "code_or_archive_revision": "Baseline f37e... uses full-rescan; candidate 730c... rows use lane-minimum source; current-source archive bb195... contains candidate WGSL, whereas the audited local worktree file is byte-identical to baseline WGSL.",
+      "hardware_software_environment": "RTX 2000 Ada pilot, A40 hosts, RTX 4090 reference/deep hosts; each pair is matched by configuration and workload.",
+      "dataset_provenance": "Synthetic campaign cells across c1/c4/c5, p1, d1, and d3; no pooling of different workloads beyond the explicit pair count.",
+      "N_dimension_batch_k_eligible_fraction": "Per pair; the matrix and report retain N, D, B, k, and eligibility.",
+      "filter_representation": "Per paired workload; baseline and candidate use matched campaign definitions.",
+      "timing_boundary": "Batch-call-completion P95.",
+      "sample_and_repetition_count": "Per row as retained in sample_count; report uses lower medians of per-run percentiles.",
+      "correctness_oracle": "Only completed rows meeting recall gate are paired.",
+      "memory_scope": "No memory efficiency claim is made from this latency ratio.",
+      "qualification_status": "Qualified negative result; ratio is baseline P95 divided by candidate P95.",
+      "limitations": "Post-hoc matched pair count with limited repetitions; no statistical significance claim."
+    },
+    {
+      "claim_id": "CHROMA-001",
+      "exact_claim": "Qenlo WGPU is faster than Chroma in seven qualified paired cells, with observed Chroma/Qenlo P95 ratios from 3.700x to 3233.136x; three Chroma rows fail the predeclared recall gate.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv", "research/artifacts/runpod-small-2026-09-05/report/performance-report.md", "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/*/chroma/summary.json", "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/*/chroma-ef512/summary.json"],
+      "code_or_archive_revision": "Chroma replay script scripts/chroma_replay.py; source bundle 730c... for native paired rows.",
+      "hardware_software_environment": "RTX 4090 Runpod Vulkan host; Chroma replay executes through Python collection/query API.",
+      "dataset_provenance": "Synthetic campaign workloads plus one retained real-r100000-d384 fixture; per workload source metadata retained.",
+      "N_dimension_batch_k_eligible_fraction": "Seven qualified pairs span c1, c2, c4, c5, d1, d3, and real-r100000-d384; exact values are in matrix rows.",
+      "filter_representation": "Qenlo rows use native corpus or selected-user-population scope; Chroma rows use the Python replay's collection query path.",
+      "timing_boundary": "Qenlo batch-call-completion; Chroma python-collection-query-including-bindings-serialization.",
+      "sample_and_repetition_count": "3 repetitions in each completed replay row.",
+      "correctness_oracle": "FP64 truth and predeclared Chroma recall gate; failed gates: c3 at ef=128, c6 at ef=128, d2 at ef=512.",
+      "memory_scope": "No cross-engine memory comparison.",
+      "qualification_status": "Scoped paired result; never a universal fastest-database claim.",
+      "limitations": "Different ANN/persistence/filter/API boundaries; Chroma is approximate HNSW and three attempted rows are disqualified before held-out timing."
+    },
+    {
+      "claim_id": "FAIL-001",
+      "exact_claim": "The campaign preserves four pre-fix 100000 x 768 failures, two initial invalid-harness rows, three Chroma recall-gate failures, and 42 unavailable primary-configuration rows.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv", "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-invalid-harness/", "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-retry/", "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/", "research/artifacts/runpod-small-2026-09-05/common/*/outcome.json"],
+      "code_or_archive_revision": "Invalid harness and pre-fix archives use current revision b22d... with source bundle 730c...; corrected archive uses current source bundle bb195....",
+      "hardware_software_environment": "Runpod NVIDIA configurations; unavailable outcomes contain the exact pod-create command and offer metadata.",
+      "dataset_provenance": "d4/d5 synthetic-uniform-v1 for 768 failures; Chroma failures use their labeled campaign workloads.",
+      "N_dimension_batch_k_eligible_fraction": "d4/d5 N=100000, D=768; all other failure details remain in matrix failure_detail.",
+      "filter_representation": "Per matrix row.",
+      "timing_boundary": "No latency promoted for failed or invalid rows.",
+      "sample_and_repetition_count": "No completed samples for invalid/failed rows; Chroma gate failures have zero held-out timings.",
+      "correctness_oracle": "Failure or recall-gate diagnostics are retained verbatim.",
+      "memory_scope": "Pre-fix d4/d5 failures report collection storage admission rejection rather than measured memory consumption.",
+      "qualification_status": "Excluded from headline timing claims but retained as evidence.",
+      "limitations": "Unavailable offers are evidence of campaign coverage and availability at run time, not hardware performance."
+    },
+    {
+      "claim_id": "OPS-001",
+      "exact_claim": "The final captured Runpod account daily spend is 0.9400778694252952 USD, no campaign pods remain, and the campaign retained no volume. The ledger began at 0.9096019977878312 USD; the observed account-spend delta is 0.030475871637464 USD and is not a definitive campaign-only cost because billing attribution and lag are not isolated.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/campaign-summary.json", "research/artifacts/runpod-small-2026-09-05/ledger.jsonl", "research/artifacts/runpod-small-2026-09-05/billing-pods-final.jsonl"],
+      "code_or_archive_revision": "Campaign controller ledger; finished UTC 2026-09-05T17:06:04.9915979Z.",
+      "hardware_software_environment": "Runpod API/controller; primary and deep configurations recorded with quoted rates.",
+      "dataset_provenance": "Campaign-wide operational record.",
+      "N_dimension_batch_k_eligible_fraction": "Not applicable.",
+      "filter_representation": "Not applicable.",
+      "timing_boundary": "Billing and deletion event timestamps, not query timing; spend fields are account daily spend captures.",
+      "sample_and_repetition_count": "156 billing captures; 10 pod_created and 10 pod_deleted_verified ledger events.",
+      "correctness_oracle": "Zero remaining campaign pods verified by controller/API record.",
+      "memory_scope": "No retained campaign volume; pod storage scope is operational only.",
+      "qualification_status": "Verified operational accounting; billing lag is explicitly possible.",
+      "limitations": "Do not call 0.9400778694252952 USD the campaign-only cost. It is the final known account daily spend capture."
+    },
+    {
+      "claim_id": "UNQUAL-001",
+      "exact_claim": "The only completed but unqualified matrix row is USearch on d2-r25000-d384-b64-k10-f1: recall_at_k=0.3453125 and P95=83.313304 ms; it is excluded from qualified latency comparisons.",
+      "source_artifact": ["research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv", "research/artifacts/runpod-small-2026-09-05/report/performance-matrix.json", "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d2-r25000-d384-b64-k10-f1/usearch/summary.json"],
+      "code_or_archive_revision": "source bundle 730c050065e6786972a7be4f9bcb619168becdc943ce1122d1583c61f66409e3",
+      "hardware_software_environment": "RTX 4090 secure Runpod deep host; USearch replay.",
+      "dataset_provenance": "d2 synthetic workload, N=25000, D=384.",
+      "N_dimension_batch_k_eligible_fraction": "25000, 384, B=64, k=10, eligible fraction 1.0.",
+      "filter_representation": "corpus scope.",
+      "timing_boundary": "batch-call-completion.",
+      "sample_and_repetition_count": "3 completed samples/repetitions.",
+      "correctness_oracle": "Recall gate failed: recall_at_k=0.3453125.",
+      "memory_scope": "Peak process RSS 144592896 bytes; no Qenlo-owned accelerator allocation.",
+      "qualification_status": "Completed but unqualified; not used in qualified engine comparison.",
+      "limitations": "Its latency remains visible as a negative correctness result; it must not be presented as an exact qualified USearch baseline."
+    }
+  ],
+  "configuration_accounting": {
+    "manifest_entries": 15,
+    "primary_target": 10,
+    "primary_target_interpretation": "The first ten entries in research/runpod/small-collection-configurations.json are the primary offer target; deep/reference/retry/fix entries are follow-up configurations. The matrix keeps all follow-up rows visible.",
+    "pod_created_events": 10,
+    "pod_deleted_verified_events": 10,
+    "unique_configurations_with_pod_created_event": 8,
+    "caution": "The phrase ten configurations attempted refers to the campaign's primary target and controller attempts, not ten distinct successful hardware measurements; the 15-entry manifest includes follow-up and retry records."
+  },
+  "raw_discrepancies": [
+    {
+      "issue": "Source archive role versus durable worktree selector",
+      "observation": "current-source.tar.gz (bb195...) contains the lane-minimum WGSL candidate, baseline-source.tar.gz (f37e...) contains the simpler full-rescan selector, and the audited local crates/qenlo/src/gpu_exact.wgsl is byte-identical to baseline WGSL.",
+      "resolution": "Treat lane-minimum rows as a frozen experimental candidate comparison and describe the durable implementation as the simpler selector. Do not relabel candidate rows as current durable behavior.",
+      "source": "Source archive comparison and direct WGSL byte hashes above."
+    },
+    {
+      "issue": "Replay filter timing boundary",
+      "observation": "benchmark_small_vectors.py and replay rows use prefiltered canonical eligible vectors; build_and_filter_prepare_ns is separate.",
+      "resolution": "Do not claim external rows include the same predicate evaluation work as native corpus-scope rows. State each timing boundary explicitly.",
+      "source": "scripts/benchmark_small_vectors.py, matrix filter_scope/timing_scope fields, corrected raw configuration files."
+    },
+    {
+      "issue": "Lifecycle P95 semantics",
+      "observation": "lifecycle matrix P95 fields are first-search P95; mutation_p95_ns is a separate mutation field. The harness times Collection::open as reopen_ns, then starts a new timer for the first search, so reopen_first_search_ns is search-only despite the broad summary timing_scope string.",
+      "resolution": "Report mutation, open, and first-search costs separately. Do not add reopen_ns and reopen_first_search_ns into an invented composite unless explicitly recomputed from a raw timer.",
+      "source": "crates/qenlo-bench/src/main.rs:451-467, lifecycle-current-gpu/summary.txt, lifecycle.csv, scripts/analyze_small_campaign.py."
+    },
+    {
+      "issue": "Spend attribution",
+      "observation": "campaign-summary.json stores startedSpendUsd=0.9096019977878312 and finalKnownSpendUsd=0.9400778694252952, both daily account captures; the file also says billingDelayPossible=true.",
+      "resolution": "Call finalKnownSpendUsd account daily spend, not campaign-only cost. The observed delta is descriptive and may be affected by delayed billing or unrelated account usage.",
+      "source": "campaign-summary.json, ledger.jsonl billing_capture records."
+    }
+  ],
+  "untested_or_unqualified": [
+    "No current Android or iOS device result is established by this campaign.",
+    "No Metal or DX12 cloud result is established by this campaign; NVIDIA Vulkan hosts dominate.",
+    "No universal routing threshold or learned router is established.",
+    "No statistical significance claim is supported for three-repetition replay rows.",
+    "No cross-engine memory-efficiency score is valid from the retained fields.",
+    "No scale law or product-wide fastest-database claim is established."
+  ]
+}

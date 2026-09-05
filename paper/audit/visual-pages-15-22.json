@@ -1,0 +1,99 @@
+{
+  "pdf_path": "paper/output/pdf/qenlo-final-research-paper.pdf",
+  "pdf_sha256": "75380B13DB339F0C6C86FD4104C014D4EEA68C8C9007C9613CB10105E562B96D",
+  "render_directory": "paper/tmp/final-pages",
+  "inspected_pages": [15, 16, 17, 18, 19, 20, 21, 22],
+  "method": "Each updated PNG was opened individually with the image viewer at high detail and checked visually for page breaks, clipping, table and figure bounds, captions, labels, legends, and readability.",
+  "pages": [
+    {
+      "page": 15,
+      "image": "paper/tmp/final-pages/page-15.png",
+      "visual_status": "pass",
+      "content": "Continuation of references [12]-[15].",
+      "tables_figures_captions": "No tables or figures; all reference entries and URLs remain within the text block.",
+      "labels_legends": "Reference numbering, venue text, DOI/URL labels, and page number are visible.",
+      "layout_clipping": "No clipping or overlap observed. The large lower-page whitespace is a valid consequence of the references ending on this page, not a blank page.",
+      "page_breaks": "Clean reference continuation into the appendix on page 16.",
+      "actionable_issues": []
+    },
+    {
+      "page": 16,
+      "image": "paper/tmp/final-pages/page-16.png",
+      "visual_status": "pass",
+      "content": "Appendix A, detailed retained tables; common small-collection native rows and selector comparison.",
+      "tables_figures_captions": "Tables 4 and 5 are fully visible. Table 5 uses compact type but rows, ratios, and caption are readable at rendered resolution.",
+      "labels_legends": "Column headers and configuration/workload labels are visible; no legend is present.",
+      "layout_clipping": "No clipping, collision, or ruled-line truncation observed.",
+      "page_breaks": "Section A.2 and Table 5 end before the footer with ample margin.",
+      "actionable_issues": []
+    },
+    {
+      "page": 17,
+      "image": "paper/tmp/final-pages/page-17.png",
+      "visual_status": "pass",
+      "content": "Appendix tables for real-embedding replay and historical Windows endpoints/localization.",
+      "tables_figures_captions": "Tables 6, 7, and 8 are fully visible with captions above their tables; values and recall columns are readable.",
+      "labels_legends": "Engine, completed-call P95, FP64 recall, eligible, system, compact WGPU P95, and related headers are visible.",
+      "layout_clipping": "No clipping or overlap observed in the three tables.",
+      "page_breaks": "A.4 begins cleanly after Table 6 and Table 8 ends above the footer.",
+      "actionable_issues": []
+    },
+    {
+      "page": 18,
+      "image": "paper/tmp/final-pages/page-18.png",
+      "visual_status": "pass",
+      "content": "Historical eligibility ablation and A6000 distributions.",
+      "tables_figures_captions": "Tables 9, 10, and 11 are complete. The qualification note for cuVS and the unordered top-10 caveat are legible.",
+      "labels_legends": "Preparation, percentile, recall, system, and eligible headers are readable; no legend is present.",
+      "layout_clipping": "No clipped rows, captions, or rules; the last table ends with sufficient margin.",
+      "page_breaks": "A.5/A.6 transitions are clean.",
+      "actionable_issues": []
+    },
+    {
+      "page": 19,
+      "image": "paper/tmp/final-pages/page-19.png",
+      "visual_status": "pass",
+      "content": "Historical Linux library cohort with Figure 12 and Table 12.",
+      "tables_figures_captions": "Figure 12 has visible title, logarithmic y-axis, x-axis, point labels, and caption. Table 12 is complete and its qualification note is visible.",
+      "labels_legends": "The exhaustive/ANN legend and all plotted system labels are readable; axis labels explicitly show P95 latency and recall@10.",
+      "layout_clipping": "No point labels or table columns are clipped; the rightmost LanceDB label stays inside the figure region.",
+      "page_breaks": "Figure caption and Table 12 are separated cleanly.",
+      "actionable_issues": []
+    },
+    {
+      "page": 20,
+      "image": "paper/tmp/final-pages/page-20.png",
+      "visual_status": "pass",
+      "content": "Android aggregate records, the added full Intel Arc aggregate table, and the beginning of claim ledger/provenance.",
+      "tables_figures_captions": "Table 13 (Android) and newly added Table 14 (Intel Arc) are fully visible. The Arc table contains all 21 cells and complete P50/P95/P99 columns; both tables and captions remain readable.",
+      "labels_legends": "Suite/cell/rows/batch/sample, system, percentile, and claim-ledger transition text are visible.",
+      "layout_clipping": "No clipping or overlap observed. The long Arc table fits above the B heading and all rows/rules are present.",
+      "page_breaks": "The B section starts after the Arc table and continues naturally onto page 21.",
+      "actionable_issues": []
+    },
+    {
+      "page": 21,
+      "image": "paper/tmp/final-pages/page-21.png",
+      "visual_status": "pass",
+      "content": "Continuation of claim ledger, source/result archive identities, and the beginning of discrepancies/excluded evidence.",
+      "tables_figures_captions": "Tables 15 and 16 are complete. Source archive hashes, subsection headings, and the opening archive paragraph are visible.",
+      "labels_legends": "Claim/result/artifact headers and archive labels S0/S1/S2/H2 are readable.",
+      "layout_clipping": "No clipped table cells or hashes. The B.1 archive list continues to page 22 without truncation.",
+      "page_breaks": "The claim-ledger prose and B.1 subsection flow coherently from page 20 and continue cleanly to page 22.",
+      "actionable_issues": []
+    },
+    {
+      "page": 22,
+      "image": "paper/tmp/final-pages/page-22.png",
+      "visual_status": "pass",
+      "content": "Continuation of archive identities, discrepancies resolved during authoring, excluded evidence, and reproduction/audit procedure.",
+      "tables_figures_captions": "No tables or figures; all continuation prose and reproduction entry points are visible.",
+      "labels_legends": "B.2, B.3, and B.4 headings plus named scripts and paths are readable.",
+      "layout_clipping": "No clipping, overlap, or broken line wraps observed. The page ends cleanly above the footer.",
+      "page_breaks": "Continuation from page 21 is coherent and the final subsection is fully visible.",
+      "actionable_issues": []
+    }
+  ],
+  "overall_status": "pass",
+  "overall_findings": "All eight updated pages passed visual inspection. The new full Intel Arc table is complete and readable. No clipped labels, unreadable legends, blank pages, broken captions, bad page breaks, or misleading scale annotations were observed."
+}

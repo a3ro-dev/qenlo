@@ -17,6 +17,29 @@ import kotlin.concurrent.write
 /** A validation, lifecycle, storage, or native execution failure. */
 public class QenloException(message: String) : RuntimeException(message)
 
+/** Requested execution policy for collection searches. */
+public enum class ExecutionMode(internal val nativeValue: Int) {
+    CPU(0),
+    AUTOMATIC(1),
+    GPU_REQUIRED(2),
+}
+
+/** Eligibility preparation strategy used by the portable GPU backend. */
+public enum class GpuFilterMode(internal val nativeValue: Int) {
+    CPU_MASK(0),
+    CPU_ELIGIBLE_ROWS(1),
+    GPU_PREDICATE(2),
+}
+
+/** Native execution and allocation settings for a collection. */
+public data class CollectionOptions(
+    public val backend: ExecutionMode = ExecutionMode.CPU,
+    public val gpuFilterMode: GpuFilterMode = GpuFilterMode.GPU_PREDICATE,
+    public val gpuAllocationBudgetBytes: ULong = 512uL * 1024uL * 1024uL,
+) {
+    init { require(gpuAllocationBudgetBytes > 0uL) { "gpu allocation budget must be positive" } }
+}
+
 /** One canonical vector and its filterable metadata. */
 public data class Record(
     public val id: ULong,
@@ -73,9 +96,13 @@ public data class CollectionStats(
 
 private interface QenloNative : Library {
     fun qenlo_collection_new(dimension: Long): Pointer?
+    fun qenlo_collection_new_configured(dimension: Long, backend: Int, gpuFilterMode: Int, gpuAllocationBudgetBytes: Long): Pointer?
     fun qenlo_collection_create(path: String, dimension: Long): Pointer?
+    fun qenlo_collection_create_configured(path: String, dimension: Long, backend: Int, gpuFilterMode: Int, gpuAllocationBudgetBytes: Long): Pointer?
     fun qenlo_collection_open(path: String, dimension: Long): Pointer?
+    fun qenlo_collection_open_configured(path: String, dimension: Long, backend: Int, gpuFilterMode: Int, gpuAllocationBudgetBytes: Long): Pointer?
     fun qenlo_collection_import_qn(path: String, dimension: Long): Pointer?
+    fun qenlo_collection_import_qn_configured(path: String, dimension: Long, backend: Int, gpuFilterMode: Int, gpuAllocationBudgetBytes: Long): Pointer?
     fun qenlo_add(handle: Pointer, id: Long, userId: Long, timestamp: Long, vector: FloatArray, vectorLen: Long): Int
     fun qenlo_add_batch(handle: Pointer, ids: LongArray, userIds: LongArray, timestamps: LongArray, vectors: FloatArray, rows: Long, dimension: Long): Int
     fun qenlo_delete(handle: Pointer, id: Long): Int
@@ -174,24 +201,48 @@ public class QenloCollection private constructor(handle: Pointer?, public val di
     private var handle: Pointer? = handle ?: throw QenloException(lastError())
 
     public companion object {
-        public fun memory(dimension: Int): QenloCollection {
+        public fun memory(dimension: Int, options: CollectionOptions = CollectionOptions()): QenloCollection {
             require(dimension > 0) { "dimension must be positive" }
-            return QenloCollection(NativeApi.value.qenlo_collection_new(dimension.toLong()), dimension)
+            return QenloCollection(
+                NativeApi.value.qenlo_collection_new_configured(
+                    dimension.toLong(), options.backend.nativeValue, options.gpuFilterMode.nativeValue,
+                    options.gpuAllocationBudgetBytes.toLong(),
+                ),
+                dimension,
+            )
         }
 
-        public fun create(path: Path, dimension: Int): QenloCollection {
+        public fun create(path: Path, dimension: Int, options: CollectionOptions = CollectionOptions()): QenloCollection {
             require(dimension > 0) { "dimension must be positive" }
-            return QenloCollection(NativeApi.value.qenlo_collection_create(path.toString(), dimension.toLong()), dimension)
+            return QenloCollection(
+                NativeApi.value.qenlo_collection_create_configured(
+                    path.toString(), dimension.toLong(), options.backend.nativeValue,
+                    options.gpuFilterMode.nativeValue, options.gpuAllocationBudgetBytes.toLong(),
+                ),
+                dimension,
+            )
         }
 
-        public fun open(path: Path, dimension: Int): QenloCollection {
+        public fun open(path: Path, dimension: Int, options: CollectionOptions = CollectionOptions()): QenloCollection {
             require(dimension > 0) { "dimension must be positive" }
-            return QenloCollection(NativeApi.value.qenlo_collection_open(path.toString(), dimension.toLong()), dimension)
+            return QenloCollection(
+                NativeApi.value.qenlo_collection_open_configured(
+                    path.toString(), dimension.toLong(), options.backend.nativeValue,
+                    options.gpuFilterMode.nativeValue, options.gpuAllocationBudgetBytes.toLong(),
+                ),
+                dimension,
+            )
         }
 
-        public fun importQn(path: Path, dimension: Int): QenloCollection {
+        public fun importQn(path: Path, dimension: Int, options: CollectionOptions = CollectionOptions()): QenloCollection {
             require(dimension > 0) { "dimension must be positive" }
-            return QenloCollection(NativeApi.value.qenlo_collection_import_qn(path.toString(), dimension.toLong()), dimension)
+            return QenloCollection(
+                NativeApi.value.qenlo_collection_import_qn_configured(
+                    path.toString(), dimension.toLong(), options.backend.nativeValue,
+                    options.gpuFilterMode.nativeValue, options.gpuAllocationBudgetBytes.toLong(),
+                ),
+                dimension,
+            )
         }
 
         private fun lastError(): String = takeString(NativeApi.value.qenlo_last_error(), false)

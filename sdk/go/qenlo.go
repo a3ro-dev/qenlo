@@ -28,6 +28,38 @@ type Error struct{ Message string }
 
 func (e *Error) Error() string { return e.Message }
 
+type ExecutionMode uint32
+
+const (
+	// CPU requests exhaustive native CPU execution.
+	CPU ExecutionMode = iota
+	// Automatic permits GPU execution and reports any CPU fallback.
+	Automatic
+	// GPURequired rejects construction when the artifact or host cannot provide the portable GPU backend.
+	GPURequired
+)
+
+// GPUFilterMode selects how the portable GPU backend prepares eligibility.
+type GPUFilterMode uint32
+
+const (
+	GPUFilterCPUMask GPUFilterMode = iota
+	GPUFilterCPURows
+	GPUFilterPredicate
+)
+
+// Options configures native execution and its GPU allocation budget.
+type Options struct {
+	Backend                  ExecutionMode
+	GPUFilter                GPUFilterMode
+	GPUAllocationBudgetBytes uint64
+}
+
+// DefaultOptions returns the portable CPU-only configuration.
+func DefaultOptions() Options {
+	return Options{Backend: CPU, GPUFilter: GPUFilterPredicate, GPUAllocationBudgetBytes: 512 * 1024 * 1024}
+}
+
 // Record is one canonical vector and its filterable metadata.
 type Record struct {
 	ID        uint64
@@ -77,7 +109,7 @@ type ExecutionReport struct {
 	BatchSize        int
 }
 
-// SearchResponse contains ordered hits and telemetry from one committed generation.
+// SearchResponse contains ordered hits and an execution report from one committed generation.
 type SearchResponse struct {
 	Results []SearchResult
 	Report  ExecutionReport
@@ -118,42 +150,91 @@ func validateDimension(dimension int) error {
 	return nil
 }
 
+func validateOptions(options Options) (Options, error) {
+	if options.Backend > GPURequired {
+		return Options{}, fmt.Errorf("unknown backend %d", options.Backend)
+	}
+	if options.GPUFilter > GPUFilterPredicate {
+		return Options{}, fmt.Errorf("unknown GPU filter mode %d", options.GPUFilter)
+	}
+	if options.GPUAllocationBudgetBytes == 0 {
+		options.GPUAllocationBudgetBytes = 512 * 1024 * 1024
+	}
+	return options, nil
+}
+
 // New creates an in-memory exact-CPU collection.
 func New(dimension int) (*Collection, error) {
+	return NewWithOptions(dimension, DefaultOptions())
+}
+
+// NewWithOptions creates an in-memory collection with explicit execution controls.
+func NewWithOptions(dimension int, options Options) (*Collection, error) {
 	if err := validateDimension(dimension); err != nil {
 		return nil, err
 	}
-	return newCollection(C.qenlo_collection_new(C.size_t(dimension)), dimension)
+	options, err := validateOptions(options)
+	if err != nil {
+		return nil, err
+	}
+	return newCollection(C.qenlo_collection_new_configured(C.size_t(dimension), C.uint32_t(options.Backend), C.uint32_t(options.GPUFilter), C.uint64_t(options.GPUAllocationBudgetBytes)), dimension)
 }
 
 // Create creates durable state in a new or empty directory.
 func Create(path string, dimension int) (*Collection, error) {
+	return CreateWithOptions(path, dimension, DefaultOptions())
+}
+
+// CreateWithOptions creates durable state with explicit execution controls.
+func CreateWithOptions(path string, dimension int, options Options) (*Collection, error) {
 	if err := validateDimension(dimension); err != nil {
+		return nil, err
+	}
+	options, err := validateOptions(options)
+	if err != nil {
 		return nil, err
 	}
 	value := C.CString(path)
 	defer C.free(unsafe.Pointer(value))
-	return newCollection(C.qenlo_collection_create(value, C.size_t(dimension)), dimension)
+	return newCollection(C.qenlo_collection_create_configured(value, C.size_t(dimension), C.uint32_t(options.Backend), C.uint32_t(options.GPUFilter), C.uint64_t(options.GPUAllocationBudgetBytes)), dimension)
 }
 
 // Open recovers durable state under an exclusive process lock.
 func Open(path string, dimension int) (*Collection, error) {
+	return OpenWithOptions(path, dimension, DefaultOptions())
+}
+
+// OpenWithOptions recovers durable state with explicit execution controls.
+func OpenWithOptions(path string, dimension int, options Options) (*Collection, error) {
 	if err := validateDimension(dimension); err != nil {
+		return nil, err
+	}
+	options, err := validateOptions(options)
+	if err != nil {
 		return nil, err
 	}
 	value := C.CString(path)
 	defer C.free(unsafe.Pointer(value))
-	return newCollection(C.qenlo_collection_open(value, C.size_t(dimension)), dimension)
+	return newCollection(C.qenlo_collection_open_configured(value, C.size_t(dimension), C.uint32_t(options.Backend), C.uint32_t(options.GPUFilter), C.uint64_t(options.GPUAllocationBudgetBytes)), dimension)
 }
 
 // ImportQN imports a checksummed .qn snapshot into a mutable in-memory collection.
 func ImportQN(path string, dimension int) (*Collection, error) {
+	return ImportQNWithOptions(path, dimension, DefaultOptions())
+}
+
+// ImportQNWithOptions imports a snapshot with explicit execution controls.
+func ImportQNWithOptions(path string, dimension int, options Options) (*Collection, error) {
 	if err := validateDimension(dimension); err != nil {
+		return nil, err
+	}
+	options, err := validateOptions(options)
+	if err != nil {
 		return nil, err
 	}
 	value := C.CString(path)
 	defer C.free(unsafe.Pointer(value))
-	return newCollection(C.qenlo_collection_import_qn(value, C.size_t(dimension)), dimension)
+	return newCollection(C.qenlo_collection_import_qn_configured(value, C.size_t(dimension), C.uint32_t(options.Backend), C.uint32_t(options.GPUFilter), C.uint64_t(options.GPUAllocationBudgetBytes)), dimension)
 }
 
 func nativeError() error {

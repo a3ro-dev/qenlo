@@ -1,0 +1,13 @@
+stage	cell	engine	status	exit_code
+common	c1-r1000-d128-b1-f1	current-gpu	completed	0
+baseline	c1-r1000-d128-b1-f1	baseline-cpu	completed	0
+baseline	c1-r1000-d128-b1-f1	baseline-gpu	completed	0
+common	c2-r1000-d384-b16-f001	current-gpu	completed	0
+common	c3-r10000-d128-b16-f1	current-gpu	completed	0
+common	c4-r10000-d384-b1-f001	current-gpu	completed	0
+baseline	c4-r10000-d384-b1-f001	baseline-cpu	completed	0
+baseline	c4-r10000-d384-b1-f001	baseline-gpu	completed	0
+common	c5-r100000-d128-b1-f001	current-gpu	completed	0
+baseline	c5-r100000-d128-b1-f001	baseline-cpu	completed	0
+baseline	c5-r100000-d128-b1-f001	baseline-gpu	completed	0
+common	c6-r100000-d384-b16-f1	current-gpu	completed	0

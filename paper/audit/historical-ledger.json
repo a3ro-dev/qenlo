@@ -1,0 +1,398 @@
+{
+  "schema": "qenlo-historical-evidence-ledger-v1",
+  "audit_date": "2026-09-05",
+  "scope": "Historical manuscript sources and retained evidence cohorts before the 2026-09-05 small-collection campaign.",
+  "working_head": {
+    "commit": "b22d3b5033cfb578508a4cb76a8022dd3e3e258b",
+    "message": "Optimize selective exact CPU search",
+    "paper_files_at_head": ["paper/paper.tex", "paper/appendix.tex", "paper/references.bib", "paper/README.md", "paper/REPRODUCE.md"],
+    "note": "The working tree currently contains later, uncommitted paper and benchmark edits. Archive hashes and per-artifact Git revisions below identify historical measurements; current source checkout must not be used as a substitute."
+  },
+  "historical_manuscripts": [
+    {"commit": "1d121151e4159eaa797e0ffae6987a2c830dbc95", "date": "2026-09-02", "title": "When Exact Search Wins---and When It Does Not: Evidence from Predicate-Aware Vector Retrieval", "scope": "Initial synthesis of Windows crossover, Android, A6000 synthetic/real, and external-library evidence."},
+    {"commit": "3faf32e9308e4351f02d017ba16bc12ee479cb8b", "date": "2026-09-02", "title": "Eligible Work as a Routing Variable: Measuring CPU/GPU Exhaustive Crossovers in Filtered Vector Search", "scope": "Routing paper retaining non-poolable native, Android, Intel Arc, A6000, and library cohorts."},
+    {"commit": "f10f71acb67f72cadacf8a891b9db53312d54f4e", "date": "2026-09-04", "title": "Routing Filtered Vector Search Across CPU and Portable GPU: Completed-Call Crossovers and Eligibility Compilation", "scope": "Adds EligibilityPlan and RTX 4090 materialization ablation; explicitly labels exploratory cohorts and routing-regret limits."}
+  ],
+  "claims": [
+    {
+      "id": "windows_dense_endpoint",
+      "exact_claim": "On one Windows RTX 4050 host and 100k x 384 AG News rows, all-row completed-call P95 was 16.6567 ms for Qenlo CPU, 3.2404 ms for WGPU predicate, 4.2428 ms for WGPU compact rows, and 4.4591 ms for WGPU mask.",
+      "source_artifact": ["benchmarks/2026-08-28/real/cpu-384-all-v4", "benchmarks/2026-08-28/real/gpu-predicate-384-all-v5", "benchmarks/2026-08-28/real/gpu-rows-384-all-v4", "benchmarks/2026-08-28/real/gpu-mask-384-all-v4", "docs/results-2026-08-28.md"],
+      "source_revision_or_archive_hash": {"per_cell_git_revision": {"cpu": "4ae9f1d134dc50ff91685c9eca093e5b290275d0", "gpu": "f1ccc4de6aafb22ec54aafef37d93ec876f6d3d0"}, "dataset_sha256": "8f686ab3661ce0caddda43a4c1bf8f1db39bee655d779edc1ffdfe38a16d505d"},
+      "hardware_software": "Windows 11; Intel Core i5-13420H, 12 logical processors, 16.87 GiB RAM; NVIDIA RTX 4050 Laptop, 6141 MiB, driver 616.56; Rust 1.98 release, clang-cl, wgpu DX12.",
+      "dataset_provenance": "DTU AG News all-MiniLM-L12-v2 embeddings; 100000 corpus rows x 384 FP32; corpus/tuning/evaluation ranges disjoint; synthetic independent metadata; source record benchmarks/2026-08-28/real/dataset/ag-news-384.json.",
+      "parameters": {"N": 100000, "D": 384, "batch": 1, "k": 10, "eligible_fraction": 1.0, "warmups": 200, "repetitions": 5, "query_calls": 25000},
+      "timing_boundary": "Batch-call completion from host search invocation until ordered IDs/distances are available; includes predicate, transfer, dispatch, synchronization, readback, and merge; excludes build/load/oracle.",
+      "samples_repetitions": "5 runs x 5000 held-out queries per run; report is lower-middle run P95.",
+      "correctness_oracle": "Independent FP64 exhaustive oracle; evaluation recall 0.99998 for exact native paths; zero filter violations; USearch/Chroma are separate approximate rows.",
+      "memory_scope": "Vector/gpu budgets in config; host RSS and allocator unavailable in this cohort; owned accelerator scope is not physical VRAM.",
+      "qualification": "Qualified within this hardware/revision/workload; exhaustive paths are exhaustive but not numerically identical to FP64 at all boundaries.",
+      "limitations": "One laptop, one OS/API, D=384, B=1, all rows; the dense WGPU predicate/rows/mask rows share `f1ccc4d...`, while the CPU dense row records `4ae9f1d...`; Chroma boundary differs and ANN rows are not an exact comparison; working tree was dirty.",
+      "recommendation": "Retain as Windows dense representation/crossover context; never relabel as new-campaign or universal database ranking."
+    },
+    {
+      "id": "windows_selective_endpoint",
+      "exact_claim": "On the same Windows corpus at E=1000 (1% eligible), CPU P95 was 0.2304 ms, compact-row WGPU 0.6766 ms, and shader-predicate WGPU 2.8832 ms; all had recall 1.0.",
+      "source_artifact": ["benchmarks/2026-08-28/real/cpu-384-onepct", "benchmarks/2026-08-28/real/gpu-rows-384-onepct", "benchmarks/2026-08-28/real/gpu-predicate-384-onepct-v4"],
+      "source_revision_or_archive_hash": {"git_revision": {"cpu_rows": "78e3947f48baf17ce90c3b4194a4fed3f0c6d81d", "gpu_predicate": "f1ccc4de6aafb22ec54aafef37d93ec876f6d3d0"}, "dataset_crc32": "beb3c848"},
+      "hardware_software": "Windows 11 / Core i5-13420H / RTX 4050 laptop / DX12; Rust release build.",
+      "dataset_provenance": "Same DTU AG News 100k x 384 source and synthetic independent metadata as dense endpoint; filter user_id=0 and timestamp range -50000..-49000.",
+      "parameters": {"N": 100000, "D": 384, "batch": 1, "k": 10, "eligible_count": 1000, "eligible_fraction": 0.01, "warmups": 200, "repetitions": 5},
+      "timing_boundary": "Completed host batch call; compact rows include predicate traversal/materialization and GPU transfer.",
+      "samples_repetitions": "5 runs x 5000 evaluation calls; lower-middle P95.",
+      "correctness_oracle": "Independent FP64 oracle; recall 1.0; zero filter violations.",
+      "memory_scope": "Host RSS/allocator unavailable; config vector budget is admission scope only.",
+      "qualification": "Qualified exact/exhaustive result within the cell.",
+      "limitations": "Selective filter is one synthetic metadata distribution; no B>1; the CPU/compact-row sparse rows record `78e3947...`, while shader-predicate records `f1ccc4d...`; compact-row and predicate representations differ in work.",
+      "recommendation": "Use to support selectivity and representation dependence; do not combine with 100k dense P95 into a pooled effect."
+    },
+    {
+      "id": "windows_native_crossover",
+      "exact_claim": "The post-hoc RTX 4050 compact-row sweep brackets a CPU/WGPU winner reversal between E=2000 and E=3000: CPU/WGPU P95 ratios are 0.8199, 1.1742, 1.2392, 1.2309, 1.1625, and 1.0792 for E=2k,3k,4k,6k,8k,10k.",
+      "source_artifact": ["research/data/processed/native_crossover_summary.csv", "research/data/raw/2026-09-02-native-crossover/cpu-e{2000,3000,4000,6000,8000,10000}", "research/data/raw/2026-09-02-native-crossover/gpu-rows-e{2000,3000,4000,6000,8000,10000}"],
+      "source_revision_or_archive_hash": {"all_cell_git_revision": "3e2a4a9bd82e130192907fc29eee6321269fb374", "processed_csv_sha256": "not recomputed in this audit; source is committed/retained CSV"},
+      "hardware_software": "Windows x86-64 RTX 4050 host; native Rust/WGPU DX12 path; per-cell config records platform and dirty-worktree status.",
+      "dataset_provenance": "Same 100k x 384 AG News source, synthetic independent metadata, disjoint tuning/evaluation ranges.",
+      "parameters": {"N": 100000, "D": 384, "batch": 1, "k": 10, "eligible_counts": [2000,3000,4000,6000,8000,10000], "warmups": 200, "repetitions": 5},
+      "timing_boundary": "Completed-call P95; baseline compact-row implementation counts predicate and then materializes row IDs inside the timed call.",
+      "samples_repetitions": "5 runs per engine/cell, 5000 held-out queries per run; 25000 calls per cell.",
+      "correctness_oracle": "Independent FP64 oracle; all six rows recall 1.0.",
+      "memory_scope": "No portable host memory measurement in config.",
+      "qualification": "Descriptive post-hoc crossover, not fitted law or universal threshold.",
+      "limitations": "Single hardware/revision/D/batch; sweep selected after endpoints; sequential cloud/laptop effects and dirty source; no confidence interval for crossover location.",
+      "recommendation": "Retain as central historical evidence for interaction among E, representation, and device; label bracket and revision explicitly."
+    },
+    {
+      "id": "static_router_regret",
+      "exact_claim": "Applying the shipped 4096-row static rule counterfactually to the six crossover cells misroutes E=3000 and E=4000, with relative P95 regret 17.4239% and 23.9173%; it selects the measured fastest route in the other four cells.",
+      "source_artifact": ["research/data/processed/static_router_regret.csv", "research/scripts/analyze_results.py", "paper/figures/routing_regret.pdf"],
+      "source_revision_or_archive_hash": {"derived_from": "native_crossover_summary.csv", "figure_sha256": "e6ed87539e69b15339b6012220a5dfa3bdec9149939698de0be6d552922a58a0"},
+      "hardware_software": "Same RTX 4050 Windows cohort as native crossover.",
+      "dataset_provenance": "Same 100k x 384 AG News and predicate cells.",
+      "parameters": {"E": [2000,3000,4000,6000,8000,10000], "policy": "CPU if E<4096 else compact-row WGPU"},
+      "timing_boundary": "Cell-level P95 only; policy is applied after observing measured cell results; no per-query paired route trace.",
+      "samples_repetitions": "Inherited five-run cells.",
+      "correctness_oracle": "Inherited recall 1.0 exhaustive cells.",
+      "memory_scope": "Not measured.",
+      "qualification": "Post-hoc counterfactual analysis; not a calibrated-router evaluation.",
+      "limitations": "Only two misroutes in six points; no held-out policy; no uncertainty interval; absolute regret is descriptive.",
+      "recommendation": "Retain as negative evidence against universal thresholds; do not claim routing improvement."
+    },
+    {
+      "id": "eligibility_materialization_ablation",
+      "exact_claim": "On a separate RTX 4090/Vulkan cohort, one-pass and cached eligibility preparation reduced median run-level P95 versus legacy two-pass at E=1k,4k,6k,100k; all rows retained oracle recall 1.0 at sparse E and 0.99998 at E=100k.",
+      "source_artifact": ["research/data/processed/eligibility_ablation_summary.csv", "research/artifacts/qenlo-phase1-eligibility-2026-09-04.tar.gz", "research/scripts/analyze_results.py", "paper/figures/eligibility_ablation.pdf"],
+      "source_revision_or_archive_hash": {"archive_sha256": "26e0ccc057c59c0fb4687f8d85a923e88b7bb25257e4e551e22cffe13c1b821f", "figure_sha256": "5f9a629b65a0eb50422d91a2d206f17303febb8044b72cac0db2283c9f547506"},
+      "hardware_software": "RunPod secure cloud; AMD Ryzen 9 7950X, RTX 4090, NVIDIA driver 570.211.01, Vulkan; exact environment in archive.",
+      "dataset_provenance": "Retained 100k x 384 AG News source; same query/filter semantics as native cohort.",
+      "parameters": {"N": 100000, "D": 384, "batch": 1, "k": 10, "eligible_counts": [1000,4000,6000,100000], "warmups": 200, "repetitions": 5, "evaluation_calls_per_run": 5000},
+      "timing_boundary": "Completed-call host latency including eligibility preparation, transfer, execution, synchronization and result completion; build/load excluded.",
+      "samples_repetitions": "5 sequential complete runs and 25000 calls per mode/cell.",
+      "correctness_oracle": "Independent FP64 oracle plus property tests for plan equivalence and stale-plan rejection.",
+      "memory_scope": "Archive contains environment/diagnostics; no cross-scope efficiency score.",
+      "qualification": "Qualified implementation ablation; no universal speedup claim.",
+      "limitations": "Modes run sequentially, not interleaved; no confidence intervals; same device/data only; cached route changes state and is not equivalent to uncached policy.",
+      "recommendation": "Retain to explain eligibility preparation cost and generation-bound derived state; separate from RTX 4050 crossover and new 100k x 768 supplement."
+    },
+    {
+      "id": "linux_library_context",
+      "exact_claim": "On one Linux RunPod 100k x 384 replay, Qenlo CPU P95 was 12.901 ms, FAISS Flat 10.217 ms, USearch 5.093 ms, FAISS HNSW 1.494 ms, Chroma HNSW 3.777 ms, Milvus Lite 76.229 ms, and LanceDB Flat 242.256 ms; recall ranged 0.9914--1.0.",
+      "source_artifact": ["benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/*", "research/data/processed/linux_library_summary.csv", "benchmarks/runpod/2026-09-02-bb51987/README.md"],
+      "source_revision_or_archive_hash": {"repo_revision": "bb519873c00128e1fec93836d6f55a69ce418b57", "archive_sha256": "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"},
+      "hardware_software": "RunPod RTX 3070 pod; image runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404; Linux x86-64 AMD EPYC 7B12 host; GPU Vulkan unavailable, so Qenlo GPU has no timing.",
+      "dataset_provenance": "fancyzhx/ag_news embeddings, 100000 corpus + 100 tuning + 500 evaluation; prepared qnb SHA256 906ee4134368ce50691a2a664844d55250c33ab721c7708a6816b9caf1abe4e2.",
+      "parameters": {"N": 100000, "D": 384, "batch": 1, "k": 10, "eligible_fraction": 1.0, "warmups": 50, "repetitions": 3, "evaluation_calls": 500},
+      "timing_boundary": "Per-library completed call as defined by each replay; host API/binding/storage overhead included in external rows.",
+      "samples_repetitions": "3 repetitions x 500 evaluation calls per system; 1500 samples in processed summary.",
+      "correctness_oracle": "Independent benchmark truth; exact rows recall 1.0, ANN rows 0.9914--0.9988 and qualified against configured target.",
+      "memory_scope": "No comparable memory metric; each system has its own storage/build footprint.",
+      "qualification": "Contextual cross-library comparison only; not product-equivalent and no GPU Qenlo measurement.",
+      "limitations": "Different APIs, persistence, filtering, ANN algorithms, build times, and binding boundaries; Qdrant excluded because local mode switches to exact above 20k; Vulkan failure is retained.",
+      "recommendation": "Retain as scoped ecosystem context and negative evidence against universal fastest-database claims; do not pool latency with native Rust/WGPU cells."
+    },
+    {
+      "id": "android_mali_device_lab",
+      "exact_claim": "Author-supplied Android 16/API 36 Mali-G615 results report recall@10=1.0 and no fallback in all 21 cells; at 100k x 384 batch 1 soak, CPU P95 27.019 ms and WGPU exact P95 17.678 ms, while batch-8 WGPU P95 11.131 ms.",
+      "source_artifact": ["research/data/processed/android_device_lab.csv", "research/data/raw/2026-09-02-android/PROVENANCE.md", "docs/device-lab.md", "paper/figures/android_matched.pdf"],
+      "source_revision_or_archive_hash": {"run_ids": ["1788360526431-12061", "1788360541413-12061", "1788360620387-12061"], "figure_sha256": "4a936b7ff297dc465ee2a46605b559ad4d73b8ef8862106f2b3db07d628a9c08"},
+      "hardware_software": "Android 16/API 36, MediaTek MT6897 CPU, Mali-G615 MC6 GPU, Vulkan, app 0.1.0, android-arm64.",
+      "dataset_provenance": "Deterministic device-lab clustered corpus; 10k/100k x 384; author-supplied aggregates, no raw calls.",
+      "parameters": {"N": [10000,100000], "D": 384, "batch": [1,8], "k": 10, "samples_per_cell": [16,64,512], "eligible_fraction": "dense and selective cells; varies by cell"},
+      "timing_boundary": "Device-lab host-observed search latency; transfer/allocation/dispatch diagnostics reported; construction outside query timing.",
+      "samples_repetitions": "Quick 16, full 64, soak 512 reported samples/cell; aggregate-only.",
+      "correctness_oracle": "Reported independent float64 truth and recall@10=1.0 in all cells; no raw oracle files retained.",
+      "memory_scope": "Allocation/upload/readback fields present; power source null and thermal_state string 0 are not interpreted.",
+      "qualification": "Qualified as user-supplied platform context, not independently rerun.",
+      "limitations": "Aggregate-only, one device, no power/thermal semantics, no 1M x 768 gate, deterministic clustered corpus; Android evidence cannot be regenerated from raw calls.",
+      "recommendation": "Retain explicitly as device-lab evidence; supports platform-specific direction only, not inference from NVIDIA/cloud results."
+    },
+    {
+      "id": "intel_arc_device_lab",
+      "exact_claim": "On one Intel Arc Vulkan device-lab submission, all 21 cells report recall@10=1.0/no fallback; 100k x 384 soak exact WGPU P95 was 4.444 ms versus CPU 16.486 ms, while IVF-Flat was 2.704 ms.",
+      "source_artifact": ["benchmarks/2026-08-31/device-lab/intel-arc/reports.json", "benchmarks/2026-08-31/device-lab/intel-arc/README.md"],
+      "source_revision_or_archive_hash": {"run_ids": ["1788191220761-8960", "1788191227442-34176", "1788192094423-26860"]},
+      "hardware_software": "Windows x86-64; Intel Arc Graphics; Vulkan; CPU identity Intel Family 6 Model 170; app 0.1.0.",
+      "dataset_provenance": "Device-lab deterministic clustered corpus, 10k/100k x 384; report supplied manually.",
+      "parameters": {"N": [10000,100000], "D": 384, "batch": [1,8], "k": 10, "samples": [16,512]},
+      "timing_boundary": "Host-observed completed-call device-lab P95; diagnostics include transfer and dispatch.",
+      "samples_repetitions": "Two quick runs with 16 samples/cell and one soak run with 512 samples/cell; no repeated independent devices.",
+      "correctness_oracle": "Embedded report recall@10=1.0; no separate raw oracle archive located.",
+      "memory_scope": "Allocation bytes are Qenlo-reported ownership; not physical VRAM or process RSS.",
+      "qualification": "Qualified platform-specific contextual evidence; second quick report is labeled quick inside JSON despite external full label.",
+      "limitations": "Single Arc adapter, aggregate JSON, no 1M x 768 gate, no cross-device pooling, deterministic corpus.",
+      "recommendation": "Retain only with explicit device/API and aggregate caveats; supports portability context, not universal GPU claims."
+    },
+    {
+      "id": "a6000_synthetic_cuda_crossover",
+      "exact_claim": "On an RTX A6000, a research PyTorch/CUDA buffered prototype was slower than FAISS GPU Flat at E=1k and 10k but faster at E=100k and 1M; P95 pairs were (0.097541,0.085716), (0.155722,0.137350), (0.567277,0.788721), and (4.668280,6.347464) ms (prototype, FAISS).",
+      "source_artifact": ["research/data/raw/2026-09-02-a6000-cuda/heldout/manifest.json", "research/data/raw/2026-09-02-a6000-cuda/heldout/raw_samples.csv", "research/data/processed/a6000_exact_summary.csv", "paper/figures/a6000_exact_crossover.png"],
+      "source_revision_or_archive_hash": {"raw_sha256": "978161ef55b9293b49f039c40c29fd8b0a95161dd15cf9cb992c66c0ca293ba8", "manifest_sha256": "b6c98494f8387f8d52ca8607f04cc4a1ea9e7c860d83be87b3ad0bf9450de859", "figure_sha256": "733b5e9f1406f9e4b36f21b89c3198fd1051dc3703cb6450ef15c9d2c274e775"},
+      "hardware_software": "NVIDIA RTX A6000 49140 MiB, driver 570.195.03, CUDA 12.8; Python 3.12.3, PyTorch 2.9.1+cu128, FAISS 1.14.1.",
+      "dataset_provenance": "Synthetic normalized random FP32 vectors; fresh seed 20260903; 1M x 768; temporary eligible matrix passed to both adapters.",
+      "parameters": {"N": 1000000, "D": 768, "batch": 1, "k": 10, "eligible_counts": [1000,10000,100000,1000000], "queries": 100, "warmups": 50, "repetitions": 5},
+      "timing_boundary": "Host wall time including query H2D, device execution, synchronization, and ID D2H; setup/filter materialization excluded.",
+      "samples_repetitions": "500 calls per system/cell (100 queries x 5 repetitions).",
+      "correctness_oracle": "Complete unordered top-10 agreement between two exact implementations; no independent FP64 oracle.",
+      "memory_scope": "No comparative memory metric in manifest.",
+      "qualification": "Qualified only as a separate research implementation-development experiment; not shipped Qenlo and not portable WGPU.",
+      "limitations": "Prototype API and pre-materialized eligibility; no filter-setup timing, no CPU/oracle/ANN frontier, one A6000, no native Rust CUDA.",
+      "recommendation": "Retain as exploratory cross-implementation reversal; never use as Qenlo product performance or pooled evidence."
+    },
+    {
+      "id": "a6000_real_strict_gate",
+      "exact_claim": "On the strict 1M x 768 TopK cohort with E=10026, FAISS GPU Flat P95 was 0.132222 ms, NumPy CPU 0.197311 ms, and a research CUDA prototype 0.170722 ms; all three qualified at recall@10=1.0, while cuVS recall 0.9 was disqualified.",
+      "source_artifact": ["benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/README.md", "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/summary.json", "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-qenlo-isolated/summary.json", "research/data/processed/a6000_strict_summary.csv"],
+      "source_revision_or_archive_hash": {"public_documents_sha256": {"docs": "f1c9f0dd07c1d4b6da8fcf697b53a899ddc68e1de400922360aa3741671275d3", "queries": "d9a34c1825ef4524da7a89f2a5b8be08bde1e98ce3e0b2ac0a1bf34a3b800870"}},
+      "hardware_software": "NVIDIA RTX A6000 48 GiB; driver 570.133.07; CUDA/PyTorch prototype; isolated FAISS process required cuBLASLt preload.",
+      "dataset_provenance": "TopK Bench public 1M x 768; strict int_filter <100, cosine via normalized FP32/IP; E=10026 due provider data distribution.",
+      "parameters": {"N": 1000000, "D": 768, "batch": 1, "k": 10, "eligible_count": 10026, "warmups": 100, "repetitions": 5, "measured_queries": 1000, "samples": 5000},
+      "timing_boundary": "Host invocation through host-resident IDs/scores, including H2D query, GPU work, top-k, D2H, synchronization; excludes loading/filter construction/oracle.",
+      "samples_repetitions": "5000 samples per valid row; cuVS has 0 qualified samples in strict-gate summary.",
+      "correctness_oracle": "Independent CPU FP64 oracle; valid rows recall 1.0; cuVS retained as failed/disqualified.",
+      "memory_scope": "No comparable memory/energy metric retained.",
+      "qualification": "Qualified exact comparative cell but research prototype, not shipped Qenlo Rust/WGPU; fails claimed 2x gate and is slower than FAISS.",
+      "limitations": "Only one strict selectivity, one A6000, no native Qenlo CUDA, no mobile/portable inference, process preload difference, cuVS runtime failures retained.",
+      "recommendation": "Retain as negative result and boundary evidence; explicitly prohibit fastest-exact-filtered-GPU claim."
+    },
+    {
+      "id": "runpod_external_library_replay",
+      "exact_claim": "The retained RunPod 100k x 384 replay measured Qenlo CPU 12.901 ms, Qenlo USearch 5.093 ms, Chroma 3.777 ms, FAISS Flat 10.217 ms, FAISS HNSW 1.494 ms, Milvus Lite 76.229 ms, and LanceDB Flat 242.256 ms P95.",
+      "source_artifact": ["benchmarks/runpod/2026-09-02-bb51987/README.md", "benchmarks/runpod/2026-09-02-bb51987/artifacts/qenlo-cpu/summary.txt", "benchmarks/runpod/2026-09-02-bb51987/artifacts/qenlo-usearch/summary.txt", "benchmarks/runpod/2026-09-02-bb51987/artifacts/{chroma,faiss-flat,faiss-hnsw,milvus,lancedb-flat}/summary.json"],
+      "source_revision_or_archive_hash": {"repo_revision": "bb519873c00128e1fec93836d6f55a69ce418b57", "archive_sha256": "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"},
+      "hardware_software": "RunPod community RTX 3070 pod; image runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404; Qenlo GPU Vulkan ICD failed closed.",
+      "dataset_provenance": "all-MiniLM-L12-v2 embeddings from fancyzhx/ag_news; 100k corpus + 100 tuning + 500 evaluation; prepared qnb SHA-256 906ee4134368ce50691a2a664844d55250c33ab721c7708a6816b9caf1abe4e2.",
+      "parameters": {"N": 100000, "D": 384, "batch": 1, "k": 10, "eligible_fraction": 1.0, "warmups": 50, "repetitions": 3, "evaluation_queries": 500},
+      "timing_boundary": "Each completed library call including its API/binding path; not a common database/service boundary.",
+      "samples_repetitions": "3 repetitions x 500 evaluation calls per backend.",
+      "correctness_oracle": "Independent truth; exact rows recall 1.0; ANN rows 0.9914--0.9988 and pass configured gate.",
+      "memory_scope": "No apples-to-apples memory measurement.",
+      "qualification": "Retained contextual comparison; GPU Qenlo row is unavailable, not CPU fallback.",
+      "limitations": "Different persistence/API/index/filter semantics, only dense all-row cell, approximate rows are not exact; Qdrant intentionally excluded; alternate image aborted.",
+      "recommendation": "Use only for scoped external context and failure preservation."
+    },
+    {
+      "id": "a6000_provider_approximate_one_percent",
+      "exact_claim": "The earlier provider-compatible TopK A6000 experiment reported Qenlo CUDA prototype P95 0.1834 ms versus FAISS GPU Flat 0.1332 ms and cuVS 1.1156 ms at approximately 1% eligibility; all had supplied-ground-truth recall 1.0 in that cell.",
+      "source_artifact": ["docs/reports/2026-09-02-topk-a6000-assessment.md", "benchmark-results/sota-a6000-topk-2026-09-02/cosine_inclusive/summary.json", "benchmark-results/sota-a6000-topk-2026-09-02/cosine_inclusive/p95_latency.png"],
+      "source_revision_or_archive_hash": {"topk_source_revision": "398ce7d72dea7ad765ada54c5daa014c498efb52"},
+      "hardware_software": "RTX A6000 49,140 MiB, driver 580.159.03, CUDA 12.8; PyTorch 2.8.0+cu128; FAISS 1.14.1; cuVS 26.08.01.",
+      "dataset_provenance": "Public TopK Bench 1M x 768; provider int_filter <= threshold yields 10148 eligible rows rather than strict <100.",
+      "parameters": {"N": 1000000, "D": 768, "batch": 1, "k": 10, "eligible_count": 10148, "warmups": 100, "repetitions": 10, "queries_per_repetition": 1000},
+      "timing_boundary": "Host completed call including H2D/query/device/top-k/D2H/synchronization; shared prefiltered matrix excludes filter materialization.",
+      "samples_repetitions": "10000 calls per adapter/cell.",
+      "correctness_oracle": "Supplied provider ground truth; no independent exact FP64 oracle; 10% and 100% rows had disagreements.",
+      "memory_scope": "Not reported comparably.",
+      "qualification": "Exploratory provider-compatible approximate-1% cell; not strict gate and not shipped Qenlo.",
+      "limitations": "Filter boundary mismatch, prototype implementation, pre-materialized eligibility, no native WGPU, no strict oracle; report itself says no demonstrated advantage.",
+      "recommendation": "Retain only as historical negative/context artifact, never headline result."
+    }
+  ],
+  "figure_inventory": [
+    {"file": "paper/figures/architecture.{pdf,png,svg}", "historical_source": "research/scripts/generate_plots.py::architecture", "status": "retained and referenced by HEAD manuscript", "sha256": {"pdf": "adf96dc5e71aaef60ab5e11d2475fe5acd3228aa3777c8e5c8c40ed99e63847a", "png": "d611cbc19ac509bc1c89d0e126b70f7f3254e2d66ed44fbcc8dfd4635db02bd0", "svg": "2d6cc8d31387b2cf075388e9f1f268d4439015543bad68abdb233b6918014295"}},
+    {"file": "paper/figures/phase_map.{pdf,png}", "historical_source": "generate_plots.py::phase_map; native_crossover_summary.csv + windows_summary.csv + a6000_exact_summary.csv", "status": "retained and referenced at HEAD; current working manuscript may differ", "sha256": {"pdf": "70eb4ecc9c627cc2a5dd50f39d9a77916924e38628bb3b907e7477cfcf6b2556", "png": "bfdbb248442133c13354ae6c208dfc98b564bed7ecbf24fc38dcd37fda695403"}},
+    {"file": "paper/figures/routing_regret.{pdf,png,svg}", "historical_source": "generate_plots.py::routing_regret; static_router_regret.csv", "status": "retained and referenced at HEAD", "sha256": {"pdf": "e6ed87539e69b15339b6012220a5dfa3bdec9149939698de0be6d552922a58a0", "png": "d715e2b69ecfcc645778ee017cb1d2fb6d4500dd9a81cf816d92dafa90f4158b", "svg": "46631bfa21926106c658e2ffa55afd8a4e3bf3119fc64050cd535d8b3008d4d6"}},
+    {"file": "paper/figures/eligibility_ablation.{pdf,png}", "historical_source": "generate_plots.py::eligibility_ablation; eligibility_ablation_summary.csv", "status": "retained and referenced at HEAD", "sha256": {"pdf": "5f9a629b65a0eb50422d91a2d206f17303febb8044b72cac0db2283c9f547506", "png": "7539896902e3c6777937338121cc782c8e3daaea84a3faa92efa207113395a83"}},
+    {"file": "paper/figures/windows_strategies.{pdf,png}", "historical_source": "generate_plots.py::windows_strategies; windows_summary.csv", "status": "retained and referenced at HEAD", "sha256": {"pdf": "a3a1ee4c88ae60e65a13edc07cb3cd21002b80dbddfc134981c9cefaca7f0ca0", "png": "e4d13868fed0496417afcbdbf2953e21d3b14a98c86fa6f026ef6def75ff1aa3"}},
+    {"file": "paper/figures/android_matched.{pdf,png}", "historical_source": "generate_plots.py::android_matched; android_device_lab.csv", "status": "retained and referenced at HEAD; aggregate-only source", "sha256": {"pdf": "4a936b7ff297dc465ee2a46605b559ad4d73b8ef8862106f2b3db07d628a9c08", "png": "a6d17e5f3832005ab2666f283377475979cf4495e1d990122d3df77b74ec95fd"}},
+    {"file": "paper/figures/linux_library_context.{pdf,png}", "historical_source": "generate_plots.py::linux_context; linux_library_summary.csv", "status": "retained and referenced at HEAD", "sha256": {"pdf": "287de0d126046306e271b69bf80959e50b86bf1c10283827572f897d2d9db803", "png": "bde50a78b3d210c2a35031f1fc412d17e36639c40e3aa90d2e5b165715646f50"}},
+    {"file": "paper/figures/a6000_exact_crossover.{png,svg}", "historical_source": "1d12115 predecessor plot; A6000 synthetic summary", "status": "retained unreferenced historical figure", "sha256": {"png": "733b5e9f1406f9e4b36f21b89c3198fd1051dc3703cb6450ef15c9d2c274e775", "svg": "487dce4413245de905c76e7e0c6c0aef5196cb75b80dd1b51ef5aa8372216e58"}},
+    {"file": "paper/figures/native_cpu_gpu_crossover.{png,svg}", "historical_source": "1d12115 predecessor plot; native_crossover_summary.csv", "status": "retained unreferenced historical figure", "sha256": {"png": "4617ed22c1466e5f7b41dae14ac8aefe645c72b130a7e690959cafb1ef03a15c", "svg": "141de2558bf46590c1eb6b6e131da2d22a2dd71da708cf771dae6138c513b43a"}},
+    {"file": "paper/figures/android_soak_p95.{png,svg}", "historical_source": "1d12115 predecessor plot; Android aggregate CSV", "status": "retained unreferenced historical figure; aggregate-only source", "sha256": {"png": "f0e49967b4ae0a93c7bd6bd95eded0deab21426f75c21dfb3fcf9b3bd5ad9039", "svg": "5fdd476b66096102325a14d1576d4b4ce3f1d168c11ec2599160c3df874b6d7a"}},
+    {"file": "paper/figures/selectivity_p95.{png,svg}", "historical_source": "1d12115 predecessor plot; Windows/source tables", "status": "retained unreferenced historical figure", "sha256": {"png": "284e9b4be567542a62d667163e6c9d77b1eef206c3a80e5f5382384d82d056d9", "svg": "c9c80c32505077b930136489e263cb8c7beade899026e7bef1bdf4e620f15b76"}},
+    {"file": "paper/figures/batch_effect.{png,svg}", "historical_source": "1d12115 predecessor plot; device-lab batch cells", "status": "retained unreferenced historical figure; device-specific", "sha256": {"png": "751755df61ef9a74fdb233ab8d31d1fe8a022963f3cd9616b3a4087c33779d53", "svg": "a82a8139724c6c8e1868c4ad1c22aea516cb2b13e22dbf0068cdebb8a18a60b2"}},
+    {"file": "paper/figures/dimension_crossover.svg", "historical_source": "1d12115 predecessor plot; no retained processed dimension-effect cohort", "status": "retained but underlying dimension claim is unmeasured", "sha256": "e479988ae4c84e773733c0c6c872110ab7f105212b553b52629ca7afc72fe32a46"},
+    {"file": "paper/figures/fastest_backend_heatmap.{png,svg}", "historical_source": "1d12115 predecessor plot; endpoint/library context", "status": "retained unreferenced; not a pooled ranking", "sha256": {"png": "e8b7a345bf4e6b655395d27ef213c1c6b587f39caddd3b9fbea591150fa3028f", "svg": "ce23e51dcb10313ee1c108745e9008f75323ef0589e0cc2a04951b8fe677ee01"}},
+    {"file": "paper/figures/hnsw_tradeoff.{png,svg}", "historical_source": "1d12115 predecessor plot; one tuned HNSW point", "status": "retained unreferenced; no ANN frontier", "sha256": {"png": "bba925dd8388e887d48887d58df2d8456d2ea50ca170586ca6ba92f701b42671", "svg": "9da789e7f0c61cf946193e669f76614e63857e7618e9958e7ea8cd8b73662984"}},
+    {"file": "paper/figures/matched_corpus_size.svg", "historical_source": "1d12115 predecessor plot; evidence_completeness.csv", "status": "retained unreferenced; matched-size analysis marked unmeasured", "sha256": "128d5678c8a2cc7fbacd7ed516ba7388de8adfbfa07ddeafe06c99149b7f0fc2"},
+    {"file": "paper/figures/metadata_robustness.svg", "historical_source": "1d12115 predecessor plot; metadata robustness exploratory artifact", "status": "retained unreferenced; metadata correlation marked unmeasured", "sha256": "85754370e3b6c3fe92229da5d93b83cc2b6002962903f9eb4b32b7050ac8fb16"},
+    {"file": "paper/figures/absolute_eligible_p95.svg", "historical_source": "1d12115 predecessor plot; native endpoint/crossover", "status": "retained unreferenced historical figure", "sha256": "487dce4413245de905c76e7e0c6c0aef5196cb75b80dd1b51ef5aa8372216e58"}
+  ],
+  "figure_files_exact_top_level": [
+    "a6000_exact_crossover.png", "a6000_exact_crossover.svg", "absolute_eligible_p95.svg",
+    "android_matched.pdf", "android_matched.png", "android_soak_p95.png", "android_soak_p95.svg",
+    "architecture.pdf", "architecture.png", "architecture.svg", "batch_effect.png", "batch_effect.svg",
+    "dimension_crossover.svg", "eligibility_ablation.pdf", "eligibility_ablation.png",
+    "fastest_backend_heatmap.png", "fastest_backend_heatmap.svg", "hnsw_tradeoff.png", "hnsw_tradeoff.svg",
+    "linux_library_context.pdf", "linux_library_context.png", "matched_corpus_size.svg", "metadata_robustness.svg",
+    "native_cpu_gpu_crossover.png", "native_cpu_gpu_crossover.svg", "phase_map.pdf", "phase_map.png",
+    "routing_regret.pdf", "routing_regret.png", "routing_regret.svg", "selectivity_p95.png", "selectivity_p95.svg",
+    "windows_strategies.pdf", "windows_strategies.png"
+  ],
+  "figure_inventory_note": "The exact top-level inventory contains 34 files across 18 logical families. The newer paper/figures/final directory is a separate generated output and is not counted as historical top-level evidence here.",
+  "software_source_paths": {
+    "windows_dense_endpoint": {
+      "experiment_records": [
+        "benchmarks/2026-08-28/real/measurements/cpu-384-all-v4.json",
+        "benchmarks/2026-08-28/real/measurements/gpu-predicate-384-all-v5.json",
+        "benchmarks/2026-08-28/real/measurements/gpu-rows-384-all-v4.json",
+        "benchmarks/2026-08-28/real/measurements/gpu-mask-384-all-v4.json",
+        "benchmarks/2026-08-28/real/dataset/ag-news-384.json"
+      ],
+      "code_paths": [
+        "crates/qenlo/src/gpu.rs",
+        "crates/qenlo/src/gpu_exact.wgsl",
+        "crates/qenlo/src/lib.rs",
+        "crates/qenlo-bench/src/main.rs",
+        "crates/qenlo-bench/src/replay.rs",
+        "benchmarks/2026-08-28/system.json",
+        "benchmarks/2026-08-28/real/build-final.json"
+      ],
+      "source_note": "The CPU and dense WGPU rows carry separate recorded Git revisions; these paths identify the implementation family and retained build metadata, not a same-revision speedup claim."
+    },
+    "windows_selective_endpoint": {
+      "experiment_records": [
+        "benchmarks/2026-08-28/real/measurements/cpu-384-onepct.json",
+        "benchmarks/2026-08-28/real/measurements/gpu-rows-384-onepct.json",
+        "benchmarks/2026-08-28/real/measurements/gpu-predicate-384-onepct-v4.json",
+        "benchmarks/2026-08-28/real/dataset/ag-news-384.json"
+      ],
+      "code_paths": [
+        "crates/qenlo/src/gpu.rs",
+        "crates/qenlo/src/gpu_exact.wgsl",
+        "crates/qenlo-bench/src/main.rs",
+        "crates/qenlo-bench/src/replay.rs"
+      ],
+      "source_note": "Sparse CPU, sparse compact-row WGPU, and shader-predicate rows retain their own revision labels; the claim is a scoped endpoint comparison."
+    },
+    "windows_native_crossover": {
+      "experiment_records": [
+        "research/data/raw/2026-09-02-native-crossover/cpu-e{2000,3000,4000,6000,8000,10000}",
+        "research/data/raw/2026-09-02-native-crossover/gpu-rows-e{2000,3000,4000,6000,8000,10000}",
+        "research/data/processed/native_crossover_summary.csv",
+        "research/data/processed/static_router_regret.csv"
+      ],
+      "code_paths": [
+        "research/scripts/analyze_results.py",
+        "crates/qenlo/src/gpu.rs",
+        "crates/qenlo/src/gpu_exact.wgsl",
+        "crates/qenlo-bench/src/main.rs"
+      ],
+      "source_note": "All six qualified crossover pairs record revision 3e2a4a9; the processed router table is a post-hoc reduction and does not establish a held-out adaptive router."
+    },
+    "static_router_regret": {
+      "experiment_records": [
+        "research/data/processed/static_router_regret.csv",
+        "research/data/processed/native_crossover_summary.csv"
+      ],
+      "code_paths": ["research/scripts/analyze_results.py"],
+      "source_note": "Derived from the matched native crossover cohort; no independent online selector run is represented."
+    },
+    "eligibility_materialization_ablation": {
+      "experiment_records": [
+        "research/artifacts/qenlo-phase1-eligibility-2026-09-04.tar.gz",
+        "research/data/processed/eligibility_ablation_summary.csv"
+      ],
+      "code_paths": [
+        "scripts/runpod/phase1-eligibility-ablation.sh",
+        "research/scripts/analyze_results.py",
+        "crates/qenlo/src/gpu.rs",
+        "crates/qenlo/src/gpu_exact.wgsl"
+      ],
+      "source_note": "The archive SHA-256 in the claim record is the source boundary; the reduction is regenerated from the retained archive records."
+    },
+    "linux_library_context": {
+      "experiment_records": [
+        "benchmark-results/2026-09-02-runpod-archive/CAMPAIGN_MANIFEST.json",
+        "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/*",
+        "benchmarks/runpod/2026-09-02-bb51987/manifest.json",
+        "research/data/processed/linux_library_summary.csv"
+      ],
+      "code_paths": [
+        "scripts/oss_replay.py",
+        "crates/qenlo-bench/src/replay.rs",
+        "benchmarks/runpod/2026-09-02-bb51987/README.md"
+      ],
+      "source_note": "The replay archive records revision bb519873 and API/persistence/filter boundaries; it is scoped external context rather than a universal engine ranking."
+    },
+    "android_mali_device_lab": {
+      "experiment_records": [
+        "research/data/processed/android_device_lab.csv",
+        "research/data/raw/2026-09-02-android/PROVENANCE.md",
+        "docs/device-lab.md"
+      ],
+      "code_paths": ["docs/device-lab.md"],
+      "source_note": "The retained physical-device records identify app 0.1.0 and run IDs but do not retain raw calls, power, or thermal traces; source commit is unrecorded."
+    },
+    "intel_arc_device_lab": {
+      "experiment_records": [
+        "benchmarks/2026-08-31/device-lab/intel-arc/reports.json",
+        "benchmarks/2026-08-31/device-lab/intel-arc/README.md"
+      ],
+      "code_paths": ["benchmarks/2026-08-31/device-lab/intel-arc/README.md", "docs/device-lab.md"],
+      "source_note": "The JSON suite and quick/full labels are retained; source commit and raw call traces are not."
+    },
+    "a6000_synthetic_cuda_crossover": {
+      "experiment_records": [
+        "research/data/raw/2026-09-02-a6000-cuda/heldout/manifest.json",
+        "research/data/raw/2026-09-02-a6000-cuda/heldout/raw_samples.csv",
+        "research/data/raw/2026-09-02-a6000-cuda/heldout/correctness.csv",
+        "research/data/processed/a6000_exact_summary.csv"
+      ],
+      "code_paths": [
+        "research/scripts/run_cuda_synthetic_matrix.py",
+        "research/scripts/run_faiss_flat_baseline.py",
+        "research/scripts/analyze_results.py"
+      ],
+      "source_note": "This is a PyTorch/CUDA prototype with pre-materialized eligibility and no independent FP64 oracle; it remains contextual."
+    },
+    "a6000_real_strict_gate": {
+      "experiment_records": [
+        "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/summary.json",
+        "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-qenlo-isolated/summary.json",
+        "research/data/processed/a6000_strict_summary.csv"
+      ],
+      "code_paths": [
+        "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/run_strict_topk_research_gate.py",
+        "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/run_strict_topk_research_gate_v2.py",
+        "scripts/run_topk_a6000_exact_gpu.py"
+      ],
+      "source_note": "The strict rows are retained as a negative external boundary; the research CUDA prototype is not the shipped Rust/WGPU path."
+    },
+    "a6000_provider_approximate_one_percent": {
+      "experiment_records": [
+        "docs/reports/2026-09-02-topk-a6000-assessment.md",
+        "benchmark-results/sota-a6000-topk-2026-09-02/cosine_inclusive/summary.json"
+      ],
+      "code_paths": ["scripts/run_topk_a6000_exact_gpu.py"],
+      "source_note": "The <= provider filter and supplied/pre-filtered ground truth disqualify this cohort from exact headline comparisons."
+    }
+  },
+  "exclusions": [
+    {"item": "A6000 CUDA/FAISS rows as Qenlo shipped GPU result", "reason": "PyTorch/CUDA research prototype, not Rust/WGPU; retain only as exploratory context."},
+    {"item": "A6000 provider-compatible approximate-1% row as strict gate", "reason": "Provider uses <= threshold and yields 10148 eligible rows; no independent FP64 oracle; shared prefiltered matrix."},
+    {"item": "cuVS A6000 rows", "reason": "Recall 0.9 in real strict cohort or runtime/library failures in corrected gate; retained as failure, not performance result."},
+    {"item": "Qenlo GPU in RunPod RTX 3070 replay", "reason": "Vulkan ICD unavailable; failed closed before timing; no CPU fallback mislabeled GPU."},
+    {"item": "Qdrant", "reason": "Explicitly excluded because local mode switches to exact brute force above 20k; not apples-to-apples ANN cohort."},
+    {"item": "Dimension effect, metadata-correlation, matched-corpus-size and calibrated-router claims", "reason": "evidence_completeness.csv marks them unmeasured or routing regret unmeasured; retained figures are not evidence."},
+    {"item": "iOS device support/performance", "reason": "No retained physical iOS-device run; simulator/macOS build cannot establish it."},
+    {"item": "Mobile performance inferred from cloud NVIDIA", "reason": "Cross-device inference prohibited; Android and Intel Arc remain separate aggregate cohorts."}
+  ],
+  "global_limitations": [
+    "Historical cohorts use different revisions, hosts, dimensions, data provenance, filters, APIs, and timing boundaries and must not be pooled.",
+    "FP32 exhaustive execution is distinct from numerical agreement with an FP64 oracle; dense native recall is 0.99998 in the retained AG News cells.",
+    "Host completed-call timings are distinct from kernel/device-resident timings; external Python/database API boundaries differ.",
+    "Process RSS, Qenlo-owned accelerator allocations, and storage budgets are distinct scopes; no invented memory-efficiency score is valid.",
+    "Android source is aggregate-only and cannot be regenerated from raw calls; several historical figures have no current generator path.",
+    "Five-run native cohorts and three-run external replays support descriptive comparisons, not broad statistical-significance claims."
+  ]
+}

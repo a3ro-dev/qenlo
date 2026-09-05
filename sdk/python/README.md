@@ -2,7 +2,9 @@
 
 Type-safe Python bindings for **Qenlo** — the embedded, durable vector database written in Rust.
 
-Qenlo provides exact filtered cosine vector search with atomic commits, write-ahead logging (WAL), portable `.qn` snapshot files, and zero external database services. Every search returns an execution report containing routing decisions, memory allocations, and hardware execution telemetry.
+Qenlo provides exact filtered cosine vector search with atomic commits,
+write-ahead logging (WAL), and portable `.qn` snapshot files. Every search
+returns an execution report with routing and resource measurements.
 
 ## Installation
 
@@ -43,7 +45,7 @@ with Collection.memory(dimension=3) as db:
     for hit in response.results:
         print(f"ID: {hit.id}, Cosine Distance: {hit.distance:.4f}")
 
-    # Inspect hardware and routing telemetry
+    # Inspect the execution report
     report = response.report
     print(f"Backend: {report.actual_backend}, Algorithm: {report.algorithm}")
     print(f"Total Duration: {report.total_duration_ns} ns")
@@ -107,6 +109,49 @@ db.add_batch(records)
 db.delete_batch([10, 11])
 ```
 
+For an existing C-contiguous native `float32` matrix, `add_buffer` avoids
+per-component Python assignment. Writable buffers are borrowed for the native
+call; read-only buffers incur one bulk copy. The Rust core copies and validates
+the complete batch before return.
+
+## Optional PyTorch index
+
+Install the optional dependency only in desktop applications that already need
+PyTorch:
+
+```bash
+pip install 'qenlo[torch]'
+```
+
+`TorchIndex` is an exhaustive, resident FP32 matrix index. It is derived from a
+canonical collection and is not a second durable store:
+
+```python
+from qenlo import Filter, TorchIndex
+
+index = TorchIndex.from_collection(
+    db,
+    Filter(user_id=42),
+    device="cuda",       # "cpu" and "mps" are also explicit choices
+    max_bytes=256 << 20,
+)
+ids, distances = index.search(query_tensor, k=10)
+```
+
+The capture includes only live rows matching the filter and records the canonical
+generation. A later add or delete makes the index stale; `search` then raises
+instead of serving the old snapshot. Inputs are copied, normalized, and owned by
+the index. Returned IDs and distances are tensors on the selected device. The
+reported `allocation_bytes` and `max_bytes` checks cover owned vectors, IDs, and
+the explicit search tensors; they do not measure PyTorch allocator caches or
+backend-private memory.
+
+Current tensor IDs are restricted to `0..=2**63-1`. Native collections accept the
+full unsigned 64-bit range, but PyTorch documents `uint64` eager operations as
+having limited backend support. `TorchIndex.from_collection` rejects a snapshot
+outside the portable tensor range without truncating it. CPU is tested locally;
+CUDA and MPS require separate platform runs.
+
 ---
 
 ## Data Model & Types
@@ -155,13 +200,14 @@ except QenloError as e:
 
 ---
 
-## Anonymous Telemetry Notice
+## Background work and networking
 
-Qenlo collects anonymous installation, execution, and hardware environment telemetry (OS platform, CPU architecture, SDK version, and search duration metrics) transmitted securely to `https://api.gobitsnbytes.org/qenlo/telemetry`. This telemetry is strictly anonymous, privacy-preserving, and mandatory across all SDK installations (there is no opt-out) in order to monitor stability, diagnose GPU driver regressions, and optimize embedded vector routing algorithms.
+Importing or using the Python SDK starts no background thread and sends no
+network request. Applications may export `ExecutionReport` values through their
+own telemetry system.
 
 ---
 
 ## License
 
 Dual-licensed under **MIT** or **Apache-2.0** at your option.
-

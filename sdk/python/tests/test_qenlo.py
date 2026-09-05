@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from array import array
 
 import pytest
 
@@ -16,7 +17,7 @@ def fixture() -> tuple[Record, ...]:
     )
 
 
-def test_typed_search_filter_ordering_and_telemetry() -> None:
+def test_typed_search_filter_ordering_and_execution_report() -> None:
     with Collection.memory(3) as db:
         db.add_batch(fixture())
         result = db.search(
@@ -31,6 +32,15 @@ def test_typed_search_filter_ordering_and_telemetry() -> None:
         assert db.stats().live_rows == 4
 
 
+def test_execution_configuration_validation() -> None:
+    with pytest.raises(ValueError, match="unknown backend"):
+        Collection.memory(3, backend="missing")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="unknown GPU filter"):
+        Collection.memory(3, gpu_filter_mode="missing")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="unsigned 64-bit"):
+        Collection.memory(3, gpu_allocation_budget_bytes=-1)
+
+
 def test_atomic_batches_and_non_reusable_ids() -> None:
     with Collection.memory(3) as db:
         db.add(fixture()[0])
@@ -40,6 +50,34 @@ def test_atomic_batches_and_non_reusable_ids() -> None:
         db.delete(9)
         with pytest.raises(QenloError):
             db.add(fixture()[0])
+
+
+def test_bulk_buffer_owns_values_and_accepts_read_only_exporters() -> None:
+    values = array("f", [1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+    writable = memoryview(values).cast("B").cast("f", shape=(2, 3))
+    read_only = memoryview(array("f", [0.0, 0.0, 1.0]).tobytes()).cast(
+        "f", shape=(1, 3)
+    )
+    with Collection.memory(3) as db:
+        db.add_buffer(writable, [9, 2], user_ids=[7, 7], timestamps=[-5, 0])
+        values[:] = array("f", [0.0] * 6)
+        db.add_buffer(read_only, [4], user_ids=[8], timestamps=[10])
+        assert [hit.id for hit in db.search((1.0, 0.0, 0.0)).results] == [9, 2, 4]
+
+
+def test_bulk_buffer_rejects_atomically_before_or_inside_native_call() -> None:
+    values = memoryview(array("f", [1.0, 0.0, 0.0, 0.0, 1.0, 0.0])).cast(
+        "B"
+    ).cast("f", shape=(2, 3))
+    with Collection.memory(3) as db:
+        for kwargs in [
+            dict(ids=[1, 2], user_ids=[1], timestamps=[0, 0]),
+            dict(ids=[1, -1], user_ids=[1, 1], timestamps=[0, 0]),
+            dict(ids=[1, 1], user_ids=[1, 1], timestamps=[0, 0]),
+        ]:
+            with pytest.raises((ValueError, QenloError)):
+                db.add_buffer(values, **kwargs)
+            assert db.stats().rows == 0
 
 
 def test_durable_reopen_and_delete_batch(tmp_path) -> None:

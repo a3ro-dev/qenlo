@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "qenlo"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Type-safe Python SDK for the embedded Qenlo vector database"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -22,6 +22,9 @@ classifiers = [
 Documentation = "https://a3ro-dev.github.io/qenlo/docs/"
 Repository = "https://github.com/a3ro-dev/qenlo"
 Issues = "https://github.com/a3ro-dev/qenlo/issues"
+
+[project.optional-dependencies]
+torch = ["torch>=2.8"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/qenlo"]

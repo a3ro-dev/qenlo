@@ -1,0 +1,14 @@
+phase,repetition,mutation_ns,first_search_ns,actual_backend,rebuilt,generation,upload_bytes,allocation_bytes,result_count,deleted_id_absent
+add-one,0,21995239,353251,Wgpu,false,10001,41668,17179736,10,true
+delete-one,0,21747776,398405,Wgpu,false,10002,41668,17179736,10,true
+add-batch,0,22044922,403245,Wgpu,false,10010,41764,17192216,10,true
+delete-batch,0,21725354,402482,Wgpu,false,10018,41736,17192216,10,true
+add-one,1,21667306,595253,Wgpu,false,10019,41804,17193776,10,true
+delete-one,1,22002754,523970,Wgpu,false,10020,41804,17193776,10,true
+add-batch,1,22072665,555379,Wgpu,false,10028,41900,17206256,10,true
+delete-batch,1,21743950,538988,Wgpu,false,10036,41872,17206256,10,true
+add-one,2,21762384,598309,Wgpu,false,10037,41940,17207816,10,true
+delete-one,2,21706169,631140,Wgpu,false,10038,41940,17207816,10,true
+add-batch,2,22070480,740094,Wgpu,false,10046,42036,17220296,10,true
+delete-batch,2,21958140,818721,Wgpu,false,10054,42008,17220296,10,true
+reopen,0,52168927,101295702,Wgpu,true,10054,15683720,17220296,10,true

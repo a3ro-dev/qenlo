@@ -42,7 +42,10 @@ impl Theme {
     }
 
     pub fn header(&self) -> Style {
-        Style::default().fg(self.accent).bg(self.surface).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(self.accent)
+            .bg(self.surface)
+            .add_modifier(Modifier::BOLD)
     }
 
     pub fn border_style(&self) -> Style {
@@ -62,11 +65,16 @@ impl Theme {
     }
 
     pub fn accent_bold(&self) -> Style {
-        Style::default().fg(self.accent).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(self.accent)
+            .add_modifier(Modifier::BOLD)
     }
 
     pub fn selected_row(&self) -> Style {
-        Style::default().fg(self.text).bg(self.surface_raised).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(self.text)
+            .bg(self.surface_raised)
+            .add_modifier(Modifier::BOLD)
     }
 
     pub fn ok_style(&self) -> Style {

@@ -2,6 +2,8 @@
 
 ## unreleased
 
+This section targets `0.1.0-alpha.2`; publication remains gated on package and platform CI.
+
 ### added
 
 - versioned, checksummed canonical snapshots, staged publication, and a
@@ -32,6 +34,21 @@
   unavailable measurements, and host-owned bounded OTLP setup.
 - checksummed deterministic benchmark datasets, disjoint source-row partitions,
   workload manifests, raw samples, and nearest-rank latency summaries.
+- explicit in-memory `StorageOptions`, including first-query vector admission,
+  and propagation of the benchmark vector budget into collection construction.
+- optional lazy PyTorch tensor indexing, bulk Python float32-buffer ingestion,
+  typed native result buffers, and shared execution controls across SDK bindings.
+- a failure-preserving 182-row small-collection campaign, machine-readable matrix,
+  claim-to-artifact ledger, and revised research paper.
+
+### changed
+
+- append and live-mask GPU updates now avoid full resident rebuilds when capacity
+  permits; generation checks prevent mixed canonical and derived state.
+- the lane-minimum WGSL selector candidate was measured, won five and lost seven
+  qualified pairs, and was reverted rather than shipped as a universal change.
+- documentation now distinguishes source bindings, package verification, and
+  physical mobile evidence.
 
 ### compatibility and limits
 
@@ -44,5 +61,6 @@
 - snapshot compaction/restart replay remain synchronous, memory admission is
   estimated, and Windows power-loss durability is not guaranteed.
 
-test outcomes belong in [the verification record](docs/verification.md), not an
-unqualified release claim. large-workload performance remains to be measured.
+Test outcomes belong in [the verification record](docs/verification.md), not an
+unqualified release claim. The current campaign covers 1K--100K vectors; mobile,
+Metal/MPS, AMD/Intel Linux, and larger-scale performance remain separate gates.

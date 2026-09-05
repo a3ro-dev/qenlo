@@ -1,0 +1,185 @@
+{
+  "audit": {
+    "date": "2026-09-05",
+    "current_source_revision": "b22d3b5033cfb578508a4cb76a8022dd3e3e258b",
+    "implementation_note_baseline": "3e2a4a9bd82e130192907fc29eee6321269fb374",
+    "scope": "Source-level semantic audit; no product source changed.",
+    "limitations": [
+      "This ledger does not establish positive CUDA or MPS execution from the CPU-focused Python test file.",
+      "This ledger does not prove concurrent mutation isolation or universal power-loss durability.",
+      "Historical manuscript evidence is not relabeled as a current-revision measurement."
+    ]
+  },
+  "claims": [
+    {
+      "id": "SYS-001",
+      "claim": "Canonical ingestion and query normalization produce FP32 vectors using an FP64 norm accumulator; non-finite, zero-norm, and dimension-invalid inputs are rejected.",
+      "status": "supported_with_scope",
+      "source_artifacts": [
+        {"path": "crates/qenlo-core/src/lib.rs", "lines": "218-229, 629-690, 1156-1178"},
+        {"path": "crates/qenlo-core/src/lib.rs", "lines": "1181-1200", "role": "restoration validation preserves stored FP32 bytes"}
+      ],
+      "evidence": "normalize_vector checks dimensions and finiteness, computes norm as f64, divides in f64, then casts components to f32. Search entry points normalize queries. Restoration validates unit norm within 1e-5 without renormalizing.",
+      "scope": "Canonical Rust store and query boundaries.",
+      "limitations": ["Stored FP32 bytes are validated, not renormalized, on restore.", "This does not imply FP64 vector storage."]
+    },
+    {
+      "id": "SYS-002",
+      "claim": "The CPU path is exhaustive over eligible canonical rows, but its scoring pipeline contains an FP32 candidate stage and an FP64 final ranking boundary.",
+      "status": "supported_with_scope",
+      "source_artifacts": [
+        {"path": "crates/qenlo-core/src/lib.rs", "lines": "738-821", "role": "optimized search and certified candidate bound"},
+        {"path": "crates/qenlo-core/src/lib.rs", "lines": "869-882, 927-981, 997-1143", "role": "distance path types and dot implementations"},
+        {"path": "paper/audit/before/appendix.tex", "lines": "39", "role": "historical exactness qualification"}
+      ],
+      "evidence": "Eligible rows are covered by the search; bounded collections may generate candidates with FP32 dot code, then re-score candidates with the FP64 dot implementation. Larger collections use reference scoring.",
+      "scope": "Exact CPU execution semantics, not bit-identical FP64 arithmetic for every intermediate.",
+      "limitations": ["Do not describe all CPU operations as FP64.", "Oracle agreement remains an empirical qualification."]
+    },
+    {
+      "id": "SYS-003",
+      "claim": "Native CPU, native GPU host merge, WGSL selector, and TorchIndex define deterministic distance-then-ID ordering within their implementation precision.",
+      "status": "supported_with_scope",
+      "source_artifacts": [
+        {"path": "crates/qenlo-core/src/lib.rs", "lines": "841-864", "role": "RankedHit total ordering"},
+        {"path": "crates/qenlo/src/gpu.rs", "lines": "809-817", "role": "GPU host ordering"},
+        {"path": "crates/qenlo/src/gpu_exact.wgsl", "lines": "108-110", "role": "WGSL comparator"},
+        {"path": "sdk/python/src/qenlo/torch.py", "lines": "73-75, 159-168", "role": "sorted IDs and stable cutoff tie handling"}
+      ],
+      "evidence": "Host ordering compares distance then ID; WGSL compares FP32 distance then 64-bit ID; TorchIndex uses stable sorting at a tied cutoff after sorting IDs.",
+      "scope": "Deterministic implementation order.",
+      "limitations": ["Does not prove identical tie membership against an independent FP64 oracle across engines.", "FP32 and FP64 distances can differ near ties."]
+    },
+    {
+      "id": "SYS-004",
+      "claim": "EligibilityPlan binds predicate materialization and representation to the canonical generation and supports one-pass, legacy two-pass, and generation/filter-keyed cached preparation.",
+      "status": "supported",
+      "source_artifacts": [
+        {"path": "crates/qenlo/src/lib.rs", "lines": "441-566", "role": "plan fields, cache key, traversal counts, representations"},
+        {"path": "crates/qenlo/src/lib.rs", "lines": "569-593", "role": "diagnostic annotation"},
+        {"path": "crates/qenlo/src/lib.rs", "lines": "2685-2730", "role": "retained plan/cache tests"}
+      ],
+      "evidence": "Compile records generation, eligible count, corpus size, predicate kind, representation, transfer estimate, runs, materialization, traversal count, and cache state. Cached host rows require exact generation and filter equality; legacy mode deliberately performs two traversals.",
+      "scope": "WGPU feature implementation and its diagnostics.",
+      "limitations": ["The plan is derived execution state, not canonical truth.", "Shader plans retain host rows for possible fallback but do not make all GPU paths host-row timed paths."]
+    },
+    {
+      "id": "SYS-005",
+      "claim": "Exact row execution validates eligible row ordering, bounds, liveness, and predicate membership; malformed or stale rows fail closed.",
+      "status": "supported",
+      "source_artifacts": [
+        {"path": "crates/qenlo-core/src/lib.rs", "lines": "663-735", "role": "search_rows and reference validation"},
+        {"path": "crates/qenlo/src/lib.rs", "lines": "1527-1541", "role": "mutation invalidates prepared generation"},
+        {"path": "paper/audit/before/head-paper.tex", "lines": "62", "role": "historical wording"}
+      ],
+      "evidence": "Execution checks strict row ordering, slot bounds, live state, and every predicate clause before scoring; mutation clears prepared-generation state.",
+      "scope": "Synchronous plan/execution generation boundary.",
+      "limitations": ["This is not a guarantee of lock-spanning concurrent execution for external derived views."]
+    },
+    {
+      "id": "SYS-006",
+      "claim": "Required-GPU mode returns initialization/preparation/search errors rather than silently falling back; automatic mode may use CPU and records a fallback reason.",
+      "status": "supported_with_scope",
+      "source_artifacts": [
+        {"path": "crates/qenlo/src/lib.rs", "lines": "60-68, 1376-1404", "role": "backend selection and construction"},
+        {"path": "crates/qenlo/src/lib.rs", "lines": "1580-1634", "role": "prepare and fallback"},
+        {"path": "crates/qenlo/src/lib.rs", "lines": "1637-1732", "role": "search routing and error behavior"},
+        {"path": "research/implementation-notes.md", "lines": "11-13", "role": "implementation summary"}
+      ],
+      "evidence": "WgpuRequired maps backend construction and preparation failures to errors. Automatic maps construction/preparation/search failures to CPU fallback with a reason.",
+      "scope": "Implemented backend policy, including reported failure paths.",
+      "limitations": ["Not every device-loss condition is recoverable or transparent; an unhealthy backend can make diagnostics unavailable.", "Campaign availability remains empirical."]
+    },
+    {
+      "id": "SYS-007",
+      "claim": "File-backed commit validates a whole ordered batch before WAL publication and canonical visibility; in-memory mutation has no durability guarantee.",
+      "status": "supported_with_scope",
+      "source_artifacts": [
+        {"path": "crates/qenlo/src/lib.rs", "lines": "1407-1439, 1442-1511", "role": "in-memory and file-backed mutation paths"},
+        {"path": "crates/qenlo/src/storage.rs", "lines": "260-333", "role": "checksummed WAL, sync, rename, manifest"},
+        {"path": "research/implementation-notes.md", "lines": "13", "role": "durability limitation"},
+        {"path": "paper/paper.tex", "lines": "37", "role": "wording requiring scope"}
+      ],
+      "evidence": "commit validates and admits the batch, then appends/syncs file-backed WAL before applying the canonical batch. In-memory add/delete bypass file persistence; documentation states process-crash recovery is tested but universal power-loss durability is not claimed.",
+      "scope": "Durable staging applies to file-backed collections only.",
+      "limitations": ["Do not call in-memory commits durable.", "Windows directory sync is not a portable universal power-loss proof."]
+    },
+    {
+      "id": "SYS-008",
+      "claim": "Resident exact GPU state can be updated incrementally after add/delete when capacity, layout, chunk, and budget constraints permit; otherwise a later preparation can rebuild it.",
+      "status": "supported_with_scope",
+      "source_artifacts": [
+        {"path": "crates/qenlo/src/lib.rs", "lines": "1527-1541", "role": "mutation invalidation and update attempt"},
+        {"path": "crates/qenlo/src/gpu.rs", "lines": "411-470", "role": "incremental update constraints"},
+        {"path": "crates/qenlo/src/gpu.rs", "lines": "1092-1136, 1139-1149", "role": "full prepare and update dispatch"},
+        {"path": "paper/paper.tex", "lines": "49, 131", "role": "measured mutation wording"}
+      ],
+      "evidence": "The update path appends rows and updates live masks when its admission checks pass; unsupported layouts, excessive chunks, budget failures, or health failure return false and leave the generation unprepared for later rebuilding.",
+      "scope": "Exact WGPU resident state and the measured mutation cells.",
+      "limitations": ["Measured zero rebuild fraction is not a universal mutation guarantee.", "The source exposes no arbitrary vector replacement operation in this path."]
+    },
+    {
+      "id": "SYS-009",
+      "claim": "TorchIndex supports the device type names CPU, CUDA, and MPS, with availability checks, but current repository tests provide CPU conformance and negative CUDA coverage rather than positive CUDA/MPS evidence.",
+      "status": "supported_with_scope",
+      "source_artifacts": [
+        {"path": "sdk/python/src/qenlo/torch.py", "lines": "26-75", "role": "device validation and FP32 ownership"},
+        {"path": "sdk/python/tests/test_torch_index.py", "lines": "1, 62-74", "role": "test scope"},
+        {"path": "paper/paper.tex", "lines": "51", "role": "manuscript device wording"}
+      ],
+      "evidence": "Constructor accepts only cpu/cuda/mps and checks torch CUDA/MPS availability. The test module describes itself as CPU-only and tests the unavailable-CUDA branch when CUDA is absent; no positive MPS test occurs in the file.",
+      "scope": "API/source support versus tested hardware evidence.",
+      "limitations": ["Do not infer Android or iOS device support from this tensor bridge.", "Do not claim all PyTorch device backends are supported."]
+    },
+    {
+      "id": "SYS-010",
+      "claim": "TorchIndex.from_collection captures a filtered generation and sequential search rejects the view after a canonical mutation.",
+      "status": "supported_with_scope",
+      "source_artifacts": [
+        {"path": "sdk/python/src/qenlo/torch.py", "lines": "90-106", "role": "snapshot generation capture"},
+        {"path": "sdk/python/src/qenlo/torch.py", "lines": "124-168", "role": "single generation check before GEMM"},
+        {"path": "sdk/python/tests/test_torch_index.py", "lines": "47-60", "role": "stale mutation test"}
+      ],
+      "evidence": "from_collection stores _source_collection and _source_generation. search compares current collection generation and raises a stale RuntimeError; the test deletes a row and verifies rejection.",
+      "scope": "Sequential stale-view behavior.",
+      "limitations": ["There is one pre-computation generation check; no post-computation recheck or lock spanning the GEMM is present.", "A double-checked concurrent snapshot guarantee is unsupported."]
+    },
+    {
+      "id": "SYS-011",
+      "claim": "The old appendix can describe an FP64 oracle and deterministic ordering, but its wording that tied cutoffs accept only deterministic members selected by that order overstates cross-engine oracle equivalence.",
+      "status": "overclaim_flag",
+      "source_artifacts": [
+        {"path": "paper/audit/before/appendix.tex", "lines": "36-39", "role": "historical correctness prose"},
+        {"path": "paper/audit/before/head-paper.tex", "lines": "40", "role": "correct FP32/oracle qualification"}
+      ],
+      "evidence": "Implementation orders ties deterministically, but CPU/GPU/Torch comparison precision differs and the retained manuscript itself says exhaustive does not mean bit-identical to the FP64 oracle.",
+      "scope": "Paper wording audit.",
+      "limitations": ["Use deterministic implementation order plus measured oracle qualification; do not claim a universal tie theorem."]
+    },
+    {
+      "id": "SYS-012",
+      "claim": "The current phrase 'Atomic batches publish only after validation and durable staging' requires a file-backed qualifier.",
+      "status": "overclaim_flag",
+      "source_artifacts": [
+        {"path": "paper/paper.tex", "lines": "37", "role": "current manuscript phrase"},
+        {"path": "crates/qenlo/src/lib.rs", "lines": "1415-1426, 1442-1511", "role": "in-memory versus file-backed paths"},
+        {"path": "research/implementation-notes.md", "lines": "13", "role": "power-loss limitation"}
+      ],
+      "evidence": "In-memory mutation calls update the canonical store directly and has no durable generation; file-backed commit performs WAL staging. Source documentation limits durability evidence to process-crash recovery and declines universal power-loss durability.",
+      "scope": "Current manuscript wording.",
+      "limitations": ["A corrected phrase can state atomic validation/application for in-memory collections and durable staging for file-backed collections."]
+    },
+    {
+      "id": "SYS-013",
+      "claim": "A double-checked concurrent TorchIndex snapshot guarantee is not supported by the current source.",
+      "status": "overclaim_flag",
+      "source_artifacts": [
+        {"path": "sdk/python/src/qenlo/torch.py", "lines": "133-155", "role": "single pre-computation check"},
+        {"path": "sdk/python/tests/test_torch_index.py", "lines": "47-60", "role": "sequential stale test only"}
+      ],
+      "evidence": "search checks collection generation once before converting queries and running GEMM. The source does not reacquire a native collection read lock or compare generation after computation.",
+      "scope": "Concurrent snapshot semantics.",
+      "limitations": ["Sequential stale rejection remains supported."]
+    }
+  ]
+}

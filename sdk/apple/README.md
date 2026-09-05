@@ -4,6 +4,19 @@ Type-safe Swift bindings for **Qenlo** — the embedded, durable vector database
 
 The Swift package provides typed, `Sendable`-safe bindings for macOS and iOS applications with zero background servers, local storage persistence, atomic mutations, and fast exact filtered vector search.
 
+Collections default to exhaustive CPU execution. Desktop artifacts built with portable GPU support can opt into automatic routing or require the GPU:
+
+```swift
+let configuration = QenloCollectionConfiguration(
+    backend: .automatic,
+    gpuFilterMode: .gpuPredicate,
+    gpuAllocationBudgetBytes: 512 * 1024 * 1024
+)
+let db = try QenloCollection(memoryDimension: 384, configuration: configuration)
+```
+
+Automatic mode records its actual route and fallback in `QenloExecutionReport`. Required-GPU mode fails during construction if the artifact or host cannot provide the backend. iOS packages remain CPU-only unless their native artifact explicitly enables portable GPU support.
+
 ## Installation
 
 Add Qenlo to your `Package.swift` dependencies:
@@ -123,4 +136,3 @@ try db.deleteBatch([10, 11])
 ## License
 
 Dual-licensed under **MIT** or **Apache-2.0** at your option.
-

@@ -1,0 +1,520 @@
+mode=common
+captured_utc=2026-09-05T13:54:57Z
+current_source_bundle_sha256=730c050065e6786972a7be4f9bcb619168becdc943ce1122d1583c61f66409e3
+baseline_source_bundle_sha256=f37e744c7ee4054a74c4b4181f2dde61dade4d677bbc5493b9a36b61d165a45d
+Linux e27af91fc299 6.8.0-134-generic #134~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Jun 30 14:05:04 UTC  x86_64 x86_64 x86_64 GNU/Linux
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           52 bits physical, 57 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  96
+On-line CPU(s) list:                     0-95
+Vendor ID:                               GenuineIntel
+Model name:                              Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz
+CPU family:                              6
+Model:                                   106
+Thread(s) per core:                      2
+Core(s) per socket:                      24
+Socket(s):                               2
+Stepping:                                6
+CPU(s) scaling MHz:                      45%
+CPU max MHz:                             3500.0000
+CPU min MHz:                             800.0000
+BogoMIPS:                                5600.00
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local split_lock_detect wbnoinvd dtherm ida arat pln pts vnmi avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq la57 rdpid fsrm md_clear pconfig flush_l1d arch_capabilities
+Virtualization:                          VT-x
+L1d cache:                               2.3 MiB (48 instances)
+L1i cache:                               1.5 MiB (48 instances)
+L2 cache:                                60 MiB (48 instances)
+L3 cache:                                72 MiB (2 instances)
+NUMA node(s):                            2
+NUMA node0 CPU(s):                       0-23,48-71
+NUMA node1 CPU(s):                       24-47,72-95
+Vulnerability Gather data sampling:      Mitigation; Microcode
+Vulnerability Indirect target selection: Mitigation; Aligned branch/return thunks
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Mitigation; Clear CPU buffers; SMT vulnerable
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Not affected
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Not affected
+               total        used        free      shared  buff/cache   available
+Mem:     540644118528 70627508224 135486730240  1141030912 339802378240 470016610304
+Swap:              0           0           0
+Filesystem                            1B-blocks         Used     Available Use% Mounted on
+overlay                             32212254720   3386851328   28825403392  11% /
+tmpfs                                  67108864            0      67108864   0% /dev
+shm                                 25000001536            0   25000001536   0% /dev/shm
+/dev/mapper/ubuntu--vg-ubuntu--lv  487880318976  24223072256  438799077376   6% /usr/bin/nvidia-smi
+tmpfs                              270322057216            0  270322057216   0% /sys/fs/cgroup
+tmpfs                               54064414720      5697536   54058717184   1% /run/nvidia-persistenced/socket
+/dev/mapper/vg-lv                 7679367970816 627882008576 7051485962240   9% /etc/hosts
+tmpfs                                      4096         4096             0 100% /run/nvidia-ctk-hook68457edf-b180-48fc-8a2d-caea48fb7ca2
+tmpfs                                      4096            0          4096   0% /proc/acpi
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Sat Sep  5 13:54:57 2026
+Driver Version                                         : 580.159.04
+CUDA Version                                           : 13.0
+
+Attached GPUs                                          : 1
+GPU 00000000:D1:00.0
+    Product Name                                       : NVIDIA A40
+    Product Brand                                      : NVIDIA
+    Product Architecture                               : Ampere
+    Display Mode                                       : Requested functionality has been deprecated
+    Display Attached                                   : Yes
+    Display Active                                     : Disabled
+    Persistence Mode                                   : Enabled
+    Addressing Mode                                    : None
+    MIG Mode
+        Current                                        : N/A
+        Pending                                        : N/A
+    Accounting Mode                                    : Disabled
+    Accounting Mode Buffer Size                        : 4000
+    Driver Model
+        Current                                        : N/A
+        Pending                                        : N/A
+    Serial Number                                      : 1322221002909
+    GPU UUID                                           : GPU-5766e374-19b1-d3be-bc74-520b04bb2f77
+    GPU PDI                                            : 0x2b95f1c8acab3be
+    Minor Number                                       : 7
+    VBIOS Version                                      : 94.02.5C.00.03
+    MultiGPU Board                                     : No
+    Board ID                                           : 0xd100
+    Board Part Number                                  : 900-2G133-0000-000
+    GPU Part Number                                    : 2235-895-A1
+    FRU Part Number                                    : N/A
+    Platform Info
+        Chassis Serial Number                          : N/A
+        Slot Number                                    : N/A
+        Tray Index                                     : N/A
+        Host ID                                        : N/A
+        Peer Type                                      : N/A
+        Module Id                                      : 1
+        GPU Fabric GUID                                : N/A
+    Inforom Version
+        Image Version                                  : G133.0200.00.05
+        OEM Object                                     : 2.0
+        ECC Object                                     : 6.16
+        Power Management Object                        : N/A
+    Inforom BBX Object Flush
+        Latest Timestamp                               : N/A
+        Latest Duration                                : N/A
+    GPU Operation Mode
+        Current                                        : N/A
+        Pending                                        : N/A
+    GPU C2C Mode                                       : N/A
+    GPU Virtualization Mode
+        Virtualization Mode                            : None
+        Host VGPU Mode                                 : N/A
+        vGPU Heterogeneous Mode                        : N/A
+    GPU Recovery Action                                : None
+    GSP Firmware Version                               : 580.159.04
+    IBMNPU
+        Relaxed Ordering Mode                          : N/A
+    PCI
+        Bus                                            : 0xD1
+        Device                                         : 0x00
+        Domain                                         : 0x0000
+        Base Classcode                                 : 0x3
+        Sub Classcode                                  : 0x2
+        Device Id                                      : 0x223510DE
+        Bus Id                                         : 00000000:D1:00.0
+        Sub System Id                                  : 0x145A10DE
+        GPU Link Info
+            PCIe Generation
+                Max                                    : 4
+                Current                                : 4
+                Device Current                         : 4
+                Device Max                             : 4
+                Host Max                               : 4
+            Link Width
+                Max                                    : 16x
+                Current                                : 16x
+        Bridge Chip
+            Type                                       : N/A
+            Firmware                                   : N/A
+        Replays Since Reset                            : 0
+        Replay Number Rollovers                        : 0
+        Tx Throughput                                  : 439 KB/s
+        Rx Throughput                                  : 341 KB/s
+        Atomic Caps Outbound                           : N/A
+        Atomic Caps Inbound                            : N/A
+    Fan Speed                                          : 0 %
+    Performance State                                  : P0
+    Clocks Event Reasons
+        Idle                                           : Active
+        Applications Clocks Setting                    : Not Active
+        SW Power Cap                                   : Not Active
+        HW Slowdown                                    : Not Active
+            HW Thermal Slowdown                        : Not Active
+            HW Power Brake Slowdown                    : Not Active
+        Sync Boost                                     : Not Active
+        SW Thermal Slowdown                            : Not Active
+        Display Clock Setting                          : Not Active
+    Clocks Event Reasons Counters
+        SW Power Capping                               : 147293747014 us
+        Sync Boost                                     : 0 us
+        SW Thermal Slowdown                            : 0 us
+        HW Thermal Slowdown                            : 0 us
+        HW Power Braking                               : 0 us
+    Sparse Operation Mode                              : N/A
+    FB Memory Usage
+        Total                                          : 46068 MiB
+        Reserved                                       : 580 MiB
+        Used                                           : 0 MiB
+        Free                                           : 45489 MiB
+    BAR1 Memory Usage
+        Total                                          : 65536 MiB
+        Used                                           : 1 MiB
+        Free                                           : 65535 MiB
+    Conf Compute Protected Memory Usage
+        Total                                          : 0 MiB
+        Used                                           : 0 MiB
+        Free                                           : 0 MiB
+    Compute Mode                                       : Default
+    Utilization
+        GPU                                            : 1 %
+        Memory                                         : 0 %
+        Encoder                                        : 0 %
+        Decoder                                        : 0 %
+        JPEG                                           : 0 %
+        OFA                                            : 0 %
+    Encoder Stats
+        Active Sessions                                : 0
+        Average FPS                                    : 0
+        Average Latency                                : 0
+    FBC Stats
+        Active Sessions                                : 0
+        Average FPS                                    : 0
+        Average Latency                                : 0
+    DRAM Encryption Mode
+        Current                                        : N/A
+        Pending                                        : N/A
+    ECC Mode
+        Current                                        : Enabled
+        Pending                                        : Enabled
+    ECC Errors
+        Volatile
+            SRAM Correctable                           : 0
+            SRAM Uncorrectable Parity                  : 0
+            SRAM Uncorrectable SEC-DED                 : 0
+            DRAM Correctable                           : 0
+            DRAM Uncorrectable                         : 0
+        Aggregate
+            SRAM Correctable                           : 0
+            SRAM Uncorrectable Parity                  : 0
+            SRAM Uncorrectable SEC-DED                 : 0
+            DRAM Correctable                           : 0
+            DRAM Uncorrectable                         : 0
+            SRAM Threshold Exceeded                    : No
+        Aggregate Uncorrectable SRAM Sources
+            SRAM L2                                    : 0
+            SRAM SM                                    : 0
+            SRAM Microcontroller                       : 0
+            SRAM PCIE                                  : 0
+            SRAM Other                                 : 0
+        Channel Repair Pending                         : No
+        TPC Repair Pending                             : No
+        Unrepairable Memory                            : N/A
+    Retired Pages
+        Single Bit ECC                                 : N/A
+        Double Bit ECC                                 : N/A
+        Pending Page Blacklist                         : N/A
+    Remapped Rows
+        Correctable Error                              : 0
+        Inactive Correctable Error                     : 0
+        Uncorrectable Error                            : 0
+        Inactive Uncorrectable Error                   : 0
+        Pending                                        : No
+        Remapping Failure Occurred                     : No
+        Bank Remap Availability Histogram
+            Max                                        : 192 bank(s)
+            High                                       : 0 bank(s)
+            Partial                                    : 0 bank(s)
+            Low                                        : 0 bank(s)
+            None                                       : 0 bank(s)
+    Temperature
+        GPU Current Temp                               : 41 C
+        GPU T.Limit Temp                               : N/A
+        GPU Shutdown Temp                              : 98 C
+        GPU Slowdown Temp                              : 95 C
+        GPU Max Operating Temp                         : 88 C
+        GPU Target Temperature                         : N/A
+        Memory Current Temp                            : N/A
+        Memory Max Operating Temp                      : N/A
+    GPU Power Readings
+        Average Power Draw                             : 102.10 W
+        Instantaneous Power Draw                       : 108.18 W
+        Current Power Limit                            : 300.00 W
+        Requested Power Limit                          : 300.00 W
+        Default Power Limit                            : 300.00 W
+        Min Power Limit                                : 100.00 W
+        Max Power Limit                                : 300.00 W
+    GPU Memory Power Readings 
+        Average Power Draw                             : N/A
+        Instantaneous Power Draw                       : N/A
+    Module Power Readings
+        Average Power Draw                             : N/A
+        Instantaneous Power Draw                       : N/A
+        Current Power Limit                            : N/A
+        Requested Power Limit                          : N/A
+        Default Power Limit                            : N/A
+        Min Power Limit                                : N/A
+        Max Power Limit                                : N/A
+    Power Smoothing                                    : N/A
+    Workload Power Profiles
+        Requested Profiles                             : N/A
+        Enforced Profiles                              : N/A
+    Clocks
+        Graphics                                       : 1740 MHz
+        SM                                             : 1740 MHz
+        Memory                                         : 7251 MHz
+        Video                                          : 1530 MHz
+    Applications Clocks
+        Graphics                                       : 1740 MHz
+        Memory                                         : 7251 MHz
+    Default Applications Clocks
+        Graphics                                       : 1740 MHz
+        Memory                                         : 7251 MHz
+    Deferred Clocks
+        Memory                                         : N/A
+    Max Clocks
+        Graphics                                       : 1740 MHz
+        SM                                             : 1740 MHz
+        Memory                                         : 7251 MHz
+        Video                                          : 1530 MHz
+    Max Customer Boost Clocks
+        Graphics                                       : 1740 MHz
+    Clock Policy
+        Auto Boost                                     : N/A
+        Auto Boost Default                             : N/A
+    Fabric
+        State                                          : N/A
+        Status                                         : N/A
+        CliqueId                                       : N/A
+        ClusterUUID                                    : N/A
+        Health
+            Summary                                    : N/A
+            Bandwidth                                  : N/A
+            Route Recovery in progress                 : N/A
+            Route Unhealthy                            : N/A
+            Access Timeout Recovery                    : N/A
+            Incorrect Configuration                    : N/A
+            Partition Assigned                         : N/A
+    Processes                                          : None
+    Capabilities
+        EGM                                            : disabled
+
+rustc 1.98.0 (88d9e12ae 2026-08-18)
+binary: rustc
+commit-hash: 88d9e12ae178fab0fb5cc050a94da85685d449ea
+commit-date: 2026-08-18
+host: x86_64-unknown-linux-gnu
+release: 1.98.0
+LLVM version: 22.1.8
+cargo 1.98.0 (797e8a9bc 2026-08-05)
+Python 3.12.3
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+PyGObject==3.48.2
+PyJWT==2.7.0
+PyPika==0.51.1
+PyYAML==6.0.3
+Pygments==2.19.2
+Send2Trash==1.8.3
+aiohappyeyeballs==2.7.1
+aiohttp==3.14.3
+aiosignal==1.4.0
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.12.0
+argon2-cffi-bindings==25.1.0
+argon2-cffi==25.1.0
+arrow==1.4.0
+asttokens==3.0.1
+async-lru==2.0.5
+attrs==25.4.0
+babel==2.17.0
+bcrypt==5.0.0
+beautifulsoup4==4.14.3
+bleach==6.3.0
+blinker==1.7.0
+build==1.6.0
+certifi==2025.11.12
+cffi==2.0.0
+charset-normalizer==3.4.4
+chromadb==1.5.9
+click==8.5.0
+comm==0.2.3
+cryptography==41.0.7
+dbus-python==1.3.2
+debugpy==1.8.19
+decorator==5.2.1
+defusedxml==0.7.1
+distlib==0.4.0
+distro==1.9.0
+durationpy==0.11
+executing==2.2.1
+faiss-cpu==1.15.0
+fastjsonschema==2.21.2
+filelock==3.20.1
+flatbuffers==25.12.19
+fqdn==1.5.1
+frozenlist==1.8.0
+fsspec==2025.12.0
+googleapis-common-protos==1.75.3
+grpcio==1.83.1
+h11==0.16.0
+hf-xet==1.6.0
+hf_transfer==0.1.9
+httpcore==1.0.9
+httplib2==0.20.4
+httptools==0.8.0
+httpx==0.28.1
+huggingface_hub==1.30.0
+idna==3.11
+importlib_resources==7.1.0
+ipykernel==7.1.0
+ipython==9.8.0
+ipython_pygments_lexers==1.1.1
+ipywidgets==8.1.8
+isoduration==20.11.0
+jedi==0.19.2
+json5==0.12.1
+jsonpointer==3.0.0
+jsonschema-specifications==2025.9.1
+jsonschema==4.25.1
+jupyter-archive==3.4.0
+jupyter-events==0.12.0
+jupyter-lsp==2.3.0
+jupyter_client==8.7.0
+jupyter_core==5.9.1
+jupyter_server==2.17.0
+jupyter_server_terminals==0.5.3
+jupyterlab==4.4.10
+jupyterlab_pygments==0.3.0
+jupyterlab_server==2.28.0
+jupyterlab_widgets==3.0.16
+kubernetes==36.0.3
+lark==1.3.1
+launchpadlib==1.11.0
+lazr.restfulclient==0.14.6
+lazr.uri==1.0.6
+markdown-it-py==4.2.0
+matplotlib-inline==0.2.1
+mdurl==0.1.2
+mistune==3.1.4
+mmh3==5.3.0
+mpmath==1.3.0
+multidict==6.7.1
+nbclient==0.10.2
+nbconvert==7.16.6
+nbformat==5.10.4
+nest-asyncio==1.6.0
+networkx==3.6.1
+notebook==7.4.2
+notebook_shim==0.2.4
+numpy==2.3.3
+nvidia-cublas-cu12==12.8.4.1
+nvidia-cuda-cupti-cu12==12.8.90
+nvidia-cuda-nvrtc-cu12==12.8.93
+nvidia-cuda-runtime-cu12==12.8.90
+nvidia-cudnn-cu12==9.10.2.21
+nvidia-cufft-cu12==11.3.3.83
+nvidia-cufile-cu12==1.13.1.3
+nvidia-curand-cu12==10.3.9.90
+nvidia-cusolver-cu12==11.7.3.90
+nvidia-cusparse-cu12==12.5.8.93
+nvidia-cusparselt-cu12==0.7.1
+nvidia-nccl-cu12==2.27.5
+nvidia-nvjitlink-cu12==12.8.93
+nvidia-nvshmem-cu12==3.3.20
+nvidia-nvtx-cu12==12.8.90
+oauthlib==3.2.2
+onnxruntime==1.29.0
+opentelemetry-api==1.44.0
+opentelemetry-exporter-otlp-proto-common==1.44.0
+opentelemetry-exporter-otlp-proto-grpc==1.44.0
+opentelemetry-proto==1.44.0
+opentelemetry-sdk==1.44.0
+opentelemetry-semantic-conventions==0.65b0
+orjson==3.12.0
+overrides==7.7.0
+packaging==25.0
+pandocfilters==1.5.1
+parso==0.8.5
+pexpect==4.9.0
+platformdirs==4.5.1
+prometheus_client==0.23.1
+prompt_toolkit==3.0.52
+propcache==0.5.2
+protobuf==7.36.1
+psutil==7.0.0
+ptyprocess==0.7.0
+pure_eval==0.2.3
+pybase64==1.5.0
+pycparser==2.23
+pydantic-settings==2.15.0
+pydantic==2.13.5
+pydantic_core==2.46.5
+pyparsing==3.1.1
+pyproject_hooks==1.2.0
+python-apt==2.7.7+ubuntu5.1
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.3
+python-json-logger==4.0.0
+pyzmq==27.1.0
+referencing==0.37.0
+requests-oauthlib==2.0.0
+requests==2.32.5
+rfc3339-validator==0.1.4
+rfc3986-validator==0.1.1
+rfc3987-syntax==1.1.0
+rich==15.0.0
+rpds-py==0.30.0
+setuptools==80.9.0
+shellingham==1.5.4
+six==1.16.0
+soupsieve==2.8
+stack-data==0.6.3
+sympy==1.14.0
+tenacity==9.1.4
+terminado==0.18.1
+tinycss2==1.4.0
+tokenizers==0.23.2
+torch==2.9.1+cu128
+torchaudio==2.9.1+cu128
+tornado==6.5.4
+tqdm==4.70.0
+traitlets==5.14.3
+triton==3.5.1
+typer==0.27.2
+typing-inspection==0.4.4
+typing_extensions==4.15.0
+tzdata==2025.3
+uri-template==1.3.0
+urllib3==2.6.2
+uvicorn==0.52.4
+uvloop==0.22.1
+virtualenv==20.35.4
+wadllib==1.3.6
+watchfiles==1.2.0
+wcwidth==0.2.14
+webcolors==25.10.0
+webencodings==0.5.1
+websocket-client==1.9.0
+websockets==17.1
+widgetsnbextension==4.0.15
+yarl==1.24.5

@@ -50,7 +50,7 @@ pub use qenlo_core::{Predicate as Filter, TimestampRange};
 
 /// Maximum supported result count for this prototype.
 pub const MAX_K: usize = 64;
-/// Default cap for all Qenlo-owned GPU allocations, including scratch buffers.
+/// Default cap for Qenlo-owned GPU buffer bytes, including scratch buffers.
 pub const DEFAULT_GPU_BUDGET_BYTES: u64 = 512 * 1024 * 1024;
 #[cfg(feature = "gpu-wgpu")]
 const AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS: usize = 4_096;
@@ -156,8 +156,8 @@ pub struct CollectionConfig {
     pub gpu_allocation_budget_bytes: u64,
 }
 
-/// Admission budget for canonical loading and durable writes (not measured RSS).
-/// Allows vector payload plus 512 bytes per row for indexes and bookkeeping.
+/// Admission budget for canonical loading, the aligned exact-CPU scan view, and durable writes.
+/// The estimate also allows 512 bytes per row for metadata indexes and bookkeeping; it is not RSS.
 #[derive(Debug, Clone, Copy)]
 pub struct StorageOptions {
     pub max_load_bytes: u64,
@@ -240,14 +240,18 @@ impl<T> Measurement<T> {
     }
 }
 
-/// Host-side phase durations. GPU device timestamps are not currently collected.
+/// Search phase durations. GPU scoring and selection use device timestamps when supported;
+/// the other fields are host-observed durations.
 #[derive(Debug, Clone)]
 pub struct PhaseTimings {
     pub preparation: Measurement<Duration>,
     pub filtering: Measurement<Duration>,
     pub upload: Measurement<Duration>,
+    /// Total backend execution observed by the host.
     pub execution: Measurement<Duration>,
     pub readback: Measurement<Duration>,
+    /// GPU scoring time when timestamp queries are supported.
+    pub scoring: Measurement<Duration>,
     pub selection: Measurement<Duration>,
 }
 
@@ -259,6 +263,7 @@ impl PhaseTimings {
             upload: Measurement::unavailable("no device transfer"),
             execution: Measurement::Available(execution),
             readback: Measurement::unavailable("no device readback"),
+            scoring: Measurement::unavailable("included in exact CPU execution"),
             selection: Measurement::unavailable("included in exact CPU execution"),
         }
     }
@@ -371,6 +376,14 @@ pub struct CollectionStats {
     pub durable_generation: Option<u64>,
     pub recovered_interrupted_write: bool,
     pub closed: bool,
+}
+
+/// Owned live rows captured from one canonical generation for derived integrations.
+#[derive(Debug, Clone)]
+pub struct CanonicalSnapshot {
+    pub dimension: usize,
+    pub generation: u64,
+    pub records: Vec<Record>,
 }
 
 /// Explicit validation, lifecycle, storage, and backend failures.
@@ -610,7 +623,17 @@ fn contiguous_run_count(rows: &[u32]) -> usize {
 impl Collection {
     /// Construct an in-memory collection; use `create` for durable commits.
     pub async fn new(config: CollectionConfig) -> Result<Self, Error> {
-        Ok(Self::from_state(CollectionState::new(config).await?))
+        Self::new_with_options(config, StorageOptions::default()).await
+    }
+
+    /// Construct an in-memory collection with an explicit canonical-memory admission budget.
+    pub async fn new_with_options(
+        config: CollectionConfig,
+        options: StorageOptions,
+    ) -> Result<Self, Error> {
+        Ok(Self::from_state(
+            CollectionState::new_with_options(config, options).await?,
+        ))
     }
 
     /// Create a collection in an empty directory, held under an exclusive OS lock.
@@ -793,6 +816,29 @@ impl Collection {
                 (records, total)
             }
         }
+    }
+
+    /// Copy live rows matching `filter` while holding one canonical read generation.
+    pub fn canonical_snapshot(&self, filter: &Filter) -> Result<CanonicalSnapshot, Error> {
+        let state = self.inner.read_blocking();
+        state.ensure_open()?;
+        let records = state
+            .store
+            .filter(filter)
+            .into_iter()
+            .map(|slot| {
+                state
+                    .store
+                    .record(slot)
+                    .expect("canonical filter returns valid rows")
+                    .clone()
+            })
+            .collect();
+        Ok(CanonicalSnapshot {
+            dimension: state.store.dimension(),
+            generation: state.store.generation(),
+            records,
+        })
     }
 
     /// Explicitly prepare the current generation, serialized with all mutations.
@@ -1166,10 +1212,18 @@ struct CollectionState {
 impl CollectionState {
     #[tracing::instrument(name = "qenlo.initialize", skip_all, fields(backend = ?config.backend))]
     pub async fn new(config: CollectionConfig) -> Result<Self, Error> {
+        Self::new_with_options(config, StorageOptions::default()).await
+    }
+
+    #[tracing::instrument(name = "qenlo.initialize", skip_all, fields(backend = ?config.backend))]
+    pub async fn new_with_options(
+        config: CollectionConfig,
+        options: StorageOptions,
+    ) -> Result<Self, Error> {
         let store = CoreStore::new(config.dimension)?;
         let (backend, fallback_reason) = Self::initialize_backend(&config).await?;
         Ok(Self {
-            storage_options: StorageOptions::default(),
+            storage_options: options,
             last_commit: None,
             rebuild_policy: RebuildPolicy::OnSearch,
             preparation_reason: PreparationReason::Initial,
@@ -1367,9 +1421,9 @@ impl CollectionState {
             })])?;
             return Ok(());
         }
+        let previous_generation = self.store.generation();
         self.store.add(id, user_id, timestamp, vector)?;
-        self.prepared_generation = None;
-        self.preparation_reason = PreparationReason::Mutation;
+        self.finish_mutation(previous_generation, &[id]);
         Ok(())
     }
 
@@ -1379,9 +1433,9 @@ impl CollectionState {
             self.commit(&[Mutation::Delete(id)])?;
             return Ok(());
         }
+        let previous_generation = self.store.generation();
         self.store.delete(id)?;
-        self.prepared_generation = None;
-        self.preparation_reason = PreparationReason::Mutation;
+        self.finish_mutation(previous_generation, &[id]);
         Ok(())
     }
 
@@ -1442,12 +1496,19 @@ impl CollectionState {
             } else {
                 Measurement::unavailable("in-memory collection")
             };
+            let previous_generation = self.store.generation();
             self.store.apply_batch(&core_mutations)?;
             if self.path.is_some() {
                 self.durable_generation = Some(self.store.generation());
             }
-            self.prepared_generation = None;
-            self.preparation_reason = PreparationReason::Mutation;
+            let changed_ids = mutations
+                .iter()
+                .map(|mutation| match mutation {
+                    Mutation::Add(row) => row.id,
+                    Mutation::Delete(id) => *id,
+                })
+                .collect::<Vec<_>>();
+            self.finish_mutation(previous_generation, &changed_ids);
             persistence
         };
         let report = CommitReport {
@@ -1461,6 +1522,22 @@ impl CollectionState {
         };
         self.last_commit = Some(report.clone());
         Ok(report)
+    }
+
+    fn finish_mutation(&mut self, previous_generation: u64, changed_ids: &[u64]) {
+        #[cfg(feature = "gpu-wgpu")]
+        let was_prepared = self.prepared_generation == Some(previous_generation);
+        #[cfg(not(feature = "gpu-wgpu"))]
+        let _ = (previous_generation, changed_ids);
+        self.prepared_generation = None;
+        self.preparation_reason = PreparationReason::Mutation;
+        #[cfg(feature = "gpu-wgpu")]
+        if was_prepared
+            && let Backend::Wgpu(gpu) = &mut self.backend
+            && gpu.try_update(&self.store, changed_ids)
+        {
+            self.prepared_generation = Some(self.store.generation());
+        }
     }
 
     fn record_single_commit(
@@ -2430,7 +2507,8 @@ mod tests {
             let path = temp_dir("options");
             let config = CollectionConfig::cpu_exact(2);
             let options = StorageOptions {
-                max_load_bytes: 600,
+                // One 2D row (616 admitted bytes) fits; two rows do not.
+                max_load_bytes: 700,
             };
             let collection = Collection::create_with_options(&path, config.clone(), options)
                 .await
@@ -2454,6 +2532,39 @@ mod tests {
             assert_eq!(resolved.stats().live_rows, 0);
             resolved.close().unwrap();
             std::fs::remove_dir_all(path).unwrap();
+        });
+    }
+
+    #[test]
+    fn in_memory_collection_honors_explicit_storage_budget() {
+        block_on(async {
+            let collection = Collection::new_with_options(
+                CollectionConfig::cpu_exact(2),
+                StorageOptions {
+                    // One 2D row (616 admitted bytes) fits; two rows do not.
+                    max_load_bytes: 700,
+                },
+            )
+            .await
+            .unwrap();
+            collection
+                .add_batch(&[NewRecord {
+                    id: 1,
+                    user_id: 1,
+                    timestamp: 0,
+                    vector: vec![1.0, 0.0],
+                }])
+                .unwrap();
+            assert!(matches!(
+                collection.add_batch(&[NewRecord {
+                    id: 2,
+                    user_id: 1,
+                    timestamp: 0,
+                    vector: vec![1.0, 0.0],
+                }]),
+                Err(Error::Storage(_))
+            ));
+            assert_eq!(collection.stats().live_rows, 1);
         });
     }
 
@@ -2664,6 +2775,102 @@ mod tests {
                 assert_eq!(response.report.row_cache_hit, Some(expected_hit));
                 assert_eq!(response.report.predicate_traversals, traversals);
             }
+        });
+    }
+
+    #[cfg(feature = "gpu-wgpu")]
+    #[test]
+    fn prepared_gpu_applies_bounded_append_and_delete_without_rebuild() {
+        block_on(async {
+            let created = Collection::new(CollectionConfig {
+                dimension: 2,
+                backend: BackendSelection::WgpuRequired(GpuFilterMode::GpuPredicate),
+                gpu_allocation_budget_bytes: DEFAULT_GPU_BUDGET_BYTES,
+            })
+            .await;
+            let collection = match created {
+                Ok(collection) => collection,
+                Err(error) if std::env::var_os("QENLO_REQUIRE_GPU").is_none() => {
+                    eprintln!("GPU unavailable: {error}");
+                    return;
+                }
+                Err(error) => panic!("GPU required: {error}"),
+            };
+            collection.add(1, 7, 0, &[1.0, 0.0]).unwrap();
+            assert!(collection.prepare().await.unwrap());
+
+            collection.add(2, 7, 0, &[0.0, 1.0]).unwrap();
+            let after_add = collection
+                .search(&[0.0, 1.0], &Filter::ALL, 2)
+                .await
+                .unwrap();
+            assert!(!after_add.report.rebuilt);
+            assert_eq!(
+                after_add
+                    .results
+                    .iter()
+                    .map(|hit| hit.id)
+                    .collect::<Vec<_>>(),
+                [2, 1]
+            );
+            let stats = collection.stats();
+            assert_eq!(stats.prepared_generation, Some(stats.generation));
+
+            collection.delete(2).unwrap();
+            let after_delete = collection
+                .search(&[0.0, 1.0], &Filter::ALL, 2)
+                .await
+                .unwrap();
+            assert!(!after_delete.report.rebuilt);
+            assert_eq!(
+                after_delete
+                    .results
+                    .iter()
+                    .map(|hit| hit.id)
+                    .collect::<Vec<_>>(),
+                [1]
+            );
+        });
+    }
+
+    #[cfg(feature = "gpu-wgpu")]
+    #[test]
+    fn incremental_gpu_chunks_are_bounded_then_consolidated() {
+        block_on(async {
+            let created = Collection::new(CollectionConfig {
+                dimension: 2,
+                backend: BackendSelection::WgpuRequired(GpuFilterMode::GpuPredicate),
+                gpu_allocation_budget_bytes: DEFAULT_GPU_BUDGET_BYTES,
+            })
+            .await;
+            let collection = match created {
+                Ok(collection) => collection,
+                Err(error) if std::env::var_os("QENLO_REQUIRE_GPU").is_none() => {
+                    eprintln!("GPU unavailable: {error}");
+                    return;
+                }
+                Err(error) => panic!("GPU required: {error}"),
+            };
+            collection.add(1, 7, 0, &[1.0, 0.0]).unwrap();
+            collection.prepare().await.unwrap();
+            for id in 2..=1 + gpu::MAX_INCREMENTAL_CHUNKS as u64 {
+                collection.add(id, 7, id as i64, &[1.0, 0.0]).unwrap();
+                let stats = collection.stats();
+                assert_eq!(stats.prepared_generation, Some(stats.generation));
+            }
+
+            let overflow_id = gpu::MAX_INCREMENTAL_CHUNKS as u64 + 2;
+            collection
+                .add(overflow_id, 7, overflow_id as i64, &[1.0, 0.0])
+                .unwrap();
+            assert_eq!(collection.stats().prepared_generation, None);
+            let response = collection
+                .search(&[1.0, 0.0], &Filter::ALL, MAX_K)
+                .await
+                .unwrap();
+            assert!(response.report.rebuilt);
+            assert_eq!(response.results.len(), overflow_id as usize);
+            assert_eq!(collection.stats().prepared_generation, Some(overflow_id));
         });
     }
 

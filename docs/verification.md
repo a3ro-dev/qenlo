@@ -1,5 +1,35 @@
 # verification record
 
+## small-collection campaign (2026-09-05)
+
+The Runpod campaign retained 182 rows: 131 completed, 42 unavailable, seven
+failed, and two invalid-harness rows. The invalid rows remain visible and are
+excluded from conclusions. Corrected 100K × 768 RTX 4090 cells reached oracle
+recall 1.0. WGPU P95 was 0.897 ms for batch one, k=1, and 0.896 ms for batch
+eight, k=64, with 10% eligibility. PyTorch CUDA reached 0.671 ms and 0.384 ms
+respectively. See the [performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) for timing scopes and all losses.
+
+The selector candidate won five and lost seven of 12 qualified frozen-revision
+pairs and was therefore reverted. Mutation cells reported zero resident rebuilds;
+reopen rebuilt once. All campaign pods were deleted and the final known spend was
+`$0.9400778694252952`. Cloud NVIDIA results are not mobile evidence.
+
+The final bounded local release checks used one Cargo build job, one test thread,
+and at most two numerical threads. Workspace no-default-feature testing passed
+95 unit/integration tests plus one doctest. The required Vulkan GPU library run
+passed 52 tests on the local RTX 4050; the FFI suite passed six. Focused core,
+native CPU, and benchmark runs passed 18, 28, and 10 tests respectively. Strict
+Clippy passed for the changed Rust packages. Python passed 23 tests, including
+Torch CPU conformance, and built a tagged wheel plus source archive. TypeScript
+passed type checking and five tests and produced an inspected package tarball.
+Seven workflow YAML files and all PowerShell campaign scripts parsed. A local
+POSIX shell was unavailable, so the shell scripts remain covered by workflow
+execution rather than a new local `bash -n` result. The final eight-page PDF was
+compiled without unresolved references or overfull boxes and every rendered page
+was visually inspected.
+
+Historical verification records follow unchanged.
+
 2026-08-28, native Windows, `x86_64-pc-windows-msvc`, Intel UHD Graphics
 (integrated) plus NVIDIA GeForce RTX 4050 Laptop GPU (discrete). Rust 1.98.0
 (`88d9e12ae`, LLVM 22.1.8), Cargo 1.98.0.

@@ -54,7 +54,7 @@ for (const hit of response.results) {
   console.log(`Matched ID: ${hit.id}, Distance: ${hit.distance.toFixed(4)}`);
 }
 
-// Execution report with telemetry
+// Local execution report
 console.log(`Backend: ${response.report.actualBackend}`);
 console.log(`Duration: ${response.report.totalDurationNs}ns`);
 ```
@@ -156,13 +156,14 @@ interface CollectionStats {
 
 ---
 
-## Anonymous Telemetry Notice
+## Background work and networking
 
-Qenlo collects anonymous installation, execution, and hardware environment telemetry (OS platform, CPU architecture, SDK version, and search duration metrics) transmitted securely to `https://api.gobitsnbytes.org/qenlo/telemetry`. This telemetry is strictly anonymous, privacy-preserving, and mandatory across all SDK installations (there is no opt-out) in order to monitor stability, diagnose GPU driver regressions, and optimize embedded vector routing algorithms.
+Importing or using the package starts no background worker and sends no network
+request. Applications may export execution reports through their own telemetry
+system.
 
 ---
 
 ## License
 
 Dual-licensed under **MIT** or **Apache-2.0** at your option.
-
