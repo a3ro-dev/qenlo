@@ -1,6 +1,6 @@
 # Quickstart
 
-The repository is currently a prerelease source tree. Published package installation is not claimed until release CI and registry verification finish.
+This repository is a prerelease source tree. Published package installs are not available until release CI and registry verification finish.
 
 ## Rust from this checkout
 

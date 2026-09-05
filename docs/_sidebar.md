@@ -1,32 +1,35 @@
-* **Getting Started**
+* **Getting started**
   * [Overview](README.md)
   * [Quickstart](quickstart.md)
-  * [QenloDB Browser (Web, TUI, Desktop)](browser.md)
-  * [Core Concepts](concepts.md)
-  * [Suggested Use Cases](use-cases.md)
-  * [When to Use Qenlo (Pros & Cons)](trade-offs.md)
-  * [Feature Comparison Matrix](feature-matrix.md)
+  * [Collection browser](browser.md)
+  * [Core concepts](concepts.md)
+  * [Use cases](use-cases.md)
+  * [Trade-offs](trade-offs.md)
+  * [Feature matrix](feature-matrix.md)
 
-* **SDKs & Bindings**
+* **SDKs and bindings**
   * [Rust API](sdks/rust.md)
   * [Python SDK](sdks/python.md)
-  * [TypeScript / Node](sdks/typescript.md)
-  * [Go Driver](sdks/go.md)
-  * [Kotlin & Android](sdks/kotlin.md)
-  * [Swift & Apple](sdks/swift.md)
+  * [TypeScript SDK](sdks/typescript.md)
+  * [Go driver](sdks/go.md)
+  * [Kotlin and Android](sdks/kotlin.md)
+  * [Swift and Apple](sdks/swift.md)
 
-* **Architecture & Storage**
-  * [Architecture Specification](architecture.md)
-  * [Storage & .qn Format](qn-format-v1.md)
-  * [Crash Recovery Policy](recovery-policy.md)
-  * [GPU Acceleration & WGSL](gpu-design.md)
+* **Architecture and storage**
+  * [Architecture specification](architecture.md)
+  * [Storage and .qn format](qn-format-v1.md)
+  * [Recovery policy](recovery-policy.md)
+  * [GPU design](gpu-design.md)
+  * [CUDA backend todo](cuda-backend-todo.md)
 
-* **Research & Benchmarks**
-  * [Benchmark Protocol](benchmark-protocol.md)
-  * [Device Lab Ingestion](device-lab.md)
-  * [Evidence & Results](results-2026-08-28.md)
-  * [Verification Record](verification.md)
+* **Research and benchmarks**
+  * [Benchmark protocol](benchmark-protocol.md)
+  * [Device lab](device-lab.md)
+  * [Measured results](results-2026-08-28.md)
+  * [Verification record](verification.md)
 
-* **Release & Ops**
-  * [Implementation Status](implementation-status.md)
-  * [Package Publishing](publishing.md)
+* **Release and operations**
+  * [Implementation status](implementation-status.md)
+  * [Package publishing](publishing.md)
+  * [CI and release map](ci.md)
+

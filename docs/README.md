@@ -1,15 +1,15 @@
 # Qenlo documentation
 
-Qenlo is a research-grade embedded vector store for durable, exact, metadata-filtered retrieval. It runs inside an application and keeps canonical records locally; optional CPU, WGPU, ANN, and tensor structures decide how a query executes, not what data exists.
+Qenlo is a research-grade embedded vector store for durable, exact, metadata-filtered retrieval. It runs inside your application and stores canonical records locally. Optional CPU, WGPU, ANN, and tensor structures determine how a query runs, not which records exist.
 
 ## Start here
 
-- [Quickstart](quickstart.md): create, mutate, search, close, and reopen a collection.
-- [Concepts](concepts.md): canonical state, eligibility, exactness, and routing.
-- [Use cases](use-cases.md): where Qenlo fits and where it does not.
-- [Trade-offs](trade-offs.md): operational and performance costs.
-- [Architecture](architecture.md): storage and derived execution structures.
-- [Feature matrix](feature-matrix.md): implemented, optional, and unverified capabilities.
+- [Quickstart](quickstart.md): Create, mutate, search, close, and reopen a collection.
+- [Concepts](concepts.md): Canonical state, eligibility, exactness, and routing.
+- [Use cases](use-cases.md): Where Qenlo fits and where it does not.
+- [Trade-offs](trade-offs.md): Operational and performance costs.
+- [Architecture](architecture.md): Storage and derived execution structures.
+- [Feature matrix](feature-matrix.md): Implemented, optional, and unverified capabilities.
 
 ## Operate and integrate
 
@@ -31,6 +31,6 @@ Qenlo is a research-grade embedded vector store for durable, exact, metadata-fil
 - [Implementation status](implementation-status.md)
 - [Research paper](../paper/output/pdf/qenlo-final-research-paper.pdf)
 
-Benchmark results apply only to their recorded data, hardware, source revision, runtime, and timing boundary. They do not establish a universal CPU/GPU threshold or production-readiness claim.
+Benchmark results apply only to their recorded data, hardware, source revision, runtime, and timing boundary. They do not establish a universal CPU or GPU threshold, nor do they claim production readiness.
 
-Rust and the native ABI run in CI across Linux, Windows, and macOS. A successful target build is not physical-device validation. The core and SDKs start no background worker and make no network request; telemetry is a separately deployed, host-controlled component.
+Rust and the native ABI run in CI across Linux, Windows, and macOS. Passing a target build does not prove physical device validation. The core engine and SDKs start no background workers and make no network requests. Telemetry is an entirely separate, host-controlled service.

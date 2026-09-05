@@ -23,7 +23,7 @@ CPU is the conservative default and often wins when filtering leaves very few ca
 
 ### GPU portability
 
-WGPU offers one programming path across graphics APIs, not guaranteed performance or availability. Adapter selection, drivers, Vulkan ICDs, shader compilation, dispatch, and readback can dominate useful work. Required mode fails explicitly; automatic mode may fall back.
+WGPU provides a single programming path across graphics APIs, but it does not guarantee performance or hardware availability. Adapter selection, drivers, Vulkan ICDs, shader compilation, dispatch, and readback can dominate useful work. Required mode fails explicitly; automatic mode may fall back.
 
 ### Approximate and tensor paths
 
@@ -31,7 +31,7 @@ USearch changes the correctness contract, so recall must accompany latency. PyTo
 
 ### Reopen and mutation
 
-Canonical mutations can invalidate prepared eligibility and accelerator state. Reopen may rebuild derived state. Existing tests cover defined recovery cases, not arbitrary concurrent or power-loss schedules.
+Canonical mutations can invalidate prepared eligibility and accelerator state. Reopening a collection may rebuild derived state. Existing tests cover defined recovery cases, not arbitrary concurrent or power-loss schedules.
 
 ## Routing guidance
 

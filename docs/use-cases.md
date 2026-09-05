@@ -4,7 +4,7 @@ Qenlo is for local applications that need durable vector records and exact searc
 
 ## Desktop and offline retrieval
 
-Use Qenlo for note search, document retrieval, code search, or local RAG when the index should live beside the application. There is no service to deploy, and search does not require network access. This fit is strongest when the host owns precomputed embeddings and exact results are preferable to ANN tuning.
+Use Qenlo for note search, document retrieval, code search, or local RAG when the index lives directly beside the application. There is no external service to run, and search requires no network access. It fits best when the host application manages precomputed embeddings and prefers deterministic exact results over tuning an approximate index.
 
 ## Application and agent memory
 
@@ -18,9 +18,9 @@ Applications can isolate users with separate collection directories or use the b
 
 ## Exact filtered retrieval
 
-Qenlo evaluates eligible live rows and returns exhaustive top-k results within the selected exact engine. This is attractive when predicates are selective enough that ANN adds complexity without useful latency savings.
+Qenlo evaluates eligible live rows and returns exhaustive top-k results within the selected exact engine. This pays off when predicates eliminate enough candidates that an approximate index adds indexing overhead without saving query latency.
 
-“Exact” means exhaustive candidate coverage. FP32 storage and backend arithmetic can still differ from an FP64 oracle near ties.
+"Exact" means exhaustive candidate coverage. FP32 storage and backend arithmetic can still differ from an FP64 oracle near ties.
 
 ## Optional local acceleration
 

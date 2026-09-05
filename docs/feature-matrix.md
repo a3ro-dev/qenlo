@@ -1,6 +1,6 @@
 # Feature matrix
 
-This page describes Qenlo's current code and evidence. It does not infer competitor features or mobile support from desktop builds.
+This page describes Qenlo's current code and evidence. It does not infer competitor capabilities or mobile support from desktop builds.
 
 ## Deployment profiles
 
@@ -13,7 +13,7 @@ This page describes Qenlo's current code and evidence. It does not infer competi
 | PyTorch tensor index | excluded | optional Python extra | CPU and CUDA tested; MPS API exists but has no current hardware result |
 | Durable `.qn` snapshots and WAL | included | included | create/open/recovery/corruption tests |
 | Rich diagnostics and browser | excluded | optional packages | desktop source and tests |
-| Network telemetry | never automatic | separate optional service | core and SDKs make no network request |
+| Network telemetry | never automatic | separate optional service | core engine and SDKs make no network requests |
 
 ## SDK and packaging status
 
