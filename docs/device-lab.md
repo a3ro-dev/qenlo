@@ -51,7 +51,7 @@ The [Intel Arc submission](../benchmarks/2026-08-31/device-lab/intel-arc/README.
 retains two embedded `quick` reports and one `soak` report from an Intel Arc
 Vulkan adapter. All 21 cells passed with Recall@10 = 1.0 and no fallback. The
 soak result recorded exact GPU P95 of 4,444 µs versus exact CPU P95 of 16,486 µs.
-One report was supplied under a “full” label but identifies itself as `quick`;
+One report was supplied under a "full" label but identifies itself as `quick`;
 Qenlo preserves the embedded suite value and does not represent it as full.
 These device-lab results do not satisfy the separate 1M × 768 investment gate.
 
@@ -71,7 +71,7 @@ Reports exclude vectors, queries, raw filter values, source data, hostnames, ser
 
 For a zero-server test round, submit retained reports through the repository's
 [device lab report form](https://github.com/a3ro-dev/qenlo/issues/new?template=device-lab-report.yml).
-Android and iOS provide **Copy report and open GitHub**; desktop testers paste the
+Android and iOS provide "Copy report and open GitHub"; desktop testers paste the
 contents of `qenlo-lab-run.json`. Reports remain visible and searchable as GitHub
 issues. Because the repository is public, the form requires explicit consent.
 

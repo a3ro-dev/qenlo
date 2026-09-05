@@ -1,6 +1,6 @@
-# verification record
+# Verification record
 
-## small-collection campaign (2026-09-05)
+## Small-collection campaign (2026-09-05)
 
 The Runpod campaign retained 182 rows: 131 completed, 42 unavailable, seven
 failed, and two invalid-harness rows. The invalid rows remain visible and are
@@ -33,12 +33,12 @@ Historical verification records follow unchanged.
 2026-08-28, native Windows, `x86_64-pc-windows-msvc`, Intel UHD Graphics
 (integrated) plus NVIDIA GeForce RTX 4050 Laptop GPU (discrete). Rust 1.98.0
 (`88d9e12ae`, LLVM 22.1.8), Cargo 1.98.0.
-this is a local correctness and benchmark record, not a production-readiness or
+This is a local correctness and benchmark record, not a production-readiness or
 general scale claim.
 
-## commands and results
+## Commands and results
 
-the starting portable suite passed 16 tests before changes. the final native
+The starting portable suite passed 16 tests before changes. The final native
 commands used these process-local settings for C++ builds:
 
 ```powershell
@@ -47,7 +47,7 @@ $env:CXX = 'clang-cl'
 $env:CARGO_INCREMENTAL = '0'
 ```
 
-| command | final result |
+| Command | Final result |
 | --- | --- |
 | `cargo fmt --all -- --check` | passed |
 | `cargo test --workspace --no-default-features -- --test-threads=1` | 47 tests + 1 doctest passed |
@@ -57,13 +57,13 @@ $env:CARGO_INCREMENTAL = '0'
 | `cargo test -p qenlo --features usearch --test cpu_quality -- --nocapture` | 2 tests passed; CPU and USearch recall@10 = 1.0 in all 9 fixture filters |
 | `cargo test -p qenlo-bench --all-features --all-targets` | 8 tests passed, including the real stalled-collector test |
 
-the final all-features total consists of 40 collection/storage/GPU unit tests, 2
+The final all-features total consists of 40 collection/storage/GPU unit tests, 2
 CPU quality tests, 2 process-exit tests, 7 benchmark-library tests, 3 runner
-tests, 1 telemetry test, and 12 core tests. the doctest compiles the durable
+tests, 1 telemetry test, and 12 core tests. The doctest compiles the durable
 quickstart.
-both README Rust snippets also passed a separate `rustdoc --test` compilation.
+Both README Rust snippets also passed a separate `rustdoc --test` compilation.
 
-hardware acceptance was run twice, with adapter absence made fatal:
+Hardware acceptance was run twice, with adapter absence made fatal:
 
 ```powershell
 $env:QENLO_REQUIRE_GPU = '1'
@@ -73,24 +73,24 @@ $env:WGPU_BACKEND = 'vulkan'
 cargo test -p qenlo --features gpu-wgpu --lib -- --nocapture --test-threads=1
 ```
 
-both runs passed 37 tests and printed the RTX 4050 with the requested backend.
+Both runs passed 37 tests and printed the RTX 4050 with the requested backend.
 The Intel adapter was present on the host but was not the reported device: the
 high-performance request selected the discrete NVIDIA adapter. The retained
 manifests record the actual adapter, device type, API, and negotiated limits.
-coverage includes optional predicate combinations and signed extremes, tombstones,
+Coverage includes optional predicate combinations and signed extremes, tombstones,
 bounded chunk/readback accounting, real device destruction, required errors,
-automatic fallback, explicit recovery, unavailable adapters and allocation validation.
+automatic fallback, explicit recovery, unavailable adapters, and allocation validation.
 
-device destruction is `Device::destroy()`, not an injected driver reset. allocation
+Device destruction is `Device::destroy()`, not an injected driver reset. Allocation
 failure uses a real invalid allocation request and budget rejection, not deliberate
-physical VRAM exhaustion. process-exit tests bypass destructors and leave partial
+physical VRAM exhaustion. Process-exit tests bypass destructors and leave partial
 staging files; they do not simulate power removal. Unix, Metal, mobile, browser,
-network filesystems and sudden-power-loss behavior were not exercised.
+network filesystems, and sudden-power-loss behavior were not exercised.
 
-## benchmark smoke and lock observations
+## Benchmark smoke and lock observations
 
-the prepared smoke has 256 corpus rows, dimension 16, 8 tuning queries and 32
-held-out evaluation queries, seed 42. its prepared CRC32 is `c256dfdd`.
+The prepared smoke has 256 corpus rows, dimension 16, 8 tuning queries, and 32
+held-out evaluation queries, seed 42. Its prepared CRC32 is `c256dfdd`.
 
 ```powershell
 cargo run -p qenlo-bench -- --help
@@ -102,46 +102,46 @@ foreach ($mode in @('disabled','basic','detailed')) {
 }
 ```
 
-all passed recall@10 = 1.0. the latter runs retained 160 samples each, 25 eligible
-rows, AVX2, debug profile and no subscriber. measured observations:
+All passed recall@10 = 1.0. The latter runs retained 160 samples each, 25 eligible
+rows, AVX2, debug profile, and no subscriber. Measured observations:
 
-| diagnostics | median of run P95 batch latency | mean reported lock wait per query |
+| Diagnostics | Median of run P95 batch latency | Mean reported lock wait per query |
 | --- | --- | --- |
 | disabled | 24,400 ns | 85.62 ns |
 | basic | 23,000 ns | 53.12 ns |
 | detailed | 30,100 ns | 70.62 ns |
 
-these are small, sequential, uncontended smoke observations on a busy laptop.
-lock wait includes clock/acquisition overhead, not an isolated estimate of all
-locking costs. noise is visible: basic happened to be lower than disabled.
-do not interpret this as a speed ranking or extrapolate it to scale.
-raw samples and manifests remain in the named ignored `target/` directories;
-`cargo clean` will remove them. repeat with fresh output paths.
+These are small, sequential, uncontended smoke observations on a busy laptop.
+Lock wait includes clock/acquisition overhead, not an isolated estimate of all
+locking costs. Noise is visible: basic happened to be lower than disabled.
+Do not interpret this as a speed ranking or extrapolate it to scale.
+Raw samples and manifests remain in the named ignored `target/` directories;
+`cargo clean` will remove them. Repeat with fresh output paths.
 
-additional corrected-runner smokes used CPU, USearch, GPU mask, GPU eligible rows,
-GPU predicate and automatic mode, plus empty/fewer-than-k and batch-32 cases.
-all passed recall 1.0 and strict score/order validation. their raw outputs are
-`target/bench-smoke-*-v2/`. exact commands are reproducible from their manifests
+Additional corrected-runner smokes used CPU, USearch, GPU mask, GPU eligible rows,
+GPU predicate, and automatic mode, plus empty/fewer-than-k and batch-32 cases.
+All passed recall 1.0 and strict score/order validation. Their raw outputs are
+`target/bench-smoke-*-v2/`. Exact commands are reproducible from their manifests
 and [the protocol](benchmark-protocol.md).
 
-the larger independent correctness fixture has 2,048 rows, dimension 32 and 16
-disjoint queries across 9 filters. both CPU and USearch measured recall 1.0.
+The larger independent correctness fixture has 2,048 rows, dimension 32, and 16
+disjoint queries across 9 filters. Both CPU and USearch measured recall 1.0.
 The follow-up [real-data result record](results-2026-08-28.md) now retains
 100k × 384 CPU, RTX 4050 GPU, USearch, and native Chroma cells with five runs,
 independent truth, recall gates, and seeded whole-run intervals. The exact GPU
 predicate path measured 5.14× lower P95 than Qenlo exact CPU when all rows were
 eligible, while the 1% selective GPU predicate cell was slower than CPU. The
 predeclared 1m × 768 investment gate remains untested because this host lacks
-the required memory. host RSS/allocator totals and GPU kernel timestamps remain
+the required memory. Host RSS/allocator totals and GPU kernel timestamps remain
 explicitly unavailable for the library reports.
 
-## device-lab verification (2026-08-30)
+## Device-lab verification (2026-08-30)
 
 The release `quick` profile ran on the NVIDIA RTX 4050 through Vulkan with a
 10,000 × 384 deterministic clustered corpus and 16 timed queries. Every cell
 passed with Recall@10 1.0:
 
-| cell | P95 per query | upload bytes |
+| Cell | P95 per query | Upload bytes |
 | --- | ---: | ---: |
 | CPU exact | 1,099 µs | 0 |
 | GPU exact | 464 µs | 41,600 |
@@ -175,35 +175,35 @@ cell. All 21 cells passed with Recall@10 = 1.0 and no reported fallback.
 On the soak run, exact GPU P95 was 4,444 µs versus exact CPU P95 16,486 µs
 (3.71× lower). IVF-Flat P95 was 2,704 µs (6.10× lower than exact CPU), while
 IVF-SQ8 P95 was 22,797 µs and therefore slower than exact CPU on this cell.
-The report supplied under a “full” label identifies itself as `quick`; the
+The report supplied under a "full" label identifies itself as `quick`; the
 retained record and public summary use the embedded value. These observations
 are evidence for one Intel Arc adapter and do not close the 1M × 768 gate.
 
-## toolchain and remaining release limits
+## Toolchain and remaining release limits
 
-- the existing MSVC 14.29 native-dependency crash was not repaired or re-tested;
+- The existing MSVC 14.29 native-dependency crash was not repaired or re-tested;
   this work used the documented `clang-cl` workaround successfully.
-- early builds printed Windows incremental-cache finalization `Access denied`.
-  final verification disabled incremental compilation without changing user config.
-- the OTLP test initially exposed a real runtime panic with an async HTTP client
-  on synchronous exporter workers. switching the host to the blocking client
-  fixed it. the final stalled-collector/privacy/overflow/shutdown check passed.
-- full Windows power-loss durability is not guaranteed: files are synced, but
+- Early builds printed Windows incremental-cache finalization `Access denied`.
+  Final verification disabled incremental compilation without changing user config.
+- The OTLP test initially exposed a real runtime panic with an async HTTP client
+  on synchronous exporter workers. Switching the host to the blocking client
+  fixed it. The final stalled-collector/privacy/overflow/shutdown check passed.
+- Full Windows power-loss durability is not guaranteed: files are synced, but
   directory publication is not synced with a Windows-specific primitive.
-- commits append checksummed immutable WAL transactions after O(batch) atomic
-  validation. reopen replays contiguous generations; flush/close synchronously
-  compact to a full snapshot. background compaction is not claimed.
-- only derived readiness metadata is persisted; ANN graphs and resident GPU
-  buffers rebuild after restart. no persisted graph cache is claimed.
-- interrupted initial creation may require manual handling of confirmed staging
-  files. preserve evidence before cleanup; never guess at a committed outcome.
-- the repository includes `LICENSE-MIT`; metadata also declares Apache-2.0 as an
-  option, but a separate Apache license text is not included. no licensing terms
+- Commits append checksummed immutable WAL transactions after O(batch) atomic
+  validation. Reopen replays contiguous generations; flush/close synchronously
+  compact to a full snapshot. Background compaction is not claimed.
+- Only derived readiness metadata is persisted; ANN graphs and resident GPU
+  buffers rebuild after restart. No persisted graph cache is claimed.
+- Interrupted initial creation may require manual handling of confirmed staging
+  files. Preserve evidence before cleanup; never guess at a committed outcome.
+- The repository includes `LICENSE-MIT`; metadata also declares Apache-2.0 as an
+  option, but a separate Apache license text is not included. No licensing terms
   were changed in this implementation.
 
-## implementation commits
+## Implementation commits
 
-starting point: `4c40187`. no push or remote repository creation was performed.
+Starting point: `4c40187`. No push or remote repository creation was performed.
 
 ```text
 458d783 feat(cpu): add SIMD eligible-set baseline and streaming restore
@@ -220,7 +220,7 @@ ebd7d5f fix(obs): account for resident uploads and failed GPU preparation
 f70b5d6 docs(api): add checked quickstart and clarify recovery diagnostics
 ```
 
-the documentation-only commit containing this historical record follows those
+The documentation-only commit containing this historical record follows those
 commits. Later result, site, and adapter documentation is tracked in the current
 repository history. The pre-existing `index.html` modification was preserved
 until the site update requested after this record; the current site file now

@@ -1,6 +1,6 @@
 # Heterogeneous roadmap status
 
-This ledger separates implemented code from research directions and distribution prerequisites. “Built” means source and automated packaging exist; “physically validated” means the test ran on hardware available during implementation.
+This ledger separates implemented code from research directions and distribution prerequisites. "Built" means source and automated packaging exist; "physically validated" means the test ran on hardware available during implementation.
 
 | Milestone | Status | Evidence or remaining gate |
 |---|---|---|

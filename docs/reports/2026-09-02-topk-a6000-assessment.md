@@ -4,9 +4,9 @@
 
 We evaluated a CUDA/PyTorch predicate-search prototype, Faiss GPU Flat, and
 cuVS brute force on the public TopK Bench 1M × 768 corpus using cosine search,
-top-k=10, a one-query call boundary, and the TopK provider’s inclusive integer
+top-k=10, a one-query call boundary, and the TopK provider's inclusive integer
 filter semantics. At the approximately 1% cell, all three systems matched the
-supplied TopK top-10 lists in all 10,000 retained query calls. Qenlo’s prototype
+supplied TopK top-10 lists in all 10,000 retained query calls. Qenlo's prototype
 P95 was 0.1834 ms, versus 0.1332 ms for Faiss GPU Flat. The proposed fastest
 exact-filtered-search claim is therefore unsupported. More importantly, the
 prototype is not the shipped Qenlo Rust/wgpu binary, and the study lacks an
@@ -33,7 +33,7 @@ Each adapter received the same pre-materialized eligible vector subset. This
 excludes filtering/index setup from the timing, and it means the cuVS result is
 not a measurement of its native prefilter API.
 
-This code is an experiment harness, not integration with Qenlo’s actual
+This code is an experiment harness, not integration with Qenlo's actual
 portable GPU backend. The Qenlo binary continues to use wgpu; a Linux/Windows
 CUDA backend remains explicitly unimplemented in `docs/cuda-backend-todo.md`.
 
@@ -53,7 +53,7 @@ the host invokes search and finish after IDs/scores are host-resident, including
 query H→D transfer, device execution, top-k, D→H transfer, and synchronization.
 
 The public provider implementation uses `int_filter <= threshold`; hence the
-reported “1%” cell has 10,148 eligible rows, not the requested strict `<100`
+reported "1%" cell has 10,148 eligible rows, not the requested strict `<100`
 predicate. This result is described as provider-compatible approximately 1%,
 not as satisfying the strict preregistered gate.
 
@@ -69,7 +69,7 @@ median bootstrap 95% intervals are retained in `summary.json`.
 | Faiss GPU Flat | 1.0000 | 0.1237 | 0.1332 | 0.1365 | fastest measured row |
 | cuVS brute force | 1.0000 | 0.5243 | 1.1156 | 1.4914 | slower; different Python binding path |
 
-The Qenlo prototype’s P95 / Faiss P95 ratio is 1.38. Thus Qenlo is slower in
+The Qenlo prototype's P95 / Faiss P95 ratio is 1.38. Thus Qenlo is slower in
 this measured cell; it does not meet the target, let alone a 2× advantage.
 
 At 10% and 100%, all adapters had some supplied-ground-truth disagreements:
@@ -85,7 +85,7 @@ materialization strategy can reduce exact search work proportionally to the
 eligible set, but it does not establish a general Qenlo advantage; in the
 approximately-1% measurement, the same basic strategy is faster through Faiss.
 
-Qenlo’s portable wgpu execution is a separate deployability property: it can
+Qenlo's portable wgpu execution is a separate deployability property: it can
 target embedded and heterogeneous devices where a CUDA-only Faiss GPU path is
 not available. This study does not quantify that property or establish novelty
 against other portable vector-search systems.
@@ -95,7 +95,7 @@ against other portable vector-search systems.
 This experiment uses the public [TopK Bench](https://github.com/topk-io/bench)
 corpus and its supplied recall lists. Faiss GPU Flat and NVIDIA cuVS
 brute-force search are the direct GPU flat-search comparators. They are not
-portable embedded-device substitutes for Qenlo’s wgpu path, which is an
+portable embedded-device substitutes for Qenlo's wgpu path, which is an
 important deployment distinction, but they remain relevant latency comparators
 on the same NVIDIA GPU.
 
@@ -145,4 +145,4 @@ python scripts/summarize_topk_exact_gpu.py benchmark-results/sota-a6000-topk-202
 
 ## Final verdict
 
-**No demonstrated advantage.**
+No demonstrated advantage.

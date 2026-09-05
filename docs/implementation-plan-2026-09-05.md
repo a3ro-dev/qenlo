@@ -13,7 +13,7 @@ Make Qenlo simple to use and fast for **1K–100K vectors**, with resource use t
 
 These are build and configuration choices, not separate database implementations. Phones do not inherit desktop dependencies. Desktop conveniences must use the same canonical records, filtering, deletion and persistence semantics.
 
-“Best performance per resource” means measuring latency and throughput alongside peak RAM, accelerator allocations, scratch, transfer volume, build cost and mutation cost. There is no power-measurement project and no single invented efficiency score.
+"Best performance per resource" means measuring latency and throughput alongside peak RAM, accelerator allocations, scratch, transfer volume, build cost and mutation cost. There is no power-measurement project and no single invented efficiency score.
 
 GPU investment remains in scope. The earlier million-vector research gate is historical evidence, not a veto on the new small-collection objective. Beating Chroma is a concrete benchmark target, not a result to promise in advance.
 
@@ -149,7 +149,7 @@ Only after the matrix and artifact audit:
 - Preserve earlier crossover and negative results as revision-specific historical evidence. Do not relabel old measurements as results of the new implementation.
 - Explain the selector change, its correctness invariant, memory cost, tensor integration and remaining platform gaps.
 - Separate native portable GPU, PyTorch CUDA/MPS, CPU and mobile cohorts. Include failures and competitor wins.
-- State which hypotheses the new experiments support and which remain untested. “Fastest database” stays a goal unless evidence supports a precisely scoped claim.
+- State which hypotheses the new experiments support and which remain untested. "Fastest database" stays a goal unless evidence supports a precisely scoped claim.
 - Apply research-engineer for factual rigor, humanizer-zh for removing inflated/repetitive prose, and akshat-voice for direct ownership and clear explanations while preserving mathematical notation and technical names.
 - Update citations and the claim-to-artifact ledger. Compile the PDF and visually check every page, table, figure and reference.
 
