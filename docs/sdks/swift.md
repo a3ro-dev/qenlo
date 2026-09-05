@@ -9,7 +9,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/a3ro-dev/qenlo.git", from: "0.1.0-alpha.2")
+    .package(url: "https://github.com/a3ro-dev/qenlo.git", from: "0.1.0-alpha.3")
 ]
 ```
 

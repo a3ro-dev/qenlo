@@ -1,8 +1,14 @@
 # changelog
 
-## unreleased
+## 0.1.0-alpha.3 - 2026-09-06
 
-This section targets `0.1.0-alpha.2`; publication remains gated on package and platform CI.
+### added
+
+- redesigned interactive collection browser UI and local server.
+- live Mermaid architecture and execution flow rendering in documentation.
+- comprehensive status badges for CI workflows, multi-platform registries, and SDKs.
+
+## 0.1.0-alpha.2 - 2026-09-05
 
 ### added
 

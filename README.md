@@ -2,6 +2,33 @@
 
 <p align="center"><img src="assets/brand/logo/lockup.svg" alt="Qenlo" width="360"></p>
 
+<p align="center">
+  <a href="https://github.com/a3ro-dev/qenlo/actions/workflows/ci.yml"><img src="https://github.com/a3ro-dev/qenlo/actions/workflows/ci.yml/badge.svg?branch=main" alt="Portable correctness"></a>
+  <a href="https://github.com/a3ro-dev/qenlo/actions/workflows/sdk-ci.yml"><img src="https://github.com/a3ro-dev/qenlo/actions/workflows/sdk-ci.yml/badge.svg?branch=main" alt="SDK conformance"></a>
+  <a href="https://github.com/a3ro-dev/qenlo/actions/workflows/browser-release.yml"><img src="https://github.com/a3ro-dev/qenlo/actions/workflows/browser-release.yml/badge.svg?branch=main" alt="Browser and desktop CI"></a>
+  <a href="https://github.com/a3ro-dev/qenlo/actions/workflows/device-lab.yml"><img src="https://github.com/a3ro-dev/qenlo/actions/workflows/device-lab.yml/badge.svg" alt="Device lab packages"></a>
+  <a href="https://github.com/a3ro-dev/qenlo/actions/workflows/pages.yml"><img src="https://github.com/a3ro-dev/qenlo/actions/workflows/pages.yml/badge.svg?branch=main" alt="GitHub Pages"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/a3ro-dev/qenlo/releases"><img src="https://img.shields.io/github/v/release/a3ro-dev/qenlo?filter=sdk-v*&amp;display_name=tag&amp;style=flat-square&amp;label=SDK%20release" alt="GitHub SDK release"></a>
+  <a href="https://crates.io/crates/qenlo"><img src="https://img.shields.io/crates/v/qenlo.svg?style=flat-square&amp;label=crates.io" alt="qenlo on crates.io"></a>
+  <a href="https://pypi.org/project/qenlo/"><img src="https://img.shields.io/pypi/v/qenlo.svg?style=flat-square&amp;label=PyPI" alt="qenlo on PyPI"></a>
+  <a href="https://www.npmjs.com/package/@a3ro.dev/qenlo"><img src="https://img.shields.io/npm/v/%40a3ro.dev%2Fqenlo/alpha.svg?style=flat-square&amp;label=npm" alt="Qenlo on npm"></a>
+  <a href="https://github.com/a3ro-dev/qenlo/actions/workflows/sdk-publish.yml"><img src="https://img.shields.io/badge/Maven_Central-not_configured-6b7280?style=flat-square" alt="Maven Central not configured"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square" alt="License Apache-2.0"></a>
+</p>
+
+<p align="center">
+  <a href="docs/sdks/rust.md"><img src="https://img.shields.io/badge/Rust-1.98+-black?style=flat-square&amp;logo=rust&amp;logoColor=white" alt="Rust SDK"></a>
+  <a href="docs/sdks/python.md"><img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python SDK"></a>
+  <a href="docs/sdks/typescript.md"><img src="https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=flat-square&amp;logo=typescript&amp;logoColor=white" alt="TypeScript SDK"></a>
+  <a href="docs/sdks/go.md"><img src="https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat-square&amp;logo=go&amp;logoColor=white" alt="Go SDK"></a>
+  <a href="docs/sdks/kotlin.md"><img src="https://img.shields.io/badge/Kotlin-JVM-7F52FF?style=flat-square&amp;logo=kotlin&amp;logoColor=white" alt="Kotlin SDK"></a>
+  <a href="docs/sdks/swift.md"><img src="https://img.shields.io/badge/Swift-6.0+-F05138?style=flat-square&amp;logo=swift&amp;logoColor=white" alt="Swift SDK"></a>
+  <a href="docs/architecture.md"><img src="https://img.shields.io/badge/Acceleration-AVX2%20|%20NEON%20|%20WebGPU-059669?style=flat-square" alt="Acceleration"></a>
+</p>
+
 Qenlo is a local, embedded vector store for applications that need durable records, metadata filtering, and exact cosine search without operating a separate database service.
 
 It is best suited to small and medium collections owned by one application: desktop search, offline RAG, local document or code retrieval, and application memory. Qenlo is alpha software. It is not a distributed vector database, an embedding service, or a fastest-in-class search engine.
@@ -36,6 +63,8 @@ Qenlo is research-grade alpha software. The repository has strong correctness, r
 - mobile packaging and current-revision physical-device validation remain incomplete.
 
 The research paper reports observations for named hardware and source revisions. It does not claim a universal CPU/GPU threshold. Read [the paper](paper/output/pdf/qenlo-final-research-paper.pdf) or [verification notes](docs/verification.md) before quoting benchmark numbers.
+
+GitHub release assets and package registries are separate publication stages. See the [CI and release map](docs/ci.md) for triggers, gates, and outputs.
 
 ## Quickstart
 

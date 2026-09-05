@@ -7,7 +7,7 @@ tracked separately; a JVM artifact alone is not Android support.
 
 ```kotlin
 dependencies {
-    implementation("dev.qenlo:qenlo:0.1.0-alpha.2")
+    implementation("dev.qenlo:qenlo:0.1.0-alpha.3")
 }
 ```
 

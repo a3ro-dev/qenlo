@@ -8,7 +8,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-qenlo = "0.1.0-alpha.2"
+qenlo = "0.1.0-alpha.3"
 tokio = { version = "1", features = ["full"] }
 ```
 

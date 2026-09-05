@@ -36,3 +36,4 @@ sdk/typescript/dist/
 *.fls
 /research/artifacts/phase0-baseline-head-minimal.tar.gz
 /research/artifacts/runpod-campaign-v2/runpodctl-doctor.json
+/research/artifacts/runpod-small-2026-09-05/baseline-source.tar.gz
