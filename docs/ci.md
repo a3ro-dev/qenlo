@@ -1,6 +1,6 @@
 # CI and release map
 
-Qenlo uses seven GitHub Actions workflows. A green build does not imply that packages were uploaded to public registries.
+Qenlo uses seven GitHub Actions workflows. A passing build does not mean packages were published to public registries.
 
 | Workflow | Trigger | Purpose | Publishes externally |
 | --- | --- | --- | --- |
@@ -15,29 +15,29 @@ Qenlo uses seven GitHub Actions workflows. A green build does not imply that pac
 ## SDK release sequence
 
 1. Merge and verify `portable correctness` and `SDK conformance`.
-2. Create an immutable `sdk-vX.Y.Z` tag whose manifest versions agree.
-3. Wait for `SDK release artifacts` to create the GitHub Release and checksums.
+2. Create an immutable `sdk-vX.Y.Z` tag with matching manifest versions.
+3. Wait for `SDK release artifacts` to produce the GitHub Release and checksums.
 4. Manually dispatch `Publish SDKs` with that exact tag.
-5. Verify each registry independently. A green workflow can still contain an intentional skip, such as Maven Central when credentials are absent.
+5. Check each registry independently. A passing workflow can still contain deliberate skips, such as Maven Central when credentials are absent.
 
-The registry workflow is deliberately separate because registry versions are immutable. Re-running it is partly idempotent: PyPI uses `skip-existing`, while the Rust commands currently suppress all publish failures with `|| true`. That suppression makes a green Rust job insufficient proof of publication, so crates.io must be checked directly.
+The publication workflow runs separately because published package versions cannot be replaced or deleted. Re-running it is only partly idempotent: PyPI uses `skip-existing`, while the Rust publish step suppresses failures with `|| true`. Because of that suppression, a green Rust job does not prove publication succeeded. Always check crates.io directly.
 
 ## Tag families
 
-- `sdk-v*`: SDK artifact releases.
-- `lab-v*`: device-lab releases.
-- `v*`: reserved by the browser workflow, although that workflow currently has no GitHub Release publishing job.
+- `sdk-v*` tags trigger SDK artifact builds and releases.
+- `lab-v*` tags trigger device lab package builds.
+- `v*` tags are reserved for the browser workflow, which does not currently publish a GitHub Release.
 
 ## Required release configuration
 
-The `package-registries` GitHub environment gates the registry jobs. Expected secrets are:
+The `package-registries` GitHub environment protects the release jobs. You must configure the following secrets in repository settings:
 
 - `CARGO_REGISTRY_TOKEN`
-- `PYPI_API_TOKEN` or correctly configured PyPI trusted publishing
-- `NPM_TOKEN` or correctly configured npm trusted publishing
+- `PYPI_API_TOKEN` (or configured PyPI trusted publishing)
+- `NPM_TOKEN` (or configured npm trusted publishing)
 - `MAVEN_CENTRAL_USERNAME`
 - `MAVEN_CENTRAL_PASSWORD`
 - `MAVEN_SIGNING_KEY`
 - `MAVEN_SIGNING_PASSWORD`
 
-Do not record secret values in logs, artifacts, documentation, or release notes.
+Never record secret values in logs, build artifacts, documentation, or release notes.

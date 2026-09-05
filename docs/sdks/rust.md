@@ -1,10 +1,10 @@
-# Rust API Reference
+# Rust API reference
 
-The core `qenlo` crate provides high-performance, asynchronous, in-process vector search with zero external service dependencies.
+`qenlo` is an asynchronous, in-process vector database for Rust. It runs locally in your application without external service dependencies.
 
 ## Installation
 
-Add to your `Cargo.toml`:
+Add `qenlo` to `Cargo.toml`:
 
 ```toml
 [dependencies]
@@ -12,7 +12,7 @@ qenlo = "0.1.0-alpha.3"
 tokio = { version = "1", features = ["full"] }
 ```
 
-## Basic Usage
+## Basic usage
 
 ```rust
 use qenlo::{Collection, CollectionConfig, Filter, Record};

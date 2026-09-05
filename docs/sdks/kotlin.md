@@ -1,9 +1,8 @@
 # Kotlin/JVM SDK
 
-JNA bindings for JVM applications. Android packaging and bridge validation are
-tracked separately; a JVM artifact alone is not Android support.
+JNA bindings for JVM applications. Android packaging and bridge validation are tracked separately, so this JVM artifact does not provide Android support on its own.
 
-## Gradle Setup
+## Gradle setup
 
 ```kotlin
 dependencies {
@@ -11,7 +10,7 @@ dependencies {
 }
 ```
 
-## Quick Example
+## Quick example
 
 ```kotlin
 import dev.qenlo.QenloCollection
@@ -25,8 +24,4 @@ QenloCollection.memory(dimension = 3).use { db ->
 }
 ```
 
-The default execution mode is `ExecutionMode.CPU`. Desktop native artifacts with
-portable GPU support also accept `CollectionOptions` with `AUTOMATIC` or
-`GPU_REQUIRED`, a `GpuFilterMode`, and a byte allocation budget. Automatic mode
-records the actual route and fallback in `ExecutionReport`; required mode fails
-if the artifact or host cannot provide the backend.
+The default execution mode is `ExecutionMode.CPU`. Desktop native binaries with portable GPU support also accept `CollectionOptions` configured with `AUTOMATIC` or `GPU_REQUIRED`, a `GpuFilterMode`, and a byte allocation budget. Automatic mode records the chosen route and fallback in `ExecutionReport`. GPU-required mode fails if the host environment cannot provide GPU execution.

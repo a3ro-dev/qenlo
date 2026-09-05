@@ -1,7 +1,6 @@
 # Go SDK
 
-cgo bindings for embedding Qenlo in Go services and command-line tools. The
-package links the shared native ABI; it is not CGO-free.
+cgo bindings for embedding Qenlo in Go services and command-line tools. The package links against the shared native ABI and requires cgo.
 
 ## Installation
 
@@ -9,7 +8,7 @@ package links the shared native ABI; it is not CGO-free.
 go get github.com/a3ro-dev/qenlo/sdk/go
 ```
 
-## Quick Example
+## Quick example
 
 ```go
 package main
@@ -47,8 +46,4 @@ func main() {
 }
 ```
 
-CPU is the default. Desktop artifacts compiled with portable GPU support accept
-`NewWithOptions`, `CreateWithOptions`, `OpenWithOptions`, and
-`ImportQNWithOptions`. Use `Automatic` to permit a reported fallback or
-`GPURequired` to fail if the GPU route is unavailable. The allocation budget is
-set with `GPUAllocationBudgetBytes`.
+Collections run on CPU by default. Desktop binaries built with portable GPU support expose `NewWithOptions`, `CreateWithOptions`, `OpenWithOptions`, and `ImportQNWithOptions`. Set `Automatic` to allow a fallback to CPU, or `GPURequired` to fail when GPU execution is unavailable. Configure memory limits with `GPUAllocationBudgetBytes`.

@@ -1,11 +1,10 @@
 # Swift SDK
 
-Swift bindings over the shared C ABI for the platforms declared by the package:
-macOS 13+ and iOS 16+.
+Swift bindings over the shared C ABI for macOS 13+ and iOS 16+.
 
 ## Swift Package Manager
 
-Add to your `Package.swift`:
+Add `qenlo` to `Package.swift`:
 
 ```swift
 dependencies: [
@@ -13,7 +12,7 @@ dependencies: [
 ]
 ```
 
-## Quick Example
+## Quick example
 
 ```swift
 import Qenlo
@@ -26,7 +25,4 @@ let response = try db.search([0.1, 0.7, 0.5], filter: QenloFilter(userID: 42), k
 print("Found \(response.results.count) results")
 ```
 
-Collections default to CPU. A macOS native artifact compiled with portable GPU
-support can receive a `QenloCollectionConfiguration` using `.automatic` or
-`.gpuRequired`. Automatic mode reports its actual route and fallback. The iOS
-artifact remains CPU-only unless explicitly built otherwise.
+Collections default to CPU. On macOS, binaries compiled with portable GPU support accept a `QenloCollectionConfiguration` with `.automatic` or `.gpuRequired`. Automatic mode reports the active execution route and any fallback. The iOS artifact runs strictly on CPU unless built with custom GPU flags.

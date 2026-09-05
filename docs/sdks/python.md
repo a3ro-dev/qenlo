@@ -1,6 +1,6 @@
 # Python SDK
 
-Type-safe Python bindings for Qenlo powered by precompiled binary wheels.
+The Python SDK provides typed bindings for Qenlo using precompiled binary wheels.
 
 ## Installation
 
@@ -8,7 +8,7 @@ Type-safe Python bindings for Qenlo powered by precompiled binary wheels.
 pip install qenlo
 ```
 
-## Quick Example
+## Quick example
 
 ```python
 from qenlo import Collection, Filter, Record
@@ -28,23 +28,12 @@ with Collection.memory(dimension=3) as db:
 
 ## Bulk ingestion and optional tensors
 
-`Collection.add_buffer` accepts a C-contiguous native `float32` matrix plus
-parallel ID, user-ID, and timestamp arrays. It performs one native batch commit.
-Read-only matrix exporters require one bulk copy; writable exporters are borrowed
-until the call returns.
+`Collection.add_buffer` accepts a C-contiguous native `float32` matrix along with parallel arrays for ID, user ID, and timestamp values. It performs a single native batch commit. Read-only matrix exporters require one bulk copy, while writable exporters are borrowed until the call returns.
 
-Install `qenlo[torch]` to use `TorchIndex`. `TorchIndex.from_collection` captures
-filtered live rows through the typed native ABI, binds the index to that canonical
-generation, and rejects searches after a mutation. `cpu`, `cuda`, and `mps` are
-the supported device types. PyTorch remains lazily imported and optional.
+Install `qenlo[torch]` to use `TorchIndex`. Calling `TorchIndex.from_collection` captures filtered live rows through the typed native ABI, binds the index to that specific generation, and rejects searches after any mutation. Supported device targets include `cpu`, `cuda`, and `mps`. The package imports PyTorch lazily only when you use tensor features.
 
-The tensor backend currently supports IDs through `2**63 - 1`; the durable core
-continues to support the full unsigned 64-bit range. This limit is checked before
-construction because eager `uint64` operation coverage differs across PyTorch
-backends. `max_bytes` is a checked lower bound for explicit index/search tensors,
-not process RSS or allocator-cache usage.
+The tensor backend supports IDs up to `2**63 - 1`, whereas the durable core supports the full unsigned 64-bit range. Qenlo checks this limit during construction because PyTorch backends vary in their eager `uint64` coverage. The `max_bytes` setting acts as a lower bound for explicit index and search tensors, not as a cap on process RSS or allocator cache usage.
 
 ## Background work and networking
 
-Importing or using the Python SDK starts no background thread and sends no
-network request. Telemetry export belongs to the host application.
+Importing or using the Python SDK starts no background threads and makes no network requests. If your application needs telemetry, export it from your own application layer.

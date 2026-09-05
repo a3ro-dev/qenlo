@@ -1,6 +1,6 @@
 # TypeScript / Node.js SDK
 
-High-performance native Node.js FFI bindings for Qenlo with TypeScript type safety and explicit resource management (`using`).
+Native Node.js FFI bindings for Qenlo with TypeScript type definitions and explicit resource management (`using`).
 
 ## Installation
 
@@ -9,7 +9,7 @@ pnpm add @a3ro.dev/qenlo
 # or npm install @a3ro.dev/qenlo
 ```
 
-## Quick Example
+## Quick example
 
 ```typescript
 import { Collection } from "@a3ro.dev/qenlo";
@@ -30,9 +30,4 @@ const response = db.search([0.1, 0.7, 0.5], { userId: 42n }, 5);
 console.log(`Matched ID: ${response.results[0]?.id}`);
 ```
 
-Construction defaults to exhaustive CPU search. Desktop native artifacts built
-with portable GPU support accept `{ backend: "automatic" }` or
-`{ backend: "gpu-required" }`, plus `gpuFilterMode` and
-`gpuAllocationBudgetBytes`. Automatic mode exposes the actual route and fallback
-in the returned execution report; required mode fails instead of silently using
-CPU.
+Collections default to exhaustive CPU search. Desktop binaries compiled with portable GPU support also accept `{ backend: "automatic" }` or `{ backend: "gpu-required" }`, alongside `gpuFilterMode` and `gpuAllocationBudgetBytes`. Automatic mode returns the chosen execution route and any fallback in the execution report. Required mode throws an error instead of silently falling back to CPU.
