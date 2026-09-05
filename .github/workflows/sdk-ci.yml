@@ -113,7 +113,7 @@ jobs:
           pnpm run typecheck
           pnpm test
           pnpm run build
-          pnpm pack --dry-run
+          npm pack --dry-run
 
       - name: Go vet and runtime conformance
         working-directory: sdk/go
