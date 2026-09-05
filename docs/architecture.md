@@ -1,162 +1,162 @@
-# canonical data, disposable indexes
+# Canonical data, disposable indexes
 
-a derived index is allowed to be missing. canonical rows are not. that distinction
+A derived index is allowed to be missing. Canonical rows are not. That distinction
 drives the storage protocol, locks, and error behavior.
 
-## ownership and format
+## Ownership and format
 
 `CoreStore` owns normalized vectors, public IDs, metadata, permanent row slots,
-tombstones, and mutation generation. user and timestamp indexes are rebuilt from
-those rows. deleted IDs cannot be reused. generation increments per successful
+tombstones, and mutation generations. User and timestamp indexes are rebuilt from
+those rows. Deleted IDs cannot be reused. Generation increments per successful
 mutation, not per batch.
 
-`Collection` wraps state in a read/write lock. it owns the backend, preparation
-state, storage options, and durable directory's OS lock. use one shared
+`Collection` wraps state in a read/write lock. It owns the backend, preparation
+state, storage options, and the durable directory's OS lock. Use one shared
 `Arc<Collection>` rather than repeatedly opening the same directory.
 
-the little-endian v1 header contains magic, version, dimension, generation,
-total rows, and live rows. each row has ID, user ID, signed timestamp, live flag
-and reserved bytes, then normalized float32 vector bits. a trailing CRC32 covers
-header and rows. loading preserves normalized bytes rather than normalizing them
-again. unknown versions and inconsistent shapes are explicit errors.
+The little-endian v1 header contains magic, version, dimension, generation,
+total rows, and live rows. Each row has an ID, user ID, signed timestamp, live flag,
+reserved bytes, and normalized float32 vector bits. A trailing CRC32 covers the
+header and rows. Loading preserves normalized bytes rather than normalizing them
+again. Unknown versions and inconsistent shapes return explicit errors.
 
-| file | meaning |
+| File | Meaning |
 | --- | --- |
-| `collection.lock` | handle under an exclusive OS file lock |
-| `canonical-<20-digit-generation>.qdb` | published canonical snapshot |
-| `canonical-<generation>.pending` | current uncommitted staging file |
+| `collection.lock` | Handle under an exclusive OS file lock |
+| `canonical-<20-digit-generation>.qdb` | Published canonical snapshot |
+| `canonical-<generation>.pending` | Current uncommitted staging file |
 | `HEAD` | 20-byte magic, acknowledged generation, and CRC32 watermark |
-| `HEAD.pending` | staged replacement watermark |
-| `index.qidx` | checksummed dimension/backend/readiness generation, not a graph |
-| `index.pending` | staged disposable readiness marker |
+| `HEAD.pending` | Staged replacement watermark |
+| `index.qidx` | Checksummed dimension, backend, and readiness generation (not a graph) |
+| `index.pending` | Staged disposable readiness marker |
 
-valid newer legacy `.tmp` snapshots retain their recovery behavior. current
+Valid newer legacy `.tmp` snapshots retain their recovery behavior. Current
 writes use `.pending` so fully written but unpublished transactions are not
 mistaken for commits.
 
-## transaction and durability order
+## Transaction and durability order
 
-one write lock covers the entire transaction:
+One write lock covers the entire transaction:
 
-1. clone canonical state and apply the ordered batch. invalid vectors, duplicate
-   IDs, invalid deletions, and exhausted generation abort the staged copy.
-2. check the staged store's admission budget before writing.
-3. stream a complete `.pending` snapshot, append CRC32, flush, and sync the file.
-4. rename to `.qdb`, then sync the collection directory where supported.
-5. write and sync `HEAD.pending`, rename over `HEAD`, and sync the directory.
-6. prune older snapshots while retaining the immediately previous one, publish
+1. Clone canonical state and apply the ordered batch. Invalid vectors, duplicate
+   IDs, invalid deletions, and exhausted generations abort the staged copy.
+2. Check the staged store's admission budget before writing.
+3. Stream a complete `.pending` snapshot, append the CRC32, flush, and sync the file.
+4. Rename to `.qdb`, then sync the collection directory where supported.
+5. Write and sync `HEAD.pending`, rename over `HEAD`, and sync the directory.
+6. Prune older snapshots while retaining the immediately preceding one, publish
    staged memory, invalidate preparation, and return success.
 
-validation and pre-publication I/O failures leave original memory unchanged.
-canonical rename is publication. subsequent failure means uncertainty, not
-rollback: `CommitUncertain` closes the handle and releases the OS lock. reopen
-resolves the outcome. durable single-row mutations already execute this protocol;
+Validation and pre-publication I/O failures leave original memory unchanged.
+Canonical rename marks publication. Subsequent failure indicates uncertainty, not
+rollback: `CommitUncertain` closes the handle and releases the OS lock. Reopen
+resolves the outcome. Durable single-row mutations already execute this protocol;
 `flush` is normally a no-op.
 
-the retained previous snapshot helps manual investigation. it is not permission
+The retained previous snapshot helps manual investigation. It is not permission
 for automatic rollback. `HEAD` is a lower bound on acknowledged generation: if
-its snapshot is missing, open errors. the highest published generation is checked
-in full, and corruption does not cause fallback. a valid `.qdb` newer than `HEAD`
-can come from uncertain publication. reopen repairs and syncs the watermark
-before returning it. valid legacy files without `HEAD` are upgraded similarly.
+its snapshot is missing, opening the collection returns an error. The highest published generation is checked
+in full, and corruption does not cause fallback. A valid `.qdb` newer than `HEAD`
+can originate from uncertain publication. Reopen repairs and syncs the watermark
+before returning it. Valid legacy files without `HEAD` are upgraded similarly.
 
-current `.pending` contents never become visible on reopen. interrupted initial
-creation may leave no canonical snapshot at all. open then errors, while create
-refuses the nonempty directory. inspect and preserve it before manually cleaning
+Current `.pending` contents never become visible on reopen. Interrupted initial
+creation may leave no canonical snapshot at all. Open then returns an error, while create
+refuses a non-empty directory. Inspect and preserve the directory before manually cleaning
 confirmed uncommitted initialization files or using another location.
 
 Unix syncs publication and newly created directory entries, including their
-parents, subject to filesystem/hardware guarantees. Windows syncs files but does
-not implement directory sync. process-crash recovery is supported; complete
+parents, subject to filesystem and hardware guarantees. Windows syncs files but does
+not implement directory sync. Process-crash recovery is supported; complete
 sudden-power-loss durability is not claimed. CRC32 is not authentication.
 
-## memory and write costs
+## Memory and write costs
 
-the default `StorageOptions::max_load_bytes` is 512 MiB. both read and durable
+The default `StorageOptions::max_load_bytes` is 512 MiB. Both read and durable
 write admission check snapshot size and the estimate
 `rows * (32 + 4 * dimension + 64 * ceil(dimension / 16) + 512)` with checked
-arithmetic. the aligned term accounts for the disposable exact-CPU scan matrix
+arithmetic. The aligned term accounts for the disposable exact-CPU scan matrix
 that may appear on the first query; the final 512 bytes per row allow for metadata
-indexes and bookkeeping. this includes tombstones, is not measured RSS, and does
-not reserve memory. the host supplies options on create/open; they are not a
+indexes and bookkeeping. This estimate includes tombstones, does not measure resident set size (RSS), and does
+not pre-reserve memory. The host supplies options on create or open; they are not a
 persisted machine policy.
 
 `CollectionConfig::gpu_allocation_budget_bytes` is a separate device-allocation
-scope. exact GPU preparation rejects resident vector/ID/metadata buffers plus the
-admitted scratch arena when their checked total exceeds this cap. scratch includes
-query, eligibility, score, selected-candidate and readback buffers and grows to the
-largest admitted batch. host canonical memory, preparation copies, driver-private
-allocations and physical residency are outside this number. automatic mode reports
+scope. Exact GPU preparation rejects resident vector, ID, and metadata buffers plus the
+admitted scratch arena when their checked total exceeds this cap. Scratch includes
+query, eligibility, score, selected-candidate, and readback buffers, growing to the
+largest admitted batch. Host canonical memory, preparation copies, driver-private
+allocations, and physical residency fall outside this number. Automatic mode reports
 an exact-CPU fallback after a GPU budget failure; required-GPU mode returns the
-failure. hosts requiring a process-wide limit must account for both Qenlo scopes and
+failure. Hosts requiring a process-wide limit must account for both Qenlo scopes and
 their own inputs.
 
-loading keeps one decoded row outside the growing canonical store. directory
-selection and pruning retain only the generation candidates they need. no second
-full decoded snapshot is staged, but canonical rows and all metadata indexes
-remain resident. allocation can still fail.
+Loading keeps one decoded row outside the growing canonical store. Directory
+selection and pruning retain only the generation candidates they need. No second
+full decoded snapshot is staged, though canonical rows and all metadata indexes
+remain resident. Allocation can still fail.
 
-transactions validate the complete ordered batch before publishing a checksummed
-immutable WAL file and atomic manifest, then apply it to the resident store. commit
-work is O(batch), not O(collection). reopen maps and validates the latest immutable
+Transactions validate the complete ordered batch before publishing a checksummed
+immutable WAL file and atomic manifest, then apply it to the resident store. Commit
+work is O(batch), not O(collection). Reopen maps and validates the latest immutable
 canonical snapshot, then replays contiguous WAL generations. `flush` and `close`
 synchronously compact the current store into a new full snapshot and prune covered
-WAL files. background compaction and zero-copy row ownership are not implemented yet.
+WAL files. Background compaction and zero-copy row ownership are not implemented yet.
 
-## visibility and locks
+## Visibility and locks
 
-ready CPU and USearch searches hold a shared read lock for the entire query.
-mutations and rebuilds take the write lock, so a query sees a complete committed
-generation. search-triggered preparation drops its initial read lock, obtains a
-write lock, prepares the then-current generation, and downgrades before search.
-no stale graph is served during that transition.
+Ready CPU and USearch searches hold a shared read lock for the entire query.
+Mutations and rebuilds take the write lock, so a query sees a complete committed
+generation. Search-triggered preparation drops its initial read lock, acquires a
+write lock, prepares the current generation, and downgrades before search.
+No stale graph is served during that transition.
 
 GPU queries also take a per-collection gate so simultaneous use of the persistent
-scratch arena cannot multiply the budget. mutation waits for readers. there are no collection background
+scratch arena cannot multiply the budget. Mutations wait for readers. There are no collection background
 workers or speculative MVCC versions. `search_batch` holds one canonical generation
-and becomes one GPU workload when GPU routing is selected.
+and forms a single GPU workload when GPU routing is selected.
 
 For prepared exact-GPU state, deletion updates the owning chunk's host live mask;
 the next query uploads that mask through the existing bounded eligibility arena.
 Appends upload suffix rows as at most eight additional chunks. The ninth append
 wave consolidates through the full preparation path. Budget failure, device error,
-and IVF configuration also choose full preparation. The collection write lock
+and IVF configuration also trigger full preparation. The collection write lock
 publishes the canonical mutation and its derived update as one visible generation,
-so readers cannot mix old vectors with new tombstones.
+preventing readers from mixing old vectors with new tombstones.
 
-synchronous methods block. do not block a single-thread executor on mutation
-while an earlier GPU future needs that executor to finish. put contended
-synchronous work on a blocking thread. async signatures do not make snapshot I/O
-or CPU distance calculation nonblocking.
+Synchronous methods block. Do not block a single-thread executor on mutations
+while an earlier GPU future needs that executor to finish. Place contended
+synchronous work on a blocking thread. Async signatures do not make snapshot I/O
+or CPU distance calculations nonblocking.
 
-## preparation and backend boundaries
+## Preparation and backend boundaries
 
-`index.qidx` stores only readiness metadata. no ANN graph, metadata tree, or GPU
-buffer is serialized. restart always rebuilds, even when its generation matches.
-missing, corrupt, backend-mismatched, and stale markers change the preparation
-reason, never canonical membership. marker-save failure is reported separately
-from canonical commit.
+`index.qidx` stores only readiness metadata. No ANN graph, metadata tree, or GPU
+buffer is serialized. Restart always rebuilds, even when its generation matches.
+Missing, corrupt, backend-mismatched, or stale markers change the preparation
+reason, never canonical membership. Marker-save failures are reported separately
+from canonical commits.
 
-`RebuildPolicy::OnSearch` prepares lazily. `Explicit` requires `prepare` and
-otherwise returns `IndexNotPrepared`. policies and ANN search expansion belong
+`RebuildPolicy::OnSearch` prepares lazily. `Explicit` requires calling `prepare` and
+otherwise returns `IndexNotPrepared`. Policies and ANN search expansion settings belong
 to the handle; the host should reapply them after reopen.
 
-exact CPU search evaluates the whole eligible subset, selecting AVX2 at runtime
-or falling back to scalar. its heap holds at most k hits. float64 accumulation
-reduces numerical error; returned float32 distances still have finite precision.
-ordering uses computed distance then ID.
+Exact CPU search evaluates the entire eligible subset, selecting AVX2 at runtime
+or falling back to scalar code. Its heap holds at most k hits. Float64 accumulation
+reduces numerical error, though returned float32 distances still have finite precision.
+Ordering uses computed distance, then ID.
 
 USearch performs approximate filtered HNSW with canonical live-ID eligibility.
-the adapter sorts returned ties, but cannot promise globally smallest IDs among
-equal-distance candidates the graph did not visit. recall must be measured for
+The adapter sorts returned ties, but cannot guarantee globally smallest IDs among
+equal-distance candidates that the graph did not visit. Recall must be measured for
 each workload and parameter claim.
 
-wgpu supplies exact search plus deterministic IVF-Flat and IVF-SQ8 candidate
+The wgpu backend supplies exact search plus deterministic IVF-Flat and IVF-SQ8 candidate
 generation with exact FP32 GPU reranking: CPU-mask, eligible-row, or GPU-predicate
 filtering; signed timestamps; bounded chunks and candidate readback; persistent
-scratch admission; true query batches; capability and device-loss reporting.
-required failures and automatic fallback are explicit. IVF configuration is derived
-state and is rebuilt after mutation; there is no custom GPU ANN graph. Exact-GPU
+scratch admission; true query batches; and capability and device-loss reporting.
+Required failures and automatic fallback are explicit. IVF configuration is derived
+state and is rebuilt after mutations; there is no custom GPU ANN graph. Exact-GPU
 state uses bounded suffix chunks and live-mask updates between consolidating rebuilds.
 On a hybrid machine, the high-performance adapter
 request is observable in the returned capabilities and benchmark manifest; the
@@ -164,19 +164,19 @@ request is observable in the returned capabilities and benchmark manifest; the
 than the integrated Intel UHD adapter. Callers should treat the reported actual
 adapter as part of the performance result.
 
-## reports and evidence
+## Reports and evidence
 
-operation IDs are process-local correlation, not durable transaction IDs. reports
-name the actual backend, preparation reason, lock wait, commit context, CPU path,
+Operation IDs provide process-local correlation, not durable transaction IDs. Reports
+record the actual backend, preparation reason, lock wait, commit context, CPU path,
 ANN parameters, transfer counts, and unavailable measurements. GPU completed-call
-timing is host-observed. adapters with wgpu timestamp-query support also report
-isolated scoring and selection device time. detailed
-eligibility diagnostics add a scan and affect overhead.
+timing is host-observed. Adapters with wgpu timestamp-query support also report
+isolated scoring and selection device time. Detailed
+eligibility diagnostics add a scan and increase overhead.
 
-the library installs no global subscriber. default spans omit vectors,
-credentials, raw user IDs, timestamps, and predicates. hosts own telemetry
-workers, queue bounds, exporter timeouts, and shutdown. exporter failure may lose
+The library installs no global subscriber. Default spans omit vectors,
+credentials, raw user IDs, timestamps, and predicates. Hosts own telemetry
+workers, queue bounds, exporter timeouts, and shutdown. Exporter failures may lose
 observations but must not alter search results.
 
-see [the benchmark protocol](benchmark-protocol.md) for evidence requirements and
+See [the benchmark protocol](benchmark-protocol.md) for evidence requirements and
 [the verification record](verification.md) for actual commands and results.

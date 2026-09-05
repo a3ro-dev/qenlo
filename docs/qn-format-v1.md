@@ -1,33 +1,33 @@
 # Qenlo portable file format (`.qn`) v1
 
-Status: implemented and covered by round-trip, shape, version, checksum, tombstone,
-and non-overwrite tests. Multi-byte values are little-endian. Readers must reject
+Status: Implemented and covered by round-trip, shape, version, checksum, tombstone,
+and non-overwrite tests. Multi-byte values use little-endian byte order. Readers must reject
 unknown versions, non-zero reserved bytes, impossible shapes, duplicate IDs,
-non-unit/non-finite vectors, and checksum mismatches.
+non-unit or non-finite vectors, and checksum mismatches.
 
 ## Layout
 
 | Offset | Size | Field |
 | ---: | ---: | --- |
-| 0 | 8 | magic bytes `QENLODB\0` |
-| 8 | 4 | format version (`1`, `u32`) |
-| 12 | 4 | vector dimension (`u32`, non-zero) |
-| 16 | 8 | canonical generation (`u64`) |
-| 24 | 8 | total row slots including tombstones (`u64`) |
-| 32 | 8 | live row count (`u64`) |
-| 40 | variable | fixed-width row records |
-| EOF - 4 | 4 | CRC32 of every preceding byte (`u32`) |
+| 0 | 8 | Magic bytes `QENLODB\0` |
+| 8 | 4 | Format version (`1`, `u32`) |
+| 12 | 4 | Vector dimension (`u32`, non-zero) |
+| 16 | 8 | Canonical generation (`u64`) |
+| 24 | 8 | Total row slots including tombstones (`u64`) |
+| 32 | 8 | Live row count (`u64`) |
+| 40 | variable | Fixed-width row records |
+| EOF - 4 | 4 | CRC32 of all preceding bytes (`u32`) |
 
 Each row is `32 + dimension * 4` bytes:
 
 | Relative offset | Size | Field |
 | ---: | ---: | --- |
-| 0 | 8 | public ID (`u64`, unique and never reused) |
-| 8 | 8 | user ID (`u64`) |
-| 16 | 8 | timestamp (`i64`) |
-| 24 | 1 | live flag (`0` or `1`) |
-| 25 | 7 | reserved, all zero |
-| 32 | `dimension * 4` | normalized IEEE-754 binary32 vector values |
+| 0 | 8 | Public ID (`u64`, unique and never reused) |
+| 8 | 8 | User ID (`u64`) |
+| 16 | 8 | Timestamp (`i64`) |
+| 24 | 1 | Live flag (`0` or `1`) |
+| 25 | 7 | Reserved, all zero |
+| 32 | `dimension * 4` | Normalized IEEE-754 binary32 vector values |
 
 The exact file length is:
 
@@ -45,8 +45,8 @@ The exact file length is:
   recovery is reported in collection statistics. Invalid pending files are preserved.
 - Import validates the complete file before returning a mutable in-memory collection.
 - Tombstones and generation are retained, so ID non-reuse and deterministic ordering survive transfer.
-- Derived CPU/GPU indexes, telemetry, locks, and embedding models are not serialized.
-  They are local, replaceable state and rebuild after import.
+- Derived CPU and GPU indexes, telemetry, locks, and embedding models are not serialized.
+  They represent local, replaceable state and rebuild after import.
 
 ## Durability boundary
 
