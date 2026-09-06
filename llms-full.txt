@@ -43,7 +43,7 @@ Qenlo is a research-grade embedded vector store for durable, exact, metadata-fil
 - [Verification](verification.md)
 - [Benchmark protocol](benchmark-protocol.md)
 - [Implementation status](implementation-status.md)
-- [Research paper](../paper/output/pdf/qenlo-final-research-paper.pdf)
+- [Research paper (final, 22 pages)](../QENLO-RESEARCH-PAPER.pdf)
 
 Benchmark results apply only to their recorded data, hardware, source revision, runtime, and timing boundary. They do not establish a universal CPU or GPU threshold, nor do they claim production readiness.
 
@@ -413,7 +413,7 @@ This page describes Qenlo's current code and evidence. It does not infer competi
 
 The September 5, 2026 campaign contains 182 status rows: 131 completed, 42 marked failed or unavailable, seven failed, and two invalid-harness rows. Only 130 qualify because one completed USearch row misses its recall gate. On one RTX 4090/Vulkan host, exact WGPU P95 was 0.897 ms for 100k by 768, batch one, `k=1`, and 0.896 ms for batch eight, `k=64`, at 10% eligibility. PyTorch CUDA was faster in both cells. Those WGPU rows used a lane-minimum selector candidate that won five and lost seven of 12 frozen-baseline pairs and was subsequently rejected.
 
-These numbers do not describe the retained selector and select no deployment default. See [the performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) and [the paper](../paper/output/pdf/qenlo-final-research-paper.pdf) for timing boundaries and limitations.
+These numbers do not describe the retained selector and select no deployment default. See [the performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) and [the final paper](../QENLO-RESEARCH-PAPER.pdf) for timing boundaries and limitations.
 
 
 ================================================================================
@@ -1902,7 +1902,7 @@ Several items that looked open in the earlier positioning report are already com
 | Earlier action | Current evidence | Disposition |
 | --- | --- | --- |
 | Add a telemetry opt-out | The [feature matrix](feature-matrix.md) says core and SDKs make no automatic network requests. [Device-lab upload](device-lab.md) is explicit and host-controlled; the collector is a separate service. | Complete. Preserve this privacy boundary with regression tests and release review. |
-| Publish the paper/writeup | A [verified 13-page PDF](../paper/output/pdf/qenlo-final-research-paper.pdf), source, figures, claim ledger, and [reproduction instructions](../paper/REPRODUCE.md) are committed. | Repository publication complete. A DOI, arXiv entry, or external engineering article remains optional distribution work. |
+| Publish the paper/writeup | A [verified 22-page PDF](../QENLO-RESEARCH-PAPER.pdf), source, figures, claim ledger, and [reproduction instructions](../paper/REPRODUCE.md) are committed. | Repository publication complete. A DOI, arXiv entry, or external engineering article remains optional distribution work. |
 | Benchmark LanceDB | The retained [100K x 384 replay](../benchmarks/runpod/2026-09-02-bb51987/README.md) includes LanceDB Flat with raw artifacts and disclosed timing boundaries. | Complete for one historical cohort. Do not imply broad coverage. |
 | Benchmark sqlite-vec | No retained sqlite-vec adapter or result was found. | Open. This is the remaining closest-competitor gap. |
 | Close the 1M x 768 gate | The [strict A6000 experiment](reports/2026-09-02-strict-topk-research-gate.md) ran and failed the pre-registered 2x CPU gate; Qenlo's prototype also lost to FAISS GPU Flat in that cell. | Complete as a negative result. Publish the verdict; do not rerun until a named implementation change creates a falsifiable new hypothesis. |

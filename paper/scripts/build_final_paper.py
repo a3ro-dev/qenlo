@@ -21,7 +21,7 @@ def main():
     issues=[line for line in log.splitlines() if re.search(r'Overfull \\[hv]box|undefined|multiply defined|LaTeX Error|not found|ignored error|Infinite glue',line,re.I)]
     blg=(build/'paper.blg').read_text(errors='replace')
     issues += [l for l in blg.splitlines() if re.search(r'Warning--|error message',l,re.I) and not l.startswith('(There were 0')]
-    output=PAPER/'output/pdf/qenlo-final-research-paper.pdf'
+    output=ROOT/'QENLO-RESEARCH-PAPER.pdf'
     report={'isolated_build':str(build),'commands':records,'issues':issues,'compile_passed':not issues,'visual_inspection':'pending','final_pdf':str(output)}
     (PAPER/'audit/build-verification.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))

@@ -52,14 +52,14 @@ python paper/scripts/verify_final_pdf.py
 
 The builder creates a new timestamped directory under `paper/tmp/`, copies only source/bibliography/figure/table inputs, and executes pdfLaTeX, BibTeX, and three resolving pdfLaTeX passes. It cannot consume stale auxiliary files from `paper/`. It rejects unresolved citations/references, missing files, duplicate labels, overfull horizontal/vertical boxes, and ignored TeX errors. Only a passing build is copied to:
 
-`paper/output/pdf/qenlo-final-research-paper.pdf`
+`QENLO-RESEARCH-PAPER.pdf`
 
 The PDF verifier extracts layout-preserving text, checks headline values and reference/figure/table markers, renders every page at 120 DPI, and records the PDF hash, page count, and pixel hashes. It does not certify visual quality automatically. Every rendered page must be inspected for clipping, labels, legends, tables, equations, references, and page breaks. After edits, rebuild and re-inspect changed rendered pages; identical pixel output can retain its recorded review. Final visual records are tied to the delivered PDF and per-page render hashes.
 
 ## Scope and archival cautions
 
 - Do not invoke the older `scripts/generate_small_paper_tables.py` in this final workflow: it writes the superseded six-claim CSV. It remains unchanged as historical authoring code.
-- Do not overwrite source archives, raw samples, historical plots, or earlier PDFs.
+- Do not overwrite source archives, raw samples, or historical plots. Superseded paper PDFs live only in git history.
 - There is no script here to run cloud workloads or publish an artifact.
 - USD 0.9400778694252952 is captured daily account spend; billing lag and unrelated usage prevent clean campaign-only attribution.
 - Completed-call, device phases, process RSS, and owned accelerator/tensor allocations have different scopes. No efficiency score combines them.

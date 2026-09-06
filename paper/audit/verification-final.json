@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "pdf": "paper/output/pdf/qenlo-final-research-paper.pdf",
+  "pdf": "QENLO-RESEARCH-PAPER.pdf",
   "pdf_sha256": "75380b13db339f0c6c86fd4104c014d4eea68c8c9007c9613cb10105e562b96d",
   "pages": 22,
   "figures_pdf_png_pairs": 12,

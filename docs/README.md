@@ -30,7 +30,7 @@ Qenlo is a research-grade embedded vector store for durable, exact, metadata-fil
 - [Verification](verification.md)
 - [Benchmark protocol](benchmark-protocol.md)
 - [Implementation status](implementation-status.md)
-- [Research paper](../paper/output/pdf/qenlo-final-research-paper.pdf)
+- [Research paper (final, 22 pages)](../QENLO-RESEARCH-PAPER.pdf)
 
 Benchmark results apply only to their recorded data, hardware, source revision, runtime, and timing boundary. They do not establish a universal CPU or GPU threshold, nor do they claim production readiness.
 

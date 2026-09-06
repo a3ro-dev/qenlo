@@ -5,7 +5,7 @@ from pypdf import PdfReader
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[2]
 def main():
-    paper=ROOT/'paper';pdf=paper/'output/pdf/qenlo-final-research-paper.pdf';out=paper/'tmp/final-pages'
+    paper=ROOT/'paper';pdf=ROOT/'QENLO-RESEARCH-PAPER.pdf';out=paper/'tmp/final-pages'
     out.mkdir(parents=True,exist_ok=True)
     text_path=paper/'audit/final-text.txt'
     subprocess.run(['pdftotext','-layout',str(pdf),str(text_path)],check=True)

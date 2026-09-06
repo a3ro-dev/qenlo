@@ -1,6 +1,8 @@
-# Qenlo research paper
+# Qenlo research paper source
 
-The definitive synthesis is [qenlo-final-research-paper.pdf](output/pdf/qenlo-final-research-paper.pdf). It integrates the September 5 small-collection campaign with the historical routing, eligibility preparation, Android, Intel Arc, A6000, real-embedding, and external-engine evidence.
+There is exactly one published manuscript: [QENLO-RESEARCH-PAPER.pdf](../QENLO-RESEARCH-PAPER.pdf) in the repository root. It is the verified 22-page final paper and integrates the September 5 small-collection campaign with the historical routing, eligibility preparation, Android, Intel Arc, A6000, real-embedding, and external-engine evidence.
+
+This directory contains its reproducible source and audit evidence, not alternative papers. Generated build directories live under the ignored `paper/tmp/` path. Superseded manuscript PDFs were removed; git history retains them if historical comparison is ever needed.
 
 The thesis is conditional execution: eligible work, preparation, predicate representation, batching, selection, runtime ownership, and mutation/residency state matter alongside collection size and device class. The archive supports this engineering conclusion; it does not validate a universal threshold or an adaptive router.
 
@@ -15,10 +17,10 @@ The thesis is conditional execution: eligible work, preparation, predicate repre
 
 ## Contents
 
-- `paper.tex`, `appendix.tex`, `references.bib`: manuscript, detailed evidence, audited citations.
+- `paper.tex`, `appendix.tex`, `references.bib`: canonical manuscript source, detailed evidence, and audited citations.
 - `tables/claim-to-artifact.json`: combined full ledger; CSV provides an index.
 - `audit/`: historical, campaign, citation, and source-contract audits; verifier results and preserved pre-edit manuscripts.
-- `figures/final/`: twelve generated PDF/PNG figure pairs. Original top-level figures are preserved.
+- `figures/final/`: twelve generated PDF/PNG figure pairs used by the paper. Original top-level figures are retained as research evidence.
 - `scripts/`: paper-only reduction, verification, table/figure generation, ledger, and isolated-build helpers.
 - `audit/figure-sources.json`: each generator's exact input paths and hashes.
 - `audit/build-verification.json` and `audit/verification-final.json`: build, text, and visual verification records.
