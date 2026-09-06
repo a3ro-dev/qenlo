@@ -208,5 +208,9 @@ jobs:
         run: |
           cd release-assets
           find . -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+          release_args=("$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes)
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            release_args+=(--prerelease)
+          fi
+          gh release create "${release_args[@]}"
           find . -type f -print0 | xargs -0 gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY"
