@@ -35,6 +35,7 @@ DOCS_CATALOG = [
         ("docs/results-2026-08-28.md", "Measured results (2026-08-28)", "Native Windows benchmark run data and comparisons"),
         ("docs/verification.md", "Verification record", "Verification record, test outcomes, and audit trail"),
         ("docs/implementation-status.md", "Implementation status", "Engineering roadmap status and hardware gates"),
+        ("docs/prioritized-roadmap.md", "Prioritized roadmap", "Ranked adoption, trust, mobile, and research milestones"),
         ("docs/ci.md", "CI and release map", "GitHub Actions workflows and release sequence"),
         ("docs/publishing.md", "Package publishing", "Multi-registry publication pipeline"),
     ]),

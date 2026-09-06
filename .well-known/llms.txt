@@ -42,6 +42,7 @@ Qenlo is a research-grade embedded vector database for durable, exact, metadata-
 - [Measured results (2026-08-28)](https://a3ro-dev.github.io/qenlo/docs/results-2026-08-28.md): Native Windows benchmark run data and comparisons
 - [Verification record](https://a3ro-dev.github.io/qenlo/docs/verification.md): Verification record, test outcomes, and audit trail
 - [Implementation status](https://a3ro-dev.github.io/qenlo/docs/implementation-status.md): Engineering roadmap status and hardware gates
+- [Prioritized roadmap](https://a3ro-dev.github.io/qenlo/docs/prioritized-roadmap.md): Ranked adoption, trust, mobile, and research milestones
 - [CI and release map](https://a3ro-dev.github.io/qenlo/docs/ci.md): GitHub Actions workflows and release sequence
 - [Package publishing](https://a3ro-dev.github.io/qenlo/docs/publishing.md): Multi-registry publication pipeline
 

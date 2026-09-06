@@ -29,6 +29,7 @@
   * [Verification record](verification.md)
 
 * **Release and operations**
+  * [Prioritized roadmap](prioritized-roadmap.md)
   * [Implementation status](implementation-status.md)
   * [Package publishing](publishing.md)
   * [CI and release map](ci.md)

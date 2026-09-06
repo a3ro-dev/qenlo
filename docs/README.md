@@ -26,6 +26,7 @@ Qenlo is a research-grade embedded vector store for durable, exact, metadata-fil
 
 ## Evidence and project status
 
+- [Prioritized roadmap](prioritized-roadmap.md)
 - [Verification](verification.md)
 - [Benchmark protocol](benchmark-protocol.md)
 - [Implementation status](implementation-status.md)

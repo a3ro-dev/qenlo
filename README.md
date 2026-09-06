@@ -161,6 +161,7 @@ Benchmark commands and evidence requirements are documented in the [benchmark pr
 - [Use cases](docs/use-cases.md)
 - [Trade-offs](docs/trade-offs.md)
 - [Feature matrix](docs/feature-matrix.md)
+- [Prioritized roadmap](docs/prioritized-roadmap.md)
 - [Implementation status](docs/implementation-status.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security model](SECURITY.md)

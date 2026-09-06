@@ -6,7 +6,7 @@ JNA bindings for JVM applications. Android packaging and bridge validation are t
 
 ```kotlin
 dependencies {
-    implementation("dev.qenlo:qenlo:0.1.0-alpha.3")
+    implementation("dev.qenlo:qenlo:0.1.0-alpha.4")
 }
 ```
 

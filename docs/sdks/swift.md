@@ -8,7 +8,7 @@ Add `qenlo` to `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/a3ro-dev/qenlo.git", from: "0.1.0-alpha.3")
+    .package(url: "https://github.com/a3ro-dev/qenlo.git", from: "0.1.0-alpha.4")
 ]
 ```
 

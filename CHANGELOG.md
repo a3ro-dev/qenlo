@@ -1,5 +1,23 @@
 # changelog
 
+## 0.1.0-alpha.4 - 2026-09-07
+
+### added
+
+- a repository-evidence-driven roadmap that ranks adoption, comparative
+  coverage, compatibility, mobile validation, and launch work by impact,
+  effort, dependencies, and proof of completion.
+
+### changed
+
+- documentation navigation now links directly to the prioritized roadmap.
+- package manifests and SDK installation examples now use `0.1.0-alpha.4`.
+
+### compatibility and limits
+
+- no storage format, query semantics, native ABI, execution backend, or
+  automatic network behavior changed in this release.
+
 ## 0.1.0-alpha.3 - 2026-09-06
 
 ### added
