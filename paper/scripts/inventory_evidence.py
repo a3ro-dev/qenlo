@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a bounded inventory of retained research evidence.
+"""Create a bounded inventory of Git-tracked research evidence.
 
 The inventory deliberately excludes derived paper outputs and never reads
 large vector/database payloads. Text and machine-readable records are hashed;
@@ -11,13 +11,14 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import subprocess
 from collections import defaultdict
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "paper/audit/archive-inventory.json"
-ROOTS = [ROOT / "research", ROOT / "benchmarks", ROOT / "docs/reports", ROOT / "benchmark-results"]
+ROOTS = ["research", "benchmarks", "docs/reports", "benchmark-results"]
 # The retained tree is about 1 GB. Hash individual payloads up to 256 MiB;
 # this covers the retained qnb/source archives while keeping the index bounded.
 MAX_HASH_BYTES = 256 * 1024 * 1024
@@ -160,27 +161,26 @@ def digest(path: Path, size: int, kind: str) -> tuple[str | None, str, int]:
 
 def main() -> None:
     files = []
-    seen = set()
-    for root in ROOTS:
-        for path in root.rglob("*"):
-            if not path.is_file():
-                continue
-            key = path.resolve()
-            if key in seen:
-                continue
-            seen.add(key)
-            size = path.stat().st_size
-            kind = classify(path)
-            sha, status, canonical_size = digest(path, size, kind)
-            files.append({
-                "path": rel(path),
-                "size_bytes": canonical_size,
-                "type": kind,
-                "cohort": cohort(path),
-                "sha256": sha,
-                "hash_status": status,
-                "manifest_references": nearby_manifest_refs(path),
-            })
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z", "--", *ROOTS],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+    ).stdout.decode("utf-8", errors="surrogateescape")
+    for relative in filter(None, tracked.split("\0")):
+        path = ROOT / relative
+        size = path.stat().st_size
+        kind = classify(path)
+        sha, status, canonical_size = digest(path, size, kind)
+        files.append({
+            "path": rel(path),
+            "size_bytes": canonical_size,
+            "type": kind,
+            "cohort": cohort(path),
+            "sha256": sha,
+            "hash_status": status,
+            "manifest_references": nearby_manifest_refs(path),
+        })
     files.sort(key=lambda x: x["path"])
     by_hash = defaultdict(list)
     for item in files:
@@ -201,8 +201,8 @@ def main() -> None:
     payload = {
         "schema": "qenlo-evidence-archive-inventory-v1",
         "generated_by": "paper/scripts/inventory_evidence.py",
-        "scope": ["research/**", "benchmarks/**", "docs/reports/**", "benchmark-results/**"],
-        "excluded_paths": ["paper/** (derived manuscript, figures, reductions, and audit outputs)"],
+        "scope": [f"Git-tracked {root}/**" for root in ROOTS],
+        "excluded_paths": ["paper/** (derived manuscript, figures, reductions, and audit outputs)", "untracked and ignored local files"],
         "hash_policy": {"max_computed_bytes": MAX_HASH_BYTES, "text_line_endings": "CRLF normalized to LF before size and SHA-256", "large_payload_behavior": "use existing manifest/sidecar reference where known; otherwise hash=null and hash_status=skipped_large_payload"},
         "summary": {"file_count": len(files), "bytes": sum(x["size_bytes"] for x in files), "cohort_file_counts": dict(sorted(counts.items())), "cohort_bytes": dict(sorted(bytes_by_cohort.items()))},
         "cohort_decisions": COHORT_DECISIONS,
