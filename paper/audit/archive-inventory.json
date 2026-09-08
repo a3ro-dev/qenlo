@@ -18,7 +18,7 @@
   },
   "summary": {
     "file_count": 1654,
-    "bytes": 531312892,
+    "bytes": 531312849,
     "cohort_file_counts": {
       "a6000_provider_approximate": 32,
       "a6000_strict_gate": 23,
@@ -46,7 +46,7 @@
       "benchmark_results_mirrors": 10301318,
       "benchmarks": 136674,
       "eligibility_ablation": 15276350,
-      "gpu_tuning": 80133,
+      "gpu_tuning": 80090,
       "historical_processed": 33824,
       "historical_reports": 4345,
       "intel_arc_device_lab": 11957,
@@ -539,20 +539,20 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/run_strict_topk_research_gate.py",
       "size_bytes": 8925,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "a6000_strict_gate",
       "sha256": "067709e36d0b987ba429a18eb39d0b68faa65baf63b2dc25a64e9c00b2c87b4a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/run_strict_topk_research_gate_v2.py",
       "size_bytes": 9211,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "a6000_strict_gate",
       "sha256": "dd43a2e74021be1696d3b0ec5651bbecd8e0d4c28d1fcf97758ef8c37a13fda9",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -1111,10 +1111,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null,
       "duplicate_group_size": 26
@@ -1122,10 +1122,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/chroma.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1133,10 +1133,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/dependencies.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1144,10 +1144,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/embeddings.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1155,10 +1155,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/faiss-flat.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1166,10 +1166,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/faiss-hnsw.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1177,10 +1177,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/lancedb-flat.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1188,10 +1188,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/milvus.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1199,10 +1199,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/pip-install.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1210,10 +1210,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/prepare.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1221,10 +1221,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/qenlo-cpu.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1232,10 +1232,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/qenlo-gpu.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null,
       "duplicate_group_size": 3
@@ -1243,10 +1243,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/qenlo-usearch.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -1254,10 +1254,10 @@
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/rust-toolchain.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -2243,10 +2243,10 @@
     {
       "path": "benchmarks/2026-08-28/chroma/verify.py",
       "size_bytes": 2619,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "benchmarks",
       "sha256": "1f535fb3d9878ac2753a23b02c26d178280ab834cb11c323208f2380949e0add",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -2288,11 +2288,11 @@
     },
     {
       "path": "benchmarks/2026-08-28/gpu-tuning/SHA256SUMS",
-      "size_bytes": 4615,
-      "type": "binary_or_other",
+      "size_bytes": 4572,
+      "type": "text_or_machine_readable",
       "cohort": "gpu_tuning",
-      "sha256": "2cae2f6115e92e0f7d40f2bcbe1e075d2c8b294a56423340b5fd453df593aa63",
-      "hash_status": "computed_sha256",
+      "sha256": "b70d5f1b5af4bee69bb9c5907eb41bc98fc71a45dbaefaf979f1b8e02416ac7d",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "benchmarks/2026-08-28/gpu-tuning/README.md",
@@ -2818,10 +2818,10 @@
     {
       "path": "benchmarks/2026-08-28/gpu-tuning/verify.py",
       "size_bytes": 4114,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "gpu_tuning",
       "sha256": "edc3bd7cd8913cf0cb0ad1227cfcb9f4871a3b9e359f548e960505440901fd7a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "benchmarks/2026-08-28/gpu-tuning/SHA256SUMS",
@@ -4488,10 +4488,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/cargo-build.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4520,10 +4520,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/chroma.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4553,10 +4553,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/dependencies.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4585,10 +4585,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/embeddings.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4617,10 +4617,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/faiss-flat.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4650,10 +4650,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/faiss-hnsw.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4683,10 +4683,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/lancedb-flat.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4716,10 +4716,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/milvus.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4749,10 +4749,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/pip-install.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4781,10 +4781,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/prepare.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4813,10 +4813,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/qenlo-cpu.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4845,10 +4845,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/qenlo-gpu-predicate-gl.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/qenlo-gpu.exit-code",
       "duplicate_group_size": 3
@@ -4877,10 +4877,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/qenlo-gpu.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/qenlo-gpu.exit-code",
       "duplicate_group_size": 3
@@ -4909,10 +4909,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/qenlo-usearch.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -4941,10 +4941,10 @@
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/rust-toolchain.exit-code",
       "size_bytes": 2,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "linux_external_replay",
       "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/cargo-build.exit-code",
       "duplicate_group_size": 26
@@ -6229,10 +6229,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/SHA256SUMS",
       "size_bytes": 17278,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "3daad12462aaa15697a3a2b4d1fe12ed4e3d407a51054292a198a09550bfbf37",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -6347,10 +6347,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-cpu.time",
       "size_bytes": 1135,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "59ce964f7b143dbbd37a4262819031031d8d02b79e99e78643cc4fab35592dc5",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -6436,10 +6436,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-gpu.time",
       "size_bytes": 1267,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "e31368013cbe658adf982b9067bf02a9d8cf4a9d74f697ecd8f1076a9bc81a71",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -6536,10 +6536,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/current-gpu.time",
       "size_bytes": 1186,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "ebcdc6e14f45abca4970360fd993cbac88cc9c5e226bc73b3d838d3d87788f7f",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -6625,10 +6625,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c2-r1000-d384-b16-f001/current-gpu.time",
       "size_bytes": 1186,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "075c8e7489128febe146c052785db6ad2b6a2d3e1ec71a0cbd39142a5405a241",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -6707,10 +6707,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c3-r10000-d128-b16-f1/current-gpu.time",
       "size_bytes": 1184,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "a93baa7a4891776d903ae38435a10216e8a4e184d780e8fb8d5f3284bee2db04",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -6789,10 +6789,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-cpu.time",
       "size_bytes": 1145,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "bc3f8928b293e0cad8acd6e3ff8c9d59ebb931bef6bb2875f105ec1aa1d2b591",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -6878,10 +6878,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-gpu.time",
       "size_bytes": 1277,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "6e51cbbb48d43fa5faa10dc459a3dc9200e5dd1c9e6277443717d9ed42abaefe",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -6978,10 +6978,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/current-gpu.time",
       "size_bytes": 1187,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "405c4735ae0a819cba553146be6090271191cd89d657e1d42cc0c1da3390509d",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -7067,10 +7067,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-cpu.time",
       "size_bytes": 1149,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "b37ea518484aeecdb6146e3699e2d60ead25f7b457e08d970251f0f0fee5a29d",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -7156,10 +7156,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-gpu.time",
       "size_bytes": 1281,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "fb19bcb766bca48c0c1955b7d3dc87e91bcf110119de0c19863058044b9c289b",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -7256,10 +7256,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/current-gpu.time",
       "size_bytes": 1190,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "846f5a1da6aae4c9f2abb1cef736b9cfb2e601b2f2e72b876c18a205a68428ec",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -7345,10 +7345,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/runs/c6-r100000-d384-b16-f1/current-gpu.time",
       "size_bytes": 1188,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "03877924ad655aa9b441c1eb04aa688492a2f190af9d1bb6356491e2da9baeba",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -7427,10 +7427,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/status.tsv",
       "size_bytes": 694,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "e43d0e71b7cf4efbe5d48515e7f347af6fac34947c6c8c1b28fa9749d6d6ea9f",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-ca-mtl-secure/extracted/artifacts/SHA256SUMS",
@@ -7530,10 +7530,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/SHA256SUMS",
       "size_bytes": 17388,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "d858883f90763f5ccb72562ee360bbbfa5fbbc492f80424be221eda7efa6ccc0",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -7648,10 +7648,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-cpu.time",
       "size_bytes": 1136,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "7b2c79cc018dd642d3dddad39b1cb8040b231fabed25c12d1d3c57dfd4e684ef",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -7737,10 +7737,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-gpu.time",
       "size_bytes": 1267,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "ad284589acb2e928d53b23ca85e8ddb2a51466145d9da5b2a2eadc6400f390bd",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -7837,10 +7837,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/current-gpu.time",
       "size_bytes": 1186,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "bf8e7d2dececfb661071a046ab44ba278ffc42cffabdf41ece10238b15cbd523",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -7926,10 +7926,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c2-r1000-d384-b16-f001/current-gpu.time",
       "size_bytes": 1186,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "713893d63c0d5f0207dfa52ad225bf5b6dd3291d58480661fc857b49c35de478",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -8008,10 +8008,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c3-r10000-d128-b16-f1/current-gpu.time",
       "size_bytes": 1184,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "2435aee9357ac4e8472b347302b8c5dbfa5749f8a995f6ecdbc6f32f91a8ba63",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -8090,10 +8090,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-cpu.time",
       "size_bytes": 1146,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "fcee86958c2e9987a3827520d7211f4d8a46f978e2214a232694912a32120405",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -8179,10 +8179,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-gpu.time",
       "size_bytes": 1277,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "5cec0520cb760f6d14e3649f80165c67bcbcbc4e3d0b6e17103c8cc554b98716",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -8279,10 +8279,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/current-gpu.time",
       "size_bytes": 1187,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "a5183f010b25c367523e37586fa1e8e8d17a8a39f395cb847b0cebd8ada9cee0",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -8368,10 +8368,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-cpu.time",
       "size_bytes": 1149,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "c9e4d3e2376cdc89fc4e736f794e7846d82061ed7c463198259032f4a3c5e183",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -8457,10 +8457,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-gpu.time",
       "size_bytes": 1282,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "286610145ee68aef0bd6cc14f396fa7f0628091f74bc2777667c54d671341768",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -8557,10 +8557,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/current-gpu.time",
       "size_bytes": 1190,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "e64a1f0610af3500e0c425efe271e58b66c3a98b108382ad074c2eff8a309703",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -8646,10 +8646,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/runs/c6-r100000-d384-b16-f1/current-gpu.time",
       "size_bytes": 1188,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "08c3d162f4977890f3951e22bf3addaaabb759b225c8eb544d9cb2da0f66ec08",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -8728,10 +8728,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/status.tsv",
       "size_bytes": 694,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "e43d0e71b7cf4efbe5d48515e7f347af6fac34947c6c8c1b28fa9749d6d6ea9f",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/common/a40-eu-se-secure/extracted/artifacts/SHA256SUMS",
@@ -8966,10 +8966,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/SHA256SUMS",
       "size_bytes": 43213,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "1448e5c37727c49a3b0f4f45de81640dd53511baf37cea313938ce86992c279c",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -9084,10 +9084,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/baseline-cpu.time",
       "size_bytes": 1142,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "1083c3cf280d6a95f93fe18985ba626812bacaf919f3a6bf32fc8e1794eb722b",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/baseline-source-bundle.sha256",
@@ -9173,10 +9173,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/baseline-gpu.time",
       "size_bytes": 1276,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "d752afde48a191f1ece0119d388165d5c8f5c3d16d47f6fb2dc7e5c605f8b6bc",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/baseline-source-bundle.sha256",
@@ -9334,10 +9334,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/current-cpu.time",
       "size_bytes": 1152,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "8c1f16e7c9919793cfba628e96b719fa9e6f75ddc0aec95e176d375af6d62eb8",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/baseline-source-bundle.sha256",
@@ -9423,10 +9423,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/current-gpu.time",
       "size_bytes": 1285,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "bb7dd86ea3ff8a05a3074a230f47da197bc75a6310bc8e4571b115c506b6f15f",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/baseline-source-bundle.sha256",
@@ -9632,10 +9632,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/usearch.time",
       "size_bytes": 1308,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "51daa423a9f8bd05994bc802c52531696297f5d187a15388bc2771eea08e8846",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d1-r5000-d384-b8-k10-f01/baseline-source-bundle.sha256",
@@ -9762,10 +9762,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d2-r25000-d384-b64-k10-f1/current-cpu.time",
       "size_bytes": 1151,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "a7d53751c433779f59c452e6d470edc2e96e8194d0c1a857ddbf94ef1dab0a32",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -9844,10 +9844,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d2-r25000-d384-b64-k10-f1/current-gpu.time",
       "size_bytes": 1281,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "bec70b6f87bf057e843e685a32ff6d7d8d08f58422d465f2a9772be9de61458d",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -10046,10 +10046,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d2-r25000-d384-b64-k10-f1/usearch.time",
       "size_bytes": 1312,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "a07164b1f7933c4aeb0c678d04687c22f8798ebc08aa27225eaa7375ad933004",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -10128,10 +10128,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/baseline-cpu.time",
       "size_bytes": 1165,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "f989139e27e527fdec770002fe3f94e8cf6c461e511f6ab5f6a19343bb00430a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/baseline-source-bundle.sha256",
@@ -10217,10 +10217,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/baseline-gpu.time",
       "size_bytes": 1303,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "d9e44a17227a89b0c57a7a8916a6096636e6dcdc30844457e25afaef7f6f0e64",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/baseline-source-bundle.sha256",
@@ -10378,10 +10378,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/current-cpu.time",
       "size_bytes": 1170,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "b9cfea33a148ce8e13f9fa47a828343aff513a08449a796772402ca3436e681c",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/baseline-source-bundle.sha256",
@@ -10467,10 +10467,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/current-gpu.time",
       "size_bytes": 1305,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "60af9839a6856dfe818fefce033625400163ea597aed29228e55d9bc90158744",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/baseline-source-bundle.sha256",
@@ -10676,10 +10676,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/usearch.time",
       "size_bytes": 1337,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "4d803bb3acf3ccba97ca5e078a9edd24df1e6747c0ded2f6159c6a0eca0ac058",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d3-r50000-d384-b1-k10-compound/baseline-source-bundle.sha256",
@@ -10765,10 +10765,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-cpu.time",
       "size_bytes": 1189,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "c83217d91516dcb9070c96091397c5322eafd92b1f7341baf351e61bfcc9d2b9",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -10796,10 +10796,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-cpu.time",
       "size_bytes": 1195,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "bd8ca32df8e2657d8cdcb0eb05e27663dd469134821de3e8458268d1ed2c4318",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -10827,10 +10827,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d6-r25000-d768-b64-k64-f001/current-cpu.time",
       "size_bytes": 1157,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "486a33b33ed57691e28cacf8c4deed2c4454ee4ab8b7396016ad1829315270ee",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -10909,10 +10909,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/d6-r25000-d768-b64-k64-f001/current-gpu.time",
       "size_bytes": 1287,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "073643f721349baac83329aa3630999c190ddb4fde77876632dee687bfd1c2fc",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -11172,10 +11172,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/real-r100000-d384-b16-k10-f001/current-cpu.time",
       "size_bytes": 1146,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "9937a45ba7d80bb71c100c60a7cde6307aed7a9eb52b86c8b1732f4b3932901b",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -11254,10 +11254,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/real-r100000-d384-b16-k10-f001/current-gpu.time",
       "size_bytes": 1282,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "d099607dd9ee8fa121f2b6e93a1ff4c0d54cf779a186fcd952485b11fb658b9c",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -11456,10 +11456,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/runs/real-r100000-d384-b16-k10-f001/usearch.time",
       "size_bytes": 1315,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "380992aedb1fa67c40cffad72f285b2ecb805fe90c0b8490c1ed1559f1e79ee3",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -11538,10 +11538,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/status.tsv",
       "size_bytes": 2480,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "9da1ea31f6023bbc342005b14b20d3755acfb094f2e1b995d1c65e073404a13e",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep/rtx4090-eu-ro-secure-deep/extracted/artifacts/SHA256SUMS",
@@ -11640,10 +11640,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/SHA256SUMS",
       "size_bytes": 11082,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "0cdc88ffb78e3e560f07dd83486193d1ef2c2d44022b91e6d22f831645dba059",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null,
       "duplicate_group_size": 2
@@ -11762,10 +11762,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-cpu.time",
       "size_bytes": 1153,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "a680e0daebb85d5f052c863811cbdcd391b48973308480206862f0c1c0324dfb",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null,
       "duplicate_group_size": 2
@@ -11850,10 +11850,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-gpu.time",
       "size_bytes": 1285,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "65fa94fa07a021139a930f7d31b7c5dd23178e4f5ec04ee955169985ecf12206",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null,
       "duplicate_group_size": 2
@@ -12070,10 +12070,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-cpu.time",
       "size_bytes": 1157,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "0e30ac914601dc871262a8276e36a964e360ef82bd9a156e09b8ebeded1282e4",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null,
       "duplicate_group_size": 2
@@ -12158,10 +12158,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-gpu.time",
       "size_bytes": 1292,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "3363728e6bfd6c4243f7f5ed3500acecbc0c7f9a11a6df5500cc34e5c3415a5a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null,
       "duplicate_group_size": 2
@@ -12378,10 +12378,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/status.tsv",
       "size_bytes": 747,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "d3e00b3eb3155657dd744fb442f416b12646c975ea55e95f1c4fb80cd048d12a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/SHA256SUMS",
@@ -12462,10 +12462,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/extracted/artifacts/SHA256SUMS",
       "size_bytes": 11082,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "0cdc88ffb78e3e560f07dd83486193d1ef2c2d44022b91e6d22f831645dba059",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/SHA256SUMS",
       "duplicate_group_size": 2
@@ -12584,10 +12584,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/extracted/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-cpu.time",
       "size_bytes": 1153,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "a680e0daebb85d5f052c863811cbdcd391b48973308480206862f0c1c0324dfb",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-cpu.time",
       "duplicate_group_size": 2
@@ -12672,10 +12672,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/extracted/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-gpu.time",
       "size_bytes": 1285,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "65fa94fa07a021139a930f7d31b7c5dd23178e4f5ec04ee955169985ecf12206",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-gpu.time",
       "duplicate_group_size": 2
@@ -12892,10 +12892,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/extracted/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-cpu.time",
       "size_bytes": 1157,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "0e30ac914601dc871262a8276e36a964e360ef82bd9a156e09b8ebeded1282e4",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-cpu.time",
       "duplicate_group_size": 2
@@ -12980,10 +12980,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/extracted/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-gpu.time",
       "size_bytes": 1292,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "3363728e6bfd6c4243f7f5ed3500acecbc0c7f9a11a6df5500cc34e5c3415a5a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-gpu.time",
       "duplicate_group_size": 2
@@ -13200,10 +13200,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/extracted/artifacts/status.tsv",
       "size_bytes": 747,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "d3e00b3eb3155657dd744fb442f416b12646c975ea55e95f1c4fb80cd048d12a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-admission-fix/extracted/artifacts/SHA256SUMS",
@@ -13304,10 +13304,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-retry/extracted/artifacts/SHA256SUMS",
       "size_bytes": 1922,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "aea728ef482a91399d92523bad7fc8abc636b7e162cade7d21b9b843935a3646",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -13398,10 +13398,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-retry/extracted/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-cpu.time",
       "size_bytes": 1194,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "9a032333ebf2ebc450a09a897c7e8c75747ae454144413cb9be864087fc944ee",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -13429,10 +13429,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-retry/extracted/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-cpu.time",
       "size_bytes": 1195,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "4c29ce5b7a8fac7378e5600e0c97dffdaf9c896eb5b40c0a6af5b50671005167",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -13460,10 +13460,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-retry/extracted/artifacts/status.tsv",
       "size_bytes": 151,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "ee8d48c167f34543493cb808f0d74bd55078cf6ed2513cd38a1573862e4c1cc6",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768-retry/extracted/artifacts/SHA256SUMS",
@@ -13547,10 +13547,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768/extracted/artifacts/SHA256SUMS",
       "size_bytes": 1284,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "090fbfb7f105b84a92954220e7fde9e41ddde7e18b9d064ea9d451f3c4b939a5",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -13635,30 +13635,30 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768/extracted/artifacts/runs/d4-r100000-d768-b1-k1-f1/current-cpu.time",
       "size_bytes": 1228,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "ccc3227002de6d67c085a6eee6f1705db897906ae834a3a2906c9fe27f5adbe2",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768/extracted/artifacts/runs/d5-r100000-d768-b8-k64-f01/current-cpu.time",
       "size_bytes": 1238,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "4c5dd130d03a8929dece2d70fbf89f4fa298b8e12fc4d9d8949042edc477561a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768/extracted/artifacts/status.tsv",
       "size_bytes": 151,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "ee8d48c167f34543493cb808f0d74bd55078cf6ed2513cd38a1573862e4c1cc6",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/deep768/rtx4090-eu-ro-secure-deep768/extracted/artifacts/SHA256SUMS",
@@ -13838,10 +13838,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/pilot/rtx2000-eu-ro-secure-pilot/extracted/artifacts/SHA256SUMS",
       "size_bytes": 4914,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "285bd84317c8ae73bef5dcc6729f886b775d876dfe61823b7ac8bff1a7551e82",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -13956,10 +13956,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/pilot/rtx2000-eu-ro-secure-pilot/extracted/artifacts/runs/p1-r1000-d128-b1-f1/baseline-cpu.time",
       "size_bytes": 1135,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "c43ce33ab046c74645ee5baa422ef36ea3c8cc621b701a3ecb9a98b0e0620729",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/pilot/rtx2000-eu-ro-secure-pilot/extracted/artifacts/runs/p1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -14045,10 +14045,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/pilot/rtx2000-eu-ro-secure-pilot/extracted/artifacts/runs/p1-r1000-d128-b1-f1/baseline-gpu.time",
       "size_bytes": 1267,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "94a8ff53a810c2077a68f20a791c77dc9458d6cdd0ce6a798d9887c88cfe0539",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/pilot/rtx2000-eu-ro-secure-pilot/extracted/artifacts/runs/p1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -14145,10 +14145,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/pilot/rtx2000-eu-ro-secure-pilot/extracted/artifacts/runs/p1-r1000-d128-b1-f1/current-gpu.time",
       "size_bytes": 1185,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "7c075f7acc9a3db3ef9bbfd6cfd55c33c38fa1519136ba6487fd9b0441e45c45",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/pilot/rtx2000-eu-ro-secure-pilot/extracted/artifacts/runs/p1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -14234,10 +14234,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/pilot/rtx2000-eu-ro-secure-pilot/extracted/artifacts/status.tsv",
       "size_bytes": 194,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "239ce09806f2d365959c0ebdd5b4038857b409d4572594e0ccce96e0d67820bb",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/pilot/rtx2000-eu-ro-secure-pilot/extracted/artifacts/SHA256SUMS",
@@ -14346,10 +14346,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/SHA256SUMS",
       "size_bytes": 48681,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "ab28ca7ec450c55d44a5cb3d244e07333dc85c3926d868f081df68bc80f5c7b7",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -14464,10 +14464,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu.time",
       "size_bytes": 1026,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "840865a776f6a3f4806a218f36a1a2106d2b833517b17bc48794af21a6c7b658",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/SHA256SUMS",
@@ -14500,10 +14500,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/collection/HEAD",
       "size_bytes": 20,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "fc3ec88ceab8e300f73760c0fe083cf09a2d18d9afa6ab467783839b5f968abb",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null,
       "duplicate_group_size": 3
@@ -14511,10 +14511,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/collection/MANIFEST",
       "size_bytes": 36,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "76d3b2be2617e97466218a451e1b402366a051cad804a46d99e02cbd9fccb293",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -14531,10 +14531,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/collection/collection.lock",
       "size_bytes": 0,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmarks/2026-08-28/real/measurements/cpu-384-all.log",
       "duplicate_group_size": 19
@@ -14722,10 +14722,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-cpu.time",
       "size_bytes": 1135,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "45be3215f06a7e11664b983e3d0bc946904e21a5f44a2f4cc549ca94bf147c77",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -14811,10 +14811,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-gpu.time",
       "size_bytes": 1267,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "a6934a62e5f7ecc5514a11f8d0d9939dbb341f0f1a8ac67012431185de2f292b",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -14972,10 +14972,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c1-r1000-d128-b1-f1/current-cpu.time",
       "size_bytes": 1140,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "3470dd27a81e0ea99c3c194fdeac8fd90ca087d071006b0f4ddcbdc034ad7974",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -15061,10 +15061,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c1-r1000-d128-b1-f1/current-gpu.time",
       "size_bytes": 1186,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "4011e8a55fa6a17952c340341af927a7588f8731a7b31b67d33181d0e8ea859b",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c1-r1000-d128-b1-f1/baseline-source-bundle.sha256",
@@ -15331,10 +15331,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c2-r1000-d384-b16-f001/current-cpu.time",
       "size_bytes": 1147,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "6d66119e9d568da3efad7625b50b81f9444020d3c36f1d37c39e5689ccc39502",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -15413,10 +15413,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c2-r1000-d384-b16-f001/current-gpu.time",
       "size_bytes": 1185,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "4e10111d361bd672b64f6ab2dac40cf0f49ad7fd37332e75cd7a214ba9cee153",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -15656,10 +15656,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c3-r10000-d128-b16-f1/current-cpu.time",
       "size_bytes": 1145,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "812ad58728c04fdfadc613cc021257eda72e854e76931f4f3c108d343e01d01a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -15738,10 +15738,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c3-r10000-d128-b16-f1/current-gpu.time",
       "size_bytes": 1183,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "966dbb97b114a5a4fb0cabf30f5e867674508fe133b88ba11be314704819ba15",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -15940,10 +15940,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-cpu.time",
       "size_bytes": 1145,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "3a9e205d382c1e1f576c5a67d94659a9170931411b6f03d4b27f3aba046e4155",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -16029,10 +16029,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-gpu.time",
       "size_bytes": 1277,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "71ce44d111db8ba8cf02748e57cb4a6cf1efb65f3445d989b578cb700e922292",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -16190,10 +16190,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c4-r10000-d384-b1-f001/current-cpu.time",
       "size_bytes": 1150,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "2e76317e7040e260c082d3a64fc144a4096e5d9eaa37544e531f46163ebc1a65",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -16279,10 +16279,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c4-r10000-d384-b1-f001/current-gpu.time",
       "size_bytes": 1187,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "eca512b529740dc733e3afde8837a208e57c4d6173cd3d94f81b5c067ad8882c",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c4-r10000-d384-b1-f001/baseline-source-bundle.sha256",
@@ -16488,10 +16488,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-cpu.time",
       "size_bytes": 1149,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "73d9d373e2be0cd5160cd033ce2a86b5a70f0854aef7c4a9bcbe3c3b6448a8cf",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -16577,10 +16577,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-gpu.time",
       "size_bytes": 1280,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "8d49a093fe16698c7d8d7e255f7e775bd478fea35d485ae6a8d5ce84babc0794",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -16738,10 +16738,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c5-r100000-d128-b1-f001/current-cpu.time",
       "size_bytes": 1153,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "ee944d35b55c31715a8d0787b0f3b05205b312efd5d73f986eb0f9fd131b6f63",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -16827,10 +16827,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c5-r100000-d128-b1-f001/current-gpu.time",
       "size_bytes": 1190,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "9ae570bb8f415c38edde6782452c3fb98c8a4354bd825b9f8de2d1782a429380",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c5-r100000-d128-b1-f001/baseline-source-bundle.sha256",
@@ -17077,10 +17077,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c6-r100000-d384-b16-f1/current-cpu.time",
       "size_bytes": 1152,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "84f88da69064e30b2dab2f818dda3f6f9776aa338f97596ead38fd214561cf4a",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -17159,10 +17159,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/runs/c6-r100000-d384-b16-f1/current-gpu.time",
       "size_bytes": 1188,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "c9a4cb9bde29f7e727590755371d63b55d85d61b2002ea7960455cc13496da69",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
@@ -17361,10 +17361,10 @@
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/status.tsv",
       "size_bytes": 2676,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "c92652eea8dc03bcfa8484a76862313ea0ca180d81c7b6997f499a0affeedfb1",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
           "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/SHA256SUMS",
@@ -18987,10 +18987,10 @@
     {
       "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/HEAD",
       "size_bytes": 20,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "fc3ec88ceab8e300f73760c0fe083cf09a2d18d9afa6ab467783839b5f968abb",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/collection/HEAD",
       "duplicate_group_size": 3
@@ -18998,10 +18998,10 @@
     {
       "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/MANIFEST",
       "size_bytes": 36,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "e1d9782fe7cf92274c2fdcedf65e9786b4ec79bd348c776911c552c1c1f1d98f",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null,
       "duplicate_group_size": 2
@@ -19020,10 +19020,10 @@
     {
       "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/collection.lock",
       "size_bytes": 0,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmarks/2026-08-28/real/measurements/cpu-384-all.log",
       "duplicate_group_size": 19
@@ -19160,10 +19160,10 @@
     {
       "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/HEAD",
       "size_bytes": 20,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "fc3ec88ceab8e300f73760c0fe083cf09a2d18d9afa6ab467783839b5f968abb",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/collection/HEAD",
       "duplicate_group_size": 3
@@ -19171,10 +19171,10 @@
     {
       "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/MANIFEST",
       "size_bytes": 36,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "e1d9782fe7cf92274c2fdcedf65e9786b4ec79bd348c776911c552c1c1f1d98f",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/MANIFEST",
       "duplicate_group_size": 2
@@ -19193,10 +19193,10 @@
     {
       "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/collection.lock",
       "size_bytes": 0,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": "benchmarks/2026-08-28/real/measurements/cpu-384-all.log",
       "duplicate_group_size": 19
@@ -19483,70 +19483,70 @@
     {
       "path": "research/scripts/analyze_results.py",
       "size_bytes": 13156,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "e5784dc794fb16521e4a13e395b7b1dce856d4fa82defb7795372d429df4704c",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "research/scripts/analyze_runpod_campaign.py",
       "size_bytes": 7365,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "48f84032ab25a14aead64044d841c114c1c98056f7b4a0571be8c78206df48e9",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "research/scripts/generate_plots.py",
       "size_bytes": 12284,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "8cf3ceba1597c4d94399298921aab90be280f18c57275c61858ed3a277678f88",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "research/scripts/run_campaign.sh",
       "size_bytes": 424,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "90399af47cf56d8088c1278de6298f74fceae368c02af0170df54b1d03a07f3d",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "research/scripts/run_cuda_synthetic_matrix.py",
       "size_bytes": 6869,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "ce23505c493e8d91f3df9b39cb6456b73cff16a8af9006e1ed8df39de691c4a0",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "research/scripts/run_faiss_flat_baseline.py",
       "size_bytes": 4652,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "10dfeadb9e28476151d7c6fae44bf71df365c8be8daaa94bbde7c59d7a104f04",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "research/scripts/run_phase2_exact_cells.sh",
       "size_bytes": 1025,
-      "type": "binary_or_other",
+      "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "420f26e563759533c4988bcf80c54e7d25d5802b4bdfa4088d3f2911518ecd81",
-      "hash_status": "computed_sha256",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     }

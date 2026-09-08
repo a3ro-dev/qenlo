@@ -27,8 +27,10 @@ SHA_RE = re.compile(r"(?i)(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])")
 TEXT_SUFFIXES = {
     ".md", ".txt", ".csv", ".json", ".jsonl", ".toml", ".yaml", ".yml", ".xml",
     ".svg", ".sha256", ".patch", ".log", ".out", ".err", ".stderr", ".stdout",
-    ".command", ".cfg", ".ini", ".html", ".tex", ".bib",
+    ".command", ".cfg", ".ini", ".html", ".tex", ".bib", ".py", ".sh", ".tsv",
+    ".lock", ".time", ".exit-code",
 }
+TEXT_NAMES = {"HEAD", "MANIFEST", "SHA256SUMS"}
 ARCHIVE_SUFFIXES = {".gz", ".tgz", ".zip", ".xz", ".bz2", ".zst"}
 DATASET_SUFFIXES = {".qnb", ".f32", ".h5", ".hdf5", ".npz", ".bin", ".sqlite3", ".db"}
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".pdf"}
@@ -69,7 +71,7 @@ def rel(path: Path) -> str:
 
 def classify(path: Path) -> str:
     suffix = path.suffix.lower()
-    if suffix in TEXT_SUFFIXES:
+    if suffix in TEXT_SUFFIXES or path.name in TEXT_NAMES:
         return "text_or_machine_readable"
     if path.name.lower().endswith(tuple(ARCHIVE_SUFFIXES)) or path.name.lower().endswith(".tar.gz"):
         return "binary_archive"
