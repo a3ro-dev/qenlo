@@ -801,12 +801,6 @@
           "sha256_values": [
             "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
           ]
-        },
-        {
-          "path": "benchmark-results/2026-09-02-runpod-archive/CAMPAIGN_MANIFEST.json",
-          "sha256_values": [
-            "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
-          ]
         }
       ],
       "duplicate_of": null
@@ -830,12 +824,6 @@
           "sha256_values": [
             "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
           ]
-        },
-        {
-          "path": "benchmark-results/2026-09-02-runpod-archive/CAMPAIGN_MANIFEST.json",
-          "sha256_values": [
-            "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
-          ]
         }
       ],
       "duplicate_of": null
@@ -850,12 +838,6 @@
       "manifest_references": [
         {
           "path": "benchmark-results/2026-09-02-runpod-archive/verification.json",
-          "sha256_values": [
-            "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
-          ]
-        },
-        {
-          "path": "benchmark-results/2026-09-02-runpod-archive/CAMPAIGN_MANIFEST.json",
           "sha256_values": [
             "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
           ]
@@ -1511,12 +1493,6 @@
       "sha256": "9d01029f71fc2943e120b3585c8cbf1e8070e1013913a4ba1f47f86be0d9a59f",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
-        {
-          "path": "benchmark-results/2026-09-02-runpod-archive/CAMPAIGN_MANIFEST.json",
-          "sha256_values": [
-            "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
-          ]
-        },
         {
           "path": "benchmark-results/2026-09-02-runpod-archive/CAMPAIGN_MANIFEST.json",
           "sha256_values": [
@@ -4275,14 +4251,6 @@
           "sha256_values": [
             "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
           ]
-        },
-        {
-          "path": "benchmarks/runpod/2026-09-02-bb51987/manifest.json",
-          "sha256_values": [
-            "70f5f11325823020c23e4b6ebbfbbb1b7849dd5fd15dd747777af7d1a5b8021a",
-            "906ee4134368ce50691a2a664844d55250c33ab721c7708a6816b9caf1abe4e2",
-            "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
-          ]
         }
       ],
       "duplicate_of": null
@@ -5274,14 +5242,6 @@
           "sha256_values": [
             "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
           ]
-        },
-        {
-          "path": "benchmarks/runpod/2026-09-02-bb51987/manifest.json",
-          "sha256_values": [
-            "70f5f11325823020c23e4b6ebbfbbb1b7849dd5fd15dd747777af7d1a5b8021a",
-            "906ee4134368ce50691a2a664844d55250c33ab721c7708a6816b9caf1abe4e2",
-            "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
-          ]
         }
       ],
       "duplicate_of": null
@@ -5307,14 +5267,6 @@
           "sha256_values": [
             "70f5f11325823020c23e4b6ebbfbbb1b7849dd5fd15dd747777af7d1a5b8021a",
             "906ee4134368ce50691a2a664844d55250c33ab721c7708a6816b9caf1abe4e2"
-          ]
-        },
-        {
-          "path": "benchmarks/runpod/2026-09-02-bb51987/manifest.json",
-          "sha256_values": [
-            "70f5f11325823020c23e4b6ebbfbbb1b7849dd5fd15dd747777af7d1a5b8021a",
-            "906ee4134368ce50691a2a664844d55250c33ab721c7708a6816b9caf1abe4e2",
-            "d46b3a098f4d92b8bd21ae329e41a3be8b9b9117f3737c4600f7849c682bf9a3"
           ]
         }
       ],

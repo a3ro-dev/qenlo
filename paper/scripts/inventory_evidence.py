@@ -124,10 +124,13 @@ def nearby_manifest_refs(path: Path) -> list[dict[str, str]]:
     refs = []
     candidates = [path.parent / n for n in ("manifest.json", "checksums.json", "verification.json", "CAMPAIGN_MANIFEST.json", "SHA256SUMS", "README.md", "PROVENANCE.md")]
     candidates += list(path.parent.glob("*.sha256"))
-    candidates += list(path.parent.glob("*manifest*.json"))
+    candidates += [candidate for candidate in path.parent.glob("*.json") if "manifest" in candidate.name.lower()]
+    seen = set()
     for candidate in candidates:
-        if not candidate.exists() or candidate == path or candidate.stat().st_size > 2 * 1024 * 1024:
+        key = rel(candidate)
+        if key in seen or not candidate.exists() or candidate == path or candidate.stat().st_size > 2 * 1024 * 1024:
             continue
+        seen.add(key)
         try:
             text = candidate.read_text(encoding="utf-8", errors="replace")
         except OSError:
