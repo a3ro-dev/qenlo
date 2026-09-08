@@ -1,5 +1,32 @@
 # changelog
 
+## 0.1.0-alpha.5 - 2026-09-08
+
+### added
+
+- a reproducible evidence reducer plus a preregistered held-out automatic-routing
+  gate, with raw runs and processed decisions retained in the repository.
+- an immutable format-v1 fixture produced by the published alpha.4 Python wheel
+  and imported by the current Rust test suite.
+- an explicit compatibility policy and supported-versus-preview SDK tiers.
+
+### changed
+
+- Rust, Python, TypeScript, Kotlin, and documentation versions advance together.
+- SDK installation, result-field, distribution, and Apache-2.0 license guidance
+  now matches the packages and release pipeline.
+- reproducible scratch renders and superseded planning documents were removed;
+  unique measurements remain in the evidence inventory.
+
+### compatibility and limits
+
+- the proposed `eligible_rows * dimension * batch` router fit retained
+  development data but failed the held-out maximum-regret gate (235.7% versus a
+  25% limit), so alpha.5 retains alpha.4 routing behavior.
+- `.qn` format v1, WAL v1, query semantics, and the native ABI are unchanged.
+- Rust, Python, and TypeScript are supported alpha SDKs. Go, Kotlin/JVM, and
+  Swift remain preview surfaces.
+
 ## 0.1.0-alpha.4 - 2026-09-07
 
 ### added

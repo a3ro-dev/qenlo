@@ -1,0 +1,32 @@
+cohort,configuration,workload,source_family,eligible_rows,dimension,batch,work_units,cpu_p95_ns,gpu_p95_ns,optimal_backend,old_backend,old_regret,candidate_backend,candidate_regret
+small-collection-campaign,a40-ca-mtl-secure,c1-r1000-d128-b1-f1,baseline,1000,128,1,128000,32647.0,140554.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,a40-ca-mtl-secure,c4-r10000-d384-b1-f001,baseline,100,384,1,38400,18987.0,129394.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,a40-ca-mtl-secure,c5-r100000-d128-b1-f001,baseline,1000,128,1,128000,90237.0,165776.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,a40-eu-se-secure,c1-r1000-d128-b1-f1,baseline,1000,128,1,128000,31366.0,230417.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,a40-eu-se-secure,c4-r10000-d384-b1-f001,baseline,100,384,1,38400,19008.0,173274.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,a40-eu-se-secure,c5-r100000-d128-b1-f001,baseline,1000,128,1,128000,69164.0,200688.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx2000-eu-ro-secure-pilot,p1-r1000-d128-b1-f1,baseline,1000,128,1,128000,60152.0,151475.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-deep,d1-r5000-d384-b8-k10-f01,baseline,500,384,8,1536000,414903.0,117426.0,gpu,gpu,0.0,gpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-deep,d1-r5000-d384-b8-k10-f01,current,500,384,8,1536000,238958.0,132148.0,gpu,gpu,0.0,gpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-deep,d2-r25000-d384-b64-k10-f1,current,25000,384,64,614400000,69060968.0,1262164.0,gpu,gpu,0.0,gpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-deep,d3-r50000-d384-b1-k10-compound,baseline,50,384,1,19200,9484.0,89335.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-deep,d3-r50000-d384-b1-k10-compound,current,50,384,1,19200,7471.0,144707.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-deep,d6-r25000-d768-b64-k64-f001,current,250,768,64,12288000,3001905.0,492659.0,gpu,gpu,0.0,gpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-deep,real-r100000-d384-b16-k10-f001,current,1000,384,16,6144000,941633.0,171958.0,gpu,gpu,0.0,gpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-deep768-admission-fix,d4-r100000-d768-b1-k1-f1,current,100000,768,1,76800000,9408908.0,897146.0,gpu,gpu,0.0,gpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-deep768-admission-fix,d5-r100000-d768-b8-k64-f01,current,10000,768,8,61440000,28598793.0,896204.0,gpu,gpu,0.0,gpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-reference-retry,c1-r1000-d128-b1-f1,baseline,1000,128,1,128000,14607.0,79148.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-reference-retry,c1-r1000-d128-b1-f1,current,1000,128,1,128000,14306.0,94266.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-reference-retry,c2-r1000-d384-b16-f001,current,10,384,16,61440,48370.0,134742.0,cpu,gpu,1.785652263799876,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-reference-retry,c3-r10000-d128-b16-f1,current,10000,128,16,20480000,1998788.0,269484.0,gpu,gpu,0.0,gpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-reference-retry,c4-r10000-d384-b1-f001,baseline,100,384,1,38400,8185.0,77706.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-reference-retry,c4-r10000-d384-b1-f001,current,100,384,1,38400,8165.0,91050.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-reference-retry,c5-r100000-d128-b1-f001,baseline,1000,128,1,128000,35867.0,102251.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-reference-retry,c5-r100000-d128-b1-f001,current,1000,128,1,128000,34053.0,95328.0,cpu,cpu,0.0,cpu,0.0
+small-collection-campaign,rtx4090-eu-ro-secure-reference-retry,c6-r100000-d384-b16-f1,current,100000,384,16,614400000,68057514.0,4047861.0,gpu,gpu,0.0,gpu,0.0
+windows-native-crossover,RTX 4050 / DX12,eligible-2000,historical,2000,384,1,768000,519800.00000000006,634000.0,cpu,cpu,0.0,cpu,0.0
+windows-native-crossover,RTX 4050 / DX12,eligible-3000,historical,3000,384,1,1152000,956300.0,814400.0,gpu,cpu,0.17423870333988223,gpu,0.0
+windows-native-crossover,RTX 4050 / DX12,eligible-4000,historical,4000,384,1,1536000,1330500.0,1073700.0,gpu,cpu,0.23917295333892152,gpu,0.0
+windows-native-crossover,RTX 4050 / DX12,eligible-6000,historical,6000,384,1,2304000,1973500.0,1603300.0,gpu,gpu,0.0,gpu,0.0
+windows-native-crossover,RTX 4050 / DX12,eligible-8000,historical,8000,384,1,3072000,2500300.0,2150800.0,gpu,gpu,0.0,gpu,0.0
+windows-native-crossover,RTX 4050 / DX12,eligible-10000,historical,10000,384,1,3840000,2810400.0,2604100.0,gpu,gpu,0.0,gpu,0.0

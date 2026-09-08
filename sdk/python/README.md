@@ -9,7 +9,7 @@ returns an execution report with routing and resource measurements.
 ## Installation
 
 ```bash
-pip install qenlo
+pip install "qenlo==0.1.0a5"
 ```
 
 Pre-built binary wheels bundle the native Rust engine for:
@@ -120,7 +120,7 @@ Install the optional dependency only in desktop applications that already need
 PyTorch:
 
 ```bash
-pip install 'qenlo[torch]'
+pip install 'qenlo[torch]==0.1.0a5'
 ```
 
 `TorchIndex` is an exhaustive, resident FP32 matrix index. It is derived from a
@@ -210,4 +210,4 @@ own telemetry system.
 
 ## License
 
-Dual-licensed under **MIT** or **Apache-2.0** at your option.
+Licensed under **Apache-2.0**.

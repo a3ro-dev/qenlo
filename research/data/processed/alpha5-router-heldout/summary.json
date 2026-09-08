@@ -1,0 +1,9 @@
+{
+  "schema": "qenlo-alpha5-router-heldout-result-v1",
+  "workloads": 16,
+  "wrong_routes": 8,
+  "median_routing_regret": 0.004286083139685037,
+  "max_routing_regret": 2.3565180285897163,
+  "recall_and_filter_correct": true,
+  "release_gate_passed": false
+}

@@ -1,4 +1,4 @@
-# Qenlo Swift SDK (macOS & iOS)
+# Qenlo Swift SDK (preview: macOS & iOS)
 
 Type-safe Swift bindings for **Qenlo** — the embedded, durable vector database written in Rust.
 
@@ -19,15 +19,9 @@ Automatic mode records its actual route and fallback in `QenloExecutionReport`. 
 
 ## Installation
 
-Add Qenlo to your `Package.swift` dependencies:
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/a3ro-dev/qenlo.git", from: "0.1.0")
-]
-```
-
-Or in Xcode: **File → Add Package Dependencies...** and enter `https://github.com/a3ro-dev/qenlo.git`.
+The source package lives in `sdk/apple`; the repository root is not a SwiftPM
+package. Build that directory from source or use `QenloFFI.xcframework.zip`
+from the matching GitHub release.
 
 ### Supported Platforms
 - **macOS** 13.0+ (Apple Silicon `arm64`, Intel `x86_64`)
@@ -135,4 +129,4 @@ try db.deleteBatch([10, 11])
 
 ## License
 
-Dual-licensed under **MIT** or **Apache-2.0** at your option.
+Licensed under **Apache-2.0**.

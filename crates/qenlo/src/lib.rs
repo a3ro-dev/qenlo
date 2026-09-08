@@ -2316,6 +2316,32 @@ mod tests {
     }
 
     #[test]
+    fn imports_alpha4_format_v1_fixture() {
+        block_on(async {
+            let fixture =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/alpha4-format-v1.qn");
+            let imported = Collection::import_qn(fixture, CollectionConfig::cpu_exact(3))
+                .await
+                .unwrap();
+
+            assert_eq!(imported.stats().rows, 3);
+            assert_eq!(imported.stats().live_rows, 2);
+            assert_eq!(imported.stats().generation, 4);
+            assert_eq!(
+                imported
+                    .search(&[1.0, 0.0, 0.0], &Filter::ALL, 3)
+                    .await
+                    .unwrap()
+                    .results
+                    .iter()
+                    .map(|hit| hit.id)
+                    .collect::<Vec<_>>(),
+                [7, 12]
+            );
+        });
+    }
+
+    #[test]
     fn transactions_validate_all_rows_and_roll_back_before_publication() {
         block_on(async {
             let path = temp_dir("transaction");

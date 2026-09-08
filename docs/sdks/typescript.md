@@ -5,8 +5,8 @@ Native Node.js FFI bindings for Qenlo with TypeScript type definitions and expli
 ## Installation
 
 ```bash
-pnpm add @a3ro.dev/qenlo
-# or npm install @a3ro.dev/qenlo
+pnpm add @a3ro.dev/qenlo@alpha
+# or npm install @a3ro.dev/qenlo@alpha
 ```
 
 ## Quick example

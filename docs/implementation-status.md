@@ -6,11 +6,12 @@ This ledger separates implemented code from research directions and distribution
 |---|---|---|
 | correctness/oracle hardening | implemented | deterministic semantic checks and independent exact truth in `qenlo-lab` |
 | storage v2 WAL/manifest/mmap | implemented | atomic batch, recovery, corruption, reopen, and fail-closed tests |
-| query-level router | partial | eligibility plans and hardware-bound threshold profiles are implemented; persisted calibration, online adaptation, and held-out regret evaluation remain open |
+| query-level router | partial | eligibility plans and hardware-bound threshold profiles are implemented; an alpha.5 scalar-work rule failed its held-out regret gate, while persisted calibration and online adaptation remain open |
 | ARM NEON fallback | implemented | target compilation; physical ARM run comes from macOS/mobile packages |
 | portable exact GPU | implemented | persistent arenas, chunked bounded readback, true B×D batches |
 | small-collection Runpod matrix | completed | 182 retained rows across six GPU configurations plus a corrected 100K × 768 supplement; final known spend $0.9401 |
 | lane-minimum selector candidate | measured and rejected | won five and lost seven of 12 qualified pairs; final source retains the simpler full-rescan selector |
+| scalar-work router candidate | measured and rejected | fit 31 retained pairs, then missed 8/16 held-out routes with 235.7% maximum regret; alpha.4 routing remains |
 | post-mutation resident updates | implemented and measured | append/live-mask cells rebuilt zero times; reopen remains a full resident rebuild |
 | optional PyTorch index | implemented, desktop-only | lazy CPU/CUDA/MPS tensor API bound to canonical generation; CUDA and CPU measured, MPS unavailable in this campaign |
 | portable IVF-Flat | implemented | Recall@10 ≥ 0.95 tester gate and exact FP32 GPU rerank |

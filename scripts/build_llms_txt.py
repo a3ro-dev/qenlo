@@ -26,6 +26,7 @@ DOCS_CATALOG = [
         ("docs/architecture.md", "Architecture specification", "CoreStore, transaction lifecycle, lock protocols, and visibility"),
         ("docs/qn-format-v1.md", ".qn storage format", "Binary file layout, little-endian specs, and atomic exchange semantics"),
         ("docs/recovery-policy.md", "Recovery policy", "Deterministic recovery, fail-closed boundaries, and operator contracts"),
+        ("docs/compatibility.md", "Compatibility policy", "Storage, SDK, ABI, and prerelease change guarantees"),
         ("docs/gpu-design.md", "GPU search design", "Custom WGSL scoring, selection pipelines, chunking, and memory arenas"),
         ("docs/cuda-backend-todo.md", "CUDA backend todo", "Entry gates and engineering requirements for a native CUDA backend"),
     ]),
@@ -113,17 +114,21 @@ def main():
     llms_full = build_llms_full_txt(root)
 
     # 1. Root files
-    (root / "llms.txt").write_text(llms_txt, encoding="utf-8")
-    (root / "llms-full.txt").write_text(llms_full, encoding="utf-8")
+    def write_lf(path: Path, text: str) -> None:
+        with path.open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(text)
+
+    write_lf(root / "llms.txt", llms_txt)
+    write_lf(root / "llms-full.txt", llms_full)
 
     # 2. docs/ copies
-    (root / "docs" / "llms.txt").write_text(llms_txt, encoding="utf-8")
-    (root / "docs" / "llms-full.txt").write_text(llms_full, encoding="utf-8")
+    write_lf(root / "docs" / "llms.txt", llms_txt)
+    write_lf(root / "docs" / "llms-full.txt", llms_full)
 
     # 3. .well-known/ copy
     well_known = root / ".well-known"
     well_known.mkdir(exist_ok=True)
-    (well_known / "llms.txt").write_text(llms_txt, encoding="utf-8")
+    write_lf(well_known / "llms.txt", llms_txt)
 
     print("Generated llms.txt and llms-full.txt across root, docs/, and .well-known/")
 

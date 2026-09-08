@@ -19,6 +19,7 @@
   * [Architecture specification](architecture.md)
   * [Storage and .qn format](qn-format-v1.md)
   * [Recovery policy](recovery-policy.md)
+  * [Compatibility policy](compatibility.md)
   * [GPU design](gpu-design.md)
   * [CUDA backend todo](cuda-backend-todo.md)
 

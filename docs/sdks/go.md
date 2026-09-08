@@ -1,4 +1,4 @@
-# Go SDK
+# Go SDK (preview)
 
 cgo bindings for embedding Qenlo in Go services and command-line tools. The package links against the shared native ABI and requires cgo.
 

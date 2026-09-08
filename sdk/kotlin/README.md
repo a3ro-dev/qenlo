@@ -1,4 +1,4 @@
-# Qenlo Kotlin SDK
+# Qenlo Kotlin SDK (preview)
 
 Type-safe Kotlin/JVM and Android bindings for **Qenlo** — the embedded, durable vector database written in Rust.
 
@@ -6,29 +6,11 @@ Qenlo provides exact filtered cosine vector search with atomic transactions, wri
 
 ## Installation
 
-### Gradle (Kotlin DSL)
+Alpha.5 ships a preview JAR in the GitHub release. Maven Central publication is
+not currently guaranteed. To build locally, run `gradle build` in `sdk/kotlin`.
 
-```kotlin
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("dev.qenlo:qenlo:0.1.0")
-}
-```
-
-### Maven (`pom.xml`)
-
-```xml
-<dependency>
-    <groupId>dev.qenlo</groupId>
-    <artifactId>qenlo</artifactId>
-    <version>0.1.0</version>
-</dependency>
-```
-
-Native libraries are embedded in the JAR and automatically extracted via JNA on `linux-x64`, `windows-x64`, and `darwin-arm64`.
+Release-built JARs embed native libraries and extract them through JNA on
+`linux-x64`, `windows-x64`, and `darwin-arm64`.
 
 Collections use exhaustive CPU search by default. A desktop artifact built with portable GPU support can opt into automatic routing or require the GPU:
 
@@ -147,4 +129,4 @@ db.deleteBatch(listOf(10uL, 11uL))
 
 ## License
 
-Dual-licensed under **MIT** or **Apache-2.0** at your option.
+Licensed under **Apache-2.0**.

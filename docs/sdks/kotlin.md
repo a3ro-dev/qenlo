@@ -1,14 +1,10 @@
-# Kotlin/JVM SDK
+# Kotlin/JVM SDK (preview)
 
 JNA bindings for JVM applications. Android packaging and bridge validation are tracked separately, so this JVM artifact does not provide Android support on its own.
 
-## Gradle setup
-
-```kotlin
-dependencies {
-    implementation("dev.qenlo:qenlo:0.1.0-alpha.4")
-}
-```
+Alpha.5 ships a preview JAR in the GitHub release. Maven Central publication is
+not guaranteed; build from `sdk/kotlin` with `gradle build` when no registry
+artifact is available.
 
 ## Quick example
 

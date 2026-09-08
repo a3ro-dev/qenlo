@@ -15,8 +15,8 @@
     "large_payload_behavior": "use existing manifest/sidecar reference where known; otherwise hash=null and hash_status=skipped_large_payload"
   },
   "summary": {
-    "file_count": 1819,
-    "bytes": 1015688811,
+    "file_count": 1886,
+    "bytes": 1020804426,
     "cohort_file_counts": {
       "a6000_provider_approximate": 41,
       "a6000_strict_gate": 32,
@@ -26,18 +26,18 @@
       "benchmarks": 54,
       "eligibility_ablation": 3,
       "gpu_tuning": 44,
-      "historical_processed": 10,
+      "historical_processed": 19,
       "historical_reports": 1,
       "intel_arc_device_lab": 2,
       "linux_external_replay": 182,
       "phase_archives": 4,
-      "research": 39,
+      "research": 97,
       "small_collection_campaign": 1150,
       "windows_agnews_endpoints": 124,
       "windows_native_crossover": 84
     },
     "cohort_bytes": {
-      "a6000_provider_approximate": 44158654,
+      "a6000_provider_approximate": 44158634,
       "a6000_strict_gate": 4311473,
       "a6000_synthetic": 407100,
       "android_device_lab": 3407,
@@ -45,12 +45,12 @@
       "benchmarks": 138172,
       "eligibility_ablation": 15276350,
       "gpu_tuning": 80229,
-      "historical_processed": 6240,
-      "historical_reports": 4365,
+      "historical_processed": 34476,
+      "historical_reports": 4345,
       "intel_arc_device_lab": 11957,
       "linux_external_replay": 32109995,
       "phase_archives": 204641364,
-      "research": 11945757,
+      "research": 17033176,
       "small_collection_campaign": 406818773,
       "windows_agnews_endpoints": 84574557,
       "windows_native_crossover": 46377440
@@ -739,7 +739,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": null,
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_preload.log",
@@ -1238,7 +1238,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/chroma.exit-code",
@@ -1260,7 +1260,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/chroma.stdout.log",
@@ -1293,7 +1293,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/dependencies.stdout.log",
@@ -1359,7 +1359,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/faiss-flat.stdout.log",
@@ -1392,7 +1392,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/faiss-hnsw.stdout.log",
@@ -1425,7 +1425,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/lancedb-flat.stdout.log",
@@ -1458,7 +1458,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/milvus.stdout.log",
@@ -1491,7 +1491,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/pip-install.stdout.log",
@@ -1524,7 +1524,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/prepare.stdout.log",
@@ -1557,7 +1557,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/qenlo-cpu.stdout.log",
@@ -1601,7 +1601,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/qenlo-usearch.exit-code",
@@ -1623,7 +1623,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/qenlo-usearch.stdout.log",
@@ -1656,7 +1656,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/logs/rust-toolchain.stdout.log",
@@ -4396,7 +4396,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/2026-08-28/real/measurements/cpu-384-all-v4.json",
@@ -4437,7 +4437,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/2026-08-28/real/measurements/cpu-384-onepct.json",
@@ -4760,7 +4760,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/2026-08-28/verification/portable-final.txt",
@@ -5094,7 +5094,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/chroma.exit-code",
@@ -5116,7 +5116,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/chroma.stdout.log",
@@ -5149,7 +5149,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/dependencies.stdout.log",
@@ -5215,7 +5215,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/faiss-flat.stdout.log",
@@ -5248,7 +5248,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/faiss-hnsw.stdout.log",
@@ -5281,7 +5281,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/lancedb-flat.stdout.log",
@@ -5314,7 +5314,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/milvus.stdout.log",
@@ -5347,7 +5347,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/pip-install.stdout.log",
@@ -5380,7 +5380,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/prepare.stdout.log",
@@ -5413,7 +5413,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/qenlo-cpu.stdout.log",
@@ -5456,7 +5456,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/qenlo-gpu.exit-code",
@@ -5489,7 +5489,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/qenlo-usearch.exit-code",
@@ -5511,7 +5511,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/qenlo-usearch.stdout.log",
@@ -5544,7 +5544,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "benchmarks/runpod/2026-09-02-bb51987/artifacts/logs/rust-toolchain.stdout.log",
@@ -5909,20 +5909,30 @@
     },
     {
       "path": "docs/reports/2026-09-02-strict-topk-research-gate.md",
-      "size_bytes": 4365,
+      "size_bytes": 4345,
       "type": "text_or_machine_readable",
       "cohort": "historical_reports",
-      "sha256": "17fa5dad6395351602623a506dc4b17751ee061ded66226e2066c8e75cf4f0c5",
+      "sha256": "2e16e6bd060dd68c66233a07ab565d75b5a776bd9cd584873b4ed91b8461cf9a",
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "docs/reports/2026-09-02-topk-a6000-assessment.md",
-      "size_bytes": 7226,
+      "size_bytes": 7206,
       "type": "text_or_machine_readable",
       "cohort": "a6000_provider_approximate",
-      "sha256": "c4d46bfa58dc464ab454fc71cf9912cdc36543c954abba94a6622d63b4000eac",
+      "sha256": "27de51374aaf3d7214ec672b9fb83ee30ed5ad6aaef79e55ef520a7f44007636",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/README.md",
+      "size_bytes": 1308,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "732141aac6b7c0e9117adb90f758730fa261a3d2caba82b1151432a99eeb6bb8",
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": null
@@ -16936,7 +16946,8 @@
       "sha256": "fc3ec88ceab8e300f73760c0fe083cf09a2d18d9afa6ab467783839b5f968abb",
       "hash_status": "computed_sha256",
       "manifest_references": [],
-      "duplicate_of": null
+      "duplicate_of": null,
+      "duplicate_group_size": 3
     },
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/collection/MANIFEST",
@@ -16967,7 +16978,7 @@
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
-      "duplicate_group_size": 32
+      "duplicate_group_size": 34
     },
     {
       "path": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/collection/index.qidx",
@@ -20798,6 +20809,66 @@
       "duplicate_of": null
     },
     {
+      "path": "research/data/processed/alpha5-router-heldout/report.md",
+      "size_bytes": 829,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "a8c051845c9fc6e05ca63be98a8af3053dfbaf0657c158c026dad004a14b56fa",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/alpha5-router-heldout/results.csv",
+      "size_bytes": 1943,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "44a191b2bf9acc629f54c9aa3137e662c7dca2729cf6043a6e2102f53c9883b8",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/alpha5-router-heldout/summary.json",
+      "size_bytes": 258,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "4d5ec6c3a64e276320ce746f369fcab76c68eb90808cde3bb33a5201c509eff5",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/alpha5-routing/report.md",
+      "size_bytes": 643,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "3bdeef51a835cd9111917f290949a1f8b98a824586b52abbfec8c9908186cb4a",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/alpha5-routing/routing-pairs.csv",
+      "size_bytes": 4579,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "dfb7b3934e13ac05a03207036dcebd935418c8b1a89df01b7acbba10fae65e9f",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/alpha5-routing/summary.json",
+      "size_bytes": 693,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "eabd46aa778c860b5b846b75591a08a08acba15dbf413dede2fba1416975ea2b",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
       "path": "research/data/processed/android_device_lab.csv",
       "size_bytes": 2457,
       "type": "text_or_machine_readable",
@@ -20863,6 +20934,36 @@
       "type": "text_or_machine_readable",
       "cohort": "historical_processed",
       "sha256": "676b60ea0fb97394e0b56081f8b147bdc68ca90ca3050e83272068ebd05f54be",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/small-matrix-local-report/performance-matrix.csv",
+      "size_bytes": 3392,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "7d4e0d44ed425f65002beb32a48a6691dae4ab5e50fc7404719214255085f743",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/small-matrix-local-report/performance-matrix.json",
+      "size_bytes": 15360,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "061d3459c3eb758f0450ec29dad25d2af5a39ea5e27ce72778e9faffac6e3349",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/small-matrix-local-report/performance-report.md",
+      "size_bytes": 539,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "f144652d322d0fdfc11890704af156b68f37893c236d7d9bf027cc9c14279a9c",
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": null
@@ -21903,6 +22004,625 @@
       "type": "text_or_machine_readable",
       "cohort": "windows_native_crossover",
       "sha256": "0a3dd92dd7bc827f5e0cfa36e9a8a1cc6e0e96be030a494224e8e36c72e1f20a",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz",
+      "size_bytes": 4968881,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+      "size_bytes": 103,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "0ebf6b8547220139783593a86661d133f7b2a43fbc9be69487f58065e3a7903d",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/gpu-catalog-live.json",
+      "size_bytes": 25644,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "f186fdf33fad0250282c3058ea0f78c448933b3eaa417912c53c65a2e5bb207e",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/gpu-catalog-today.json",
+      "size_bytes": 17601,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "a1ffafcc6f893c7e3d45599ba22cc41ce419cb2cd84f42a5f572974b9c99873a",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/fixture.qnb",
+      "size_bytes": 13660,
+      "type": "binary_dataset_or_database",
+      "cohort": "research",
+      "sha256": "1b6136446381bb79272b41ac1a4255b6abe7433c8118ca9170bd14db1bb0e3b9",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k1-b16/configuration.txt",
+      "size_bytes": 1584,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "7b3560422a8b27341353e7e4d9b616cb1f5d2b3d64aa1d864c38f8824e3863c1",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k1-b16/metadata.csv",
+      "size_bytes": 1230,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "0ef8e090858a9474760c6040bcff091b0d5d94fd882904fdc54ab8b3f0e71c8f",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k1-b16/runs.csv",
+      "size_bytes": 187,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "4ba85e1c304acad2bd9ec46ba2b291c9ef2e754395329e9e16ca285adcd12ff2",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k1-b16/samples.csv",
+      "size_bytes": 1260,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "a4f3d74c8cd3a23e346f18687ad43a5dc4e6ee4d8e10fbb79d2400ccb76fdde4",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k1-b16/summary.txt",
+      "size_bytes": 343,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "cd8daa9ba69af39774ac5ec918fd940b413ee02cf5348b1fae42eac58f1153bd",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k1-b16/truth.csv",
+      "size_bytes": 1202,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "3aa05c7b31f3a75e72fe21d1a17c78401f32a478088054c4c8561ea909ebc694",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k1-b16/tuning.csv",
+      "size_bytes": 82,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "146d78311d4235face0aa60ebed8ef7aaa8a1a4bffb6b3688c721974e095b749",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k64-b64/configuration.txt",
+      "size_bytes": 1585,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "e6e8aa6440c3cbf2e1e9e9fc69bd7ed7e336ad5a3123ba216d118954e71f9b47",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k64-b64/metadata.csv",
+      "size_bytes": 1230,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "0ef8e090858a9474760c6040bcff091b0d5d94fd882904fdc54ab8b3f0e71c8f",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/k1-b16/metadata.csv",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k64-b64/runs.csv",
+      "size_bytes": 192,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "df6a44cae26de177c0f3e5d9c847e505d10d23230b7c8db7639c56b335cb3d23",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k64-b64/samples.csv",
+      "size_bytes": 940,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "830511e674da76f396f1b065d65a75a00fc7defc4f5997f0202eea997c4ce23c",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k64-b64/summary.txt",
+      "size_bytes": 346,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "9830f33023b3640f1df2634cedf7695eaec18f8d381c3d49816e26fa98701e29",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k64-b64/truth.csv",
+      "size_bytes": 15430,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "942dba7a56bf15f2fd01a918ab891003b5447db3ab658810a489c34c5a4bf0c1",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/k64-b64/tuning.csv",
+      "size_bytes": 84,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "e8643d783c483b5699bccb1903291b25752934fb669ad41c3ef80e52e414ce0c",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/HEAD",
+      "size_bytes": 20,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "fc3ec88ceab8e300f73760c0fe083cf09a2d18d9afa6ab467783839b5f968abb",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/collection/HEAD",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/MANIFEST",
+      "size_bytes": 36,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "e1d9782fe7cf92274c2fdcedf65e9786b4ec79bd348c776911c552c1c1f1d98f",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/canonical-00000000000000000000.qdb",
+      "size_bytes": 44,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "da469670829e255906201ddafd6e057549ed1523470841b7d57591139f821210",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/collection.lock",
+      "size_bytes": 0,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
+      "duplicate_group_size": 34
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/index.qidx",
+      "size_bytes": 29,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "340b2254a1832325eb048f5fd8a01f27bf4af77ef9a11ed38fa047a7d1539a4e",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000128.qwal",
+      "size_bytes": 12844,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "6b766bb576290e1257a529b0ffd4c5a41200096aed7e26588df535b28219cda8",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000129.qwal",
+      "size_bytes": 144,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "079f1a6bbac235c9501a2f0c4434db61ba17447b8d3805641dc999f9587db860",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000130.qwal",
+      "size_bytes": 60,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "1c55c5ccb964ab153e688335ca3b0529e40bd9f9397f99195feb3b5dd0da56bd",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000133.qwal",
+      "size_bytes": 344,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "f08eb07bf8ed3c96cdcc294084c9eb4b002a80c8ede2d6c2ea85097333a28fd6",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000136.qwal",
+      "size_bytes": 92,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "0b5e1b30b90c75bd0aac4516042a4244700c63c9b76758de1f784373723066a1",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000137.qwal",
+      "size_bytes": 144,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "9a48d2f3b0751b4f5e2a1f033fc7fe5f7db4886b599553a94f7ebd6d0df646e0",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000138.qwal",
+      "size_bytes": 60,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "0caff3fac5492ed1a245b3af212458fb65446955aec65f06788dbe609e4568cd",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000141.qwal",
+      "size_bytes": 344,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "de2143457540b43501b8accae3ce246474c7feac531d934aeda36bd43bf2a3e4",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000144.qwal",
+      "size_bytes": 92,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "5d1bfc57134713913ddfc01615e4a0398734b45f7433b8a29a0f2c758115ed7a",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/lifecycle.csv",
+      "size_bytes": 609,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "98280c7cd3430b1fd3158f0fcdfcf9f32b7812848192dadad4fc85f560452722",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/summary.txt",
+      "size_bytes": 707,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "4173d8fb01ef4bf9345c2cab09b290ca1377e78492a93ba785ef631729d18ad4",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/HEAD",
+      "size_bytes": 20,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "fc3ec88ceab8e300f73760c0fe083cf09a2d18d9afa6ab467783839b5f968abb",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/artifacts/runpod-small-2026-09-05/reference/rtx4090-eu-ro-secure-reference-retry/extracted/artifacts/lifecycle-current-gpu/collection/HEAD",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/MANIFEST",
+      "size_bytes": 36,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "e1d9782fe7cf92274c2fdcedf65e9786b4ec79bd348c776911c552c1c1f1d98f",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/MANIFEST",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/canonical-00000000000000000000.qdb",
+      "size_bytes": 44,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "da469670829e255906201ddafd6e057549ed1523470841b7d57591139f821210",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/canonical-00000000000000000000.qdb",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/collection.lock",
+      "size_bytes": 0,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/import_faiss_failure.log",
+      "duplicate_group_size": 34
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/index.qidx",
+      "size_bytes": 29,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "b06cee84c805a4200faed01449a3c01866751ccb0095c8e89d103a4f916a9a1c",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/wal-00000000000000000128.qwal",
+      "size_bytes": 12844,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "6b766bb576290e1257a529b0ffd4c5a41200096aed7e26588df535b28219cda8",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000128.qwal",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/wal-00000000000000000129.qwal",
+      "size_bytes": 144,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "079f1a6bbac235c9501a2f0c4434db61ba17447b8d3805641dc999f9587db860",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000129.qwal",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/wal-00000000000000000130.qwal",
+      "size_bytes": 60,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "1c55c5ccb964ab153e688335ca3b0529e40bd9f9397f99195feb3b5dd0da56bd",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000130.qwal",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/wal-00000000000000000133.qwal",
+      "size_bytes": 344,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "f08eb07bf8ed3c96cdcc294084c9eb4b002a80c8ede2d6c2ea85097333a28fd6",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000133.qwal",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/wal-00000000000000000136.qwal",
+      "size_bytes": 92,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "0b5e1b30b90c75bd0aac4516042a4244700c63c9b76758de1f784373723066a1",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000136.qwal",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/wal-00000000000000000137.qwal",
+      "size_bytes": 144,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "9a48d2f3b0751b4f5e2a1f033fc7fe5f7db4886b599553a94f7ebd6d0df646e0",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000137.qwal",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/wal-00000000000000000138.qwal",
+      "size_bytes": 60,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "0caff3fac5492ed1a245b3af212458fb65446955aec65f06788dbe609e4568cd",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000138.qwal",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/wal-00000000000000000141.qwal",
+      "size_bytes": 344,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "de2143457540b43501b8accae3ce246474c7feac531d934aeda36bd43bf2a3e4",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000141.qwal",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/collection/wal-00000000000000000144.qwal",
+      "size_bytes": 92,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "5d1bfc57134713913ddfc01615e4a0398734b45f7433b8a29a0f2c758115ed7a",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": "research/data/raw/small-matrix-local-gate/lifecycle-cpu/collection/wal-00000000000000000144.qwal",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/lifecycle.csv",
+      "size_bytes": 711,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "57a6d574d84a11a0209a482855d85f151721dcacf686fa5ea86e583b16bab3fc",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/lifecycle-gpu/summary.txt",
+      "size_bytes": 721,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "c9bb3a3b90af69a6ddd581aa8e564acb082fba8c9d0840ffac48268b2e7191f1",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/replay-numpy-k1/runs.csv",
+      "size_bytes": 187,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "74b4c4e7254afe7b3a7ed65b66d5ee2325a62c6de12f540f2e5a7d4cfa56e9c8",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/replay-numpy-k1/samples.csv",
+      "size_bytes": 407,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "1f423d1306e2ffa6a9a6873f84155da84a7577720488093202e71b0043ee2044",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/replay-numpy-k1/summary.json",
+      "size_bytes": 1074,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "7e0b146e1d2866ecc02007050b5332c0f3ca01e174bc9e37bf83eeb36bb4f403",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/replay-torch-k64/runs.csv",
+      "size_bytes": 194,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "a3dbcd185076bfd1eea36f2ea3844a01e8e4b72c9c3fd64b40be88eb98388576",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/replay-torch-k64/samples.csv",
+      "size_bytes": 326,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "8d86b574fa8b74a921f21103ff635d53002fa410e89c00db27a518b09e4111ec",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/small-matrix-local-gate/replay-torch-k64/summary.json",
+      "size_bytes": 1085,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "6e2b034c641ecda174c1f6dcdbdf024722bd462a1b2597723a8a5241cb615bda",
       "hash_status": "computed_sha256",
       "manifest_references": [],
       "duplicate_of": null

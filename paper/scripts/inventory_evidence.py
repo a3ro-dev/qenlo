@@ -201,7 +201,8 @@ def main() -> None:
         "files": files,
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    with OUTPUT.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(payload, indent=2) + "\n")
     print(json.dumps(payload["summary"], indent=2))
 
 

@@ -29,6 +29,7 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           python scripts/check_release_versions.py "$RELEASE_TAG"
+          python scripts/check_docs.py
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
           echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
 
@@ -124,3 +125,39 @@ jobs:
             exit 0
           fi
           gradle --no-daemon publishAllPublicationsToMavenCentralRepository
+
+  verify-supported-registries:
+    needs: [verify, crates, pypi, npm]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require Rust, Python, and npm packages to resolve
+        env:
+          RELEASE_TAG: ${{ needs.verify.outputs.tag }}
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.parse, urllib.request
+
+          version = os.environ["RELEASE_TAG"].removeprefix("sdk-v")
+          python_version = version.replace("-alpha.", "a")
+          urls = {
+              "crates.io/qenlo": f"https://crates.io/api/v1/crates/qenlo/{version}",
+              "crates.io/qenlo-core": f"https://crates.io/api/v1/crates/qenlo-core/{version}",
+              "PyPI/qenlo": f"https://pypi.org/pypi/qenlo/{python_version}/json",
+              "npm/@a3ro.dev/qenlo": "https://registry.npmjs.org/" + urllib.parse.quote("@a3ro.dev/qenlo", safe="") + "/" + version,
+          }
+          pending = dict(urls)
+          for _ in range(20):
+              for name, url in list(pending.items()):
+                  try:
+                      with urllib.request.urlopen(url, timeout=20) as response:
+                          if response.status == 200:
+                              del pending[name]
+                  except Exception:
+                      pass
+              if not pending:
+                  break
+              time.sleep(15)
+          if pending:
+              raise SystemExit("published package did not resolve: " + ", ".join(pending))
+          print(json.dumps({"version": version, "verified": sorted(urls)}, indent=2))
+          PY

@@ -40,6 +40,21 @@ jobs:
         run: python -m pip install numpy==2.5.2
       - name: Test comparison, replay, and immutable gate rules
         run: python -m unittest discover -s scripts -p "test_*.py"
+      - name: Reproduce alpha.5 routing decision
+        run: |
+          python scripts/analyze_routing_evidence.py
+          set +e
+          python scripts/analyze_alpha5_router_gate.py
+          status=$?
+          set -e
+          test "$status" -eq 1
+          git diff --exit-code -- research/data/processed/alpha5-routing research/data/processed/alpha5-router-heldout
+      - name: Check evidence inventory freshness
+        run: |
+          python paper/scripts/inventory_evidence.py
+          git diff --exit-code -- paper/audit/archive-inventory.json
+      - name: Check release-sensitive documentation
+        run: python scripts/check_docs.py
 
   # ── Cross-platform: only on main merges and tags ───────────────────
   cross-platform:

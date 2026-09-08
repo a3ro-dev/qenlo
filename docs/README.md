@@ -13,7 +13,7 @@
   <main id="main-content">
     <section class="docs-hero" aria-labelledby="docs-title">
       <div class="docs-hero__copy">
-        <p class="docs-kicker"><span aria-hidden="true"></span> documentation / v0.1.0-alpha.4</p>
+        <p class="docs-kicker"><span aria-hidden="true"></span> documentation / v0.1.0-alpha.5</p>
         <h1 id="docs-title">Know what exists.<br><strong>Know how it was found.</strong></h1>
         <p class="docs-hero__lede">Qenlo is an embedded vector store for durable, exact, metadata-filtered retrieval. Canonical records stay local. Every search path reports what actually ran.</p>
         <div class="docs-hero__actions">

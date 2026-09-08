@@ -55,3 +55,6 @@ collections continue to use Qenlo's tested directory snapshot/WAL protocol and c
 be exported to `.qn` at a committed generation. A future live single-file revision
 must define dual-superblock publication, recovery, locking, and torn-write behavior
 before it can replace that protocol.
+
+The forward-support commitment and alpha.4 compatibility fixture are described
+in the [compatibility policy](compatibility.md).

@@ -11,43 +11,104 @@ URL: https://a3ro-dev.github.io/qenlo/docs/README.md
 Description: Core introduction, boundaries, and documentation index
 ================================================================================
 
-# Qenlo documentation
-
-Qenlo is a research-grade embedded vector store for durable, exact, metadata-filtered retrieval. It runs inside your application and stores canonical records locally. Optional CPU, WGPU, ANN, and tensor structures determine how a query runs, not which records exist.
-
-## Start here
-
-- [Quickstart](quickstart.md): Create, mutate, search, close, and reopen a collection.
-- [Concepts](concepts.md): Canonical state, eligibility, exactness, and routing.
-- [Use cases](use-cases.md): Where Qenlo fits and where it does not.
-- [Trade-offs](trade-offs.md): Operational and performance costs.
-- [Architecture](architecture.md): Storage and derived execution structures.
-- [Feature matrix](feature-matrix.md): Implemented, optional, and unverified capabilities.
-
-## Operate and integrate
-
-- [Recovery policy](recovery-policy.md)
-- [Portable `.qn` format](qn-format-v1.md)
-- [GPU design](gpu-design.md)
-- [QenloDB browser](browser.md)
-- [Rust SDK](sdks/rust.md)
-- [Python SDK](sdks/python.md)
-- [TypeScript SDK](sdks/typescript.md)
-- [Go SDK](sdks/go.md)
-- [Kotlin SDK](sdks/kotlin.md)
-- [Swift SDK](sdks/swift.md)
-
-## Evidence and project status
-
-- [Prioritized roadmap](prioritized-roadmap.md)
-- [Verification](verification.md)
-- [Benchmark protocol](benchmark-protocol.md)
-- [Implementation status](implementation-status.md)
-- [Research paper (final, 22 pages)](../QENLO-RESEARCH-PAPER.pdf)
-
-Benchmark results apply only to their recorded data, hardware, source revision, runtime, and timing boundary. They do not establish a universal CPU or GPU threshold, nor do they claim production readiness.
-
-Rust and the native ABI run in CI across Linux, Windows, and macOS. Passing a target build does not prove physical device validation. The core engine and SDKs start no background workers and make no network requests. Telemetry is an entirely separate, host-controlled service.
+<div class="docs-landing">
+  <header class="docs-landing__nav" aria-label="Documentation home navigation">
+    <a class="docs-landing__brand" href="../" aria-label="Qenlo home">
+      <img src="../assets/brand/logo/lockup-reversed.svg" alt="Qenlo" width="94" height="28">
+      <span>docs</span>
+    </a>
+    <nav class="docs-landing__nav-links" aria-label="Primary">
+      <a href="#/architecture">architecture</a>
+      <a href="#/verification">verification</a>
+      <a href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noopener noreferrer">github</a>
+    </nav>
+  </header>
+  <main id="main-content">
+    <section class="docs-hero" aria-labelledby="docs-title">
+      <div class="docs-hero__copy">
+        <p class="docs-kicker"><span aria-hidden="true"></span> documentation / v0.1.0-alpha.5</p>
+        <h1 id="docs-title">Know what exists.<br><strong>Know how it was found.</strong></h1>
+        <p class="docs-hero__lede">Qenlo is an embedded vector store for durable, exact, metadata-filtered retrieval. Canonical records stay local. Every search path reports what actually ran.</p>
+        <div class="docs-hero__actions">
+          <a class="docs-button docs-button--primary" href="#/quickstart">Start the quickstart <span aria-hidden="true">→</span></a>
+          <a class="docs-button docs-button--secondary" href="#/concepts">Read the core concepts</a>
+        </div>
+      </div>
+      <div class="execution-trace" aria-label="Example Qenlo search execution trace">
+        <div class="execution-trace__bar">
+          <span>execution.report</span>
+          <span class="execution-trace__status"><i aria-hidden="true"></i> complete</span>
+        </div>
+        <ol class="execution-trace__steps">
+          <li><span>01</span><div><b>canonical store</b><small>durable records decide what exists</small></div><code>gen 0042</code></li>
+          <li><span>02</span><div><b>metadata filter</b><small>eligible rows are resolved first</small></div><code>1,284 rows</code></li>
+          <li><span>03</span><div><b>exact search</b><small>the selected route does the work</small></div><code>gpu-wgpu</code></li>
+          <li><span>04</span><div><b>execution report</b><small>fallbacks and timings stay visible</small></div><code>verified</code></li>
+        </ol>
+        <div class="execution-trace__footer"><span>requested <b>auto</b></span><span>actual <b>gpu-wgpu</b></span><span>fallback <b>none</b></span></div>
+      </div>
+    </section>
+    <section class="docs-principles" aria-label="Core properties">
+      <p><span>01</span><strong>local-first</strong> no database server</p>
+      <p><span>02</span><strong>exact by default</strong> deterministic results</p>
+      <p><span>03</span><strong>observable</strong> routes explain themselves</p>
+      <p><span>04</span><strong>embedded</strong> one canonical record store</p>
+    </section>
+    <section class="docs-paths" aria-labelledby="docs-paths-title">
+      <div class="docs-section-heading">
+        <p>Choose a path</p>
+        <h2 id="docs-paths-title">Get to the right level of detail.</h2>
+      </div>
+      <div class="docs-path-list">
+        <a href="#/quickstart">
+          <span class="docs-path-list__number">01</span>
+          <span><strong>Build with Qenlo</strong><small>Create, mutate, search, close, and reopen a collection.</small></span>
+          <span class="docs-path-list__arrow" aria-hidden="true">↗</span>
+        </a>
+        <a href="#/architecture">
+          <span class="docs-path-list__number">02</span>
+          <span><strong>Understand the system</strong><small>Trace canonical storage, derived indexes, recovery, and routing.</small></span>
+          <span class="docs-path-list__arrow" aria-hidden="true">↗</span>
+        </a>
+        <a href="#/verification">
+          <span class="docs-path-list__number">03</span>
+          <span><strong>Inspect the evidence</strong><small>See test coverage, device records, methodology, and open gates.</small></span>
+          <span class="docs-path-list__arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </section>
+    <section class="docs-sdks" aria-labelledby="docs-sdks-title">
+      <div>
+        <p class="docs-kicker">SDKs and bindings</p>
+        <h2 id="docs-sdks-title">Use the language your application already speaks.</h2>
+      </div>
+      <nav class="docs-sdk-links" aria-label="SDK documentation">
+        <a href="#/sdks/rust"><span>Rust</span><small>native API</small></a>
+        <a href="#/sdks/python"><span>Python</span><small>native extension</small></a>
+        <a href="#/sdks/typescript"><span>TypeScript</span><small>Node binding</small></a>
+        <a href="#/sdks/go"><span>Go</span><small>FFI driver</small></a>
+        <a href="#/sdks/kotlin"><span>Kotlin</span><small>Android</small></a>
+        <a href="#/sdks/swift"><span>Swift</span><small>Apple</small></a>
+      </nav>
+    </section>
+    <aside class="docs-boundary" aria-labelledby="docs-boundary-title">
+      <p>Research-grade alpha</p>
+      <div>
+        <h2 id="docs-boundary-title">Measured before it is marketed.</h2>
+        <p>Benchmark results belong to their recorded data, hardware, source revision, runtime, and timing boundary. They are evidence, not universal performance claims.</p>
+      </div>
+      <a href="#/benchmark-protocol">Read the benchmark protocol <span aria-hidden="true">→</span></a>
+    </aside>
+  </main>
+  <footer class="docs-landing__footer">
+    <span>embedded filtered vector search in Rust</span>
+    <nav aria-label="Footer">
+      <a href="#/feature-matrix">feature matrix</a>
+      <a href="#/prioritized-roadmap">roadmap</a>
+      <a href="../QENLO-RESEARCH-PAPER.pdf">research paper</a>
+    </nav>
+  </footer>
+</div>
 
 
 ================================================================================
@@ -389,12 +450,12 @@ This page describes Qenlo's current code and evidence. It does not infer competi
 
 | Surface | Binding status | Distribution status |
 | --- | --- | --- |
-| Rust | native API | source crate; release publication pending |
-| Python | native ABI, bulk float32 input, optional `TorchIndex` | wheel validation pending final release CI |
-| TypeScript | native ABI | package validation pending final release CI |
-| Go | cgo/native ABI | package validation pending final release CI |
-| Kotlin/JVM | JNA/native ABI | JVM tests exist; this is not Android packaging evidence |
-| Swift | C ABI wrapper | Apple device and simulator artifacts require separate CI validation |
+| Rust (supported) | native API | crates.io prereleases and source archive |
+| Python (supported) | native ABI, bulk float32 input, optional `TorchIndex` | PyPI prerelease wheels for Linux x64, Windows x64, and macOS arm64 |
+| TypeScript (supported) | native ABI | npm prerelease with the same three desktop native targets |
+| Go (preview) | cgo/native ABI | source archive; consumers supply or select the shared native library |
+| Kotlin/JVM (preview) | JNA/native ABI | release JAR; Maven Central publication is not a release gate |
+| Swift (preview) | C ABI wrapper | source package plus release XCFramework; the repository root is not a SwiftPM package |
 | Android | bridge/tester source | physical-device and release-package evidence missing |
 | iOS | wrapper/tester source | signing, simulator, and physical-device evidence missing |
 
@@ -415,6 +476,11 @@ The September 5, 2026 campaign contains 182 status rows: 131 completed, 42 marke
 
 These numbers do not describe the retained selector and select no deployment default. See [the performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) and [the final paper](../QENLO-RESEARCH-PAPER.pdf) for timing boundaries and limitations.
 
+Alpha.5 evaluated a simpler automatic-routing rule derived from the retained
+campaign. It fit the development pairs but failed the preregistered held-out
+gate (8/16 wrong routes; 235.7% maximum regret), so it was not shipped. See the
+[held-out gate report](../research/data/processed/alpha5-router-heldout/report.md).
+
 
 ================================================================================
 Document: Rust API
@@ -433,7 +499,7 @@ Add `qenlo` to `Cargo.toml`:
 
 ```toml
 [dependencies]
-qenlo = "0.1.0-alpha.4"
+qenlo = "0.1.0-alpha.5"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -460,7 +526,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let response = db.search(&[0.9, 0.1, 0.0], &filter, 5).await?;
     for match_record in response.results {
-        println!("ID: {}, Score: {}", match_record.id, match_record.score);
+        println!("ID: {}, Distance: {}", match_record.id, match_record.distance);
     }
 
     Ok(())
@@ -482,7 +548,7 @@ The Python SDK provides typed bindings for Qenlo using precompiled binary wheels
 ## Installation
 
 ```bash
-pip install qenlo
+pip install "qenlo==0.1.0a5"
 ```
 
 ## Quick example
@@ -530,8 +596,8 @@ Native Node.js FFI bindings for Qenlo with TypeScript type definitions and expli
 ## Installation
 
 ```bash
-pnpm add @a3ro.dev/qenlo
-# or npm install @a3ro.dev/qenlo
+pnpm add @a3ro.dev/qenlo@alpha
+# or npm install @a3ro.dev/qenlo@alpha
 ```
 
 ## Quick example
@@ -565,7 +631,7 @@ URL: https://a3ro-dev.github.io/qenlo/docs/sdks/go.md
 Description: cgo bindings for Go services and command-line tools
 ================================================================================
 
-# Go SDK
+# Go SDK (preview)
 
 cgo bindings for embedding Qenlo in Go services and command-line tools. The package links against the shared native ABI and requires cgo.
 
@@ -623,17 +689,13 @@ URL: https://a3ro-dev.github.io/qenlo/docs/sdks/kotlin.md
 Description: JNA bindings for JVM applications
 ================================================================================
 
-# Kotlin/JVM SDK
+# Kotlin/JVM SDK (preview)
 
 JNA bindings for JVM applications. Android packaging and bridge validation are tracked separately, so this JVM artifact does not provide Android support on its own.
 
-## Gradle setup
-
-```kotlin
-dependencies {
-    implementation("dev.qenlo:qenlo:0.1.0-alpha.4")
-}
-```
+Alpha.5 ships a preview JAR in the GitHub release. Maven Central publication is
+not guaranteed; build from `sdk/kotlin` with `gradle build` when no registry
+artifact is available.
 
 ## Quick example
 
@@ -659,19 +721,14 @@ URL: https://a3ro-dev.github.io/qenlo/docs/sdks/swift.md
 Description: Swift bindings over the shared C ABI
 ================================================================================
 
-# Swift SDK
+# Swift SDK (preview)
 
 Swift bindings over the shared C ABI for macOS 13+ and iOS 16+.
 
-## Swift Package Manager
-
-Add `qenlo` to `Package.swift`:
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/a3ro-dev/qenlo.git", from: "0.1.0-alpha.4")
-]
-```
+The source package lives in `sdk/apple`. The repository root is not currently a
+SwiftPM package, so alpha.5 does not claim remote `Package.swift` installation.
+Build the wrapper from source or use the `QenloFFI.xcframework.zip` attached to
+the matching GitHub release.
 
 ## Quick example
 
@@ -945,6 +1002,9 @@ be exported to `.qn` at a committed generation. A future live single-file revisi
 must define dual-superblock publication, recovery, locking, and torn-write behavior
 before it can replace that protocol.
 
+The forward-support commitment and alpha.4 compatibility fixture are described
+in the [compatibility policy](compatibility.md).
+
 
 ================================================================================
 Document: Recovery policy
@@ -983,6 +1043,47 @@ Backups and exports are accepted as recovery sources only after passing the same
 record, normalization, generation, and checksum validations applied during normal
 opens. The safest available copy wins by explicit generation rules, never by file
 modification time.
+
+
+================================================================================
+Document: Compatibility policy
+Path: docs/compatibility.md
+URL: https://a3ro-dev.github.io/qenlo/docs/compatibility.md
+Description: Storage, SDK, ABI, and prerelease change guarantees
+================================================================================
+
+# Compatibility policy
+
+Qenlo is pre-1.0. Application APIs may change between alpha releases, but a
+release does not silently reinterpret durable data or native calls.
+
+## Portable and durable data
+
+- Portable `.qn` format v1 remains readable for the rest of the 0.x series.
+- Writers continue to emit v1 until a replacement has a documented migration
+  path and compatibility fixtures in CI.
+- Unknown snapshot or WAL versions fail closed with the found and supported
+  versions. Qenlo does not attempt a lossy best-effort import.
+- The test suite imports an immutable `.qn` fixture generated by the published
+  alpha.4 Python wheel, then checks tombstones, generation, and search results.
+
+## SDK and native ABI
+
+Rust, Python, and TypeScript are the supported alpha SDKs. Go, Kotlin/JVM, and
+Swift are previews: they are tested in the repository, but their packaging and
+platform coverage are not release gates.
+
+All non-Rust SDK packages in one release must use the native library built from
+the same tag. Mixing native libraries and wrappers from different prereleases is
+unsupported. Breaking C ABI changes require coordinated SDK version bumps and
+conformance tests in the same release.
+
+## Deprecation
+
+Before 1.0, source-breaking API changes may occur without a full stable-release
+deprecation cycle. When practical, Qenlo documents the replacement in the
+changelog for at least one prerelease. Storage compatibility follows the
+stronger policy above.
 
 
 ================================================================================
@@ -1613,6 +1714,28 @@ Description: Verification record, test outcomes, and audit trail
 
 # Verification record
 
+## Alpha.5 release candidate (2026-09-08)
+
+The retained development reducer found 31 compatible CPU/GPU pairs. A
+1,000,000-work-unit candidate removed all development-set routing regret, but a
+preregistered 16-workload RTX 4050/DX12 gate then found eight wrong routes and
+235.7% maximum regret. Recall and filter checks passed. Because the maximum
+exceeded the 25% release limit, the source change was reverted and only the
+evidence pipeline and result ship.
+
+On Windows, `cargo fmt --check`, strict workspace Clippy, and the default-feature
+workspace suite passed (53 `qenlo` tests plus the remaining workspace,
+integration, recovery, and doctests). Python passed 23 tests and produced an
+inspected alpha.5 Windows wheel. TypeScript passed type checking and five tests,
+built, and produced an inspected alpha.5 tarball. The documentation/version
+check and 14 research-script tests passed. The published alpha.4 `.qn` fixture
+imported and searched successfully.
+
+The local all-features build did not reach Qenlo tests because MSVC 2019 crashed
+inside optional dependency `numkong` while compiling generated SIMD C. Go was
+not installed on this host. Those environments remain covered by Linux and
+multi-platform CI rather than being reported as local passes.
+
 ## Small-collection campaign (2026-09-05)
 
 The Runpod campaign retained 182 rows: 131 completed, 42 unavailable, seven
@@ -1810,9 +1933,8 @@ are evidence for one Intel Arc adapter and do not close the 1M × 768 gate.
   buffers rebuild after restart. No persisted graph cache is claimed.
 - Interrupted initial creation may require manual handling of confirmed staging
   files. Preserve evidence before cleanup; never guess at a committed outcome.
-- The repository includes `LICENSE-MIT`; metadata also declares Apache-2.0 as an
-  option, but a separate Apache license text is not included. No licensing terms
-  were changed in this implementation.
+- The repository and package metadata use Apache-2.0; SDK documentation points
+  to the root `LICENSE` file.
 
 ## Implementation commits
 
@@ -1855,11 +1977,12 @@ This ledger separates implemented code from research directions and distribution
 |---|---|---|
 | correctness/oracle hardening | implemented | deterministic semantic checks and independent exact truth in `qenlo-lab` |
 | storage v2 WAL/manifest/mmap | implemented | atomic batch, recovery, corruption, reopen, and fail-closed tests |
-| query-level router | partial | eligibility plans and hardware-bound threshold profiles are implemented; persisted calibration, online adaptation, and held-out regret evaluation remain open |
+| query-level router | partial | eligibility plans and hardware-bound threshold profiles are implemented; an alpha.5 scalar-work rule failed its held-out regret gate, while persisted calibration and online adaptation remain open |
 | ARM NEON fallback | implemented | target compilation; physical ARM run comes from macOS/mobile packages |
 | portable exact GPU | implemented | persistent arenas, chunked bounded readback, true B×D batches |
 | small-collection Runpod matrix | completed | 182 retained rows across six GPU configurations plus a corrected 100K × 768 supplement; final known spend $0.9401 |
 | lane-minimum selector candidate | measured and rejected | won five and lost seven of 12 qualified pairs; final source retains the simpler full-rescan selector |
+| scalar-work router candidate | measured and rejected | fit 31 retained pairs, then missed 8/16 held-out routes with 235.7% maximum regret; alpha.4 routing remains |
 | post-mutation resident updates | implemented and measured | append/live-mask cells rebuilt zero times; reopen remains a full resident rebuild |
 | optional PyTorch index | implemented, desktop-only | lazy CPU/CUDA/MPS tensor API bound to canonical generation; CUDA and CPU measured, MPS unavailable in this campaign |
 | portable IVF-Flat | implemented | Recall@10 ≥ 0.95 tester gate and exact FP32 GPU rerank |
@@ -2115,4 +2238,9 @@ Automated release workflows publish Qenlo builds across public package registrie
    - PyPI receives precompiled binary wheels (`manylinux`, `macosx`, `win_amd64`).
    - npm receives `@a3ro.dev/qenlo` with bundled native shared objects.
    - crates.io receives the `qenlo` and `qenlo-core` crates.
+
+Rust, Python, and TypeScript are supported release surfaces. Publication is not
+complete until the workflow resolves the exact new versions from crates.io,
+PyPI, and npm. Go, Kotlin/JVM, and Swift remain preview artifacts; Maven Central
+credentials or propagation do not block the supported alpha release.
 

@@ -1,5 +1,27 @@
 # Verification record
 
+## Alpha.5 release candidate (2026-09-08)
+
+The retained development reducer found 31 compatible CPU/GPU pairs. A
+1,000,000-work-unit candidate removed all development-set routing regret, but a
+preregistered 16-workload RTX 4050/DX12 gate then found eight wrong routes and
+235.7% maximum regret. Recall and filter checks passed. Because the maximum
+exceeded the 25% release limit, the source change was reverted and only the
+evidence pipeline and result ship.
+
+On Windows, `cargo fmt --check`, strict workspace Clippy, and the default-feature
+workspace suite passed (53 `qenlo` tests plus the remaining workspace,
+integration, recovery, and doctests). Python passed 23 tests and produced an
+inspected alpha.5 Windows wheel. TypeScript passed type checking and five tests,
+built, and produced an inspected alpha.5 tarball. The documentation/version
+check and 14 research-script tests passed. The published alpha.4 `.qn` fixture
+imported and searched successfully.
+
+The local all-features build did not reach Qenlo tests because MSVC 2019 crashed
+inside optional dependency `numkong` while compiling generated SIMD C. Go was
+not installed on this host. Those environments remain covered by Linux and
+multi-platform CI rather than being reported as local passes.
+
 ## Small-collection campaign (2026-09-05)
 
 The Runpod campaign retained 182 rows: 131 completed, 42 unavailable, seven
@@ -197,9 +219,8 @@ are evidence for one Intel Arc adapter and do not close the 1M × 768 gate.
   buffers rebuild after restart. No persisted graph cache is claimed.
 - Interrupted initial creation may require manual handling of confirmed staging
   files. Preserve evidence before cleanup; never guess at a committed outcome.
-- The repository includes `LICENSE-MIT`; metadata also declares Apache-2.0 as an
-  option, but a separate Apache license text is not included. No licensing terms
-  were changed in this implementation.
+- The repository and package metadata use Apache-2.0; SDK documentation points
+  to the root `LICENSE` file.
 
 ## Implementation commits
 

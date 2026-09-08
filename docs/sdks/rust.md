@@ -8,7 +8,7 @@ Add `qenlo` to `Cargo.toml`:
 
 ```toml
 [dependencies]
-qenlo = "0.1.0-alpha.4"
+qenlo = "0.1.0-alpha.5"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let response = db.search(&[0.9, 0.1, 0.0], &filter, 5).await?;
     for match_record in response.results {
-        println!("ID: {}, Score: {}", match_record.id, match_record.score);
+        println!("ID: {}, Distance: {}", match_record.id, match_record.distance);
     }
 
     Ok(())

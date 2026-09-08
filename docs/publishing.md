@@ -11,3 +11,8 @@ Automated release workflows publish Qenlo builds across public package registrie
    - PyPI receives precompiled binary wheels (`manylinux`, `macosx`, `win_amd64`).
    - npm receives `@a3ro.dev/qenlo` with bundled native shared objects.
    - crates.io receives the `qenlo` and `qenlo-core` crates.
+
+Rust, Python, and TypeScript are supported release surfaces. Publication is not
+complete until the workflow resolves the exact new versions from crates.io,
+PyPI, and npm. Go, Kotlin/JVM, and Swift remain preview artifacts; Maven Central
+credentials or propagation do not block the supported alpha release.

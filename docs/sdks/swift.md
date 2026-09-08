@@ -1,16 +1,11 @@
-# Swift SDK
+# Swift SDK (preview)
 
 Swift bindings over the shared C ABI for macOS 13+ and iOS 16+.
 
-## Swift Package Manager
-
-Add `qenlo` to `Package.swift`:
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/a3ro-dev/qenlo.git", from: "0.1.0-alpha.4")
-]
-```
+The source package lives in `sdk/apple`. The repository root is not currently a
+SwiftPM package, so alpha.5 does not claim remote `Package.swift` installation.
+Build the wrapper from source or use the `QenloFFI.xcframework.zip` attached to
+the matching GitHub release.
 
 ## Quick example
 

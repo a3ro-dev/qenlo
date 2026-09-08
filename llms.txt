@@ -32,6 +32,7 @@ Qenlo is a research-grade embedded vector database for durable, exact, metadata-
 - [Architecture specification](https://a3ro-dev.github.io/qenlo/docs/architecture.md): CoreStore, transaction lifecycle, lock protocols, and visibility
 - [.qn storage format](https://a3ro-dev.github.io/qenlo/docs/qn-format-v1.md): Binary file layout, little-endian specs, and atomic exchange semantics
 - [Recovery policy](https://a3ro-dev.github.io/qenlo/docs/recovery-policy.md): Deterministic recovery, fail-closed boundaries, and operator contracts
+- [Compatibility policy](https://a3ro-dev.github.io/qenlo/docs/compatibility.md): Storage, SDK, ABI, and prerelease change guarantees
 - [GPU search design](https://a3ro-dev.github.io/qenlo/docs/gpu-design.md): Custom WGSL scoring, selection pipelines, chunking, and memory arenas
 - [CUDA backend todo](https://a3ro-dev.github.io/qenlo/docs/cuda-backend-todo.md): Entry gates and engineering requirements for a native CUDA backend
 

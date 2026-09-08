@@ -1,4 +1,4 @@
-# Qenlo Go SDK
+# Qenlo Go SDK (preview)
 
 Type-safe cgo bindings for **Qenlo** — the embedded, durable vector database written in Rust.
 
@@ -160,4 +160,4 @@ if errors.As(err, &qerr) {
 
 ## License
 
-Dual-licensed under **MIT** or **Apache-2.0** at your option.
+Licensed under **Apache-2.0**.

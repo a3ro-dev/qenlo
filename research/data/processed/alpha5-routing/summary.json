@@ -1,0 +1,25 @@
+{
+  "schema": "qenlo-routing-analysis-v1",
+  "status": "candidate rejected by held-out evidence",
+  "work_definition": "eligible_rows * dimension * batch",
+  "candidate_work_threshold": 1000000,
+  "pair_count": 31,
+  "old": {
+    "wrong_routes": 3,
+    "median_regret": 0.0,
+    "max_regret": 1.785652263799876
+  },
+  "candidate": {
+    "wrong_routes": 0,
+    "median_regret": 0.0,
+    "max_regret": 0.0
+  },
+  "gate": {
+    "median_regret_at_most": 0.1,
+    "max_regret_at_most": 0.25,
+    "requires_improvement_over_old": true,
+    "development_evidence_passed": true,
+    "release_gate_passed": false,
+    "release_gate_reason": "held-out alpha.5 confirmation rejected the candidate"
+  }
+}

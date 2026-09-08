@@ -19,12 +19,12 @@ This page describes Qenlo's current code and evidence. It does not infer competi
 
 | Surface | Binding status | Distribution status |
 | --- | --- | --- |
-| Rust | native API | source crate; release publication pending |
-| Python | native ABI, bulk float32 input, optional `TorchIndex` | wheel validation pending final release CI |
-| TypeScript | native ABI | package validation pending final release CI |
-| Go | cgo/native ABI | package validation pending final release CI |
-| Kotlin/JVM | JNA/native ABI | JVM tests exist; this is not Android packaging evidence |
-| Swift | C ABI wrapper | Apple device and simulator artifacts require separate CI validation |
+| Rust (supported) | native API | crates.io prereleases and source archive |
+| Python (supported) | native ABI, bulk float32 input, optional `TorchIndex` | PyPI prerelease wheels for Linux x64, Windows x64, and macOS arm64 |
+| TypeScript (supported) | native ABI | npm prerelease with the same three desktop native targets |
+| Go (preview) | cgo/native ABI | source archive; consumers supply or select the shared native library |
+| Kotlin/JVM (preview) | JNA/native ABI | release JAR; Maven Central publication is not a release gate |
+| Swift (preview) | C ABI wrapper | source package plus release XCFramework; the repository root is not a SwiftPM package |
 | Android | bridge/tester source | physical-device and release-package evidence missing |
 | iOS | wrapper/tester source | signing, simulator, and physical-device evidence missing |
 
@@ -44,3 +44,8 @@ This page describes Qenlo's current code and evidence. It does not infer competi
 The September 5, 2026 campaign contains 182 status rows: 131 completed, 42 marked failed or unavailable, seven failed, and two invalid-harness rows. Only 130 qualify because one completed USearch row misses its recall gate. On one RTX 4090/Vulkan host, exact WGPU P95 was 0.897 ms for 100k by 768, batch one, `k=1`, and 0.896 ms for batch eight, `k=64`, at 10% eligibility. PyTorch CUDA was faster in both cells. Those WGPU rows used a lane-minimum selector candidate that won five and lost seven of 12 frozen-baseline pairs and was subsequently rejected.
 
 These numbers do not describe the retained selector and select no deployment default. See [the performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) and [the final paper](../QENLO-RESEARCH-PAPER.pdf) for timing boundaries and limitations.
+
+Alpha.5 evaluated a simpler automatic-routing rule derived from the retained
+campaign. It fit the development pairs but failed the preregistered held-out
+gate (8/16 wrong routes; 235.7% maximum regret), so it was not shipped. See the
+[held-out gate report](../research/data/processed/alpha5-router-heldout/report.md).

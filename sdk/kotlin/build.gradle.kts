@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.qenlo"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 
 repositories { mavenCentral() }
 
@@ -40,11 +40,6 @@ mavenPublishing {
                 name.set("Apache License 2.0")
                 url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
                 distribution.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-            }
-            license {
-                name.set("MIT License")
-                url.set("https://opensource.org/licenses/MIT")
-                distribution.set("https://opensource.org/licenses/MIT")
             }
         }
         developers {
