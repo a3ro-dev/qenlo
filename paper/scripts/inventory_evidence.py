@@ -135,20 +135,27 @@ def nearby_manifest_refs(path: Path) -> list[dict[str, str]]:
     return refs
 
 
-def digest(path: Path, size: int) -> tuple[str | None, str]:
+def digest(path: Path, size: int, kind: str) -> tuple[str | None, str, int]:
     known = KNOWN_ARCHIVE_HASHES.get(rel(path))
     if size > MAX_HASH_BYTES:
         if known:
-            return known, "existing_manifest_reference"
-        return None, "skipped_large_payload"
+            return known, "existing_manifest_reference", size
+        return None, "skipped_large_payload", size
+    if kind == "text_or_machine_readable":
+        canonical = path.read_bytes().replace(b"\r\n", b"\n")
+        actual = hashlib.sha256(canonical).hexdigest()
+        status = "computed_sha256_canonical_lf"
+        if known:
+            status = "computed_sha256_matches_manifest" if actual == known else "computed_sha256_manifest_mismatch"
+        return actual, status, len(canonical)
     h = hashlib.sha256()
     with path.open("rb") as fh:
         for chunk in iter(lambda: fh.read(1024 * 1024), b""):
             h.update(chunk)
     actual = h.hexdigest()
     if known:
-        return actual, "computed_sha256_matches_manifest" if actual == known else "computed_sha256_manifest_mismatch"
-    return actual, "computed_sha256"
+        return actual, "computed_sha256_matches_manifest" if actual == known else "computed_sha256_manifest_mismatch", size
+    return actual, "computed_sha256", size
 
 
 def main() -> None:
@@ -163,11 +170,12 @@ def main() -> None:
                 continue
             seen.add(key)
             size = path.stat().st_size
-            sha, status = digest(path, size)
+            kind = classify(path)
+            sha, status, canonical_size = digest(path, size, kind)
             files.append({
                 "path": rel(path),
-                "size_bytes": size,
-                "type": classify(path),
+                "size_bytes": canonical_size,
+                "type": kind,
                 "cohort": cohort(path),
                 "sha256": sha,
                 "hash_status": status,
@@ -195,7 +203,7 @@ def main() -> None:
         "generated_by": "paper/scripts/inventory_evidence.py",
         "scope": ["research/**", "benchmarks/**", "docs/reports/**", "benchmark-results/**"],
         "excluded_paths": ["paper/** (derived manuscript, figures, reductions, and audit outputs)"],
-        "hash_policy": {"max_computed_bytes": MAX_HASH_BYTES, "large_payload_behavior": "use existing manifest/sidecar reference where known; otherwise hash=null and hash_status=skipped_large_payload"},
+        "hash_policy": {"max_computed_bytes": MAX_HASH_BYTES, "text_line_endings": "CRLF normalized to LF before size and SHA-256", "large_payload_behavior": "use existing manifest/sidecar reference where known; otherwise hash=null and hash_status=skipped_large_payload"},
         "summary": {"file_count": len(files), "bytes": sum(x["size_bytes"] for x in files), "cohort_file_counts": dict(sorted(counts.items())), "cohort_bytes": dict(sorted(bytes_by_cohort.items()))},
         "cohort_decisions": COHORT_DECISIONS,
         "files": files,
