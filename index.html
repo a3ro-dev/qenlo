@@ -1,24 +1,1297 @@
 <!doctype html>
-<html lang="en" class="entrance-active"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#ececeb">
-<meta name="description" content="Qenlo is a local-first embedded vector store for durable exact retrieval over metadata-filtered collections.">
-<title>Qenlo — Built for Exact Retrieval</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<script>window.__entranceFailsafe=setTimeout(()=>document.documentElement.classList.remove('entrance-active'),3200)</script>
-<style>
-:root{--paper:#ececeb;--ink:#222;--copy:#4a4a4a;--glass-line:rgba(255,255,255,.36);--gap:clamp(8px,1.5vw,23px);--gutter:clamp(14px,3.6vw,54px);--content-max:1333px;--pad-top:clamp(20px,9.6vh,94px);--pad-bottom:clamp(16px,3vh,52px);--masthead-gap:clamp(16px,3vw,40px);--cards-offset:clamp(14px,9.4vh,92px)}*{box-sizing:border-box}html,body{margin:0;min-width:100%;height:100%;overflow:hidden}body{color:var(--ink);background:var(--paper);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-optical-sizing:auto;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}a{color:inherit;text-decoration:none}.stage{position:relative;isolation:isolate;display:flex;flex-direction:column;height:100svh;overflow:hidden;padding:var(--pad-top) var(--gutter) var(--pad-bottom);background:linear-gradient(rgba(236,236,234,.1),rgba(236,236,234,.1)),url("https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/5c3ec08f-2dbf-4c0a-8588-f6106a789443.webp") center/cover no-repeat,#ececeb}.stage-motion{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;pointer-events:none}.stage-motion--narrow{display:none}.paper-texture,.filter-defs{position:absolute;width:0;height:0;overflow:hidden}.masthead,.cards{width:min(100%,var(--content-max));margin-inline:auto}.masthead{z-index:2;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,clamp(260px,32vw,483px));gap:var(--masthead-gap)}.headline{margin:0;color:#202020;font-size:clamp(24px,min(3.1vw,5.9vh),47px);font-weight:400;letter-spacing:.015em;line-height:1.223}.headline__line{display:flex;flex-wrap:nowrap;align-items:center}.dot-word{display:inline-block;flex:0 0 auto;width:3.45em;height:.766em;margin-left:.319em;color:#ad314d;transform:translateY(.085em)}.dot-svg{display:block;overflow:visible;width:100%;height:100%}.intro{container-type:inline-size;width:100%;margin:.34em 0 0;color:var(--copy);font-size:clamp(13px,min(1.36vw,2.6vh),20.6px);letter-spacing:-.017em;line-height:1.62}.intro a{display:inline-block;margin-top:.65em;border-bottom:1px solid;font-weight:600}.intro a:focus-visible,.learn-more:focus-visible{outline:3px solid rgba(173,49,77,.7);outline-offset:4px}.desktop-break{display:none}@container (min-width:26.5em){.desktop-break{display:inline}}
-.cards{flex:1 1 auto;container-type:size;display:flex;justify-content:space-between;align-items:center;gap:var(--gap);min-height:0;margin-top:var(--cards-offset);--card-w:min((100cqw - 2 * var(--gap))/3,100cqh * 429/554,429px)}.card{container-type:inline-size;position:relative;flex:0 0 auto;overflow:hidden;width:var(--card-w);aspect-ratio:429/554;border:1px solid var(--glass-line);border-radius:calc(var(--card-w) * 17/429);color:#fff;--u:calc(100cqw/429);box-shadow:0 2px 4px rgba(50,28,39,.3),inset 0 1px 0 rgba(255,255,255,.24)}.card:before{content:"";position:absolute;inset:0;z-index:1;mix-blend-mode:screen;background:linear-gradient(102deg,rgba(255,255,255,.1),transparent 28%,rgba(255,255,255,.08) 62%,transparent 88%),radial-gradient(ellipse 85% 34% at 54% 7%,rgba(255,255,255,.24),transparent 72%)}.card__media{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:fill;pointer-events:none}.card__grain{position:absolute;z-index:2;inset:-8%;width:116%;height:116%;opacity:.46;mix-blend-mode:soft-light}.card__title{position:absolute;z-index:4;top:6.1%;left:5%;width:90%;margin:0;color:rgba(255,255,255,.96);font-size:calc(22.95 * var(--u));font-weight:600;line-height:1.48;text-align:center;text-shadow:0 1px 1px rgba(72,28,48,.14)}.card--speed{--entrance-delay:.46s;background:linear-gradient(180deg,#bd4468,#ad355b 38%,#a63b50 72%,#8c1320)}.card--context{--entrance-delay:.58s;background:linear-gradient(164deg,#c9b5e1,#ad80ca 29%,#9d4f72 64%,#793246)}.card--connections{--entrance-delay:.7s;background:linear-gradient(177deg,#d84736,#dd523c 24%,#e8703d 52%,#de5641 78%,#d34239)}.gauge{position:absolute;z-index:2;top:27.63%;left:10.5%;width:79%;height:59%;overflow:visible}.context-window{position:absolute;z-index:3;top:32.4%;left:20.4%;width:59%;height:30.1%;overflow:hidden;border-radius:calc(10 * var(--u));background:linear-gradient(0deg,rgba(255,255,255,.3),transparent 80%),linear-gradient(105deg,rgba(250,232,250,.72),rgba(238,120,214,.68) 51%,rgba(222,86,177,.82));box-shadow:0 calc(13 * var(--u)) calc(25 * var(--u)) rgba(70,17,69,.31);backdrop-filter:blur(calc(9 * var(--u)))}.window-lines{position:absolute;top:9%;left:6.7%;width:87%;height:24%}.window-lines span{display:block;border-radius:calc(6 * var(--u));background:rgba(255,255,255,.72)}.window-lines span:first-child{width:29%;height:calc(6 * var(--u));margin-bottom:calc(3 * var(--u))}.window-lines span:nth-child(n+2){width:100%;height:calc(22 * var(--u));background:linear-gradient(90deg,rgba(255,240,253,.72),rgba(255,170,242,.75) 42%,rgba(255,108,235,.78))}.window-lines span:nth-child(3){width:86%;margin-top:calc(3 * var(--u));opacity:.64}.connections-map{position:absolute;z-index:2;top:21.7%;left:0;width:100%;height:43%;opacity:.78;mask-image:linear-gradient(#000 50%,rgba(0,0,0,.46) 67%,transparent 96%)}
-.metric{position:absolute;z-index:5;left:0;width:100%;display:flex;align-items:flex-end;justify-content:center;color:rgba(255,255,255,.97);filter:drop-shadow(0 1px 1px rgba(104,27,54,.08))}.metric--speed{top:48.6%}.metric--context{top:48%;transform:translateX(2.1cqw)}.metric--connections{top:48.5%;transform:translateX(2.1cqw)}.dot-number{display:block;height:calc(70 * var(--u))}.metric--speed .dot-number{width:31.2%}.metric--context .dot-number{width:30.5%}.metric--connections .dot-number{width:23%}.metric__unit{margin-left:1.3%;font-size:calc(30.46 * var(--u));line-height:1;letter-spacing:calc(-.8 * var(--u));transform:translateY(calc(-11 * var(--u)))}.caption{position:absolute;z-index:5;top:65.1%;left:10%;width:80%;margin:0;color:rgba(255,255,255,.87);font-size:calc(19.95 * var(--u));letter-spacing:calc(-.36 * var(--u));line-height:1.45;text-align:center;text-shadow:0 1px 2px rgba(60,21,35,.16)}.learn-more{position:absolute;z-index:6;top:83.75%;left:50%;width:calc(111 * var(--u));height:calc(45 * var(--u));display:grid;place-items:center;transform:translateX(-50%);border-radius:999px;color:#2d2d2d;background:rgba(255,255,255,.97);box-shadow:inset 0 1px rgba(255,255,255,.5),0 1px 3px rgba(58,25,39,.08);font-size:calc(14 * var(--u));transition:transform .18s ease,box-shadow .18s ease}.learn-more:hover{transform:translateX(-50%) translateY(calc(-2 * var(--u)));box-shadow:0 calc(8 * var(--u)) calc(20 * var(--u)) rgba(58,25,39,.16)}
-html.entrance-active .headline__line{animation:headline .84s cubic-bezier(.16,1,.3,1) .08s both}html.entrance-active .headline__line+*{animation-delay:.17s}html.entrance-active .intro{animation:support .72s cubic-bezier(.22,1,.36,1) .25s both}html.entrance-active .card{animation:card .76s cubic-bezier(.16,1,.3,1) var(--entrance-delay) both}html.entrance-active .card__title,html.entrance-active .gauge,html.entrance-active .context-window,html.entrance-active .connections-map,html.entrance-active .metric,html.entrance-active .caption,html.entrance-active .learn-more{animation:support .66s cubic-bezier(.16,1,.3,1) calc(var(--entrance-delay) + .3s) both}@keyframes headline{from{opacity:0;translate:0 .52em;clip-path:inset(0 0 56%)}to{opacity:1;translate:none;clip-path:inset(-8% -2%)}}@keyframes support{from{opacity:0;translate:0 8px;filter:blur(2px)}to{opacity:1;translate:none;filter:none}}@keyframes card{from{opacity:.52;translate:0 10px;scale:.985}to{opacity:1;translate:none;scale:none}}
-@media(min-width:768px) and (max-width:1180px) and (max-aspect-ratio:6/7){.cards{display:grid;grid-template-columns:repeat(2,max-content);justify-content:center;align-content:center;--card-w:min((100cqw - var(--gap))/2,(100cqh - var(--gap))/2 * 429/554,429px)}.card:last-child{grid-column:1/-1;justify-self:center}}@media(max-width:767px){html,body{height:auto;overflow:visible}.stage{height:auto;min-height:100svh;overflow:visible;padding-bottom:32px;background:linear-gradient(rgba(236,236,234,.08),rgba(236,236,234,.08)),url("https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/0f4926a4-e660-4df2-9195-2bfb3e341bdd.webp") center top/100% 100% no-repeat,#e8e8e8}.stage-motion--wide{display:none}.stage-motion--narrow{display:block}.masthead{grid-template-columns:1fr}.cards{container-type:inline-size;flex:none;flex-direction:column;align-items:center;margin-top:48px;--card-w:min(100cqw,429px)}.card{--entrance-delay:.4s}}@media(prefers-reduced-motion:reduce){.stage-motion,.card__media{display:none}html.entrance-active *{animation:none!important;transition-duration:.01ms!important}}
-</style></head><body><main class="stage">
-<video class="stage-motion stage-motion--wide" autoplay muted loop playsinline preload="auto" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/5c3ec08f-2dbf-4c0a-8588-f6106a789443.webp" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_125226_45cb4f38-aa7e-47e1-885d-ae0b69745369.mp4"></video><video class="stage-motion stage-motion--narrow" autoplay muted loop playsinline preload="none" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/0f4926a4-e660-4df2-9195-2bfb3e341bdd.webp" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_125242_daae1570-386d-4bd5-8896-80499e2371e0.mp4"></video>
-<svg class="paper-texture" aria-hidden="true"><filter id="paperNoise"><feTurbulence type="fractalNoise" seed="8"/></filter><pattern id="paperFiber" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(17)"><path d="M0 9h18"/></pattern></svg><svg class="filter-defs" aria-hidden="true"><filter id="cardNoise"><feTurbulence type="fractalNoise" baseFrequency=".54" numOctaves="3" seed="27" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></svg>
-<header class="masthead"><h1 class="headline"><span class="headline__line">Built for <span class="dot-word" data-dots="Exact" aria-label="Exact"></span></span><span class="headline__line">Retrieval</span></h1><p class="intro">One canonical record store for durable, metadata-filtered<br class="desktop-break"> vector search, with optional CPU, GPU, and ANN execution<br class="desktop-break"> paths that never decide what exists.<br><a href="docs/#/quickstart">Read the docs</a></p></header>
-<section class="cards" aria-label="Qenlo capabilities">
-<article class="card card--speed"><video class="card__media" autoplay muted loop playsinline preload="auto" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/167977c6-8539-46b1-9a15-8dba566f50b8.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130045_1a612b69-4854-4b34-8043-ccb91f2c60af.mp4"></video><svg class="card__grain" viewBox="0 0 429 554"><rect width="429" height="554" filter="url(#cardNoise)"/></svg><h2 class="card__title">Million-Vector Scale<br>Strict TopK Cohort</h2><svg class="gauge" viewBox="0 0 326 326" aria-hidden="true"><defs><linearGradient id="arc"><stop stop-color="#ff6796"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><path d="M6.91 135.48A158.5 158.5 0 0 1 311.94 108.79" fill="none" stroke="url(#arc)" stroke-width="2.2"/><g id="gaugeTicks"/></svg><div class="metric metric--speed"><span class="dot-number" data-dots="1" aria-label="1"></span><span class="metric__unit">M</span></div><p class="caption">1,000,000 × 768<br>1% eligible, batch 1, k=10</p><a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate">Evidence</a></article>
-<article class="card card--context"><video class="card__media" autoplay muted loop playsinline preload="auto" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/0446d1d5-e65e-4db5-8090-3e30d09afc43.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130054_dd005674-d693-4d81-80a5-357f7f10b3a3.mp4"></video><svg class="card__grain" viewBox="0 0 429 554"><rect width="429" height="554" filter="url(#cardNoise)"/></svg><h2 class="card__title">Completed-Call Latency<br>Host to GPU and Back</h2><div class="context-window"><div class="window-lines"><span></span><span></span><span></span></div></div><div class="metric metric--context"><span class="dot-number" data-dots="0.17" aria-label="0.17"></span><span class="metric__unit">ms</span></div><p class="caption">P95 on RTX A6000<br>Qenlo CUDA prototype</p><a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate">Method</a></article>
-<article class="card card--connections"><video class="card__media" autoplay muted loop playsinline preload="auto" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/da8d0242-4dee-4f6d-813f-a5887e86ad77.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130103_7550f407-f14b-40a6-9616-7a26d7a8bd9f.mp4"></video><svg class="card__grain" viewBox="0 0 429 554"><rect width="429" height="554" filter="url(#cardNoise)"/></svg><h2 class="card__title">Independently Verified<br>Exact Retrieval Quality</h2><svg class="connections-map" viewBox="0 0 429 238" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="#fff"><path opacity=".3" d="M0 117h46c15 0 22 8 26 25 5 23 12 31 31 31h174c18 0 25-8 30-31 4-17 11-25 26-25h96"/><path opacity=".34" d="M0 173h87c15 0 22 7 27 25 4 15 11 22 28 22h140c17 0 25-7 29-22 5-18 12-25 28-25h90"/><path opacity=".94" stroke="#fff8dd" d="M0 61h95c14 0 22-6 27-20 4-13 12-20 27-20h115c15 0 23 6 27 20 5 14 13 20 28 20h110"/></g><g fill="#fff4a7"><circle cx="45" cy="117" r="6.5"/><circle cx="133" cy="61" r="6.5"/><circle cx="319" cy="61" r="6.5"/></g></svg><div class="metric metric--connections"><span class="dot-number" data-dots="100" aria-label="100"></span><span class="metric__unit">%</span></div><p class="caption">Recall@10 across<br>5,000 measured calls</p><a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate">Results</a></article>
-</section></main><script>
-const g={"0":["01110","10001","10011","10101","11001","10001","01110"],"1":["010","110","010","010","010","010","111"],"5":["11111","10000","10000","11110","00001","00001","11110"],"6":["01110","10000","10000","11110","10001","10001","01110"],"7":["11111","00001","00010","00100","01000","01000","01000"],".":["0","0","0","0","0","0","1"],E:["11111","10000","10000","11110","10000","10000","11111"],x:["00000","00000","10001","01010","00100","01010","10001"],a:["00000","00000","01110","00001","01111","10001","01111"],c:["00000","00000","01111","10000","10000","10000","01111"],t:["010","010","111","010","010","010","001"]};document.querySelectorAll('[data-dots]').forEach(e=>{let x=0,s='',p=e.classList.contains('dot-word')?4:5,r=e.classList.contains('dot-word')?1.8:e.closest('.metric--context')?2.32:1.55;[...e.dataset.dots].forEach(ch=>{let rows=g[ch]||g["0"];rows.forEach((row,y)=>[...row].forEach((v,col)=>{if(v==='1')s+=`<circle cx="${x+col*p+1.55}" cy="${y*4+1.55}" r="${r}"/>`}));x+=rows[0].length*p+1});e.innerHTML=`<svg class="dot-svg" viewBox="0 0 ${x} 28" fill="currentColor">${s}</svg>`});const ticks=document.querySelector('#gaugeTicks');for(let i=0;i<=22;i++){let a=(190+i*5)*Math.PI/180,o=142,n=i%5?133:129,l=document.createElementNS('http://www.w3.org/2000/svg','line');for(const[k,v]of Object.entries({x1:163+Math.cos(a)*n,y1:163+Math.sin(a)*n,x2:163+Math.cos(a)*o,y2:163+Math.sin(a)*o,stroke:'rgba(255,188,210,.34)'}))l.setAttribute(k,v);ticks.append(l)}const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,target=matchMedia('(max-width:767px)').matches?document.querySelector('.card--speed .learn-more'):document.querySelector('.card--connections .learn-more');if(reduced){clearTimeout(window.__entranceFailsafe);document.documentElement.classList.remove('entrance-active')}else target.addEventListener('animationend',()=>{clearTimeout(window.__entranceFailsafe);document.documentElement.classList.remove('entrance-active')},{once:true});
-</script></body></html>
+<html lang="en" class="entrance-active">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ececeb">
+  <meta name="description" content="Qenlo is a local-first embedded vector store for durable exact retrieval over metadata-filtered collections.">
+  <title>Qenlo — Built for Exact Retrieval</title>
+  <link rel="icon" href="assets/brand/logo/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/brand/tokens.css">
+  <script>window.__entranceFailsafe=setTimeout(()=>document.documentElement.classList.remove('entrance-active'),3200)</script>
+  <style>
+    :root {
+      --paper: #ececeb;
+      --ink: #1D2320;
+      --copy: #3E4642;
+      --glass-line: rgba(255,255,255,.36);
+      --gap: clamp(8px, 1.5vw, 23px);
+      --gutter: clamp(14px, 3.6vw, 54px);
+      --content-max: 1333px;
+      --pad-top: clamp(16px, 4vh, 48px);
+      --pad-bottom: clamp(16px, 3vh, 52px);
+      --masthead-gap: clamp(16px, 3vw, 40px);
+      --cards-offset: clamp(14px, 5vh, 56px);
+      --accent: #B53C2F;
+      --accent-focus: #B53C2F;
+      --surface-dark: #171C19;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+    body {
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--qenlo-font-family-sans, 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      font-optical-sizing: auto;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    /* Accessibility Skip Link */
+    .skip-link {
+      position: absolute;
+      top: -60px;
+      left: 16px;
+      background: #1D2320;
+      color: #FFFFFF;
+      padding: 10px 18px;
+      z-index: 9999;
+      font-weight: 600;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 16px;
+    }
+
+    /* Screen Reader Only Utility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Top Utility Bar */
+    .utility-bar {
+      position: relative;
+      z-index: 10;
+      background: rgba(236, 236, 235, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 8px var(--gutter);
+      font-size: 0.85rem;
+    }
+    .utility-bar__inner {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--qenlo-font-family-mono, monospace);
+      font-size: 0.78rem;
+      background: #E2DFD8;
+      color: #2D3531;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #B53C2F;
+    }
+    .utility-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .motion-toggle {
+      background: #FFFFFF;
+      border: 1px solid #D8D3C8;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #1D2320;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    .motion-toggle:hover {
+      background: #F2EFE9;
+    }
+
+    /* Stage / Hero */
+    .stage {
+      position: relative;
+      isolation: isolate;
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100svh - 45px);
+      padding: var(--pad-top) var(--gutter) var(--pad-bottom);
+      background: linear-gradient(rgba(236,236,234,.15), rgba(236,236,234,.15)),
+                  url("https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/5c3ec08f-2dbf-4c0a-8588-f6106a789443.webp") center/cover no-repeat,
+                  #ececeb;
+    }
+    .stage-motion {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    .stage-motion--narrow { display: none; }
+    .paper-texture, .filter-defs {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+
+    /* Masthead */
+    .masthead, .cards {
+      width: min(100%, var(--content-max));
+      margin-inline: auto;
+    }
+    .masthead {
+      z-index: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, clamp(260px, 32vw, 483px));
+      gap: var(--masthead-gap);
+    }
+    .headline {
+      margin: 0;
+      color: #1D2320;
+      font-size: clamp(24px, min(3.1vw, 5.9vh), 47px);
+      font-weight: 500;
+      letter-spacing: .015em;
+      line-height: 1.223;
+    }
+    .headline__line {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+    }
+    .dot-word {
+      display: inline-block;
+      flex: 0 0 auto;
+      width: 3.45em;
+      height: .766em;
+      margin-left: .319em;
+      color: #B53C2F;
+      transform: translateY(.085em);
+    }
+    .dot-svg {
+      display: block;
+      overflow: visible;
+      width: 100%;
+      height: 100%;
+    }
+    .intro {
+      container-type: inline-size;
+      width: 100%;
+      margin: .34em 0 0;
+      color: var(--copy);
+      font-size: clamp(14px, min(1.36vw, 2.6vh), 20.6px);
+      letter-spacing: -.017em;
+      line-height: 1.62;
+    }
+    .intro a {
+      display: inline-block;
+      margin-top: .65em;
+      border-bottom: 2px solid var(--accent);
+      font-weight: 600;
+      color: #1D2320;
+    }
+    .intro a:hover {
+      color: var(--accent);
+    }
+    .desktop-break { display: none; }
+    @container (min-width: 26.5em) {
+      .desktop-break { display: inline; }
+    }
+
+    /* Cards */
+    .cards {
+      flex: 1 1 auto;
+      container-type: size;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--gap);
+      min-height: 0;
+      margin-top: var(--cards-offset);
+      --card-w: min((100cqw - 2 * var(--gap))/3, 100cqh * 429/554, 429px);
+    }
+    .card {
+      container-type: inline-size;
+      position: relative;
+      flex: 0 0 auto;
+      overflow: hidden;
+      width: var(--card-w);
+      aspect-ratio: 429/554;
+      border: 1px solid var(--glass-line);
+      border-radius: calc(var(--card-w) * 17/429);
+      color: #fff;
+      --u: calc(100cqw / 429);
+      box-shadow: 0 4px 12px rgba(25, 15, 20, 0.32), inset 0 1px 0 rgba(255,255,255,.28);
+    }
+    .card:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      mix-blend-mode: screen;
+      background: linear-gradient(102deg, rgba(255,255,255,.12), transparent 28%, rgba(255,255,255,.08) 62%, transparent 88%),
+                  radial-gradient(ellipse 85% 34% at 54% 7%, rgba(255,255,255,.24), transparent 72%);
+    }
+    /* Top legibility overlay across cards to ensure WCAG AAA contrast */
+    .card:after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 38%;
+      z-index: 2;
+      background: linear-gradient(180deg, rgba(15, 8, 12, 0.6) 0%, rgba(15, 8, 12, 0.2) 65%, transparent 100%);
+      pointer-events: none;
+    }
+    .card__media {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+    }
+    .card__grain {
+      position: absolute;
+      z-index: 2;
+      inset: -8%;
+      width: 116%;
+      height: 116%;
+      opacity: .46;
+      mix-blend-mode: soft-light;
+    }
+    .card__title {
+      position: absolute;
+      z-index: 4;
+      top: 6.1%;
+      left: 5%;
+      width: 90%;
+      margin: 0;
+      color: #FFFFFF;
+      font-size: calc(22.95 * var(--u));
+      font-weight: 600;
+      line-height: 1.42;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Card Themes with AAA Color Contrast */
+    .card--speed {
+      --entrance-delay: .46s;
+      background: linear-gradient(180deg, #9C2E4E, #8C223E 38%, #781A2F 72%, #5C0B18);
+    }
+    /* Context card color darkened from #c9b5e1 to rich deep purple/aubergine for >7:1 AAA contrast */
+    .card--context {
+      --entrance-delay: .58s;
+      background: linear-gradient(164deg, #4F245C, #6B2956 32%, #621F35 68%, #44111E);
+    }
+    .card--connections {
+      --entrance-delay: .7s;
+      background: linear-gradient(177deg, #B53225, #B03422 24%, #BA4328 52%, #A83321 78%, #8E2315);
+    }
+
+    .gauge {
+      position: absolute;
+      z-index: 2;
+      top: 27.63%;
+      left: 10.5%;
+      width: 79%;
+      height: 59%;
+      overflow: visible;
+    }
+    .context-window {
+      position: absolute;
+      z-index: 3;
+      top: 32.4%;
+      left: 20.4%;
+      width: 59%;
+      height: 30.1%;
+      overflow: hidden;
+      border-radius: calc(10 * var(--u));
+      background: linear-gradient(0deg, rgba(255,255,255,.3), transparent 80%),
+                  linear-gradient(105deg, rgba(250,232,250,.72), rgba(238,120,214,.68) 51%, rgba(222,86,177,.82));
+      box-shadow: 0 calc(13 * var(--u)) calc(25 * var(--u)) rgba(70,17,69,.31);
+      backdrop-filter: blur(calc(9 * var(--u)));
+    }
+    .window-lines {
+      position: absolute;
+      top: 9%;
+      left: 6.7%;
+      width: 87%;
+      height: 24%;
+    }
+    .window-lines span {
+      display: block;
+      border-radius: calc(6 * var(--u));
+      background: rgba(255,255,255,.72);
+    }
+    .window-lines span:first-child {
+      width: 29%;
+      height: calc(6 * var(--u));
+      margin-bottom: calc(3 * var(--u));
+    }
+    .window-lines span:nth-child(n+2) {
+      width: 100%;
+      height: calc(22 * var(--u));
+      background: linear-gradient(90deg, rgba(255,240,253,.72), rgba(255,170,242,.75) 42%, rgba(255,108,235,.78));
+    }
+    .window-lines span:nth-child(3) {
+      width: 86%;
+      margin-top: calc(3 * var(--u));
+      opacity: .64;
+    }
+    .connections-map {
+      position: absolute;
+      z-index: 2;
+      top: 21.7%;
+      left: 0;
+      width: 100%;
+      height: 43%;
+      opacity: .78;
+      mask-image: linear-gradient(#000 50%, rgba(0,0,0,.46) 67%, transparent 96%);
+    }
+
+    .metric {
+      position: absolute;
+      z-index: 5;
+      left: 0;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      color: rgba(255,255,255,.98);
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,.4));
+    }
+    .metric--speed { top: 48.6%; }
+    .metric--context { top: 48%; transform: translateX(2.1cqw); }
+    .metric--connections { top: 48.5%; transform: translateX(2.1cqw); }
+    .dot-number {
+      display: block;
+      height: calc(70 * var(--u));
+    }
+    .metric--speed .dot-number { width: 31.2%; }
+    .metric--context .dot-number { width: 30.5%; }
+    .metric--connections .dot-number { width: 23%; }
+    .metric__unit {
+      margin-left: 1.3%;
+      font-size: calc(30.46 * var(--u));
+      line-height: 1;
+      letter-spacing: calc(-.8 * var(--u));
+      transform: translateY(calc(-11 * var(--u)));
+      font-weight: 700;
+    }
+    .caption {
+      position: absolute;
+      z-index: 5;
+      top: 65.1%;
+      left: 8%;
+      width: 84%;
+      margin: 0;
+      color: #FFFFFF;
+      font-size: calc(18.5 * var(--u));
+      letter-spacing: calc(-.3 * var(--u));
+      line-height: 1.45;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0,0,0,.6);
+      font-weight: 500;
+    }
+    .learn-more {
+      position: absolute;
+      z-index: 6;
+      top: 83.75%;
+      left: 50%;
+      width: calc(125 * var(--u));
+      height: calc(45 * var(--u));
+      display: grid;
+      place-items: center;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      color: #1D2320;
+      background: #FFFFFF;
+      box-shadow: inset 0 1px rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.2);
+      font-size: calc(14 * var(--u));
+      font-weight: 600;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .learn-more:hover {
+      transform: translateX(-50%) translateY(calc(-2 * var(--u)));
+      box-shadow: 0 calc(8 * var(--u)) calc(20 * var(--u)) rgba(0, 0, 0, .25);
+      background: #FDFBF8;
+    }
+
+    /* Animations */
+    html.entrance-active .headline__line { animation: headline .84s cubic-bezier(.16,1,.3,1) .08s both; }
+    html.entrance-active .headline__line+* { animation-delay: .17s; }
+    html.entrance-active .intro { animation: support .72s cubic-bezier(.22,1,.36,1) .25s both; }
+    html.entrance-active .card { animation: card .76s cubic-bezier(.16,1,.3,1) var(--entrance-delay) both; }
+    html.entrance-active .card__title,
+    html.entrance-active .gauge,
+    html.entrance-active .context-window,
+    html.entrance-active .connections-map,
+    html.entrance-active .metric,
+    html.entrance-active .caption,
+    html.entrance-active .learn-more { animation: support .66s cubic-bezier(.16,1,.3,1) calc(var(--entrance-delay) + .3s) both; }
+    @keyframes headline { from { opacity: 0; translate: 0 .52em; clip-path: inset(0 0 56%); } to { opacity: 1; translate: none; clip-path: inset(-8% -2%); } }
+    @keyframes support { from { opacity: 0; translate: 0 8px; filter: blur(2px); } to { opacity: 1; translate: none; filter: none; } }
+    @keyframes card { from { opacity: .52; translate: 0 10px; scale: .985; } to { opacity: 1; translate: none; scale: none; } }
+
+    /* Transparency & Disclaimer Banner */
+    .research-callout {
+      background: #E4E0D6;
+      border: 1px solid #D1CBC0;
+      border-left: 5px solid var(--accent);
+      border-radius: 6px;
+      max-width: var(--content-max);
+      margin: 48px auto 0;
+      padding: 20px 24px;
+      font-size: 0.94rem;
+      line-height: 1.6;
+      color: #2D3531;
+    }
+    .research-callout strong {
+      color: #1D2320;
+    }
+
+    /* Contact & Inquiries Section (Form Consent & Data Minimization) */
+    .contact-section {
+      max-width: 760px;
+      margin: 64px auto;
+      padding: 0 var(--gutter);
+    }
+    .contact-card {
+      background: #FFFFFF;
+      border: 1px solid #D8D3C8;
+      border-radius: 12px;
+      padding: 36px 32px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .contact-title {
+      font-size: 1.6rem;
+      margin: 0 0 10px;
+      color: #1D2320;
+    }
+    .contact-desc {
+      color: #5A615D;
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      color: #1D2320;
+    }
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #C4BEB4;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: #1D2320;
+      background: #FAF9F6;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+      background: #FFFFFF;
+    }
+    .required-mark {
+      color: var(--accent);
+      font-weight: bold;
+    }
+    .field-error {
+      color: #A3271A;
+      font-size: 0.85rem;
+      margin-top: 4px;
+      display: block;
+      min-height: 1.2em;
+    }
+    .form-consent {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin: 24px 0 16px;
+      padding: 14px 16px;
+      background: #F7F5F0;
+      border-radius: 6px;
+      border: 1px solid #E6E2DA;
+    }
+    .consent-checkbox {
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+    .consent-label {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: #3E4642;
+      cursor: pointer;
+    }
+    .consent-label a {
+      color: var(--accent);
+      text-decoration: underline;
+      font-weight: 600;
+    }
+    .data-min-notice {
+      font-size: 0.82rem;
+      color: #5A615D;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .submit-btn {
+      background: var(--accent);
+      color: #FFFFFF;
+      border: none;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      width: 100%;
+    }
+    .submit-btn:hover {
+      background: #8E2B20;
+    }
+    .form-success {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      display: none;
+    }
+    .form-success--active {
+      display: block;
+      background: #E8F5ED;
+      color: #1B5E34;
+      border: 1px solid #A8DAC0;
+    }
+
+    /* Semantic Footer & Business Details */
+    .site-footer {
+      border-top: 1px solid #D8D3C8;
+      background: #EFECE6;
+      padding: 48px var(--gutter) 32px;
+      margin-top: 64px;
+      color: #3E4642;
+      font-size: 0.92rem;
+    }
+    .site-footer__inner {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 40px;
+    }
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1D2320;
+      margin-bottom: 12px;
+    }
+    .footer-text {
+      line-height: 1.6;
+      margin-bottom: 18px;
+      max-width: 440px;
+    }
+    .footer-legal-entity {
+      font-size: 0.86rem;
+      line-height: 1.6;
+      color: #5A615D;
+    }
+    .footer-legal-entity a {
+      color: #1D2320;
+      text-decoration: underline;
+    }
+    .footer-heading {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #1D2320;
+      margin: 0 0 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .footer-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .footer-links li {
+      margin-bottom: 10px;
+    }
+    .footer-links a {
+      color: #3E4642;
+      text-decoration: none;
+    }
+    .footer-links a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    .footer-bottom {
+      max-width: var(--content-max);
+      margin: 40px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid #D8D3C8;
+      font-size: 0.84rem;
+      color: #5A615D;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .footer-disclaimer {
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+
+    /* Accessible Cookie Consent Banner */
+    .cookie-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      background: #1D2320;
+      color: #F7F5F0;
+      padding: 16px var(--gutter);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      border-top: 2px solid var(--accent);
+      display: none;
+    }
+    .cookie-banner--visible {
+      display: block;
+    }
+    .cookie-banner__inner {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .cookie-banner__content {
+      flex: 1 1 500px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .cookie-banner__content a {
+      color: #EF8B79;
+      text-decoration: underline;
+    }
+    .cookie-banner__actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .cookie-btn {
+      padding: 8px 18px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .cookie-btn--primary {
+      background: #EF8B79;
+      color: #171C19;
+    }
+    .cookie-btn--primary:hover {
+      background: #FFFFFF;
+    }
+    .cookie-btn--secondary {
+      background: transparent;
+      color: #F7F5F0;
+      border-color: #6E7C74;
+    }
+    .cookie-btn--secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Cookie Settings Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop--open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-dialog {
+      background: #FFFFFF;
+      color: #1D2320;
+      border-radius: 12px;
+      max-width: 560px;
+      width: 100%;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-title {
+      font-size: 1.35rem;
+      margin: 0 0 8px;
+    }
+    .modal-desc {
+      font-size: 0.9rem;
+      color: #5A615D;
+      margin-bottom: 20px;
+    }
+    .storage-tier {
+      border: 1px solid #E6E2DA;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      background: #FAF9F6;
+    }
+    .storage-tier__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .storage-tier__title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .storage-tier__badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #E8F5ED;
+      color: #1B5E34;
+    }
+    .storage-tier__badge--disabled {
+      background: #E6E2DA;
+      color: #5A615D;
+    }
+    .storage-tier__desc {
+      font-size: 0.85rem;
+      color: #5A615D;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    /* Responsive Breakpoints */
+    @media (min-width: 768px) and (max-width: 1180px) and (max-aspect-ratio: 6/7) {
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(2, max-content);
+        justify-content: center;
+        align-content: center;
+        --card-w: min((100cqw - var(--gap))/2, (100cqh - var(--gap))/2 * 429/554, 429px);
+      }
+      .card:last-child {
+        grid-column: 1 / -1;
+        justify-self: center;
+      }
+    }
+    @media (max-width: 767px) {
+      .stage {
+        height: auto;
+        min-height: auto;
+        padding-bottom: 32px;
+        background: linear-gradient(rgba(236,236,234,.08), rgba(236,236,234,.08)),
+                    url("https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/0f4926a4-e660-4df2-9195-2bfb3e341bdd.webp") center top/100% 100% no-repeat,
+                    #e8e8e8;
+      }
+      .stage-motion--wide { display: none; }
+      .stage-motion--narrow { display: block; }
+      .masthead { grid-template-columns: 1fr; }
+      .cards {
+        container-type: inline-size;
+        flex: none;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 48px;
+        --card-w: min(100cqw, 429px);
+      }
+      .card { --entrance-delay: .4s; }
+      .site-footer__inner {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .stage-motion, .card__media { display: none !important; }
+      html.entrance-active * { animation: none !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Accessibility Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Top Utility & Accessibility Bar -->
+  <header class="utility-bar" role="banner">
+    <div class="utility-bar__inner">
+      <div class="status-pill">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>RESEARCH ALPHA &bull; OFFLINE &amp; EMBEDDED</span>
+      </div>
+      <div class="utility-actions">
+        <button id="motionToggle" type="button" class="motion-toggle" aria-pressed="false" aria-label="Pause background video animations">
+          <span id="motionToggleIcon" aria-hidden="true">&#x23F8;</span>
+          <span id="motionToggleText">Pause Motion</span>
+        </button>
+        <a href="docs/#/quickstart" style="font-weight:600;text-decoration:none;">Docs</a>
+        <a href="#contact" style="font-weight:600;text-decoration:none;">Contact</a>
+        <a href="privacy.html" style="color:var(--copy);text-decoration:none;">Privacy</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Stage -->
+  <main id="main-content" class="stage">
+    <video id="bgMotionWide" class="stage-motion stage-motion--wide" autoplay muted loop playsinline preload="metadata" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/5c3ec08f-2dbf-4c0a-8588-f6106a789443.webp" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_125226_45cb4f38-aa7e-47e1-885d-ae0b69745369.mp4"></video>
+    <video id="bgMotionNarrow" class="stage-motion stage-motion--narrow" autoplay muted loop playsinline preload="none" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/0f4926a4-e660-4df2-9195-2bfb3e341bdd.webp" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_125242_daae1570-386d-4bd5-8896-80499e2371e0.mp4"></video>
+
+    <svg class="paper-texture" aria-hidden="true"><filter id="paperNoise"><feTurbulence type="fractalNoise" seed="8"/></filter><pattern id="paperFiber" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(17)"><path d="M0 9h18"/></pattern></svg>
+    <svg class="filter-defs" aria-hidden="true"><filter id="cardNoise"><feTurbulence type="fractalNoise" baseFrequency=".54" numOctaves="3" seed="27" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></svg>
+
+    <header class="masthead">
+      <h1 class="headline">
+        <span class="headline__line">Built for <span class="dot-word" data-dots="Exact" aria-label="Exact"><span class="sr-only">Exact</span></span></span>
+        <span class="headline__line">Retrieval</span>
+      </h1>
+      <p class="intro">
+        One canonical record store for durable, metadata-filtered<br class="desktop-break"> vector search, with optional CPU, GPU, and ANN execution<br class="desktop-break"> paths that never decide what exists.<br>
+        <a href="docs/#/quickstart">Read the documentation</a>
+      </p>
+    </header>
+
+    <!-- Capabilities Cards -->
+    <section class="cards" aria-label="Qenlo capabilities">
+      <!-- Card 1 -->
+      <article class="card card--speed">
+        <video class="card__media" autoplay muted loop playsinline preload="metadata" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/167977c6-8539-46b1-9a15-8dba566f50b8.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130045_1a612b69-4854-4b34-8043-ccb91f2c60af.mp4"></video>
+        <svg class="card__grain" viewBox="0 0 429 554" aria-hidden="true"><rect width="429" height="554" filter="url(#cardNoise)"/></svg>
+        <h2 class="card__title">Million-Vector Scale<br>Strict TopK Cohort</h2>
+        <svg class="gauge" viewBox="0 0 326 326" aria-hidden="true">
+          <defs><linearGradient id="arc"><stop stop-color="#ff6796"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+          <path d="M6.91 135.48A158.5 158.5 0 0 1 311.94 108.79" fill="none" stroke="url(#arc)" stroke-width="2.2"/>
+          <g id="gaugeTicks"/>
+        </svg>
+        <div class="metric metric--speed">
+          <span class="dot-number" data-dots="1" aria-label="1"><span class="sr-only">1</span></span>
+          <span class="metric__unit">M</span>
+        </div>
+        <p class="caption">1,000,000 &times; 768<br>1% eligible, batch 1, k=10</p>
+        <a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate" aria-label="Read strict TopK benchmark report evidence for million vector scale">Evidence</a>
+      </article>
+
+      <!-- Card 2 -->
+      <article class="card card--context">
+        <video class="card__media" autoplay muted loop playsinline preload="metadata" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/0446d1d5-e65e-4db5-8090-3e30d09afc43.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130054_dd005674-d693-4d81-80a5-357f7f10b3a3.mp4"></video>
+        <svg class="card__grain" viewBox="0 0 429 554" aria-hidden="true"><rect width="429" height="554" filter="url(#cardNoise)"/></svg>
+        <h2 class="card__title">Completed-Call Latency<br>Host to GPU and Back</h2>
+        <div class="context-window" aria-hidden="true"><div class="window-lines"><span></span><span></span><span></span></div></div>
+        <div class="metric metric--context">
+          <span class="dot-number" data-dots="0.17" aria-label="0.17"><span class="sr-only">0.17</span></span>
+          <span class="metric__unit">ms</span>
+        </div>
+        <p class="caption">P95 on RTX A6000<br>Qenlo CUDA prototype</p>
+        <a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate" aria-label="Read strict TopK latency benchmark method for 0.17 milliseconds P95">Method</a>
+      </article>
+
+      <!-- Card 3 (Corrected truth-in-advertising claim: Rigorous Oracle Verification) -->
+      <article class="card card--connections">
+        <video class="card__media" autoplay muted loop playsinline preload="metadata" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/da8d0242-4dee-4f6d-813f-a5887e86ad77.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130103_7550f407-f14b-40a6-9616-7a26d7a8bd9f.mp4"></video>
+        <svg class="card__grain" viewBox="0 0 429 554" aria-hidden="true"><rect width="429" height="554" filter="url(#cardNoise)"/></svg>
+        <h2 class="card__title">Rigorous Oracle Verification<br>Exact Retrieval Quality</h2>
+        <svg class="connections-map" viewBox="0 0 429 238" preserveAspectRatio="none" aria-hidden="true">
+          <g fill="none" stroke="#fff">
+            <path opacity=".3" d="M0 117h46c15 0 22 8 26 25 5 23 12 31 31 31h174c18 0 25-8 30-31 4-17 11-25 26-25h96"/>
+            <path opacity=".34" d="M0 173h87c15 0 22 7 27 25 4 15 11 22 28 22h140c17 0 25-7 29-22 5-18 12-25 28-25h90"/>
+            <path opacity=".94" stroke="#fff8dd" d="M0 61h95c14 0 22-6 27-20 4-13 12-20 27-20h115c15 0 23 6 27 20 5 14 13 20 28 20h110"/>
+          </g>
+          <g fill="#fff4a7"><circle cx="45" cy="117" r="6.5"/><circle cx="133" cy="61" r="6.5"/><circle cx="319" cy="61" r="6.5"/></g>
+        </svg>
+        <div class="metric metric--connections">
+          <span class="dot-number" data-dots="100" aria-label="100"><span class="sr-only">100</span></span>
+          <span class="metric__unit">%</span>
+        </div>
+        <p class="caption">100% Recall@10 vs CPU float64 oracle<br>5,000 queries (prototype evaluation)</p>
+        <a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate" aria-label="Read exact retrieval quality results against CPU float64 reference oracle">Results</a>
+      </article>
+    </section>
+
+    <!-- Transparency & Scientific Disclaimer -->
+    <aside class="research-callout" role="note" aria-label="Research status and scientific disclosure">
+      <strong>Scientific Integrity &amp; Prototype Status:</strong> Qenlo is an early research-grade alpha software project licensed under Apache 2.0. Measurements quoted above reflect a PyTorch CUDA predicate prototype evaluated against a CPU float64 reference oracle on a dedicated RunPod RTX A6000 instance. Benchmarks do not represent universal production guarantees. Read our complete research logs, environment checksums, and threats to validity in the <a href="docs/#/reports/2026-09-02-strict-topk-research-gate" style="text-decoration:underline;font-weight:600;">Strict Research-Gate Addendum</a>.
+    </aside>
+  </main>
+
+  <!-- Accessible Contact / Inquiry Section with Form Consent & Data Minimization -->
+  <section id="contact" class="contact-section" aria-labelledby="contact-heading">
+    <div class="contact-card">
+      <h2 id="contact-heading" class="contact-title">Contact &amp; Research Inquiries</h2>
+      <p class="contact-desc">
+        Have technical questions about Qenlo architecture, research collaborations, or local deployment? Send a message directly to the maintainer.
+      </p>
+
+      <form id="inquiryForm" class="inquiry-form" novalidate>
+        <div class="form-group">
+          <label for="userName">Name (Optional)</label>
+          <input type="text" id="userName" name="name" autocomplete="name" placeholder="Alex Chen" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label for="userEmail">Email Address <span class="required-mark" aria-hidden="true">*</span></label>
+          <input type="email" id="userEmail" name="email" required autocomplete="email" placeholder="alex@example.com" class="form-input" aria-required="true" aria-describedby="emailError">
+          <span id="emailError" class="field-error" role="alert"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="userMessage">Message <span class="required-mark" aria-hidden="true">*</span></label>
+          <textarea id="userMessage" name="message" rows="4" required placeholder="Describe your inquiry or research scenario..." class="form-input" aria-required="true" aria-describedby="messageError"></textarea>
+          <span id="messageError" class="field-error" role="alert"></span>
+        </div>
+
+        <!-- FORM CONSENT: Explicit, Unchecked by default (GDPR Art. 7 compliant) -->
+        <div class="form-consent">
+          <input type="checkbox" id="privacyConsent" name="consent" required aria-required="true" class="consent-checkbox">
+          <label for="privacyConsent" class="consent-label">
+            I consent to Qenlo processing my contact details solely to respond to this inquiry in accordance with the <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. <span class="required-mark" aria-hidden="true">*</span>
+          </label>
+        </div>
+        <span id="consentError" class="field-error" role="alert" style="margin-top:-10px;margin-bottom:12px;"></span>
+
+        <p class="data-min-notice">
+          <strong>Data Minimization Notice:</strong> We only collect your email address to provide a direct response. We never sell, share, or use your information for advertising.
+        </p>
+
+        <button type="submit" class="submit-btn" aria-label="Submit inquiry form">Send Inquiry</button>
+        <div id="formSuccess" class="form-success" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Complete Semantic Footer & Business Identification -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="site-footer__inner">
+      <div class="footer-col">
+        <div class="footer-brand">
+          <img src="assets/brand/logo/mark.svg" alt="" width="26" height="26" aria-hidden="true">
+          <span>Qenlo</span>
+        </div>
+        <p class="footer-text">
+          A local-first embedded vector store for durable exact retrieval over metadata-filtered collections.
+        </p>
+        <div class="footer-legal-entity">
+          <strong>Project Maintainer:</strong> Akshat Singh Kushwaha (<code>a3ro-dev</code>)<br>
+          <strong>Official Contact:</strong> <a href="mailto:akshatsingh14372@outlook.com">akshatsingh14372@outlook.com</a><br>
+          <strong>Privacy &amp; Security:</strong> <a href="mailto:privacy@qenlo.dev">privacy@qenlo.dev</a> &bull; <a href="mailto:security@qenlo.dev">security@qenlo.dev</a><br>
+          <strong>Jurisdiction:</strong> India &bull; Global Open Source Distribution
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h3 class="footer-heading">Legal &amp; Policies</h3>
+        <ul class="footer-links">
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms &amp; Conditions</a></li>
+          <li><a href="cookies.html">Cookie Policy</a></li>
+          <li><a href="refund.html">Refund Policy</a></li>
+          <li><a href="https://github.com/a3ro-dev/qenlo/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security Policy</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h3 class="footer-heading">Documentation &amp; Source</h3>
+        <ul class="footer-links">
+          <li><a href="docs/#/quickstart">Quickstart Guide</a></li>
+          <li><a href="docs/#/architecture">Architecture Specification</a></li>
+          <li><a href="docs/#/reports/2026-09-02-strict-topk-research-gate">Strict TopK Report</a></li>
+          <li><a href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+          <li><a href="https://github.com/a3ro-dev/qenlo/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Apache 2.0 License</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>&copy; 2026 Qenlo Contributors. Software licensed under <a href="https://github.com/a3ro-dev/qenlo/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">Apache 2.0</a>. Trademarks and brand marks reserved.</div>
+      <div class="footer-disclaimer">
+        Disclaimer: Qenlo is experimental research alpha software. Performance metrics are specific to documented testbeds and do not constitute warranties of fitness for a particular purpose.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Accessible Cookie / Storage Consent Banner -->
+  <aside id="cookieBanner" class="cookie-banner" role="region" aria-label="Privacy and technical storage notification">
+    <div class="cookie-banner__inner">
+      <div class="cookie-banner__content">
+        <strong>Privacy &amp; Local Storage:</strong> We use strictly necessary browser storage to remember your privacy and accessibility settings. We do not use advertising, tracking, or cross-site profiling cookies. Details are in our <a href="cookies.html">Cookie Policy</a> and <a href="privacy.html">Privacy Policy</a>.
+      </div>
+      <div class="cookie-banner__actions">
+        <button id="acceptCookiesBtn" type="button" class="cookie-btn cookie-btn--primary">Accept Necessary</button>
+        <button id="openCookieModalBtn" type="button" class="cookie-btn cookie-btn--secondary">Storage Details</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Cookie Settings Modal -->
+  <div id="cookieModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <h2 id="modalTitle" class="modal-title">Browser Storage Preferences</h2>
+      <p class="modal-desc">Review the client-side storage mechanisms used on this website.</p>
+
+      <div class="storage-tier">
+        <div class="storage-tier__header">
+          <span class="storage-tier__title">Strictly Necessary Storage</span>
+          <span class="storage-tier__badge">Always Active</span>
+        </div>
+        <p class="storage-tier__desc">Used solely to remember your consent preference and motion settings (e.g. <code>qenlo_consent_preference</code>). Exempt from consent under ePrivacy Directive Art. 5(3).</p>
+      </div>
+
+      <div class="storage-tier">
+        <div class="storage-tier__header">
+          <span class="storage-tier__title">Analytics &amp; Performance</span>
+          <span class="storage-tier__badge storage-tier__badge--disabled">None Present</span>
+        </div>
+        <p class="storage-tier__desc">We do not deploy Google Analytics, telemetry beacons, or third-party performance trackers on this website.</p>
+      </div>
+
+      <div class="storage-tier">
+        <div class="storage-tier__header">
+          <span class="storage-tier__title">Marketing &amp; Advertising</span>
+          <span class="storage-tier__badge storage-tier__badge--disabled">None Present</span>
+        </div>
+        <p class="storage-tier__desc">We do not use advertising networks, tracking pixels, or cross-site profiling tools.</p>
+      </div>
+
+      <div class="modal-actions">
+        <button id="closeCookieModalBtn" type="button" class="cookie-btn cookie-btn--primary">Save &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dot Matrix Font Glyph definitions
+    const g={"0":["01110","10001","10011","10101","11001","10001","01110"],"1":["010","110","010","010","010","010","111"],"5":["11111","10000","10000","11110","00001","00001","11110"],"6":["01110","10000","10000","11110","10001","10001","01110"],"7":["11111","00001","00010","00100","01000","01000","01000"],".":["0","0","0","0","0","0","1"],E:["11111","10000","10000","11110","10000","10000","11111"],x:["00000","00000","10001","01010","00100","01010","10001"],a:["00000","00000","01110","00001","01111","10001","01111"],c:["00000","00000","01111","10000","10000","10000","01111"],t:["010","010","111","010","010","010","001"]};
+    
+    document.querySelectorAll('[data-dots]').forEach(e => {
+      let x = 0, s = '', p = e.classList.contains('dot-word') ? 4 : 5, r = e.classList.contains('dot-word') ? 1.8 : e.closest('.metric--context') ? 2.32 : 1.55;
+      [...e.dataset.dots].forEach(ch => {
+        let rows = g[ch] || g["0"];
+        rows.forEach((row, y) => [...row].forEach((v, col) => {
+          if (v === '1') s += `<circle cx="${x + col * p + 1.55}" cy="${y * 4 + 1.55}" r="${r}"/>`;
+        }));
+        x += rows[0].length * p + 1;
+      });
+      // Retain screen reader fallback
+      const srText = e.dataset.dots;
+      e.innerHTML = `<svg class="dot-svg" viewBox="0 0 ${x} 28" fill="currentColor" aria-hidden="true">${s}</svg><span class="sr-only">${srText}</span>`;
+    });
+
+    // Gauge ticks
+    const ticks = document.querySelector('#gaugeTicks');
+    if (ticks) {
+      for (let i = 0; i <= 22; i++) {
+        let a = (190 + i * 5) * Math.PI / 180, o = 142, n = i % 5 ? 133 : 129, l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        for (const [k, v] of Object.entries({
+          x1: 163 + Math.cos(a) * n,
+          y1: 163 + Math.sin(a) * n,
+          x2: 163 + Math.cos(a) * o,
+          y2: 163 + Math.sin(a) * o,
+          stroke: 'rgba(255,188,210,.34)'
+        })) l.setAttribute(k, v);
+        ticks.append(l);
+      }
+    }
+
+    // Motion & Accessibility controls (WCAG 2.2.2 Pause, Stop, Hide)
+    const motionBtn = document.getElementById('motionToggle');
+    const motionIcon = document.getElementById('motionToggleIcon');
+    const motionText = document.getElementById('motionToggleText');
+    const allVideos = document.querySelectorAll('video');
+    const mediaReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let isMotionPaused = localStorage.getItem('qenlo_reduced_motion') === 'true' || mediaReduced;
+
+    function applyMotionState(paused) {
+      isMotionPaused = paused;
+      localStorage.setItem('qenlo_reduced_motion', paused ? 'true' : 'false');
+      motionBtn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+      if (paused) {
+        allVideos.forEach(v => { try { v.pause(); } catch(e){} });
+        motionIcon.textContent = '▶';
+        motionText.textContent = 'Play Motion';
+      } else {
+        allVideos.forEach(v => { try { v.play(); } catch(e){} });
+        motionIcon.textContent = '⏸';
+        motionText.textContent = 'Pause Motion';
+      }
+    }
+
+    motionBtn.addEventListener('click', () => {
+      applyMotionState(!isMotionPaused);
+    });
+
+    if (isMotionPaused) {
+      applyMotionState(true);
+      clearTimeout(window.__entranceFailsafe);
+      document.documentElement.classList.remove('entrance-active');
+    } else {
+      const target = matchMedia('(max-width:767px)').matches ? document.querySelector('.card--speed .learn-more') : document.querySelector('.card--connections .learn-more');
+      if (target) {
+        target.addEventListener('animationend', () => {
+          clearTimeout(window.__entranceFailsafe);
+          document.documentElement.classList.remove('entrance-active');
+        }, { once: true });
+      }
+    }
+
+    // Cookie Banner & Modal Logic
+    const cookieBanner = document.getElementById('cookieBanner');
+    const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
+    const openCookieModalBtn = document.getElementById('openCookieModalBtn');
+    const closeCookieModalBtn = document.getElementById('closeCookieModalBtn');
+    const cookieModal = document.getElementById('cookieModal');
+
+    if (!localStorage.getItem('qenlo_consent_preference')) {
+      cookieBanner.classList.add('cookie-banner--visible');
+    }
+
+    acceptCookiesBtn.addEventListener('click', () => {
+      localStorage.setItem('qenlo_consent_preference', 'necessary_accepted');
+      cookieBanner.classList.remove('cookie-banner--visible');
+    });
+
+    openCookieModalBtn.addEventListener('click', () => {
+      cookieModal.classList.add('modal-backdrop--open');
+      cookieModal.setAttribute('aria-hidden', 'false');
+      closeCookieModalBtn.focus();
+    });
+
+    closeCookieModalBtn.addEventListener('click', () => {
+      cookieModal.classList.remove('modal-backdrop--open');
+      cookieModal.setAttribute('aria-hidden', 'true');
+      localStorage.setItem('qenlo_consent_preference', 'necessary_accepted');
+      cookieBanner.classList.remove('cookie-banner--visible');
+      openCookieModalBtn.focus();
+    });
+
+    cookieModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        cookieModal.classList.remove('modal-backdrop--open');
+        cookieModal.setAttribute('aria-hidden', 'true');
+        openCookieModalBtn.focus();
+      }
+    });
+
+    // Form Validation & Consent Handling
+    const inquiryForm = document.getElementById('inquiryForm');
+    const userEmail = document.getElementById('userEmail');
+    const userMessage = document.getElementById('userMessage');
+    const privacyConsent = document.getElementById('privacyConsent');
+    const emailError = document.getElementById('emailError');
+    const messageError = document.getElementById('messageError');
+    const consentError = document.getElementById('consentError');
+    const formSuccess = document.getElementById('formSuccess');
+
+    inquiryForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let isValid = true;
+      emailError.textContent = '';
+      messageError.textContent = '';
+      consentError.textContent = '';
+
+      // Validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!userEmail.value.trim()) {
+        emailError.textContent = 'Please enter your email address.';
+        isValid = false;
+      } else if (!emailRegex.test(userEmail.value.trim())) {
+        emailError.textContent = 'Please enter a valid email address.';
+        isValid = false;
+      }
+
+      // Validate message
+      if (!userMessage.value.trim()) {
+        messageError.textContent = 'Please enter your inquiry message.';
+        isValid = false;
+      }
+
+      // Validate consent (GDPR Art. 7)
+      if (!privacyConsent.checked) {
+        consentError.textContent = 'You must consent to the processing of your contact details to submit this form.';
+        isValid = false;
+      }
+
+      if (isValid) {
+        formSuccess.textContent = 'Thank you! Your inquiry has been received. We will respond to your email shortly.';
+        formSuccess.classList.add('form-success--active');
+        inquiryForm.reset();
+        setTimeout(() => {
+          formSuccess.classList.remove('form-success--active');
+        }, 8000);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Terms and Conditions for Qenlo — Software licensing, research alpha disclaimers, benchmark limitations, and liability terms.">
+  <title>Terms and Conditions — Qenlo</title>
+  <link rel="icon" href="assets/brand/logo/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/brand/tokens.css">
+  <style>
+    :root {
+      --max-w: 860px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: var(--qenlo-color-background, #F7F5F0);
+      color: var(--qenlo-color-text, #1D2320);
+      font-family: var(--qenlo-font-family-sans, 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      font-size: 16px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      padding: 0;
+    }
+    a {
+      color: var(--qenlo-color-accent, #B53C2F);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    a:hover {
+      color: #8E2B20;
+    }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid var(--qenlo-color-focus, #B53C2F);
+      outline-offset: 3px;
+    }
+    .skip-link {
+      position: absolute;
+      top: -60px;
+      left: 16px;
+      background: #1D2320;
+      color: #FFFFFF;
+      padding: 10px 16px;
+      z-index: 1000;
+      font-weight: 600;
+      border-radius: 4px;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 16px;
+    }
+    .site-nav {
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+      background: var(--qenlo-color-surface, #EFECE6);
+      padding: 14px 24px;
+    }
+    .site-nav__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .site-nav__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .site-nav__brand img {
+      width: 26px;
+      height: 26px;
+    }
+    .site-nav__links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-size: 0.92rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .site-nav__links a {
+      text-decoration: none;
+      color: var(--qenlo-color-text, #1D2320);
+      font-weight: 500;
+    }
+    .site-nav__links a:hover {
+      color: var(--qenlo-color-accent, #B53C2F);
+    }
+    .legal-container {
+      max-width: var(--max-w);
+      margin: 48px auto;
+      padding: 0 24px 64px;
+    }
+    .legal-header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+    }
+    .legal-badge {
+      display: inline-block;
+      font-family: var(--qenlo-font-family-mono, monospace);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      background: var(--qenlo-color-surface-raised, #E6E2DA);
+      border: 1px solid var(--qenlo-color-border, #D8D3C8);
+      border-radius: 4px;
+      margin-bottom: 14px;
+      color: var(--qenlo-color-muted-text, #5A615D);
+    }
+    h1 {
+      font-size: clamp(2rem, 4vw, 2.7rem);
+      line-height: 1.2;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+    }
+    .legal-meta {
+      color: var(--qenlo-color-muted-text, #5A615D);
+      font-size: 0.95rem;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+      padding-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    h3 {
+      font-size: 1.15rem;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    p, ul, ol {
+      margin-top: 0;
+      margin-bottom: 18px;
+    }
+    ul, ol {
+      padding-left: 24px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    .warning-box {
+      background: #FFF5F3;
+      border: 1px solid #F0C4BD;
+      border-left: 4px solid var(--qenlo-color-accent, #B53C2F);
+      padding: 16px 20px;
+      margin: 24px 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .warning-box p:last-child { margin-bottom: 0; }
+    .legal-footer {
+      border-top: 1px solid var(--qenlo-color-border, #D8D3C8);
+      background: var(--qenlo-color-surface, #EFECE6);
+      padding: 32px 24px;
+      font-size: 0.9rem;
+      color: var(--qenlo-color-muted-text, #5A615D);
+    }
+    .legal-footer__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .legal-footer__links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-nav">
+    <div class="site-nav__inner">
+      <a href="./" class="site-nav__brand" aria-label="Qenlo Home">
+        <img src="assets/brand/logo/mark.svg" alt="" aria-hidden="true" width="26" height="26">
+        <span>Qenlo</span>
+      </a>
+      <nav aria-label="Site Navigation">
+        <ul class="site-nav__links">
+          <li><a href="./">Home</a></li>
+          <li><a href="docs/#/quickstart">Documentation</a></li>
+          <li><a href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="./#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="legal-container">
+    <header class="legal-header">
+      <span class="legal-badge">Legal Terms</span>
+      <h1>Terms and Conditions</h1>
+      <div class="legal-meta">
+        <strong>Effective Date:</strong> September 13, 2026 &bull; <strong>Last Updated:</strong> September 13, 2026
+      </div>
+    </header>
+
+    <div class="warning-box">
+      <p><strong>IMPORTANT LEGAL NOTICE — RESEARCH ALPHA SOFTWARE:</strong> Qenlo is an early research-grade alpha software project under active development. It is provided "AS IS" without warranties of any kind. You assume all risk regarding durability, data integrity, hardware suitability, and search correctness for your specific deployment.</p>
+    </div>
+
+    <h2>1. Agreement to Terms</h2>
+    <p>These Terms and Conditions ("Terms") constitute a legally binding agreement between you (whether individually or on behalf of an entity, "User", "you") and the Qenlo Project and its maintainer, Akshat Singh Kushwaha ("we", "us", "our"). By accessing or using this website (<code>a3ro-dev.github.io/qenlo</code>), downloading, compiling, integrating, or evaluating the Qenlo software repository or its associated packages, you acknowledge that you have read, understood, and agreed to be bound by these Terms.</p>
+    <p>If you do not agree with these Terms, you must immediately cease accessing this website and refrain from using Qenlo software.</p>
+
+    <h2>2. Open Source Licensing &amp; Proprietary Rights</h2>
+    <h3>A. Source Code License</h3>
+    <p>The core Qenlo software code, crates, tools, test suites, and documentation sources hosted in the repository are licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer">Apache License, Version 2.0</a>. Your rights to inspect, reproduce, modify, and distribute the software source code are governed by the Apache 2.0 license terms contained in the project's <a href="https://github.com/a3ro-dev/qenlo/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">LICENSE</a> file.</p>
+
+    <h3>B. Trademarks, Branding, and Distinctive Assets</h3>
+    <p>While the underlying code is open source, the name "Qenlo", the Qenlo hexagonal terminal emblem, brand icons, logo files, and the distinctive visual design of this website are protected under trademark and copyright laws. No trademark license is granted under Apache 2.0. You may not use the Qenlo mark or logos in a manner that falsely implies official endorsement, sponsorship, or association without prior written consent.</p>
+
+    <h2>3. Disclaimer of Warranties ("AS IS")</h2>
+    <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE QENLO SOFTWARE, THIS WEBSITE, ASSOCIATED DOCUMENTATION, AND BENCHMARK RESULTS ARE PROVIDED ON AN <strong>"AS IS"</strong> AND <strong>"AS AVAILABLE"</strong> BASIS, WITH ALL FAULTS AND DEFECTS.</p>
+    <p>THE MAINTAINERS AND CONTRIBUTORS EXPRESSLY DISCLAIM ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING WITHOUT LIMITATION:</p>
+    <ul>
+      <li>IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT;</li>
+      <li>WARRANTIES ARISING FROM COURSE OF DEALING, USAGE, OR TRADE PRACTICE;</li>
+      <li>WARRANTIES THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS, ACHIEVE INTENDED RESULTS, BE COMPATIBLE WITH ANY SPECIFIC ACCELERATOR HARDWARE, RUN WITHOUT INTERRUPTION, OR BE ERROR-FREE;</li>
+      <li>WARRANTIES THAT STORED DATA OR EMBEDDINGS WILL NOT BE SUBJECT TO UNINTENDED DELETION, CORRUPTION, OR LOSS.</li>
+    </ul>
+
+    <h2>4. Performance Benchmarks &amp; Reproducibility Limitations</h2>
+    <p>Benchmark data, latency timings (e.g., P95 metrics on RTX A6000 hardware), recall figures, and throughput measurements published on this website or in the documentation reflect specific, isolated experimental runs conducted on particular test fixtures, compilers, and hardware under strictly documented conditions (as recorded in <a href="docs/#/reports/2026-09-02-strict-topk-research-gate">benchmark reports</a>).</p>
+    <p>These benchmark observations are provided for scientific reproducibility and engineering research only. They do <strong>not</strong> constitute universal performance guarantees or production warranties. Real-world vector retrieval performance varies significantly depending on memory bandwidth, hardware topology, dataset dimensions, CPU SIMD vector extensions, OS scheduling, and host application architecture.</p>
+
+    <h2>5. Security Boundaries and User Responsibilities</h2>
+    <p>As documented in our <a href="https://github.com/a3ro-dev/qenlo/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security Policy</a>:</p>
+    <ul>
+      <li>Qenlo assumes execution in a trusted local environment with restricted operating system permissions. It does not establish a security boundary between untrusted tenants or hostile processes.</li>
+      <li>Vectors and metadata stored on disk are unencrypted by default; secure storage and cryptographic access control remain the sole responsibility of the host application.</li>
+      <li>CRC32 checksums detect accidental bit rot, but do not provide cryptographic signatures or defenses against hostile local actors with directory write access.</li>
+    </ul>
+
+    <h2>6. Limitation of Liability</h2>
+    <p>TO THE FULLEST EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE QENLO PROJECT, ITS MAINTAINER (AKSHAT SINGH KUSHWAHA), AUTHORS, OR CONTRIBUTORS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE, OR CONSEQUENTIAL DAMAGES WHATSOEVER, INCLUDING BUT NOT LIMITED TO:</p>
+    <ul>
+      <li>LOSS OF PROFITS, REVENUE, DATA, EMBEDDINGS, OR GOODWILL;</li>
+      <li>BUSINESS INTERRUPTION, WORK STOPPAGE, OR COMPUTER FAILURE;</li>
+      <li>COST OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</li>
+      <li>DATA BREACHES OR SECURITY FAILURES OCCURRING ON HOST SYSTEMS.</li>
+    </ul>
+    <p>IN ANY CASE, OUR ENTIRE AGGREGATE LIABILITY UNDER ANY PROVISION OF THESE TERMS, WHETHER IN CONTRACT, TORT (INCLUDING NEGLIGENCE), OR OTHERWISE, SHALL BE STRICTLY LIMITED TO THE GREATER OF ONE HUNDRED UNITED STATES DOLLARS ($100.00 USD) OR THE ACTUAL MONETARY AMOUNT (IF ANY) PAID BY YOU DIRECTLY TO THE MAINTAINER IN CONNECTION WITH QENLO IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.</p>
+
+    <h2>7. Acceptable Use of Website and Infrastructure</h2>
+    <p>You agree not to misuse this website or attempt to undermine its availability. Specifically, you agree not to:</p>
+    <ul>
+      <li>Engage in automated scraping or rate-limiting abuse that impairs site performance for other users;</li>
+      <li>Attempt unauthorized penetration testing, vulnerability scanning, or disruption of our GitHub Pages or CloudFront hosting infrastructure;</li>
+      <li>Transmit malicious code, viruses, or destructive content through form submissions or issues;</li>
+      <li>Misrepresent yourself as an authorized agent, employee, or official representative of Qenlo.</li>
+    </ul>
+
+    <h2>8. Third-Party Links &amp; External References</h2>
+    <p>This website and its documentation may contain links to external third-party repositories, preprints (e.g., arXiv), academic sources, or benchmark corpora (e.g., TopK Bench). We do not control, endorse, or assume responsibility for the accuracy, licensing, or content of third-party websites or services.</p>
+
+    <h2>9. Governing Law and Dispute Resolution</h2>
+    <p>These Terms and any disputes arising out of or related to your use of Qenlo or this website shall be governed by and construed in accordance with the laws of <strong>India</strong>, without regard to conflict of law principles.</p>
+    <p>Prior to initiating formal legal proceedings, the parties agree to engage in good-faith informal dispute resolution by contacting <a href="mailto:contact@qenlo.dev">contact@qenlo.dev</a>. If a dispute cannot be resolved informally within thirty (30) days, the competent courts in the jurisdiction of the maintainer shall have exclusive jurisdiction.</p>
+
+    <h2>10. Severability and Entire Agreement</h2>
+    <p>If any provision of these Terms is determined to be invalid, illegal, or unenforceable by an authority of competent jurisdiction, such provision shall be severed or modified to the minimum extent necessary, and the remaining provisions shall continue in full force and effect. These Terms constitute the entire understanding between you and us regarding the use of this website and supersedes all prior agreements.</p>
+
+    <h2>11. Contact and Legal Notices</h2>
+    <p>All legal inquiries, formal notices, or copyright inquiries concerning these Terms should be directed to:</p>
+    <ul>
+      <li><strong>Legal Inquiries:</strong> <a href="mailto:contact@qenlo.dev">contact@qenlo.dev</a></li>
+      <li><strong>Maintainer Direct:</strong> <a href="mailto:akshatsingh14372@outlook.com">akshatsingh14372@outlook.com</a></li>
+    </ul>
+  </main>
+
+  <footer class="legal-footer">
+    <div class="legal-footer__inner">
+      <div>
+        &copy; 2026 Qenlo Contributors. Code licensed under <a href="https://github.com/a3ro-dev/qenlo/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Apache 2.0</a>.<br>
+        Maintained by Akshat Singh Kushwaha (<code>a3ro-dev</code>).
+      </div>
+      <div class="legal-footer__links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html"><strong>Terms &amp; Conditions</strong></a>
+        <a href="cookies.html">Cookie Policy</a>
+        <a href="refund.html">Refund Policy</a>
+        <a href="docs/#/quickstart">Docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

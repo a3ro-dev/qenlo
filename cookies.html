@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cookie and Technical Storage Policy for Qenlo — Explaining strictly necessary local storage, zero tracking cookies, and your privacy choices.">
+  <title>Cookie Policy — Qenlo</title>
+  <link rel="icon" href="assets/brand/logo/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/brand/tokens.css">
+  <style>
+    :root {
+      --max-w: 860px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: var(--qenlo-color-background, #F7F5F0);
+      color: var(--qenlo-color-text, #1D2320);
+      font-family: var(--qenlo-font-family-sans, 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      font-size: 16px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      padding: 0;
+    }
+    a {
+      color: var(--qenlo-color-accent, #B53C2F);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    a:hover {
+      color: #8E2B20;
+    }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid var(--qenlo-color-focus, #B53C2F);
+      outline-offset: 3px;
+    }
+    .skip-link {
+      position: absolute;
+      top: -60px;
+      left: 16px;
+      background: #1D2320;
+      color: #FFFFFF;
+      padding: 10px 16px;
+      z-index: 1000;
+      font-weight: 600;
+      border-radius: 4px;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 16px;
+    }
+    .site-nav {
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+      background: var(--qenlo-color-surface, #EFECE6);
+      padding: 14px 24px;
+    }
+    .site-nav__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .site-nav__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .site-nav__brand img {
+      width: 26px;
+      height: 26px;
+    }
+    .site-nav__links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-size: 0.92rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .site-nav__links a {
+      text-decoration: none;
+      color: var(--qenlo-color-text, #1D2320);
+      font-weight: 500;
+    }
+    .site-nav__links a:hover {
+      color: var(--qenlo-color-accent, #B53C2F);
+    }
+    .legal-container {
+      max-width: var(--max-w);
+      margin: 48px auto;
+      padding: 0 24px 64px;
+    }
+    .legal-header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+    }
+    .legal-badge {
+      display: inline-block;
+      font-family: var(--qenlo-font-family-mono, monospace);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      background: var(--qenlo-color-surface-raised, #E6E2DA);
+      border: 1px solid var(--qenlo-color-border, #D8D3C8);
+      border-radius: 4px;
+      margin-bottom: 14px;
+      color: var(--qenlo-color-muted-text, #5A615D);
+    }
+    h1 {
+      font-size: clamp(2rem, 4vw, 2.7rem);
+      line-height: 1.2;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+    }
+    .legal-meta {
+      color: var(--qenlo-color-muted-text, #5A615D);
+      font-size: 0.95rem;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+      padding-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    h3 {
+      font-size: 1.15rem;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    p, ul, ol {
+      margin-top: 0;
+      margin-bottom: 18px;
+    }
+    ul, ol {
+      padding-left: 24px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    .callout {
+      background: var(--qenlo-color-surface, #EFECE6);
+      border-left: 4px solid var(--qenlo-color-accent, #B53C2F);
+      padding: 16px 20px;
+      margin: 24px 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout p:last-child { margin-bottom: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      border: 1px solid var(--qenlo-color-border, #D8D3C8);
+      padding: 10px 14px;
+      text-align: left;
+    }
+    th {
+      background: var(--qenlo-color-surface-raised, #E6E2DA);
+      font-weight: 600;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--qenlo-color-accent, #B53C2F);
+      color: #FFFFFF;
+      border: none;
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      text-decoration: none;
+      margin-top: 8px;
+    }
+    .btn-action:hover {
+      background: #8E2B20;
+      color: #FFFFFF;
+    }
+    .btn-action:focus-visible {
+      outline: 3px solid #1D2320;
+      outline-offset: 3px;
+    }
+    .pref-status {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 0.9rem;
+      font-family: var(--qenlo-font-family-mono, monospace);
+    }
+    .legal-footer {
+      border-top: 1px solid var(--qenlo-color-border, #D8D3C8);
+      background: var(--qenlo-color-surface, #EFECE6);
+      padding: 32px 24px;
+      font-size: 0.9rem;
+      color: var(--qenlo-color-muted-text, #5A615D);
+    }
+    .legal-footer__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .legal-footer__links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-nav">
+    <div class="site-nav__inner">
+      <a href="./" class="site-nav__brand" aria-label="Qenlo Home">
+        <img src="assets/brand/logo/mark.svg" alt="" aria-hidden="true" width="26" height="26">
+        <span>Qenlo</span>
+      </a>
+      <nav aria-label="Site Navigation">
+        <ul class="site-nav__links">
+          <li><a href="./">Home</a></li>
+          <li><a href="docs/#/quickstart">Documentation</a></li>
+          <li><a href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="./#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="legal-container">
+    <header class="legal-header">
+      <span class="legal-badge">Cookie &amp; Storage Disclosure</span>
+      <h1>Cookie Policy</h1>
+      <div class="legal-meta">
+        <strong>Effective Date:</strong> September 13, 2026 &bull; <strong>Last Updated:</strong> September 13, 2026
+      </div>
+    </header>
+
+    <div class="callout">
+      <p><strong>Tracker-Free Commitment:</strong> Qenlo does not use third-party advertising cookies, behavioral tracking pixels, or cross-site profiling tools. We use only strictly necessary local client-side storage to remember your explicit accessibility and privacy preferences.</p>
+    </div>
+
+    <h2>1. What Are Cookies and Local Storage?</h2>
+    <p>A "cookie" is a small text file placed onto your computer or mobile device by a web server when you visit a website. Cookies are typically transmitted back to the origin server with each HTTP request.</p>
+    <p>"Local Storage" (HTML5 <code>localStorage</code>) is a modern web browser technology that allows web applications to store key-value data locally within your browser. Unlike cookies, items stored in local storage are kept on your device and are never automatically transmitted across the network with every web request, significantly enhancing speed and data privacy.</p>
+
+    <h2>2. Do We Need Your Consent for Technical Storage?</h2>
+    <p>Under Article 5(3) of the European Union <strong>ePrivacy Directive (Directive 2002/58/EC as amended by 2009/136/EC)</strong> and national implementing laws across the EU/UK (such as the UK Privacy and Electronic Communications Regulations - PECR):</p>
+    <blockquote>
+      <em>Consent is <strong>not required</strong> for technical storage or access for the sole purpose of carrying out the transmission of a communication over an electronic communications network, or as strictly necessary in order for the provider of an information society service explicitly requested by the subscriber or user to provide the service.</em>
+    </blockquote>
+    <p>Because our website uses only storage strictly necessary to remember your chosen privacy preferences and accessibility toggles, prior opt-in consent is not legally mandated under Article 5(3). However, we maintain this transparent Cookie Policy and provide an interactive preference manager to give you complete visibility and control over your browser storage.</p>
+
+    <h2>3. Inventory of Local Storage Keys</h2>
+    <p>The following table lists all client-side storage items utilized on the Qenlo website:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Key / Identifier</th>
+          <th>Type</th>
+          <th>Category</th>
+          <th>Purpose &amp; Description</th>
+          <th>Lifespan</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>qenlo_consent_preference</code></td>
+          <td>localStorage</td>
+          <td>Strictly Necessary</td>
+          <td>Records whether you have acknowledged the privacy notice so you are not prompted on every visit.</td>
+          <td>Persistent (until cleared)</td>
+        </tr>
+        <tr>
+          <td><code>qenlo_reduced_motion</code></td>
+          <td>localStorage</td>
+          <td>Strictly Necessary / Accessibility</td>
+          <td>Remembers your preference for pausing background video motion across visits.</td>
+          <td>Persistent (until cleared)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>4. Third-Party CDNs &amp; Content Caching</h2>
+    <p>We serve video background assets and vector icons via Amazon Web Services CloudFront. These requests are standard static content fetches. CloudFront edge servers may log standard HTTP protocol requests (IP address and user agent) for server delivery and security, but do not set advertising or tracking cookies on your device.</p>
+    <p>We have also removed external Google Fonts connections from our landing page to prevent unauthorized IP address transfers to third-party servers.</p>
+
+    <h2>5. Interactive Preference Management</h2>
+    <p>You can reset or clear all Qenlo technical preferences from your browser at any time using the button below:</p>
+    
+    <div>
+      <button id="clearStorageBtn" class="btn-action" type="button">
+        Reset Stored Site Preferences
+      </button>
+      <div id="storageStatus" class="pref-status" role="status" aria-live="polite"></div>
+    </div>
+
+    <h2>6. Managing Cookies in Your Browser</h2>
+    <p>Every major web browser permits you to view, manage, and block cookies and local storage. If you prefer to block all local storage or cookies, you can do so through your browser settings:</p>
+    <ul>
+      <li><strong>Google Chrome:</strong> Settings &gt; Privacy and Security &gt; Third-party cookies &gt; See all site data and permissions.</li>
+      <li><strong>Mozilla Firefox:</strong> Settings &gt; Privacy &amp; Security &gt; Cookies and Site Data &gt; Manage Data.</li>
+      <li><strong>Apple Safari:</strong> Preferences &gt; Privacy &gt; Manage Website Data.</li>
+      <li><strong>Microsoft Edge:</strong> Settings &gt; Cookies and site permissions &gt; Manage and delete cookies and site data.</li>
+    </ul>
+    <p>Note: Blocking all technical storage will not break core documentation reading, but may cause the privacy notice banner to re-appear on every page reload.</p>
+
+    <h2>7. Contact and Questions</h2>
+    <p>For questions or feedback regarding our cookie and storage practices, contact:</p>
+    <ul>
+      <li><strong>Email:</strong> <a href="mailto:privacy@qenlo.dev">privacy@qenlo.dev</a></li>
+      <li><strong>Maintainer:</strong> <a href="mailto:akshatsingh14372@outlook.com">akshatsingh14372@outlook.com</a></li>
+    </ul>
+  </main>
+
+  <footer class="legal-footer">
+    <div class="legal-footer__inner">
+      <div>
+        &copy; 2026 Qenlo Contributors. Code licensed under <a href="https://github.com/a3ro-dev/qenlo/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Apache 2.0</a>.<br>
+        Maintained by Akshat Singh Kushwaha (<code>a3ro-dev</code>).
+      </div>
+      <div class="legal-footer__links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms &amp; Conditions</a>
+        <a href="cookies.html"><strong>Cookie Policy</strong></a>
+        <a href="refund.html">Refund Policy</a>
+        <a href="docs/#/quickstart">Docs</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const clearBtn = document.getElementById('clearStorageBtn');
+    const statusEl = document.getElementById('storageStatus');
+    function updateStatus() {
+      const consent = localStorage.getItem('qenlo_consent_preference');
+      const motion = localStorage.getItem('qenlo_reduced_motion');
+      if (!consent && !motion) {
+        statusEl.textContent = 'Current status: No Qenlo preferences stored in your browser.';
+        statusEl.style.color = 'var(--qenlo-color-muted-text, #5A615D)';
+      } else {
+        statusEl.textContent = `Stored keys: consent="${consent || 'none'}", motion="${motion || 'none'}"`;
+        statusEl.style.color = 'var(--qenlo-color-accent, #B53C2F)';
+      }
+    }
+    updateStatus();
+    clearBtn.addEventListener('click', () => {
+      localStorage.removeItem('qenlo_consent_preference');
+      localStorage.removeItem('qenlo_reduced_motion');
+      updateStatus();
+      statusEl.textContent = 'Success: All Qenlo local preferences have been cleared from your browser.';
+      statusEl.style.color = '#28633F';
+    });
+  </script>
+</body>
+</html>

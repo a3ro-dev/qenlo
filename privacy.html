@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Privacy Policy for Qenlo — Local-first vector store architecture and transparent data privacy commitments.">
+  <title>Privacy Policy — Qenlo</title>
+  <link rel="icon" href="assets/brand/logo/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/brand/tokens.css">
+  <style>
+    :root {
+      --max-w: 860px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: var(--qenlo-color-background, #F7F5F0);
+      color: var(--qenlo-color-text, #1D2320);
+      font-family: var(--qenlo-font-family-sans, 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      font-size: 16px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      padding: 0;
+    }
+    a {
+      color: var(--qenlo-color-accent, #B53C2F);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    a:hover {
+      color: #8E2B20;
+    }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid var(--qenlo-color-focus, #B53C2F);
+      outline-offset: 3px;
+    }
+    .skip-link {
+      position: absolute;
+      top: -60px;
+      left: 16px;
+      background: #1D2320;
+      color: #FFFFFF;
+      padding: 10px 16px;
+      z-index: 1000;
+      font-weight: 600;
+      border-radius: 4px;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 16px;
+    }
+    .site-nav {
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+      background: var(--qenlo-color-surface, #EFECE6);
+      padding: 14px 24px;
+    }
+    .site-nav__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .site-nav__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .site-nav__brand img {
+      width: 26px;
+      height: 26px;
+    }
+    .site-nav__links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-size: 0.92rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .site-nav__links a {
+      text-decoration: none;
+      color: var(--qenlo-color-text, #1D2320);
+      font-weight: 500;
+    }
+    .site-nav__links a:hover {
+      color: var(--qenlo-color-accent, #B53C2F);
+    }
+    .legal-container {
+      max-width: var(--max-w);
+      margin: 48px auto;
+      padding: 0 24px 64px;
+    }
+    .legal-header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+    }
+    .legal-badge {
+      display: inline-block;
+      font-family: var(--qenlo-font-family-mono, monospace);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      background: var(--qenlo-color-surface-raised, #E6E2DA);
+      border: 1px solid var(--qenlo-color-border, #D8D3C8);
+      border-radius: 4px;
+      margin-bottom: 14px;
+      color: var(--qenlo-color-muted-text, #5A615D);
+    }
+    h1 {
+      font-size: clamp(2rem, 4vw, 2.7rem);
+      line-height: 1.2;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+    }
+    .legal-meta {
+      color: var(--qenlo-color-muted-text, #5A615D);
+      font-size: 0.95rem;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+      padding-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    h3 {
+      font-size: 1.15rem;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    p, ul, ol {
+      margin-top: 0;
+      margin-bottom: 18px;
+    }
+    ul, ol {
+      padding-left: 24px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    .callout {
+      background: var(--qenlo-color-surface, #EFECE6);
+      border-left: 4px solid var(--qenlo-color-accent, #B53C2F);
+      padding: 16px 20px;
+      margin: 24px 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout p:last-child { margin-bottom: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      border: 1px solid var(--qenlo-color-border, #D8D3C8);
+      padding: 10px 14px;
+      text-align: left;
+    }
+    th {
+      background: var(--qenlo-color-surface-raised, #E6E2DA);
+      font-weight: 600;
+    }
+    .legal-footer {
+      border-top: 1px solid var(--qenlo-color-border, #D8D3C8);
+      background: var(--qenlo-color-surface, #EFECE6);
+      padding: 32px 24px;
+      font-size: 0.9rem;
+      color: var(--qenlo-color-muted-text, #5A615D);
+    }
+    .legal-footer__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .legal-footer__links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-nav">
+    <div class="site-nav__inner">
+      <a href="./" class="site-nav__brand" aria-label="Qenlo Home">
+        <img src="assets/brand/logo/mark.svg" alt="" aria-hidden="true" width="26" height="26">
+        <span>Qenlo</span>
+      </a>
+      <nav aria-label="Site Navigation">
+        <ul class="site-nav__links">
+          <li><a href="./">Home</a></li>
+          <li><a href="docs/#/quickstart">Documentation</a></li>
+          <li><a href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="./#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="legal-container">
+    <header class="legal-header">
+      <span class="legal-badge">Legal Documentation</span>
+      <h1>Privacy Policy</h1>
+      <div class="legal-meta">
+        <strong>Effective Date:</strong> September 13, 2026 &bull; <strong>Last Updated:</strong> September 13, 2026
+      </div>
+    </header>
+
+    <div class="callout">
+      <p><strong>Core Privacy Principle:</strong> Qenlo is a local-first, embedded vector database engine. The core engine and its SDKs run entirely on your local machine or host environment. They make zero automated outbound network requests, collect no telemetry by default, and transmit no vector data or search queries to any remote server.</p>
+    </div>
+
+    <h2>1. Data Controller Identification</h2>
+    <p>This website and the Qenlo open-source project are maintained by <strong>Akshat Singh Kushwaha</strong> (operating under the organization moniker <strong>a3ro-dev</strong>). For any inquiries, concerns, or requests regarding this Privacy Policy or our data practices, contact us at:</p>
+    <ul>
+      <li><strong>Official Privacy Email:</strong> <a href="mailto:privacy@qenlo.dev">privacy@qenlo.dev</a></li>
+      <li><strong>Maintainer Direct Email:</strong> <a href="mailto:akshatsingh14372@outlook.com">akshatsingh14372@outlook.com</a></li>
+      <li><strong>Security Contact:</strong> <a href="mailto:security@qenlo.dev">security@qenlo.dev</a> (see <a href="https://github.com/a3ro-dev/qenlo/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">SECURITY.md</a>)</li>
+      <li><strong>Repository:</strong> <a href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noopener noreferrer">https://github.com/a3ro-dev/qenlo</a></li>
+    </ul>
+
+    <h2>2. Scope of this Policy</h2>
+    <p>This Privacy Policy applies to the public website hosted at <code>a3ro-dev.github.io/qenlo</code> (including documentation pages and landing assets) and direct communications with the project maintainers. It explains how we collect, process, and safeguard information in compliance with:</p>
+    <ul>
+      <li><strong>EU &amp; UK General Data Protection Regulation (GDPR)</strong></li>
+      <li><strong>EU ePrivacy Directive (Directive 2002/58/EC as amended)</strong></li>
+      <li><strong>California Consumer Privacy Act (CCPA) / California Privacy Rights Act (CPRA)</strong></li>
+      <li><strong>India Digital Personal Data Protection Act, 2023 (DPDP Act)</strong></li>
+      <li><strong>California Online Privacy Protection Act (CalOPPA)</strong></li>
+    </ul>
+
+    <h2>3. Information We Collect and Process</h2>
+
+    <h3>A. Core Software &amp; SDKs (Local-First Guarantee)</h3>
+    <p>When you download, compile, or embed Qenlo (e.g., via Cargo, npm, PyPI, or local builds), Qenlo operates strictly locally. It does not install background telemetry daemons, does not report installation events, does not track feature usage, and transmits zero user data. Any telemetry capability (such as OpenTelemetry OTLP tracing for benchmarks) is strictly opt-in and controlled by the host application.</p>
+
+    <h3>B. Website Infrastructure &amp; Technical Server Logs</h3>
+    <p>When accessing this website, our hosting infrastructure provider (<a href="https://pages.github.com/" target="_blank" rel="noopener noreferrer">GitHub Pages</a> operated by GitHub Inc. / Microsoft Corporation) and our content delivery network (<a href="https://aws.amazon.com/cloudfront/" target="_blank" rel="noopener noreferrer">Amazon Web Services CloudFront</a>) automatically log standard HTTP protocol requests. These logs may contain:</p>
+    <ul>
+      <li>Internet Protocol (IP) address;</li>
+      <li>Date, time, and timezone of the request;</li>
+      <li>Uniform Resource Identifier (URI) requested;</li>
+      <li>HTTP status response code and bytes transferred;</li>
+      <li>User-Agent string (browser type, version, and operating system);</li>
+      <li>Referring webpage URL.</li>
+    </ul>
+    <p><strong>Legal Basis:</strong> Processing this server data is justified under GDPR Article 6(1)(f) (Legitimate Interests) to maintain network security, mitigate Distributed Denial of Service (DDoS) attacks, ensure server stability, and deliver requested content.</p>
+
+    <h3>C. Direct Inquiries and Form Submissions</h3>
+    <p>If you submit an inquiry through our contact form or email us directly, we collect only the information strictly necessary to process your request:</p>
+    <ul>
+      <li>Your name or alias;</li>
+      <li>Your business or personal email address;</li>
+      <li>The subject and content of your message.</li>
+    </ul>
+    <p><strong>Legal Basis:</strong> Processing is based on your explicit, affirmative consent pursuant to GDPR Article 6(1)(a) and Section 6 of the Indian DPDP Act 2023. We do not use your contact information for unsolicited commercial marketing or newsletters without separate, prior opt-in consent.</p>
+
+    <h2>4. What We Do NOT Collect</h2>
+    <ul>
+      <li><strong>No Advertising or Tracking Cookies:</strong> We do not deploy third-party advertising networks, behavioral tracking cookies, cross-site trackers, or browser fingerprinting scripts.</li>
+      <li><strong>No Analytics Pixels:</strong> We do not load Google Analytics, Meta Pixel, Hotjar, or similar invasive behavioral tracking scripts.</li>
+      <li><strong>No Sale or Sharing of Personal Data:</strong> We have not sold, rented, or shared personal information for monetary or other valuable consideration in the preceding 12 months, and we will never do so (CCPA/CPRA § 1798.120).</li>
+      <li><strong>No Sensitive Personal Data:</strong> We do not collect racial/ethnic origin, religious beliefs, biometric data, genetic data, health data, or financial account details.</li>
+    </ul>
+
+    <h2>5. Third-Party Subprocessors and Embeds</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Provider</th>
+          <th>Purpose</th>
+          <th>Location / Transfer Mechanism</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>GitHub, Inc. (Microsoft)</strong></td>
+          <td>Website static file hosting (GitHub Pages) and Git version control repository</td>
+          <td>United States &bull; Standard Contractual Clauses (SCCs) / Data Privacy Framework</td>
+        </tr>
+        <tr>
+          <td><strong>Amazon Web Services (AWS CloudFront)</strong></td>
+          <td>Global content delivery and asset caching for project media</td>
+          <td>Global Edge Locations &bull; AWS Data Processing Addendum / SCCs</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>6. Cookies and Local Storage</h2>
+    <p>This website employs only <strong>strictly necessary technical storage</strong> (via browser <code>localStorage</code>) required to operate the user interface:</p>
+    <ul>
+      <li><code>qenlo_consent_preference</code>: Records whether you have dismissed or set preferences on the cookie notice so the banner does not re-appear on every page navigation.</li>
+      <li><code>qenlo_reduced_motion</code>: Stores your preference for video animation playback.</li>
+    </ul>
+    <p>Because these storage items are strictly necessary to deliver services explicitly requested by you, they are exempt from consent requirements under Article 5(3) of the EU ePrivacy Directive. For further information, see our dedicated <a href="cookies.html">Cookie Policy</a>.</p>
+
+    <h2>7. Data Subject Rights</h2>
+    <p>Depending on your geographic jurisdiction, you have statutory rights concerning your personal data:</p>
+
+    <h3>A. Rights under the GDPR (European Economic Area &amp; UK)</h3>
+    <ul>
+      <li><strong>Right of Access (Art. 15):</strong> Request confirmation and a copy of any personal data we hold about you.</li>
+      <li><strong>Right to Rectification (Art. 16):</strong> Request correction of inaccurate or incomplete personal data.</li>
+      <li><strong>Right to Erasure (Art. 17):</strong> Request deletion of your personal data ("Right to be Forgotten").</li>
+      <li><strong>Right to Restriction of Processing (Art. 18):</strong> Request temporary or permanent limitation of data processing.</li>
+      <li><strong>Right to Data Portability (Art. 20):</strong> Request transmission of your data in a structured, machine-readable format.</li>
+      <li><strong>Right to Object (Art. 21):</strong> Object to processing based on legitimate interests.</li>
+      <li><strong>Right to Withdraw Consent:</strong> Withdraw previously granted consent at any time with future effect.</li>
+      <li><strong>Right to Lodge a Complaint:</strong> Lodge a complaint with your national Data Protection Supervisory Authority (e.g., CNIL in France, BfDI in Germany, ICO in the UK).</li>
+    </ul>
+
+    <h3>B. Rights under California Law (CCPA / CPRA)</h3>
+    <ul>
+      <li><strong>Right to Know / Access:</strong> Request disclosure of personal information categories collected, sources, and business purposes.</li>
+      <li><strong>Right to Delete:</strong> Request deletion of personal information collected from you.</li>
+      <li><strong>Right to Correct:</strong> Request correction of inaccurate personal information.</li>
+      <li><strong>Right to Opt-Out of Sale / Sharing:</strong> We do not sell or share personal information.</li>
+      <li><strong>Right to Non-Discrimination:</strong> You will never receive discriminatory treatment, altered service quality, or penalties for exercising CCPA rights.</li>
+    </ul>
+
+    <h3>C. Rights under the Indian DPDP Act, 2023</h3>
+    <p>Data Principals have the right to obtain a summary of personal data processed, request correction or erasure, nominate another individual in the event of death or incapacity, and access grievance redressal mechanisms.</p>
+
+    <h2>8. How to Exercise Your Rights</h2>
+    <p>To exercise any statutory privacy rights, email your request to <a href="mailto:privacy@qenlo.dev">privacy@qenlo.dev</a> or <a href="mailto:akshatsingh14372@outlook.com">akshatsingh14372@outlook.com</a>. We will acknowledge your request within 48 hours and provide a full substantive response free of charge within thirty (30) calendar days (or within statutory timelines applicable to your jurisdiction).</p>
+
+    <h2>9. Data Retention and Security</h2>
+    <p>We retain submitted communication data only as long as necessary to fulfill the specific purpose of the inquiry or to satisfy statutory record-keeping obligations. Server logs maintained by hosting providers are automatically purged or rotated on standard rolling schedules (typically 30 to 90 days). We implement reasonable organizational and technical safeguards, including HTTPS TLS 1.3 encryption in transit, strict repository access controls, and minimization of retained data.</p>
+
+    <h2>10. Children's Privacy</h2>
+    <p>This website and the Qenlo software are intended for software engineers, researchers, and professional developers. We do not knowingly solicit or collect personal information from children under 16 years of age (or the applicable age of digital consent in your jurisdiction). If you believe a minor has provided us with personal information, please contact us immediately for prompt deletion.</p>
+
+    <h2>11. International Transfers</h2>
+    <p>Website hosting servers and CDN edge nodes are located globally, including in the United States. If you access this website from outside the United States, your connection data may be transferred internationally under applicable Standard Contractual Clauses (SCCs) and adequacy decisions.</p>
+
+    <h2>12. Changes to this Privacy Policy</h2>
+    <p>We may periodically update this Privacy Policy to reflect software evolution or legal requirements. Material changes will be marked with a revised "Last Updated" date at the top of this document. We encourage users to review this page periodically.</p>
+  </main>
+
+  <footer class="legal-footer">
+    <div class="legal-footer__inner">
+      <div>
+        &copy; 2026 Qenlo Contributors. Code licensed under <a href="https://github.com/a3ro-dev/qenlo/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Apache 2.0</a>.<br>
+        Maintained by Akshat Singh Kushwaha (<code>a3ro-dev</code>).
+      </div>
+      <div class="legal-footer__links">
+        <a href="privacy.html"><strong>Privacy Policy</strong></a>
+        <a href="terms.html">Terms &amp; Conditions</a>
+        <a href="cookies.html">Cookie Policy</a>
+        <a href="refund.html">Refund Policy</a>
+        <a href="docs/#/quickstart">Docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Refund and Cancellation Policy for Qenlo — Open source free tier terms and commercial services refund provisions.">
+  <title>Refund Policy — Qenlo</title>
+  <link rel="icon" href="assets/brand/logo/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/brand/tokens.css">
+  <style>
+    :root {
+      --max-w: 860px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: var(--qenlo-color-background, #F7F5F0);
+      color: var(--qenlo-color-text, #1D2320);
+      font-family: var(--qenlo-font-family-sans, 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      font-size: 16px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      padding: 0;
+    }
+    a {
+      color: var(--qenlo-color-accent, #B53C2F);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    a:hover {
+      color: #8E2B20;
+    }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid var(--qenlo-color-focus, #B53C2F);
+      outline-offset: 3px;
+    }
+    .skip-link {
+      position: absolute;
+      top: -60px;
+      left: 16px;
+      background: #1D2320;
+      color: #FFFFFF;
+      padding: 10px 16px;
+      z-index: 1000;
+      font-weight: 600;
+      border-radius: 4px;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 16px;
+    }
+    .site-nav {
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+      background: var(--qenlo-color-surface, #EFECE6);
+      padding: 14px 24px;
+    }
+    .site-nav__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .site-nav__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .site-nav__brand img {
+      width: 26px;
+      height: 26px;
+    }
+    .site-nav__links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-size: 0.92rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .site-nav__links a {
+      text-decoration: none;
+      color: var(--qenlo-color-text, #1D2320);
+      font-weight: 500;
+    }
+    .site-nav__links a:hover {
+      color: var(--qenlo-color-accent, #B53C2F);
+    }
+    .legal-container {
+      max-width: var(--max-w);
+      margin: 48px auto;
+      padding: 0 24px 64px;
+    }
+    .legal-header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+    }
+    .legal-badge {
+      display: inline-block;
+      font-family: var(--qenlo-font-family-mono, monospace);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      background: var(--qenlo-color-surface-raised, #E6E2DA);
+      border: 1px solid var(--qenlo-color-border, #D8D3C8);
+      border-radius: 4px;
+      margin-bottom: 14px;
+      color: var(--qenlo-color-muted-text, #5A615D);
+    }
+    h1 {
+      font-size: clamp(2rem, 4vw, 2.7rem);
+      line-height: 1.2;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+    }
+    .legal-meta {
+      color: var(--qenlo-color-muted-text, #5A615D);
+      font-size: 0.95rem;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--qenlo-color-border, #D8D3C8);
+      padding-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    h3 {
+      font-size: 1.15rem;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    p, ul, ol {
+      margin-top: 0;
+      margin-bottom: 18px;
+    }
+    ul, ol {
+      padding-left: 24px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    .callout {
+      background: var(--qenlo-color-surface, #EFECE6);
+      border-left: 4px solid var(--qenlo-color-accent, #B53C2F);
+      padding: 16px 20px;
+      margin: 24px 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout p:last-child { margin-bottom: 0; }
+    .legal-footer {
+      border-top: 1px solid var(--qenlo-color-border, #D8D3C8);
+      background: var(--qenlo-color-surface, #EFECE6);
+      padding: 32px 24px;
+      font-size: 0.9rem;
+      color: var(--qenlo-color-muted-text, #5A615D);
+    }
+    .legal-footer__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .legal-footer__links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-nav">
+    <div class="site-nav__inner">
+      <a href="./" class="site-nav__brand" aria-label="Qenlo Home">
+        <img src="assets/brand/logo/mark.svg" alt="" aria-hidden="true" width="26" height="26">
+        <span>Qenlo</span>
+      </a>
+      <nav aria-label="Site Navigation">
+        <ul class="site-nav__links">
+          <li><a href="./">Home</a></li>
+          <li><a href="docs/#/quickstart">Documentation</a></li>
+          <li><a href="https://github.com/a3ro-dev/qenlo" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="./#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="legal-container">
+    <header class="legal-header">
+      <span class="legal-badge">Consumer Protection &amp; Billing</span>
+      <h1>Refund Policy</h1>
+      <div class="legal-meta">
+        <strong>Effective Date:</strong> September 13, 2026 &bull; <strong>Last Updated:</strong> September 13, 2026
+      </div>
+    </header>
+
+    <div class="callout">
+      <p><strong>Open Source Status:</strong> The core Qenlo software, crates, SDKs, and documentation are free and open-source software licensed under Apache 2.0. There are no fees, subscriptions, or hidden charges required to download, inspect, or use the open-source repository.</p>
+    </div>
+
+    <h2>1. Free &amp; Open-Source Software</h2>
+    <p>Because the open-source Qenlo library is distributed free of charge, refunds do not apply to open-source code downloads, Git repository clones, or package manager installations (e.g., via Cargo, npm, or PyPI). You will never be charged for accessing public releases of Qenlo.</p>
+
+    <h2>2. Commercial Services and Custom Contracts</h2>
+    <p>If you or your organization enter into a separate, written commercial agreement with the maintainer (Akshat Singh Kushwaha) or authorized affiliates—including priority enterprise support, dedicated benchmarking engagements, architectural consulting, or custom dual-licensing—the terms of that specific written agreement, augmented by this Policy, govern all billing and refunds.</p>
+
+    <h2>3. 14-Day Statutory Right of Withdrawal (EU / UK Consumers)</h2>
+    <p>In accordance with the <strong>European Union Consumer Rights Directive (Directive 2011/83/EU)</strong> and the UK Consumer Contracts Regulations 2013, consumers located in the European Union or the United Kingdom have the statutory right to withdraw from a purchase of digital services within fourteen (14) calendar days from the date of purchase without providing any justification.</p>
+    <p><strong>Exceptions to the Right of Withdrawal:</strong> Under statutory consumer law, the right of withdrawal ceases if:</p>
+    <ul>
+      <li>The provision of customized consulting or professional engineering services has begun with your explicit prior consent and your acknowledgment that you lose your right of withdrawal once the contract has been fully performed; or</li>
+      <li>Customized software artifacts or confidential benchmark analyses tailored to your proprietary specifications have already been delivered.</li>
+    </ul>
+
+    <h2>4. Refund Eligibility for Paid Engagements</h2>
+    <h3>A. Consulting &amp; Engineering Engagements</h3>
+    <ul>
+      <li><strong>Advance Cancellation:</strong> If you cancel a scheduled consulting session or advisory service at least 48 hours before the scheduled start time, you are entitled to a 100% refund of the pre-paid service fee.</li>
+      <li><strong>Partial Delivery:</strong> If an ongoing engagement is terminated early by mutual agreement, fees will be prorated based on hours or milestones verified, with any unearned balance refunded.</li>
+    </ul>
+
+    <h3>B. Billing Errors &amp; Duplicate Charges</h3>
+    <p>If you believe you have been erroneously charged or experienced duplicate invoicing, notify us within thirty (30) days of the transaction date. Verified billing errors will be refunded in full immediately.</p>
+
+    <h2>5. How to Request a Refund</h2>
+    <p>To request a refund or raise a billing inquiry, submit your request in writing with:</p>
+    <ul>
+      <li>Your full name and organization;</li>
+      <li>Invoice number and transaction date;</li>
+      <li>The specific reason for your refund request.</li>
+    </ul>
+    <p>Direct your request to:</p>
+    <ul>
+      <li><strong>Billing Inquiries:</strong> <a href="mailto:billing@qenlo.dev">billing@qenlo.dev</a></li>
+      <li><strong>Maintainer Direct:</strong> <a href="mailto:akshatsingh14372@outlook.com">akshatsingh14372@outlook.com</a></li>
+    </ul>
+
+    <h2>6. Processing and Payment Method</h2>
+    <p>We review all refund requests within three to five (3–5) business days. Once approved, refunds are credited back to the original payment method (e.g., credit card or bank wire) within five to ten (5–10) business days, depending on your financial institution.</p>
+  </main>
+
+  <footer class="legal-footer">
+    <div class="legal-footer__inner">
+      <div>
+        &copy; 2026 Qenlo Contributors. Code licensed under <a href="https://github.com/a3ro-dev/qenlo/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Apache 2.0</a>.<br>
+        Maintained by Akshat Singh Kushwaha (<code>a3ro-dev</code>).
+      </div>
+      <div class="legal-footer__links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms &amp; Conditions</a>
+        <a href="cookies.html">Cookie Policy</a>
+        <a href="refund.html"><strong>Refund Policy</strong></a>
+        <a href="docs/#/quickstart">Docs</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

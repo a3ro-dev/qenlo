@@ -6,6 +6,10 @@ on:
       - main
     paths:
       - 'index.html'
+      - 'privacy.html'
+      - 'terms.html'
+      - 'cookies.html'
+      - 'refund.html'
       - 'docs/**'
       - 'assets/**'
       - 'llms.txt'
@@ -42,7 +46,7 @@ jobs:
       - name: Assemble site directory
         run: |
           mkdir -p _site
-          cp index.html .nojekyll _site/
+          cp index.html privacy.html terms.html cookies.html refund.html .nojekyll _site/
           cp -r docs assets _site/
           [ -f llms.txt ] && cp llms.txt _site/ || true
           [ -f llms-full.txt ] && cp llms-full.txt _site/ || true

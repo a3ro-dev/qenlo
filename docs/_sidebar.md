@@ -35,3 +35,9 @@
   * [Package publishing](publishing.md)
   * [CI and release map](ci.md)
 
+* **Legal and policies**
+  * [Privacy Policy](../privacy.html)
+  * [Terms and Conditions](../terms.html)
+  * [Cookie Policy](../cookies.html)
+  * [Refund Policy](../refund.html)
+  * [Security Policy](https://github.com/a3ro-dev/qenlo/blob/main/SECURITY.md)
