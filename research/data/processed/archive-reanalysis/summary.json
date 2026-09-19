@@ -1,0 +1,190 @@
+{
+  "schema": "qenlo-archive-reanalysis-v1",
+  "source_archives": {
+    "phase0": {
+      "path": "research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz",
+      "sha256": "7292fd1cd0e7669c9febeaa2d49baedee747811ed65f6bc704ecbcb6e61f51ea",
+      "bytes": 18695269
+    },
+    "phase1": {
+      "path": "research/artifacts/qenlo-phase1-eligibility-2026-09-04.tar.gz",
+      "sha256": "26e0ccc057c59c0fb4687f8d85a923e88b7bb25257e4e551e22cffe13c1b821f",
+      "bytes": 15270837
+    },
+    "phase2": {
+      "path": "research/artifacts/qenlo-phase2-a40-2026-09-04-final.tar.gz",
+      "sha256": "ac3afda446f4943eab128cff458402f7559be53b96c3cf8ce44fcbbd7f8be4df",
+      "bytes": 7888289
+    },
+    "alpha5_heldout": {
+      "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz",
+      "sha256": "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e",
+      "bytes": 4968881
+    }
+  },
+  "sample_series_inventory": {
+    "sample_files_and_archive_members": 303,
+    "unique_sample_series": 282,
+    "duplicate_sample_series": 21,
+    "unique_sample_rows": 1826130,
+    "unique_csv_schemas": 12,
+    "unique_series_by_cohort": {
+      "a6000-provider": 8,
+      "a6000-strict": 3,
+      "a6000-synthetic": 3,
+      "alpha5-heldout": 48,
+      "cpu-optimization": 12,
+      "gpu-tuning": 8,
+      "linux-library": 7,
+      "native-crossover": 12,
+      "other-retained-benchmark": 6,
+      "phase0": 19,
+      "phase1": 13,
+      "small-collection": 133,
+      "windows-endpoints": 10
+    }
+  },
+  "crossover_portability": {
+    "cohorts": {
+      "h1-rtx4050-windows-dx12": {
+        "rows": 6,
+        "cpu_wins": 1,
+        "gpu_wins": 5,
+        "observed_reversal_bracket": [
+          2000,
+          3000
+        ]
+      },
+      "phase0-rtx4090-linux-vulkan": {
+        "rows": 8,
+        "cpu_wins": 4,
+        "gpu_wins": 4,
+        "observed_reversal_bracket": [
+          4000,
+          6000
+        ]
+      }
+    },
+    "contradictory_equal_E_cells": [
+      {
+        "eligible_rows": 3000,
+        "winners": {
+          "h1-rtx4050-windows-dx12": "gpu",
+          "phase0-rtx4090-linux-vulkan": "cpu"
+        }
+      },
+      {
+        "eligible_rows": 4000,
+        "winners": {
+          "h1-rtx4050-windows-dx12": "gpu",
+          "phase0-rtx4090-linux-vulkan": "cpu"
+        }
+      }
+    ],
+    "posthoc_universal_minimax_threshold": {
+      "threshold": 3000.5,
+      "wrong_routes": 2,
+      "median_regret": 0.0,
+      "mean_regret": 0.01481081794636723,
+      "max_regret": 0.17423870333988223
+    },
+    "static_4096_policy": {
+      "wrong_routes": 2,
+      "median_regret": 0.0,
+      "mean_regret": 0.02952940404848598,
+      "max_regret": 0.23917295333892152
+    },
+    "interpretation": "No E-only threshold can classify both retained cohorts because equal-E cells have different winners; thresholds are descriptive and source/environment conditioned."
+  },
+  "alpha5_router": {
+    "development": {
+      "pairs": 31,
+      "wrong_routes": 0,
+      "max_regret": 0.0,
+      "source": "research/data/processed/alpha5-routing/summary.json"
+    },
+    "heldout": {
+      "preregistered_threshold": 1000000,
+      "wrong_routes": 8,
+      "median_regret": 0.004286083139685037,
+      "mean_regret": 0.4598446956535211,
+      "max_regret": 2.3565180285897163,
+      "posthoc_minimax_threshold": {
+        "threshold": 1499904.5,
+        "wrong_routes": 1,
+        "median_regret": 0.0,
+        "mean_regret": 0.0019744008714596972,
+        "max_regret": 0.031590413943355156
+      },
+      "same_k_monotone_witnesses": [
+        {
+          "k": 10,
+          "lower_work_gpu_winner": "d768-b16-e61-k10",
+          "lower_work_units": 749568,
+          "higher_work_cpu_winner": "d128-b8-e733-k10",
+          "higher_work_units": 750592
+        },
+        {
+          "k": 10,
+          "lower_work_gpu_winner": "d768-b16-e61-k10",
+          "lower_work_units": 749568,
+          "higher_work_cpu_winner": "d128-b8-e1221-k10",
+          "higher_work_units": 1250304
+        },
+        {
+          "k": 10,
+          "lower_work_gpu_winner": "d768-b16-e61-k10",
+          "lower_work_units": 749568,
+          "higher_work_cpu_winner": "d384-b1-e1953-k10",
+          "higher_work_units": 749952
+        },
+        {
+          "k": 10,
+          "lower_work_gpu_winner": "d768-b16-e61-k10",
+          "lower_work_units": 749568,
+          "higher_work_cpu_winner": "d384-b1-e3255-k10",
+          "higher_work_units": 1249920
+        },
+        {
+          "k": 10,
+          "lower_work_gpu_winner": "d768-b16-e61-k10",
+          "lower_work_units": 749568,
+          "higher_work_cpu_winner": "d768-b16-e102-k10",
+          "higher_work_units": 1253376
+        },
+        {
+          "k": 10,
+          "lower_work_gpu_winner": "d768-b16-e61-k10",
+          "lower_work_units": 749568,
+          "higher_work_cpu_winner": "all-r1000-d128-b8-k10",
+          "higher_work_units": 1024000
+        }
+      ],
+      "automatic_over_best_min": 0.4123755032845942,
+      "automatic_over_best_max": 5.393247741321921
+    }
+  },
+  "phase2_cpu_optimization": {
+    "optimized_change_vs_baseline": {
+      "1000": -0.16968414178342983,
+      "4000": -0.2804376134512545,
+      "100000": 0.10002459722293344
+    },
+    "faiss_dense_change_vs_qenlo_baseline": -0.2685606244166684,
+    "faiss_recall_at_10": 0.9998400000000001,
+    "qenlo_baseline_recall_at_10": 0.9999800000000001
+  },
+  "claims": [
+    "The preregistered E*D*B threshold overfit development evidence: 0/31 development errors became 8/16 held-out errors with 235.7% maximum backend-choice regret.",
+    "No increasing E*D*B threshold perfectly classifies the observed medians: a GPU winner at 749568 units precedes CPU winners at larger work with k=10. A post-hoc threshold has one error and 3.16% maximum regret; this does not reject every scalar policy at the release regret limits.",
+    "Equal-E 3K and 4K cells have opposite CPU/GPU winners across retained RTX 4050 and RTX 4090 cohorts; a universal E-only threshold is therefore falsified on the observed cells.",
+    "Certified FP32 CPU scoring improves sparse A40 cells but regresses the dense cell; dense single-thread FAISS CPU Flat remains 26.9% faster than the frozen Qenlo baseline at slightly lower recall.",
+    "Automatic-route timing is not interchangeable with forced-route timing: held-out automatic P95 ranges from 0.412x to 5.393x the faster forced route."
+  ],
+  "limitations": [
+    "Cohorts differ in source revision, host, device, runtime, and execution order; no latency values are pooled.",
+    "Threshold evaluations are workload-level descriptive counterfactuals over median-run P95, not per-query paired inference.",
+    "The post-hoc minimax thresholds are diagnostics, not deployable calibrated policies.",
+    "Sample rows across schemas are counted for archive coverage only and are not treated as independent observations."
+  ]
+}

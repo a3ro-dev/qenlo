@@ -1,27 +1,27 @@
        Exact Filtered Vector Search Across Execution Environments:
-          Eligibility, Small Collections, and Completed-Call Cost
-                                          Akshat Singh Kushwaha
-                                      akshatsingh14372@outlook.com
-                                   https://github.com/a3ro-dev/qenlo
+                      Why Scalar Routing Rules Fail
+                                         Akshat Singh Kushwaha
+                                     akshatsingh14372@outlook.com
+                                  https://github.com/a3ro-dev/qenlo
                                                   September 2026
 
-                                                       Abstract
+                                                        Abstract
          Filtered vector search chooses an execution route after a predicate restricts the candidates. We study
      that decision in Qenlo, an embedded vector store with exhaustive CPU, portable WGPU, and optional tensor
-     execution. The evidence spans historical Windows crossover and eligibility-preparation experiments, Android
-     and Intel Arc device records, A6000 research prototypes, external engines, and a new 1K–100K collection
-     campaign. Cohorts remain separate by source, device, dataset, predicate, and timing boundary. On a historical
-     RTX 4050, CPU and compact-row WGPU exchange the lead between 2,000 and 3,000 eligible 384-dimensional
-     vectors; a static 4,096-row rule incurs up to 23.9% descriptive P95 regret. A separate RTX 4090 ablation
-     reduces sparse-cell P95 by 10.5–32.3% with one-pass eligibility preparation. In the corrected experimental
-     archive, RTX 4090 WGPU completes 100K-by-768 search in 0.897 ms P95 at batch one and 0.896 ms at batch
-     eight with 10% eligibility; tensor CUDA takes 0.671 and 0.384 ms. All twelve corrected engine rows have
-     FP64-oracle recall 1.0. These timings use a selector candidate subsequently rejected after five wins and seven
-     losses in twelve frozen-baseline pairs; they are not measurements of the final local selector. Tested warm post-
-     mutation searches avoid resident-state rebuilds, whereas reopen incurs preparation. ANN wins, correctness
-     failures, unavailable devices, and aggregate-only mobile evidence remain visible. Eligible work, preparation,
-     representation, batching, selection, and device state jointly inform routing; the archive does not establish a
-     transferable threshold or validate an adaptive production router.
+     execution. An archive-wide reduction inspects 303 sample files or archive members, leaving 282 content-distinct
+     series and 1,826,130 CSV sample rows across twelve schemas; these counts describe coverage, not independent
+     trials. A scalar EDB rule selected with zero errors on 31 development CPU/GPU pairs fails a preregistered
+     RTX 4050 suite on 8 of 16 workloads and reaches 235.7% maximum backend-choice regret. Near-equal EDB
+     values with equal k still produce different winners. Separate 384-dimensional, batch-one cohorts also disagree
+     at the same eligible counts: RTX 4050 CPU/WGPU reverses between 2K and 3K rows, whereas an archived
+     RTX 4090 cohort reverses between 4K and 6K. A certified FP32 CPU path improves A40 P95 by 17.0% and
+     28.0% at 1K and 4K eligible rows but regresses 10.0% at 100K. One-pass eligibility preparation, corrected
+     768-dimensional results, lifecycle measurements, ANN comparisons, failures, and mobile aggregates supply
+     mechanism and boundary evidence. The conclusion is negative but scoped: the frozen EDB rule fails its gate,
+     and a universal E threshold cannot classify the observed winners. A post-hoc EDB threshold has only 3.2%
+     maximum regret, so the archive does not reject every scalar policy at practical regret limits. Query shape, k,
+     device/source identity, preparation, representation, and state motivate a new end-to-end held-out study; no
+     successful router is yet validated.
 
 
 1    Introduction and research questions
@@ -34,21 +34,22 @@ execution problem.
 able search structures; changing routes should preserve the logical result contract. The archive contains several
 generations of implementation and experiment design. Earlier studies emphasize eligible cardinality, predicate
 representation, and routing regret. The September 5 campaign adds small collections, tensor adapters, resource
-diagnostics, lifecycle measurements, and a rejected selector. This paper preserves those findings without treating
-historical or candidate results as measurements of the final source tree.
+diagnostics, lifecycle measurements, and a rejected selector. A later preregistered router suite supplies an actual
+held-out falsification. This paper recursively inventories retained sample series and reduces previously contextual
+Phase 0 and Phase 2 archives without treating historical or candidate results as measurements of the final source
+tree.
     We ask three questions. Under what measured conditions does the preferred exhaustive route change? How
 much of a completed call comes from eligibility preparation, selection, synchronization, or derived-state prepara-
 tion rather than scoring? What deployment conclusions survive differences in numerical accuracy, APIs, persis-
 tence, runtime ownership, and evidence quality?
-    The contribution is a systems study, not a new asymptotic nearest-neighbor algorithm. It combines a localized
-historical crossover, an eligibility-materialization ablation, a failure-preserving small-collection campaign, and
-heterogeneous-device observations. A claim ledger records which measurements support each conclusion. A
-rejected optimization retains scientific value, while its latency does not become a promise about the retained
-implementation.
+    The contribution is a systems study, not a new asymptotic nearest-neighbor algorithm. It combines localized
+crossovers, an eligibility-materialization ablation, a failure-preserving small-collection campaign, heterogeneous-
+device observations, a sparse-only CPU optimization, and development/held-out routing evaluation. A claim
+ledger records which measurements support each conclusion. Rejected policies and optimizations retain scientific
+value, while their latency does not become a promise about the retained implementation.
 
 
-
-                                                            1
+                                                           1
 2    System model and semantic contracts
 Let the live canonical collection at generation g contain normalized FP32 vectors xi ∈ RD , public identifiers i,
 and metadata mi . A predicate P defines
@@ -147,6 +148,11 @@ the statistic is median run P95. A6000 tables summarize per-call distributions w
 500 calls per system and cell. Android and Arc provide aggregate percentiles. No figure claims significance or
 draws error bars. Lines are guides. Sequential execution, post-hoc choices, and small run counts limit causal and
 statistical interpretation.
+    The archive-wide census hashes canonical-LF CSV bytes. It includes tracked and selected archive-internal
+samples.csv, raw samples.csv, and lifecycle records; exact mirrors contribute one unique series. The twelve
+schemas have different sample units. Their 1,826,130 rows are never pooled into a confidence interval or treated
+as independent query draws. Numerical synthesis below uses only source-compatible comparisons, while the
+complete disposition ledger remains machine readable.
 
 
 
@@ -156,19 +162,23 @@ statistical interpretation.
 
 Table 1: Cohort map. Observations describe archive volume, not independent replications. Codes identify source
 roles below.
-    Cohort                       Hardware / data                  Scope                        Evidence
-    Small S0/S1/S2               Ada, A40, 4090; generated,       1K–100K, 128–768D            182 status rows
-                                 AG News
-    Localization H1              RTX 4050/DX12; AG News           100K, 384D, E = 2K–10K       300,000 raw calls
-    Endpoints H0                 RTX 4050; AG News                100K, sparse/dense           225,000 raw calls
-    Eligibility H2               RTX 4090/Vulkan; AG              100K, 384D, three modes      300,000 raw calls
-                                 News
-    Linux H3                     Cloud CPU; AG News               100K, 384D, seven engines    10,500 raw calls
-    A6000 real H4                CUDA; TopK                       1M, 768D, strict predicate   20,000 raw calls
-                                 ModernBERT
-    A6000 synthetic H5           CUDA; generated FP32             1M, 768D, four E             4,000 raw calls
-    Android H6                   Mali-G615/Vulkan                 10K/100K, 384D               21 aggregate cells
-    Intel Arc H7                 Arc/Vulkan                       10K/100K, 384D               21 aggregate cells
+    Cohort                       Hardware / data              Scope                        Evidence
+    Small S0/S1/S2              Ada, A40, 4090; generated,    1K–100K, 128–768D            182 status rows
+                                AG News
+    Localization H1             RTX 4050/DX12; AG News        100K, 384D, E = 2K–10K       300,000 raw calls
+    Endpoints H0                RTX 4050; AG News             100K, sparse/dense           225,000 raw calls
+    Eligibility H2              RTX 4090/Vulkan; AG           100K, 384D, three modes      300,000 raw calls
+                                News
+    Linux H3                    Cloud CPU; AG News            100K, 384D, seven engines    10,500 raw calls
+    A6000 real H4               CUDA; TopK                    1M, 768D, strict predicate   20,000 raw calls
+                                ModernBERT
+    A6000 synthetic H5          CUDA; generated FP32          1M, 768D, four E             4,000 raw calls
+    Android H6                  Mali-G615/Vulkan              10K/100K, 384D               21 aggregate cells
+    Intel Arc H7                Arc/Vulkan                    10K/100K, 384D               21 aggregate cells
+    Router R1                   RTX 4050/DX12; generated      16 held-out shapes           48 raw route series
+    Phase 0 P0                  RTX 4090/Vulkan; AG           100K, 384D,                  19 cells
+                                News                          E = 1K–100K
+    Phase 2 P2                  A40 CPU; AG News              100K, 384D, three E          8 reduced rows
 
 
 S0 is the frozen archive f37e744c, S1 is the experimental archive 730c0500, and S2 is the corrected supplement
@@ -179,7 +189,9 @@ claim about final local behavior.
     H1 records common revision 3e2a4a9 in a dirty worktree; its configurations and outputs are part of the
 evidence identity. H0 contains several revisions. H2 is archive 26e0ccc0, and H3 is bb51987, mirrored and
 counted once. H4 and H5 use different A6000 environments and research CUDA implementations. H6 and H7
-identify device-lab run IDs rather than reconstructible executable archives.
+identify device-lab run IDs rather than reconstructible executable archives. R1 is SHA-256 8e3b5fe6; P0 is
+7292fd1c; and P2 is ac3afda4. Their executable revisions and hosts differ, so cross-cohort synthesis uses winner
+contradictions rather than pooled latency.
     Windows data derive from DTU AG News embeddings [9]; Linux uses a separately prepared fixture. Equal
 dataset names do not imply equal bytes or partitions. The small campaign retains its own fixture and checksums.
 The A6000 cohort uses TopK Bench’s million-vector, 768-dimensional ModernBERT corpus [13]; its strict and
@@ -195,23 +207,25 @@ These are neither fifteen device replications nor ten successful devices. Result
 A40 configurations, and a reference RTX 4090; unavailable L4, RTX 3090, A6000, and community offers remain
 visible.
 
-              Table 2: Common synthetic workloads, k = 10. Six selected cells, not a factorial sweep.
-                                         Cell        N        D    B      E/N
-                                         C1       1,000   128       1     100%
-                                         C2       1,000   384      16       1%
-                                         C3      10,000   128      16     100%
-                                         C4      10,000   384       1       1%
-                                         C5     100,000   128       1       1%
-                                         C6     100,000   384      16     100%
 
 
 
+                                                        4
+                                                 Table 2: Common synthetic workloads, k = 10. Six selected cells, not a factorial sweep.
+                                                                                     Cell           N         D    B      E/N
+                                                                                     C1          1,000     128     1     100%
+                                                                                     C2          1,000     384    16       1%
+                                                                                     C3         10,000     128    16     100%
+                                                                                     C4         10,000     384     1       1%
+                                                                                     C5        100,000     128     1       1%
+                                                                                     C6        100,000     384    16     100%
 
-                                                          4
-                                                       A40 / CA-MTL                                 A40 / EU-SE                                  RTX 4090 / EU-RO
+
+
+                                                        A40 / CA-MTL                                     A40 / EU-SE                           RTX 4090 / EU-RO
                                       102
-                                                                                                                                            Qenlo CPU
-                                                                                                                                            Qenlo WGPU
+                                                                                                                                          Qenlo CPU
+                                                                                                                                          Qenlo WGPU
 Completed-call P95 (ms; log scale)
 
 
@@ -234,8 +248,8 @@ Completed-call P95 (ms; log scale)
 
                                      10−2
 
-                                            C1   C2     C3        C4      C5   C6     C1     C2     C3        C4      C5   C6         C1      C2     C3       C4       C5   C6
-                                                   Workload cell (see table)                   Workload cell (see table)                       Workload cell (see table)
+                                            C1    C2     C3        C4      C5   C6        C1     C2     C3        C4      C5    C6   C1     C2     C3       C4       C5   C6
+                                                    Workload cell (see table)                      Workload cell (see table)                 Workload cell (see table)
 
 
 
@@ -255,49 +269,50 @@ generated data record has CRC32 50b69280. Table 3 verifies all twelve rows again
 These rows used the candidate subsequently rejected by the local source.
 
 
-Table 3: S2, 100K×768, completed-call ms. FP64 recall 1.0 throughout. Calls/runs counts batch calls across
+
+
+                                                                                                          5
+Table 3: S2, 100K×768, completed-call ms. FP64 recall 1.0 throughout. Calls/runs counts batch calls across
 runs; replays follow native batches. External matrices are prefiltered outside timing.
-                                                           Workload                 Engine               P50        P95    Recall          Calls/runs
-                                                           Full, B=1, k=1           Qenlo CPU         9.010       9.409         1.0           192 / 3
-                                                           Full, B=1, k=1           Qenlo WGPU        0.870       0.897         1.0           192 / 3
-                                                           Full, B=1, k=1           FAISS Flat       14.483      14.800         1.0           192 / 3
-                                                           Full, B=1, k=1           NumPy            14.507      15.343         1.0           192 / 3
-                                                           Full, B=1, k=1           Torch CPU        18.324      18.695         1.0           192 / 3
-                                                           Full, B=1, k=1           Torch CUDA        0.654       0.671         1.0           192 / 3
-                                                           10%, B=8, k=64           Qenlo CPU        27.402      28.599         1.0            24 / 3
-                                                           10%, B=8, k=64           Qenlo WGPU        0.842       0.896         1.0            24 / 3
-                                                           10%, B=8, k=64           FAISS Flat        2.716       3.055         1.0            24 / 3
-                                                           10%, B=8, k=64           NumPy             5.972       6.202         1.0            24 / 3
-                                                           10%, B=8, k=64           Torch CPU         2.847       2.936         1.0            24 / 3
-                                                           10%, B=8, k=64           Torch CUDA        0.370       0.384         1.0            24 / 3
+                      Workload               Engine                        P50     P95       Recall     Calls/runs
+                      Full, B=1, k=1         Qenlo CPU                  9.010     9.409         1.0        192 / 3
+                      Full, B=1, k=1         Qenlo WGPU                 0.870     0.897         1.0        192 / 3
+                      Full, B=1, k=1         FAISS Flat                14.483    14.800         1.0        192 / 3
+                      Full, B=1, k=1         NumPy                     14.507    15.343         1.0        192 / 3
+                      Full, B=1, k=1         Torch CPU                 18.324    18.695         1.0        192 / 3
+                      Full, B=1, k=1         Torch CUDA                 0.654     0.671         1.0        192 / 3
+                      10%, B=8, k=64         Qenlo CPU                 27.402    28.599         1.0         24 / 3
+                      10%, B=8, k=64         Qenlo WGPU                 0.842     0.896         1.0         24 / 3
+                      10%, B=8, k=64         FAISS Flat                 2.716     3.055         1.0         24 / 3
+                      10%, B=8, k=64         NumPy                      5.972     6.202         1.0         24 / 3
+                      10%, B=8, k=64         Torch CPU                  2.847     2.936         1.0         24 / 3
+                      10%, B=8, k=64         Torch CUDA                 0.370     0.384         1.0         24 / 3
 
 
 
+                              B=1, k=1, E/N=100%                                                     B=8, k=64, E/N=10%
 
-                                                                                                     5
-                              B=1, k=1, E/N=100%                                         B=8, k=64, E/N=10%
-
-    Qenlo CPU                                       9.409                                                               28.599
+    Qenlo CPU                                       9.409                                                                          28.599
 
 
- Qenlo WGPU              0.897                                                      0.896
+ Qenlo WGPU              0.897                                                                  0.896
 
 
-     FAISS Flat                                             14.800                                 3.055
+     FAISS Flat                                             14.800                                            3.055
 
 
-       NumPy                                                15.343                                         6.202
+       NumPy                                                15.343                                                    6.202
 
 
-     Torch CPU                                                18.695                              2.936
+     Torch CPU                                                18.695                                         2.936
 
 
-    Torch CUDA        0.671                                                0.384
+    Torch CUDA        0.671                                                          0.384
 
 
 
-                        100                       101                              100                        101
-                       Completed-call P95 (ms; log scale)                          Completed-call P95 (ms; log scale)
+                        100                       101                                          100                       101
+                       Completed-call P95 (ms; log scale)                                     Completed-call P95 (ms; log scale)
 
 
 
@@ -323,40 +338,39 @@ ANN rows and their recall remain in Appendix A.
 7.1       A localized exhaustive winner reversal
 Matched H1 searches use 100K×384 AG News on an RTX 4050 with DX12, B = 1, and k = 10. CPU takes
 0.5198 ms P95 versus compact-row WGPU’s 0.6340 ms at E = 2K. At 3K, WGPU takes 0.8144 ms versus CPU’s
-0.9563 ms and remains faster through 10K. The reversal is bracketed by (2K, 3K); it is not a fitted threshold. All
-localization recalls are 1.0. Compact-row timing includes the duplicated count and materialization traversal.
-
-
 
 
                                                                        6
-                                                       Historical RTX 4050 / 384D / B=1                                                             Historical A6000 / 768D / B=1
-                             3 × 100
-                                                 Qenlo CPU                                                                                 FAISS GPU Flat
-                                                 WGPU compact rows                                                                         Research CUDA prototype
+0.9563 ms and remains faster through 10K. The reversal is bracketed by (2K, 3K); it is not a fitted threshold. All
+localization recalls are 1.0. Compact-row timing includes the duplicated count and materialization traversal.
+
+                                                  Historical RTX 4050 / 384D / B=1                                                           Historical A6000 / 768D / B=1
+                        3 × 100
+                                            Qenlo CPU                                                                               FAISS GPU Flat
+                                            WGPU compact rows                                                                       Research CUDA prototype
 
 
-                             2 × 100
-      P95 (ms; log scale)
-
-
-
-
-                                                                                                        P95 (ms; log scale)
-                                                                                                                              100
-
-
-                                100
+                        2 × 100
+ P95 (ms; log scale)
 
 
 
 
-                            6 × 10−1
-                                                                                                                              10−1
+                                                                                                 P95 (ms; log scale)
+                                                                                                                       100
 
 
-                                       2 × 103          3 × 103      4 × 103      6 × 103     104                                    103                  104                105               106
-                                                              Eligible rows (log scale)                                                                  Eligible rows (log scale)
+                           100
+
+
+
+
+                       6 × 10−1
+                                                                                                                       10−1
+
+
+                                  2 × 103          3 × 103      4 × 103      6 × 103   104                                    103                  104                105     106
+                                                         Eligible rows (log scale)                                                                Eligible rows (log scale)
 
 
 
@@ -374,63 +388,61 @@ Rc ,
 These compare separate run-level percentiles, not paired queries. Equal weighting of six post-hoc cells is not an
 application distribution. A profile mechanism in code does not prove adaptive routing reduces regret.
 
-                                                   Counterfactual regret of the shipped 4,096-row rule, RTX 4050
 
-                             0.30
+
+
+                                                                                             7
+                                    Counterfactual regret of the shipped 4,096-row rule, RTX 4050
+
+                           0.30
 absolute P95 regret (ms)
 
 
 
+                                                               23.9%
+                           0.25
 
-                                                                                            23.9%
-                             0.25
+                           0.20
 
-                             0.20
+                                                 17.4%
+                           0.15
 
-                                                                               17.4%
-                             0.15
+                           0.10
 
-                             0.10
-
-                             0.05
-                                                     correct                                                                         correct                    correct              correct
-                             0.00
-                                                      2000                     3000         4000                                      6000                      8000                 10000
-                                                                                            eligible vectors, E
+                           0.05
+                                     correct                                correct   correct    correct
+                           0.00
+                                     2000        3000          4000         6000      8000       10000
+                                                               eligible vectors, E
 
 Figure 4: H1 RTX 4050, same 100K×384 compact-row cells and FP64 recall 1.0 as Figure 3. Completed-call
 P95 regret uses median five-run results and frozen 4,096-row rule. Annotations give relative regret. Descriptive
 counterfactual; no routing traces/confidence bars.
 
 
-
-
-                                                                                                    7
-7.2                             One-pass and cached eligibility
+7.2                          One-pass and cached eligibility
 H2 uses a separate RTX 4090 with Vulkan, a Ryzen 9 7950X, and driver 570.211.01. Its 100K×384 AG News
 ablation holds scoring and queries fixed across five runs per mode at E ∈ {1K, 4K, 6K, 100K}. One-pass prepara-
 tion lowers P95 from 0.131736 to 0.117870 ms at 1K, from 0.305281 to 0.208009 ms at 4K, and from 0.401130 to
 0.271618 ms at 6K, reductions of 10.5–32.3%. The warmed cache lowers the sparse values by 24.3–57.3%. The
 dense improvement is smaller: 1.786170 to 1.720476 ms for one-pass preparation, or 1.596024 ms with the cache.
 
-                                                Eligibility materialization ablation, RTX 4090 / Vulkan
-median complete-run P95 (ms)
 
 
 
-
-                                              legacy two-pass
-                                              one-pass plan
-                                    0
-                               10             cached plan
+                                                                   8
+median complete-run P95 (ms)                   Eligibility materialization ablation, RTX 4090 / Vulkan
+                                            legacy two-pass
+                                            one-pass plan
+                               100          cached plan
 
 
 
 
                                10−1
 
-                                        103                                104                            105
-                                                                   eligible vectors, E
+                                      103                                           104                                 105
+                                                                            eligible vectors, E
 
 Figure 5: H2 26e0ccc0, RTX 4090/Vulkan, 100K×384 AG News, B = 1, k = 10. Median five-run completed-call
 P95, 25,000 calls/point. Sparse FP64 recall 1.0; dense 0.99998. Sequential modes, logarithmic axes, guide lines,
@@ -441,43 +453,139 @@ H2 has no matched CPU cells and uses another host, it cannot relocate H1’s cro
 duplicated eligibility work affects a completed call.
 
 
-8                              Predicate representation and batching
+8                              Archive-wide routing falsification
+8.1                             Development fit and preregistered failure
+The EDB candidate routes to WGPU when EDB ≥ 106 . It was selected from 31 compatible development pairs
+and classified every development winner. R1 then held hardware and source to its archived RTX 4050/DX12 suite
+and varied three query shapes, k ∈ {1, 10, 64}, and work on both sides of the frozen threshold. All forced CPU,
+forced compact-row WGPU, and automatic cells pass their recall and filter gates. The frozen scalar chooses the
+wrong forced-route winner in 8 of 16 workloads. Median choice regret is only 0.4% because half the cells have
+zero regret, but the maximum is 235.7%; the preregistered 25% limit rejects the policy.
+
+
+Table 4: Development and held-out evaluation of the frozen EDB = 106 rule. Regret compares separate forced-
+route median-run P95 values; it does not substitute automatic-route timing.
+                                             Split          Cells   Wrong    Median %     Max %    Decision
+                                             Development      31        0           0.0      0.0   threshold selected
+                                             Held out         16        8           0.4    235.7   rejected
+
+
+
+
+                                                                                9
+                                                Held-out scalar-router test                                                             Environment-conditioned crossover
+                      6 × 100                                                                                                                                          RTX 4050 / DX12
+                                                                                                                                                                       RTX 4090 / Vulkan
+
+                      4 × 100
+
+                                                                                                                  100
+                      3 × 100
+ GPU P95 / CPU P95
+
+
+
+
+                                                                                          GPU P95 / CPU P95
+                      2 × 100
+                                                                                                              6 × 10−1
+
+
+
+                                                                                                              4 × 10−1
+                         100
+                                128D / B=8
+                                                                                                              3 × 10−1
+                                384D / B=1
+                                768D / B=16
+                     6 × 10−1
+                                1K dense control
+                                                                                                              2 × 10−1
+                                preregistered threshold
+
+                                  0.6            0.8         1.0          1.2      1.4                                   103                           104                          105
+                                                  Scalar work EDB (millions)                                                                      Eligible rows E
+
+
+
+Figure 6: Left: R1, sixteen preregistered RTX 4050/DX12 workloads. The dashed line is the frozen EDB = 106
+threshold; ratios below one favor WGPU. Near-equal scalar work produces different winners. Right: separate
+100K×384, B = 1, k = 10 H1/P0 cohorts; the P0 source, host, and runtime differ. Lines guide the eye, latencies
+are not pooled, and no error bars are claimed.
+
+    Near-equal work with different winners alone does not disprove a threshold: a boundary could lie between
+those values. A genuine ordering contradiction occurs at k = 10: 768D/B = 16, E = 61 favors WGPU at
+749,568 units (0.918 versus 0.947 ms), whereas 384D/B = 1, E = 1, 953 favors CPU at the larger 749,952 units
+(0.951 versus 1.2404 ms). Thus no increasing EDB threshold perfectly classifies these observed medians. All
+same-k ordering witnesses depend on the former, only 3.16%-margin cell; sequential run variability prevents a
+robust causal conclusion about factorization. A post-hoc threshold of 1,499,904.5 units leaves one error and 3.2%
+maximum regret. This is below the original regret limits but fitted to the test set, not new validation. The frozen
+policy failed; not every scalar policy has been rejected at practical regret limits.
+    The realized automatic path is also not interchangeable with the forced route selected by a policy. Across
+R1, automatic P95 ranges from 0.412 to 5.393 times the faster forced-route P95. This spread cannot be labeled
+routing overhead: sequential run drift, execution state, and path differences remain competing explanations. A
+router must therefore be evaluated end to end, not only by applying labels to forced-route percentiles.
+
+8.2                        Environment-conditioned crossover and CPU route specialization
+P0 contributes eight CPU/compact-row WGPU pairs on a separate RTX 4090/Linux/Vulkan environment. Its
+observed reversal lies between 4K and 6K eligible rows, not H1’s 2K–3K bracket. At E = 3K and 4K the two
+cohorts have opposite winners. Consequently no monotone E-only rule can classify all fourteen observed cells.
+Even the best post-hoc minimax threshold, just above 3K, retains 17.4% maximum regret; the 4,096 rule retains
+23.9%. This is a falsification over these cells, not attribution to GPU model alone: source, host CPU, OS, API,
+driver, and execution order also differ.
+    P2 supplies another conditional route inside the CPU engine. On an A40 host, a certified FP32 candidate
+stage with FP64 reranking reduces completed-call P95 by 17.0% at E = 1K and 28.0% at 4K, but increases it by
+10.0% at 100K. The measured implementation therefore routes the optimization only through 4,096 eligible rows.
+Dense single-thread FAISS CPU Flat takes 11.154 ms versus the frozen Qenlo baseline’s 15.250 ms, 26.9% lower
+latency, while recall is 0.99984 versus 0.99998. This is a scoped library-call comparison, not numerical equivalence
+or a database ranking.
+
+
+Table 5: P2 A40 selective CPU candidate, 100K×384, B = 1, k = 10, five runs and 5,000 calls/run. Change is
+optimized/baseline P95 minus one.
+                                                             E      Baseline ms     Optimized ms                         Change %         Recall@10
+                                                         1,000            0.1715          0.1424                                -17.0        1.00000
+                                                         4,000            0.6120          0.4404                                -28.0        1.00000
+                                                       100,000           15.2497         16.7750                               +10.0         0.99998
+
+
+                                                                                         10
+9                                              Predicate representation and batching
 H0 dense GPU endpoints share a recorded GPU revision: shader predicates take 3.2404 ms P95, compact rows
 4.2428, and masks 4.4591. At 1K eligible rows, compact rows take 0.6766 ms and shader predicates 2.8832 ms,
 but the sparse records differ in revision. That difference is context, not a causal representation ablation. The
-CPU and dense-GPU endpoints also differ. Figure 6 preserves these limitations rather than merging H0 with H1.
+CPU and dense-GPU endpoints also differ. Figure 7 preserves these limitations rather than merging H0 with H1.
+
+                                                                 Matched Windows strategies; 25,000 held-out calls per bar
+P95 completed-call latency (ms, log scale)
 
 
 
 
-                                                                       8
-P95 completed-call latency (ms, log scale)                         Matched Windows strategies; 25,000 held-out calls per bar
+                                                             (a) E=1,000 (1% eligible)                            (b) E=100,000 (all rows)
+                                                                                                       16.7 ms
+                                                                                                      R=0.99998
+
+                                             101                                                                   4.24 ms     4.46 ms
+                                                                                                                                           3.24 ms     3.62 ms
+                                                                                      2.88 ms                     R=0.99998   R=0.99998
+                                                                                                                                          R=0.99998   R=0.99224
+                                                                                     R=1.00000
 
 
-                                                                 (a) E=1,000 (1% eligible)                                   (b) E=100,000 (all rows)
-                                                                                                                16.7 ms
-                                                                                                               R=0.99998
+                                                                        0.677 ms
+                                             100                       R=1.00000
 
-                                             101                                                                             4.24 ms     4.46 ms
-                                                                                                                                                     3.24 ms     3.62 ms
-                                                                                          2.88 ms                           R=0.99998   R=0.99998
-                                                                                                                                                    R=0.99998   R=0.99224
-                                                                                         R=1.00000
-
-
-                                                                              0.677 ms
-                                             100                             R=1.00000
-
-                                                        0.23 ms
-                                                       R=1.00000
+                                                      0.23 ms
+                                                     R=1.00000
 
 
 
-                                                          CPU                  WGPU       WGPU                    CPU            WGPU    WGPU        WGPU       USearch
-                                                                               rows      predicate                               rows    mask       predicate   ef=128
+                                                       CPU              WGPU          WGPU              CPU        WGPU        WGPU        WGPU       USearch
+                                                                        rows         predicate                     rows        mask       predicate   ef=128
 
 
-Figure 6: H0 RTX 4050/DX12, 100K×384 AG News, B = 1, k = 10, five runs/25,000 calls per row, completed-call
+Figure 7: H0 RTX 4050/DX12, 100K×384 AG News, B = 1, k = 10, five runs/25,000 calls per row, completed-call
 P95. Dense WGPU forms share f1ccc4d; CPU/sparse records include other revisions. Exhaustive sparse/dense
 FP64 recall 1.0/0.99998; USearch ANN 0.99224. Descriptive context; no causal cross-revision speedup.
 
@@ -485,10 +593,15 @@ FP64 recall 1.0/0.99998; USearch ANN 0.99224. Descriptive context; no causal cro
 C1–C6 supports both as routing features but changes them together with dimension and selectivity. Device-lab
 batches use another reporting schema. No same-host factorial study isolates all interactions, and no fixed-E,
 varying-N study establishes eligibility as a statistically superior predictor to size.
+   The reference C1 and C5 cells sharpen this boundary without isolating it. Both have E = 1K, D = 128,
+B = 1, and k = 10, hence equal EDB. C1 is a 1K dense collection; C5 obtains the same eligible count through a
+one-percent predicate over 100K rows. Current CPU P95 rises from 0.0143 to 0.0341 ms, while candidate WGPU
+remains near 0.094–0.095 ms. Total N and predicate preparation change together, so no causal coefficient follows,
+but equal eligible scoring work plainly does not imply equal completed-call cost.
 
 
-9                                              ANN and external-engine comparisons
-9.1                                                Chroma qualification and historical competitors
+10                                                 ANN and external-engine comparisons
+10.1                                               Chroma qualification and historical competitors
 Seven qualified S1 pairs favor candidate WGPU over Chroma HNSW, with P95 ratios from 3.700 to 3233.136.
 All seven paired Chroma rows have recall 1.0. The largest ratio is the real AG News workload: Chroma takes
 555.964 ms versus WGPU’s 0.171958 ms. Three attempts fail the gate before held-out timing: C3 and C6 at
@@ -496,40 +609,41 @@ expansion 128, and deep D2 at 512. Completed USearch D2 has recall 0.3453125 at 
 These rows remain visible.
 
 
-                    4090 / reference-retry / c1 (recall 1.0000)
-
-                    4090 / reference-retry / c2 (recall 1.0000)
-
-                    4090 / reference-retry / c4 (recall 1.0000)
-
-                    4090 / reference-retry / c5 (recall 1.0000)
-
-                                                    4090 / deep / d1 (recall 1.0000)
-
-                                                    4090 / deep / d3 (recall 1.0000)
-
-                                                   4090 / deep / real (recall 1.0000)
 
 
-                                                                                             101                           102                        103
-                                                                                                         Chroma P95 / Qenlo WGPU P95 (log scale)
+                                                                                                 11
+ 4090 / reference-retry / c1 (recall 1.0000)
+
+ 4090 / reference-retry / c2 (recall 1.0000)
+
+ 4090 / reference-retry / c4 (recall 1.0000)
+
+ 4090 / reference-retry / c5 (recall 1.0000)
+
+           4090 / deep / d1 (recall 1.0000)
+
+           4090 / deep / d3 (recall 1.0000)
+
+         4090 / deep / real (recall 1.0000)
+
+
+                                                 101                      102                       103
+                                                          Chroma P95 / Qenlo WGPU P95 (log scale)
 
 
 
-Figure 7: S1 730c0500, seven qualified configuration/workload pairs on A40/RTX 4090, k = 10; IDs map to
+Figure 8: S1 730c0500, seven qualified configuration/workload pairs on A40/RTX 4090, k = 10; IDs map to
 matrix/appendix. Logarithmic axis: Chroma/native candidate-WGPU completed-call P95 ratio. Chroma recall
 printed. Python API, ANN, persistence/filter boundaries differ. Three gate failures excluded from ratios, retained
 in ledger; no error bars.
 
-
-                                                                                                     9
-    H0 Chroma dense reaches 1.1303 ms P95 at recall 0.99414, compared with 3.2404 ms for WGPU predicate
+    H0 Chroma dense reaches 1.1303 ms P95 at recall 0.99414, compared with 3.2404 ms for WGPU predicate
 evaluation at recall 0.99998. Tuned USearch with expansion 128 takes 3.6245 ms at recall 0.99224. These are
 operating points with revision and API qualifications, not ANN frontiers. In H3, Linux FAISS HNSW takes
 1.4939 ms at recall 0.9994, compared with 12.9014 ms and recall 1.0 for Qenlo CPU. Chroma, USearch, FAISS
 Flat, Milvus Lite, and LanceDB remain in the appendix. These differences preclude universal rankings.
 
-9.2    A6000 real and synthetic evidence
+10.2      A6000 real and synthetic evidence
 The H4 strict TopK predicate yields E = 10, 026 from 1M 768-dimensional rows. FAISS GPU Flat leads the
 qualified methods at 0.132222 ms P95, followed by the research CUDA prototype at 0.170722 ms and NumPy at
 0.197311 ms. Each has 5,000 calls and FP64 recall 1.0. cuVS’s 0.384636 ms row is disqualified because recall is 0.9.
@@ -541,7 +655,7 @@ and 100K points. Correctness is unordered top-10 agreement rather than an FP64 o
 to the formulation. Native WGPU has no usable A6000 Vulkan ICD and therefore no native timing in this cohort.
 
 
-10     Mutation, reopen, and resource accounting
+11      Mutation, reopen, and resource accounting
 The S1 lifecycle uses a durable 10K×384 collection on an RTX 4090 with B = 1, k = 10, and no filter. First-
 search P95 after add-one, delete-one, add-batch, and delete-batch is 0.598, 0.631, 0.740, and 0.819 ms, respectively.
 Mutation is excluded and has a separate P95 near 22 ms. Three observations of each mutation type report zero
@@ -550,26 +664,29 @@ the first search with one rebuild. Neither value is a combined timer. One observ
 tail latency.
 
 
-   add-batch                          0.740; rebuild 0
 
 
-      add-one                       0.598; rebuild 0
+                                                         12
+   add-batch                           0.740; rebuild 0
 
 
- delete-batch                           0.819; rebuild 0
+     add-one                         0.598; rebuild 0
 
 
-   delete-one                       0.631; rebuild 0
+ delete-batch                            0.819; rebuild 0
 
 
-       reopen                                                                                      101.296; rebuild 1
+   delete-one                        0.631; rebuild 0
 
 
-            10−1                       100                         101                           102
-                                         First search after mutation or reopen (ms; log scale)
+       reopen                                                                                                                 101.296; rebuild 1
 
 
-Figure 8: S1 reference RTX 4090, durable 10K×384, unfiltered B = 1, k = 10. Bars are first-search latency after
+             10−1                       100                                                   101                          102
+                                          First search after mutation or reopen (ms; log scale)
+
+
+Figure 9: S1 reference RTX 4090, durable 10K×384, unfiltered B = 1, k = 10. Bars are first-search latency after
 mutation/reopen, excluding mutation/opening. Three observations per mutation type give P95; reopen is one
 observation. Rebuild annotations are fractions, not probabilities. Deletion checks pass. Logarithmic horizontal
 axis, no error bars.
@@ -581,36 +698,33 @@ VRAM telemetry. Upload and readback counts are 403,136 and 48 bytes unfiltered, 
 for batch eight. Residency and per-call transfer are separate scopes.
 
 
-
-
-                                                           10
-                                                                                                                         0.904
-                             Scoring median
-                                                                                                                         0.902
+                                                                                              0.904
+    Scoring median
+                                                                                              0.902
+                                                                    Completed-call P95 (ms)
 
 
 
 
-                                                                                               Completed-call P95 (ms)
-                                                                                                                         0.900
-                            Selection median
-                                                                                                                                            B=1, k=1
-                                                                                                                         0.898
+                                                                                              0.900
+  Selection median
+                                                                                                             B=1, k=1
+                                                                                              0.898
 
 
-                            Backend median                                                                               0.896
-                                                                                                                                                                  B=8, k=64
-                                                                                                                         0.894
+   Backend median                                                                             0.896
+                                                                                                                                   B=8, k=64
+                                                                                              0.894
 
-            Completed-call P95                                                                                           0.892
+ Completed-call P95                                                                           0.892
 
-                                                                                                                         0.890
-                                           0.0      0.2       0.4        0.6       0.8                                        309       310 311 312 313 314 315 316                  317
-                                                     Time (ms; overlapping scopes)                                                       Qenlo-owned accelerator allocation (MB)
+                                                                                              0.890
+                    0.0   0.2       0.4        0.6       0.8                                       309   310 311 312 313 314 315 316                317
+                           Time (ms; overlapping scopes)                                                  Qenlo-owned accelerator allocation (MB)
 
 
 
-Figure 9: S2 bb195fed, RTX 4090/Vulkan, generated 100K×768, FP64 recall 1.0. Left: B = 8, k = 64, E/N =
+Figure 10: S2 bb195fed, RTX 4090/Vulkan, generated 100K×768, FP64 recall 1.0. Left: B = 8, k = 64, E/N =
 10%, raw phase medians versus call P95. Nested scopes are not additive. Right: two corrected WGPU workloads,
 zoomed linear latency axis, decimal owned-allocation MB. Different workloads do not establish a memory/latency
 law or efficiency score. No error bars.
@@ -621,47 +735,47 @@ latency. Capacity, initialization, and warm-state validity remain deployment cos
 pensive.
 
 
-11                               Mobile and heterogeneous devices
+
+
+                                                               13
+12                               Mobile and heterogeneous devices
 H6 records physical Android: Android 16 (API 36), MediaTek MT6897, Mali-G615 MC6 with Vulkan, app 0.1.0.
 All 21 aggregate cells report recall@10=1.0 without fallback or failure. CPU wins the 10K quick batch-one cell
 (5.767 versus WGPU’s 12.487 ms P95); WGPU wins the 100K full cell (16.975 versus 29.436) and soak cell (17.678
 versus 27.019). Size and suite change together, so this is a qualitative reversal rather than a mobile crossover
 bracket.
 
-                                          Android 16 / Mali-G615 device-lab evidence; observed recall@10 = 1.0
+                                       Android 16 / Mali-G615 device-lab evidence; observed recall@10 = 1.0
 
 
-                                               (a) dense batch-1 route                                                   (b) matched 100k-row soak, batch 1, n=512
+                                           (a) dense batch-1 route                         (b) matched 100k-row soak, batch 1, n=512
                             30
 reported P95 latency (ms)
 
 
 
 
-                                        CPU exhaustive                                        40                                                                              37.1
-                            25          WGPU exhaustive
-                                                                                              30                                 27.0
+                                      CPU exhaustive                                  40                                          37.1
+                            25        WGPU exhaustive
+                                                                                      30       27.0
                             20
-                                                                                                                                                               21.5
-                            15                                                                20                                                17.7
+                                                                                                                       21.5
+                            15                                                        20                    17.7
 
                             10
-                                                                                              10
-                             5
+                                                                                      10
+                            5
 
-                             0                                                                0
-                                       quick             full            soak                                                CPU               WGPU          IVF-Flat      IVF-SQ8
-                                  10k rows, n=16   100k rows, n=64 100k rows, n=512                                       exhaustive         exhaustive
+                            0                                                         0
+                                      quick             full            soak                   CPU         WGPU       IVF-Flat   IVF-SQ8
+                                 10k rows, n=16   100k rows, n=64 100k rows, n=512          exhaustive   exhaustive
 
 
-Figure 10: H6 physical Mali-G615/Vulkan, generated 384D, k = 10, app 0.1.0; commit unrecorded. Supplied
+Figure 11: H6 physical Mali-G615/Vulkan, generated 384D, k = 10, app 0.1.0; commit unrecorded. Supplied
 aggregate percentiles: quick/full/soak use 16/64/512 samples/cell. All recalls 1.0; IVF remains approximate.
 Raw calls and controlled thermal/power records absent. No error bars or current-revision mobile claim.
 
-
-
-                                                                                         11
-   At the 100K Android soak point, IVF-Flat takes 21.453 ms P95 and IVF-SQ8 takes 37.090 ms, both slower
+   At the 100K Android soak point, IVF-Flat takes 21.453 ms P95 and IVF-SQ8 takes 37.090 ms, both slower
 than exhaustive WGPU at those settings. Dense WGPU batch eight reports 11.131 ms; this batch statistic is not
 normalized per query. It suggests amortization, not an eightfold per-query gain. The power source is absent, and
 the thermal state is the uninterpreted value “0”.
@@ -673,7 +787,7 @@ Kotlin/JVM bindings do not establish current Android packaging. Simulator and ma
 physical iOS performance, and no iOS-device or MPS timing is retained.
 
 
-12      Negative results and rejected optimization
+13                               Negative results and rejected optimization
 Lane-minimum selection retains each lane’s minimum and rescans only the winning lane. It reduces repeated
 scans but changes local state and synchronization. Twelve qualified S0/S1 pairs yield five wins and seven losses,
 with frozen-baseline to candidate P95 ratios from 0.617 to 1.295. The retained implementation uses the simpler
@@ -681,7 +795,10 @@ full-rescan selector. Less nominal work did not consistently reduce completed la
 changes too: paired revisions do not prove every difference is solely caused by selection.
 
 
-        01 2000 Ada-pilot / p1
+
+
+                                                                                 14
+        01 2000 Ada-pilot / p1
 
             02 a40-ca-mtl / c1
 
@@ -706,55 +823,67 @@ changes too: paired revisions do not prove every difference is solely caused by 
           12 4090 / deep / d3
 
 
-                              0.0    0.2          0.4             0.6             0.8           1.0      1.2
-                                             Frozen baseline P95 / candidate P95 (>1 favors candidate)
+                              0.0      0.2           0.4             0.6             0.8           1.0      1.2
+                                                Frozen baseline P95 / candidate P95 (>1 favors candidate)
 
 
 
-Figure 11: S0 f37e744c versus S1 730c0500, twelve qualified WGPU configuration/workload pairs, FP64-oracle-
+Figure 12: S0 f37e744c versus S1 730c0500, twelve qualified WGPU configuration/workload pairs, FP64-oracle-
 qualified completed-call P95. Exact workloads/ratios in appendix. Above one favors candidate: five wins, seven
 losses. RTX 2000 Ada, A40, RTX 4090; no significance test, error bars, or pooled device effect.
 
-   Four pre-fix 100K×768 failures remain because a 2 GiB benchmark budget did not override the 512 MiB
+    Four pre-fix 100K×768 failures remain because a 2 GiB benchmark budget did not override the 512 MiB
 default in-memory admission limit. The corrected source and result archives have distinct hashes; correction does
 not retroactively qualify the failed rows. Two malformed workload-label invocations are invalid-harness rows, not
 slow engine results. Chroma gate failures, unqualified USearch, cuVS recall or runtime failures, and unavailable
 Vulkan paths remain part of the evidence. A controller reaching completion is insufficient for qualification.
-   Final known daily Runpod spend is $0.9400778694252952. Zero campaign pods remain, with ten creations
+    R1 is the negative routing result the earlier archive lacked. The frozen EDB candidate passed development and
+failed held out; it was reverted before release. P2 similarly rejects unconditional use of a sparse CPU optimization.
+Together with the five-win/seven-loss WGPU selector, these results show three distinct ways that plausible work
+reduction can fail at the completed-call boundary.
+    Final known daily Runpod spend is $0.9400778694252952. Zero campaign pods remain, with ten creations
 and ten verified deletions. No campaign volume was retained. This is account and daily billing, not per-query
 cost or a clean marginal campaign cost; billing lag is possible. No cloud work was rerun for authoring.
 
 
-
-
-                                                        12
-13     Deployment implications
+14      Deployment implications
 CPU fits tiny eligible workloads when accelerator fixed costs dominate. WGPU can help dense, batched workloads
 when residency is valid. Tensor execution may fit applications that already own its runtime, but package footprint
 and persistence-integration costs were not measured. Before preparation is amortized, callers must account for
 snapshot generation and mutation state. An explanatory decomposition is
 
-                                   Tcall = Tprepare + Troute + Texecute + Treturn .                             (4)
+                                    Tcall = Tprepare + Troute + Texecute + Treturn .                              (4)
 
-These conceptual, nonoverlapping boundaries are not sums of overlapping counters. Execution depends on E, D,
-B, k, representation, and device. Preparation also depends on reuse, generation, and residency. No coefficients
-are fitted. The decomposition organizes the observations without asserting a transferable latency law.
-   The reversals and preparation ablation support the central engineering inference that collection size or GPU
-availability alone is insufficient for routing. They do not validate a multidimensional predictor. Decisions require
-the named adapter and API, together with recall and mutation conditions. Cloud results cannot select a mobile
-default.
+These conceptual, nonoverlapping boundaries are not sums of overlapping counters. Candidate explanatory
+variables include E, D, B, k, representation, and device; R1 rejects one policy based on their product, but does
+not isolate each factor’s causal or predictive contribution. Preparation also depends on total N , predicate shape,
+reuse, generation, and residency. No coefficients are fitted. The decomposition organizes the observations without
+asserting a transferable latency law.
+    The reversals and preparation ablation support the central engineering inference that collection size or GPU
+availability alone is insufficient for routing. R1 goes further: one specific multiplicative predictor is rejected on
+held-out data. A candidate policy should preserve the variables rather than collapse them, bind calibration to
+source/device/API identity, include a confidence-aware fallback, and evaluate realized automatic latency after
 
 
-14     Threats to validity
+                                                           15
+mutations and cold preparation. These requirements define the next experiment; they are not evidence that a
+learned or calibrated router will succeed. Cloud results cannot select a mobile default.
+
+
+15     Threats to validity
 The archive grew sequentially rather than as a randomized factorial study. Dirty trees limit attribution even
 when hashes and configurations are retained. H0 is cross-revision context. H1 is a post-hoc study on one laptop,
-one dimension, one batch size, and one corpus, with independently generated metadata. H2 is sequential, lacks
-CPU cells, and cannot recalibrate H1. C1–C6 confound collection size, dimension, batching, and eligibility. S2
-uses a rejected selector whose final replacement was not rerun in the corrected cells.
+one dimension, one batch size, and one corpus, with independently generated metadata. P0 differs from H1 in
+several environment and source variables; opposite winners falsify universality but do not identify which variable
+moved the boundary. H2 is sequential, lacks CPU cells, and cannot recalibrate H1. C1–C6 confound collection
+size, dimension, batching, and eligibility. S2 uses a rejected selector whose final replacement was not rerun in the
+corrected cells.
     The three-run small campaign, five-run historical measurements, and single-reopen observation do not support
-narrow intervals or broad significance. Repeated queries are not independent deployment workloads. Aggregate
-device data cannot yield raw distributions, and thermal and power controls are incomplete. Prototype agreement
-is weaker than an FP64 oracle. Reference checks do not prove that all ties or workloads agree.
+narrow intervals or broad significance. R1 is held out relative to the selected rule, but its sixteen designed cells
+are not a random deployment distribution; its post-hoc alternative threshold must not be promoted. Repeated
+queries are not independent deployment workloads. Aggregate device data cannot yield raw distributions, and
+thermal and power controls are incomplete. Prototype agreement is weaker than an FP64 oracle. Reference
+checks do not prove that all ties or workloads agree.
     Adapters differ in filtering, selection, normalization, threading, persistence, and API. NumPy uses full lexi-
 cographic sorting rather than an optimal top-k baseline. Corrected FAISS is CPU Flat, whereas the historical
 A6000 result is GPU Flat. Memory scopes differ and omit peak total accelerator use. Concurrency, energy, device
@@ -762,7 +891,7 @@ loss, cache churn, adversarial predicates, and crash schedules were not benchmar
 frontiers and filter-aware baselines. No fastest-database claim follows.
 
 
-15     Related work and novelty boundary
+16     Related work and novelty boundary
 FAISS describes optimized exhaustive and approximate CPU and GPU search and selection [3, 6]. HNSW provides
 graph-based ANN search [8]. DiskANN and SPANN address storage-aware regimes [2, 12]; Filtered-DiskANN
 and ACORN modify graph access under predicates [4, 10].
@@ -774,22 +903,37 @@ compilation with generation-bound state, and resource and lifecycle evidence for
 lacks broad FANNS coverage and claims no new ANN algorithm.
 
 
-16     Conclusions
-A matched RTX 4050 sweep localizes the CPU/WGPU reversal and quantifies static-policy regret. A separate
-ablation shows that eligibility preparation changes completed latency. The small-collection results add fast exper-
-imental WGPU and tensor paths, CPU wins on selective cells, resource costs, and a rejected selector. Android,
-Arc, and A6000 extend the observations within separate correctness and platform boundaries.
-    Routing should account for eligibility, representation, batching, runtime, and state. The evidence does not
-establish a universal threshold, a numerical-equivalence theorem, or a held-out advantage for an adaptive router.
-Final local selection needs new matched measurements before it inherits the corrected experimental latencies.
+17     Conclusions
+The principal confirmatory result is the rejection of the frozen EDB rule: zero errors on 31 development pairs
+became 8 errors in 16 held-out workloads, with 235.7% maximum backend-choice regret. Separately, an E-only
+threshold cannot classify opposite observed winners at the same 3K and 4K eligible counts across two environments.
+No increasing EDB threshold perfectly classifies R1’s medians either, but its ordering contradiction depends on a
+3.16%-margin cell, and a post-hoc scalar threshold stays below the original regret limits. These observations do not
+prove that every scalar policy is practically inadequate or that query-shape factorization caused the differences.
+    The positive conclusion is a routing architecture, not a fitted policy. Execution decisions must preserve
+E, D, B, k, total N , predicate representation, source/device/runtime identity, and warm or mutation state. Eligi-
+bility plans reduce avoidable preparation; sparse-only CPU optimization and GPU selection must themselves be
+routed; and automatic-path latency must be measured directly because it is not interchangeable with forced-route
+P95. The archive also establishes scoped engineering opportunities: the dense Qenlo CPU path trails single-thread
+FAISS Flat in P2, and WGPU selection can exceed scoring in the corrected 768D diagnostics.
+    No retained result demonstrates that a multidimensional production router generalizes. The next valid claim
+requires a frozen policy, interleaved forced-route and automatic measurements, disjoint held-out devices and query
+shapes, cold/warm and post-mutation strata, and explicit regret limits. Until that experiment passes, Qenlo has
 
 
-                                                         13
-Reproducibility statement
-Retained evidence only: no product or benchmark changes and no experimental reruns. Ledgers preserve claims,
-revisions and hashes, environments, provenance, timing, counts, correctness, memory, qualification, and exclu-
-sions. Paper-only scripts regenerate reductions, tables, and PDF/PNG figures without replacing raw evidence or
-historical figures. Appendix B and paper/REPRODUCE.md describe the audit and clean build.
+
+                                                        16
+evidence for conditional execution and calibrated fallbacks, not for an adaptive-router advantage or a portable
+performance promise.
+
+
+Reproducibility statement
+Retained evidence only: no product or benchmark changes and no experimental reruns. The archive-wide script
+verifies four source archives, regenerates the new reductions, and inventories every discovered tracked or selected
+archive-internal sample series. Ledgers preserve claims, revisions and hashes, environments, provenance, timing,
+counts, correctness, memory, qualification, and exclusions. Paper-only scripts regenerate reductions, tables, and
+PDF/PNG figures without replacing raw evidence or historical figures. Appendix B and paper/REPRODUCE.md
+describe the audit and clean build.
 
 
 References
@@ -800,45 +944,46 @@ References
      Wang. SPANN: Highly-efficient billion-scale approximate nearest neighbor search. In Advances in Neural
      Information Processing Systems, volume 34, pages 5199–5212, 2021. URL https://proceedings.neurips.
      cc/paper_files/paper/2021/hash/299dc35e747eb77177d9cea10a802da2-Abstract.html.
-
  [3] Matthijs Douze, Alexandr Guzhva, Chengqi Deng, Jeff Johnson, Gergely Szilvasy, Pierre-Emmanuel Mazaré,
      Maria Lomeli, Lucas Hosseini, and Hervé Jégou. The Faiss library. arXiv preprint arXiv:2401.08281, 2024.
      URL https://arxiv.org/abs/2401.08281.
+
  [4] Siddharth Gollapudi, Neel Karia, Varun Sivashankar, Ravishankar Krishnaswamy, Nikit Begwani, Swapnil
      Raz, Yiyong Lin, Yin Zhang, Neelam Mahapatro, Premkumar Srinivasan, Amit Singh, and Harsha Vardhan
      Simhadri. Filtered-DiskANN: Graph algorithms for approximate nearest neighbor search with filters. In
      Proceedings of the ACM Web Conference 2023, pages 3406–3416. Association for Computing Machinery,
      2023. doi: 10.1145/3543507.3583552. URL https://doi.org/10.1145/3543507.3583552.
+
  [5] Patrick Iff, Paul Brügger, Marcin Chrapek, David Kochergin, Maciej Besta, and Torsten Hoefler. Bench-
      marking filtered approximate nearest neighbor search algorithms on transformer-based embedding vectors. In
      Proceedings of the 49th International ACM SIGIR Conference on Research and Development in Information
      Retrieval, pages 610–622, 2026. doi: 10.1145/3805712.3809731. URL https://doi.org/10.1145/3805712.
      3809731.
+
  [6] Jeff Johnson, Matthijs Douze, and Hervé Jégou. Billion-scale similarity search with GPUs. IEEE Transactions
      on Big Data, 7(3):535–547, 2021. doi: 10.1109/TBDATA.2019.2921572. URL https://doi.org/10.1109/
      TBDATA.2019.2921572.
  [7] Mocheng Li, Xiao Yan, Baotong Lu, Yue Zhang, James Cheng, and Chenhao Ma. Attribute filtering in ap-
      proximate nearest neighbor search: An in-depth experimental study. Proceedings of the ACM on Management
      of Data, 3(6):298:1–298:26, 2025. doi: 10.1145/3769763. URL https://doi.org/10.1145/3769763.
-
  [8] Yu. A. Malkov and D. A. Yashunin. Efficient and robust approximate nearest neighbor search using hierar-
      chical navigable small world graphs. IEEE Transactions on Pattern Analysis and Machine Intelligence, 42
      (4):824–836, 2020. doi: 10.1109/TPAMI.2018.2889473.
+
  [9] Beatrix Miranda Ginn Nielsen. DTU pretrained sentence BERT AG News embeddings, 2023. URL https:
      //doi.org/10.11583/DTU.21286923.v1.
-
 [10] Liana Patel, Peter Kraft, Carlos Guestrin, and Matei Zaharia. ACORN: Performant and predicate-agnostic
      search over vector embeddings and structured data. Proceedings of the ACM on Management of Data, 2(3):
      120:1–120:27, 2024. doi: 10.1145/3654923. URL https://doi.org/10.1145/3654923.
-[11] Jiayang Shi, Yuzheng Cai, and Weiguo Zheng. Filtered approximate nearest neighbor search: A unified
+
+
+
+                                                        17
+[11] Jiayang Shi, Yuzheng Cai, and Weiguo Zheng. Filtered approximate nearest neighbor search: A unified
      benchmark and systematic experimental study. arXiv preprint arXiv:2509.07789, 2025. URL https://arxi
      v.org/abs/2509.07789.
 
-
-
-
-                                                       14
-[12] Suhas Jayaram Subramanya, Fnu Devvrit, Harsha Vardhan Simhadri, Ravishankar Krishnaswamy, and Ro-
+[12] Suhas Jayaram Subramanya, Fnu Devvrit, Harsha Vardhan Simhadri, Ravishankar Krishnaswamy, and Ro-
      han Kadekodi. DiskANN: Fast accurate billion-point nearest neighbor search on a single node. In Advances
      in Neural Information Processing Systems, volume 32, 2019. URL https://proceedings.neurips.cc/pap
      er/2019/hash/09853c7fb1d3f8ee67a61b6bf4a7f8e6-Abstract.html.
@@ -846,14 +991,13 @@ References
      398ce7d72dea7ad765ada54c5daa014c498efb52; accessed 2026-09-05.
 [14] W3C GPU for the Web Working Group. WebGPU. https://www.w3.org/TR/webgpu/, 2026. W3C
      Candidate Recommendation Draft, 20 August 2026; accessed 2026-09-05.
-
 [15] W3C GPU for the Web Working Group. WebGPU Shading Language. https://www.w3.org/TR/WGSL/,
      2026. W3C Candidate Recommendation Draft, 17 August 2026; accessed 2026-09-05.
 
 
 
 
-                                                     15
+                                                     18
 A     Detailed retained tables
 These tables are generated from retained machine-readable evidence. They preserve aggregation within each
 cohort, and an empty field is not a zero. The full 182-row campaign CSV and JSON include every failed,
@@ -863,7 +1007,7 @@ sample units. All latency units below are milliseconds.
 A.1    Common small-collection native rows
 
 
-Table 4: S1 common cells from the matrix. CPU values on A40 are absent for this source role; no substitute
+Table 6: S1 common cells from the matrix. CPU values on A40 are absent for this source role; no substitute
 baseline-CPU row is silently inserted. Workload definitions appear in the main text. All displayed rows qualify
 at FP64 recall 1.0.
                                    Configuration      Cell   CPU P95        WGPU P95
@@ -890,7 +1034,7 @@ at FP64 recall 1.0.
 A.2    Frozen-baseline versus candidate selection
 
 
-Table 5: All twelve qualified S0/S1 pairs. The ratio is frozen-baseline P95 divided by candidate P95. IDs encode
+Table 7: All twelve qualified S0/S1 pairs. The ratio is frozen-baseline P95 divided by candidate P95. IDs encode
 row count (r), dimension (d), batch size (b), k when nondefault, and eligible fraction (f). The compound cell
 combines metadata clauses.
                              Configuration            Workload                          Ratio
@@ -910,11 +1054,11 @@ combines metadata clauses.
 
 
 
-                                                             16
+                                                             19
 A.3    Small real-embedding replay
 
 
-Table 6: S1 AG News on the reference RTX 4090, 100K×384, B = 16, k = 10, E/N = 1%. There are three runs
+Table 8: S1 AG News on the reference RTX 4090, 100K×384, B = 16, k = 10, E/N = 1%. There are three runs
 and 939 calls per native or replayed engine. Chroma and USearch are ANN; all other engines are exhaustive.
 External flat and tensor matrices are prefiltered.
                                Engine            Completed-call P95      FP64 recall
@@ -931,7 +1075,7 @@ External flat and tensor matrices are prefiltered.
 A.4    Historical Windows endpoints and matched localization
 
 
-Table 7: H0: 100K×384, B = 1, k = 10, five runs and 25,000 calls per row. Cross-revision endpoint context:
+Table 9: H0: 100K×384, B = 1, k = 10, five runs and 25,000 calls per row. Cross-revision endpoint context:
 dense CPU 4ae9f1d, dense WGPU f1ccc4d; sparse CPU and rows 78e3947, sparse predicate f1ccc4d. ANN
 rows retain their own revisions and APIs.
                            Eligible   System                            P95   FP64 recall
@@ -948,7 +1092,7 @@ rows retain their own revisions and APIs.
 
 
 
-Table 8: H1: matched recorded revision 3e2a4a9, RTX 4050/DX12, AG News, 100K×384, B = 1, k = 10, five
+Table 10: H1: matched recorded revision 3e2a4a9, RTX 4050/DX12, AG News, 100K×384, B = 1, k = 10, five
 runs and 25,000 calls per backend and cell. Post-hoc localization; median run P95.
                            Eligible   CPU P95      Compact WGPU P95           FP64 recall
                              2000       0.5198                     0.6340         1.00000
@@ -961,59 +1105,111 @@ runs and 25,000 calls per backend and cell. Post-hoc localization; median run P9
 
 
 
-                                                        17
+                                                        20
 A.5    Historical eligibility ablation
 
 
-Table 9: H2, RTX 4090/Vulkan, 100K×384, B = 1, k = 10. Five runs and 25,000 calls per mode and cell, with
+Table 11: H2, RTX 4090/Vulkan, 100K×384, B = 1, k = 10. Five runs and 25,000 calls per mode and cell, with
 modes executed sequentially. Percentiles are medians of run percentiles.
-                        Eligible   Preparation          P50      P95      P99   FP64 recall
-                          1000     legacy-two-pass   0.1204   0.1317   0.1584       1.00000
-                          1000     one-pass          0.1097   0.1179   0.1453       1.00000
-                          1000     cached            0.0908   0.0997   0.1132       1.00000
-                          4000     legacy-two-pass   0.2910   0.3053   0.3251       1.00000
-                          4000     one-pass          0.1982   0.2080   0.2250       1.00000
-                          4000     cached            0.1348   0.1438   0.1582       1.00000
-                          6000     legacy-two-pass   0.3851   0.4011   0.4400       1.00000
-                          6000     one-pass          0.2561   0.2716   0.2903       1.00000
-                          6000     cached            0.1624   0.1713   0.1941       1.00000
-                        100000     legacy-two-pass   1.6633   1.7862   1.9031       0.99998
-                        100000     one-pass          1.6074   1.7205   1.8165       0.99998
-                        100000     cached            1.5379   1.5960   1.6907       0.99998
+                        Eligible    Preparation             P50         P95         P99    FP64 recall
+                           1000     legacy-two-pass    0.1204      0.1317      0.1584             1.00000
+                           1000     one-pass           0.1097      0.1179      0.1453             1.00000
+                           1000     cached             0.0908      0.0997      0.1132             1.00000
+                           4000     legacy-two-pass    0.2910      0.3053      0.3251             1.00000
+                           4000     one-pass           0.1982      0.2080      0.2250             1.00000
+                           4000     cached             0.1348      0.1438      0.1582             1.00000
+                           6000     legacy-two-pass    0.3851      0.4011      0.4400             1.00000
+                           6000     one-pass           0.2561      0.2716      0.2903             1.00000
+                           6000     cached             0.1624      0.1713      0.1941             1.00000
+                         100000     legacy-two-pass    1.6633      1.7862      1.9031             0.99998
+                         100000     one-pass           1.6074      1.7205      1.8165             0.99998
+                         100000     cached             1.5379      1.5960      1.6907             0.99998
 
 
-A.6    Historical A6000 distributions
+A.6    Archive-wide routing and CPU reductions
 
 
-Table 10: H4 strict real TopK, 1M×768, E = 10, 026, B = 1, k = 10, 5,000 calls/system. Shared prefiltered
+Table 12: R1 all sixteen held-out workloads for the frozen EDB = 106 rule. Work is in millions; regret compares
+the selected forced route with the faster forced route. Auto/best compares the separately measured automatic
+P95 with the faster forced P95 and is not interpreted as overhead.
+                    Workload                EDB/106     k     Winner      Choice     Regret %       Auto/best
+                    d128-b8-e488-k1            0.500    1         CPU         CPU           0.0         0.727
+                    d128-b8-e733-k10           0.751   10         CPU         CPU           0.0         0.821
+                    d128-b8-e977-k64           1.000   64         CPU         GPU          41.6         3.289
+                    d128-b8-e1221-k10          1.250   10         CPU         GPU         235.7         4.021
+                    d128-b8-e1465-k1           1.500    1         GPU         GPU           0.0         2.394
+                    d384-b1-e1302-k1           0.500    1         CPU         CPU           0.0         1.861
+                    d384-b1-e1953-k10          0.750   10         CPU         CPU           0.0         1.303
+                    d384-b1-e2604-k64          1.000   64         CPU         CPU           0.0         1.150
+                    d384-b1-e3255-k10          1.250   10         CPU         GPU          21.2         1.131
+                    d384-b1-e3906-k1           1.500    1         CPU         GPU           0.9         0.923
+                    d768-b16-e41-k1            0.504    1         CPU         CPU           0.0         0.412
+                    d768-b16-e61-k10           0.750   10         GPU         CPU           3.2         0.840
+                    d768-b16-e81-k64           0.995   64         CPU         CPU           0.0         0.789
+                    d768-b16-e102-k10          1.253   10         CPU         GPU         106.8         4.595
+                    d768-b16-e122-k1           1.499    1         CPU         GPU         162.0         5.393
+                    all-r1000-d128-b8-k10      1.024   10         CPU         GPU         164.5         2.351
+
+
+
+
+                                                             21
+Table 13: H1/P0 crossover cells used for the equal-E contradiction. Both cohorts use 100K×384, B = 1, k = 10,
+five runs and 5,000 calls/run/backend; source, host CPU, GPU, OS/API, and driver differ.
+                         Environment                E     CPU P95      WGPU P95      Winner
+                         RTX 4050 / DX12        2,000         0.5198       0.6340         CPU
+                         RTX 4050 / DX12        3,000         0.9563       0.8144         GPU
+                         RTX 4050 / DX12        4,000         1.3305       1.0737         GPU
+                         RTX 4050 / DX12        6,000         1.9735       1.6033         GPU
+                         RTX 4050 / DX12        8,000         2.5003       2.1508         GPU
+                         RTX 4050 / DX12       10,000         2.8104       2.6041         GPU
+                         RTX 4090 / Vulkan      1,000         0.1019       0.1777         CPU
+                         RTX 4090 / Vulkan      2,000         0.1947       0.2630         CPU
+                         RTX 4090 / Vulkan      3,000         0.2884       0.3673         CPU
+                         RTX 4090 / Vulkan      4,000         0.4011       0.4143         CPU
+                         RTX 4090 / Vulkan      6,000         1.3114       0.5916         GPU
+                         RTX 4090 / Vulkan      8,000         2.4046       0.5934         GPU
+                         RTX 4090 / Vulkan     10,000         3.7544       0.6807         GPU
+                         RTX 4090 / Vulkan    100,000         5.6692       1.7747         GPU
+
+
+P2’s complete reduction contains the six matched Qenlo rows summarized in Table 5, a routed dense reference
+verification at 14.474 ms, and FAISS CPU Flat at 11.154 ms. The latter two are time-separated diagnostics
+and do not turn run drift into an optimization effect. Full rows, source roles, recall, and archive identity are in
+research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv.
+
+A.7     Historical A6000 distributions
+
+
+Table 14: H4 strict real TopK, 1M×768, E = 10, 026, B = 1, k = 10, 5,000 calls/system. Shared prefiltered
 matrix, host completed calls. cuVS fails correctness and is excluded from qualified comparisons. CUDA prototype
 is unshipped research code.
-                        System                         P50      P95      P99    FP64 recall
-                        cuVS (disqualified)          0.3615   0.3846   0.4131       0.90000
-                        FAISS GPU Flat               0.1261   0.1322   0.1458       1.00000
-                        NumPy CPU exhaustive         0.1217   0.1973   0.2283       1.00000
-                        CUDA prototype               0.1600   0.1707   0.1809       1.00000
+                         System                         P50      P95     P99    FP64 recall
+                         cuVS (disqualified)       0.3615     0.3846   0.4131        0.90000
+                         FAISS GPU Flat            0.1261     0.1322   0.1458        1.00000
+                         NumPy CPU exhaustive      0.1217     0.1973   0.2283        1.00000
+                         CUDA prototype            0.1600     0.1707   0.1809        1.00000
 
 
 
 
-Table 11: H5 generated normalized FP32, 1M×768, B = 1, k = 10, 500 calls/system/cell across five runs.
+Table 15: H5 generated normalized FP32, 1M×768, B = 1, k = 10, 500 calls/system/cell across five runs.
 Completed-call distribution percentiles; unordered top-10 agreement, not independent FP64 truth.
-                              Eligible   System                 P50      P95      P99
-                                 1000    FAISS GPU Flat       0.0672   0.0857   0.0952
-                                 1000    CUDA prototype       0.0775   0.0975   0.1155
-                                10000    FAISS GPU Flat       0.1272   0.1373   0.1505
-                                10000    CUDA prototype       0.1438   0.1557   0.1741
-                               100000    FAISS GPU Flat       0.7755   0.7887   0.8001
-                               100000    CUDA prototype       0.5559   0.5673   0.5763
-                              1000000    FAISS GPU Flat       6.2736   6.3475   6.4357
-                              1000000    CUDA prototype       4.6508   4.6683   4.7364
+                               Eligible   System                 P50     P95        P99
+                                 1000     FAISS GPU Flat      0.0672   0.0857   0.0952
+                                 1000     CUDA prototype      0.0775   0.0975   0.1155
+                                10000     FAISS GPU Flat      0.1272   0.1373   0.1505
+                                10000     CUDA prototype      0.1438   0.1557   0.1741
+                               100000     FAISS GPU Flat      0.7755   0.7887   0.8001
+                               100000     CUDA prototype      0.5559   0.5673   0.5763
+                              1000000     FAISS GPU Flat      6.2736   6.3475   6.4357
+                              1000000     CUDA prototype      4.6508   4.6683   4.7364
 
 
 
 
-                                                         18
-A.7                                Historical Linux libraries
+                                                         22
+A.8                                Historical Linux libraries
 
                               Descriptive Linux library cohort: same data and host, 1,500 calls/system
                                             exhaustive                                                                 LanceDB Flat
@@ -1043,13 +1239,13 @@ P95 latency (ms, log scale)
                                            0.992             0.994             0.996                0.998          1.000
                                                                            recall@10
 
-Figure 12: H3 bb51987, Linux CPU library context, separately prepared AG News 100K×384, unfiltered B =
+Figure 13: H3 bb51987, Linux CPU library context, separately prepared AG News 100K×384, unfiltered B =
 1, k = 10. Three runs/1,500 calls per system; completed library-call P95. Recall accompanies latency; algorithms,
 persistence, and APIs differ. This figure is descriptive within the host, not a product leaderboard.
 
 
 
-Table 12: H3 complete retained library context. ANN recall is part of each operating point; exhaustive engines
+Table 16: H3 complete retained library context. ANN recall is part of each operating point; exhaustive engines
 use different APIs. Native GPU failed Vulkan initialization and has no timed row.
                                                    System                   Search           P95    FP64 recall
                                                    Qenlo CPU                exhaustive    12.9014      1.00000
@@ -1063,11 +1259,11 @@ use different APIs. Native GPU failed Vulkan initialization and has no timed row
 
 
 
-                                                                              19
-A.8     Android aggregate records
+                                                                              23
+A.9     Android aggregate records
 
 
-Table 13: H6 all 21 supplied Android cells. D = 384, k = 10; B is batch size and n is the reported sample count.
+Table 17: H6 all 21 supplied Android cells. D = 384, k = 10; B is batch size and n is the reported sample count.
 All recall@10 values are 1.0, and all fallback counts are zero. Automatic rows use selective predicates and are not
 comparable with dense rows. No raw-call reconstruction is possible.
                    Suite    Cell                              Rows    B    n       P50       P95       P99
@@ -1095,10 +1291,10 @@ comparable with dense rows. No raw-call reconstruction is possible.
 
 
 
-A.9     Intel Arc aggregate records
+A.10     Intel Arc aggregate records
 
 
-Table 14: H7 all 21 Intel Arc/Vulkan cells, app 0.1.0, D = 384, k = 10. All reported recall is 1.0, with no fallback.
+Table 18: H7 all 21 Intel Arc/Vulkan cells, app 0.1.0, D = 384, k = 10. All reported recall is 1.0, with no fallback.
 The archive contains two quick reports and one soak; labels follow the embedded JSON. Automatic cells are
 selective and separate from dense rows. Raw series are unavailable.
                    Suite      Cell                           Rows     B     n      P50      P95       P99
@@ -1125,18 +1321,18 @@ selective and separate from dense rows. Raw series are unavailable.
                    soak       Auto selective WGPU           100000    8   512    0.495     0.555     0.866
 
 
-B     Claim ledger and provenance
+B      Claim ledger and provenance
 The definitive machine-readable ledger is paper/tables/claim-to-artifact.json, with a CSV index at the
 same stem. It incorporates audited historical, campaign, and system claims together with every matrix row. Each
 
 
-                                                                20
+                                                                24
 measurement records its source, revision or hash, environment, data provenance, workload, filter, timing, sample
 or repetition unit, oracle, memory scope, qualification, and limitations. Unknown provenance is explicit rather
 than inferred from a nearby cohort. Full machine paths remain outside the narrow printed tables for legibility.
 
 
-Table 15: Headline claim families and authoritative artifacts. Paths are relative to the repository; complete hashes
+Table 19: Headline claim families and authoritative artifacts. Paths are relative to the repository; complete hashes
 and per-row fields are in the ledger.
    Claim                     Result / qualification                           Artifact family
    H1/H1-regret              2K–3K reversal; up to 23.9% counterfactual       research/data/raw/2026-09-02-nativ
@@ -1161,7 +1357,7 @@ and per-row fields are in the ledger.
 
 
 
-                  Table 16: Historical, platform, accounting, and semantic claim families (continued).
+                  Table 20: Historical, platform, accounting, and semantic claim families (continued).
    Claim                     Result / qualification                           Artifact family
    H4/H5                     Real strict negative; synthetic formulation      benchmark-results/2026-09-02-runpo
                              reversal                                         d-a6000-strict-research-gate/;
@@ -1173,6 +1369,12 @@ and per-row fields are in the ledger.
    H6/H7                     Physical Android and Arc, aggregate-only         research/data/raw/2026-09-02-android
                                                                               /; benchmarks/2026-08-31/device-lab/i
                                                                               ntel-arc/reports.json
+   R1                        Frozen EDB rule: 8/16 wrong, 235.7% max          research/data/raw/alpha5-router-hel
+                             regret, rejected                                 dout-rtx4050.tar.gz; archive reanalysis
+   P0                        Separate 4K–6K reversal; equal-E                 research/artifacts/qenlo-phase0-run
+                             contradiction with H1                            pod-complete-2026-09-04.tar.gz
+   P2                        Sparse CPU gains, dense regression, FAISS        research/artifacts/qenlo-phase2-a40
+                             CPU context                                      -2026-09-04-final.tar.gz
    Accounting                Account daily spend, zero retained campaign      Campaign ledger.jsonl, billing captures,
                              resources                                        campaign-summary.json
    Semantics                 Current source contracts; not retrospective      paper/audit/system-ledger.json
@@ -1184,16 +1386,19 @@ The corrected replay records Python 3.12.3, FAISS 1.15.0, NumPy 2.3.3, and PyTor
 runtime version labels describe different layers: the NVIDIA driver reports CUDA 13.0, while the PyTorch build
 targets CUDA 12.8. Per-configuration environment captures remain authoritative for other hosts.
    The campaign root is research/artifacts/runpod-small-2026-09-05/. Full identities are:
-S0 frozen source. f37e744c7ee4054a74c4b4181f2dde61dade4d677bbc5493b9a36b61d165a45d
+
+
+                                                             25
+S0 frozen source. f37e744c7ee4054a74c4b4181f2dde61dade4d677bbc5493b9a36b61d165a45d
 S1 experimental source. 730c050065e6786972a7be4f9bcb619168becdc943ce1122d1583c61f66409e3
 
 S2 corrected source. bb195fedb6519c26598c6c103e7e182982c2eddd0a06d9c2cf54eb5cb5ceeb19
-
-
-                                                             21
-S2 result archive. 9e322d615c0bbed44616faa831493ca030dd49bbce7fe0c4386f49e3b8532fc0
+S2 result archive. 9e322d615c0bbed44616faa831493ca030dd49bbce7fe0c4386f49e3b8532fc0
 H2 eligibility archive. 26e0ccc057c59c0fb4687f8d85a923e88b7bb25257e4e551e22cffe13c1b821f
+R1 held-out router archive. 8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e
 
+P0 complete archive. 7292fd1cd0e7669c9febeaa2d49baedee747811ed65f6bc704ecbcb6e61f51ea
+P2 CPU archive. ac3afda446f4943eab128cff458402f7559be53b96c3cf8ce44fcbbd7f8be4df
 S2 result integrity is distinct from S2 source identity. The corrected result manifest has 74 non-self entries. The
 full campaign verifier checks eight retained result archives and nine checksum manifests, covering 1,053 entries
 and skipping four self-manifest entries. It also checks source roles and the identity of the local and baseline WGSL.
@@ -1222,23 +1427,30 @@ and supplied truth, whereas strict H4 used 10,026 rows and an independent oracle
 exploratory negative context and are not pooled with H4. Their approximately one-percent prototype did not
 beat FAISS, and other provider cells had correctness disagreements. cuVS numerical and runtime failures remain
 failures, not qualified exact results.
-    The archive does not test a complete multidimensional routing surface, fixed-E with varying-N , controlled
-metadata and vector correlation, a tuned filtered-ANN frontier, calibrated held-out routing, concurrency, energy,
-total VRAM peaks, long-running mutation churn, arbitrary crash recovery, MPS, or physical iOS. Historical
-mobile results cannot certify the final revision. The S2 rerun with the final local selector is absent. These gaps
-constrain the claims rather than licensing extrapolation.
+    The archive does not test a complete multidimensional routing surface, controlled fixed-E with varying-N ,
+controlled metadata and vector correlation, a tuned filtered-ANN frontier, a successful calibrated router on held-
+out data, concurrency, energy, total VRAM peaks, long-running mutation churn, arbitrary crash recovery, MPS,
+or physical iOS. R1 supplies a held-out rejection, not a positive adaptive result. Historical mobile results cannot
+certify the final revision. The S2 rerun with the final local selector is absent. These gaps constrain the claims
+rather than licensing extrapolation.
 
 B.4     Reproduction and audit procedure
-Paper-only entry points are paper/scripts/reduce_final_evidence.py, generate_final_tables.py,
-generate_final_figures.py, and verify_campaign_claims.py. Historical raw checks are in paper/audit/ve
-rify_historical_raw.py. Reductions go to paper/audit/reduced/; their parsed CSV rows match the retained
-originals. Android values are regenerated from retained aggregate records rather than unavailable raw series.
-Numerical tables and figure inputs are traceable through paper/audit/figure-sources.json. A clean LaTeX
-build, citation, reference, and box checks, extracted text, and page renders are recorded in the paper verification
-output. No command in this authoring workflow creates cloud resources or runs a performance benchmark.
+The archive-wide entry point is research/scripts/analyze_full_archive.py; it verifies R1/P0/H2/P2
+hashes, parses archives without extracting over retained data, emits the routing/CPU reductions, and writes
+a disposition ledger for tracked or selected archive-internal sample series. Other paper-only entry points are
+paper/scripts/reduce_final_evidence.py, generate_final_tables.py, generate_final_figures.py,
+
+
+                                                         26
+and verify_campaign_claims.py. Historical raw checks are in paper/audit/verify_historical_raw.py.
+Reductions go to paper/audit/reduced/ and research/data/processed/archive-reanalysis/. Android
+values are regenerated from retained aggregate records rather than unavailable raw series. Numerical tables
+and figure inputs are traceable through paper/audit/figure-sources.json. A clean LaTeX build, citation,
+reference, and box checks, extracted text, and page renders are recorded in the paper verification output. No
+command in this authoring workflow creates cloud resources or runs a performance benchmark.
 
 
 
 
-                                                         22
+                                                     27
 

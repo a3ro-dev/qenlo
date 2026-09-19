@@ -1,0 +1,15 @@
+cohort,eligible_rows,dimension,batch,k,cpu_p95_ns,gpu_p95_ns,winner,loser_over_winner,source
+h1-rtx4050-windows-dx12,2000,384,1,10,519800,634000,cpu,1.2196998845709888,research/data/raw/2026-09-02-native-crossover
+h1-rtx4050-windows-dx12,3000,384,1,10,956300,814400,gpu,1.1742387033398822,research/data/raw/2026-09-02-native-crossover
+h1-rtx4050-windows-dx12,4000,384,1,10,1330500,1073700,gpu,1.2391729533389215,research/data/raw/2026-09-02-native-crossover
+h1-rtx4050-windows-dx12,6000,384,1,10,1973500,1603300,gpu,1.2308987712842263,research/data/raw/2026-09-02-native-crossover
+h1-rtx4050-windows-dx12,8000,384,1,10,2500300,2150800,gpu,1.1624976752836154,research/data/raw/2026-09-02-native-crossover
+h1-rtx4050-windows-dx12,10000,384,1,10,2810400,2604100,gpu,1.0792212280634383,research/data/raw/2026-09-02-native-crossover
+phase0-rtx4090-linux-vulkan,1000,384,1,10,101903,177678,cpu,1.7435993052216323,research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz
+phase0-rtx4090-linux-vulkan,2000,384,1,10,194723,263006,cpu,1.3506673582473565,research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz
+phase0-rtx4090-linux-vulkan,3000,384,1,10,288435,367323,cpu,1.2735035623277342,research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz
+phase0-rtx4090-linux-vulkan,4000,384,1,10,401054,414334,cpu,1.033112747909259,research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz
+phase0-rtx4090-linux-vulkan,6000,384,1,10,1311405,591601,gpu,2.2167051779831337,research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz
+phase0-rtx4090-linux-vulkan,8000,384,1,10,2404601,593363,gpu,4.05249568982225,research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz
+phase0-rtx4090-linux-vulkan,10000,384,1,10,3754374,680685,gpu,5.5155820974459555,research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz
+phase0-rtx4090-linux-vulkan,100000,384,1,10,5669167,1774663,gpu,3.1945034071257474,research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz

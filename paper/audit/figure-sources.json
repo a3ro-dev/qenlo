@@ -134,5 +134,20 @@
       }
     ],
     "interpretation": "Separate panels, not pooled. Native matched revision 3e2a4a9 only; older endpoints deliberately omitted. A6000 pooled per-call descriptive P95 within cell, cross-implementation agreement only. Lines guide eyes."
+  },
+  {
+    "figure": "archive_router_failure",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+        "sha256": "045d05d78294716d5a0c08266bf8844d168a556e233d893a14d14bd5d0126576"
+      },
+      {
+        "path": "research/data/processed/archive-reanalysis/crossover_portability.csv",
+        "sha256": "ad1ab0e3fdf2591f25860adcf490e45dccd91cf34d4fa4da6c952fd3d7199002"
+      }
+    ],
+    "interpretation": "Left: 16 preregistered RTX 4050 workloads; near-equal work has different observed winners; monotone counterexamples and uncertainty are discussed in the text. Right: separate 384D, B=1, k=10 cohorts; lines guide the eye and latencies are never pooled. Ratio below one favors GPU. No error bars."
   }
 ]

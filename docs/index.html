@@ -329,7 +329,7 @@
     }
   </style>
 </head>
-<body class="docs-home">
+<body>
   <div id="app">Loading Qenlo documentation...</div>
   <script>
     window.$docsify = {
@@ -363,14 +363,11 @@
         }
       },
       plugins: [
-        function (hook, vm) {
-          hook.doneEach(async function () {
-            const isHome = vm.route.path === '/' || vm.route.path === '/README';
-            document.body.classList.toggle('docs-home', isHome);
-            if (isHome) document.title = 'Qenlo Documentation';
-            await mermaid.run({
-              querySelector: '.mermaid:not([data-processed])'
-            });
+        function (hook) {
+          hook.doneEach(function () {
+            if (window.mermaid) {
+              mermaid.run({ querySelector: '.mermaid:not([data-processed])' });
+            }
           });
         }
       ]

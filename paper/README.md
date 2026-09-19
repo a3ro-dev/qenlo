@@ -1,10 +1,10 @@
 # Qenlo research paper source
 
-There is exactly one published manuscript: [QENLO-RESEARCH-PAPER.pdf](../QENLO-RESEARCH-PAPER.pdf) in the repository root. It is the verified 22-page final paper and integrates the September 5 small-collection campaign with the historical routing, eligibility preparation, Android, Intel Arc, A6000, real-embedding, and external-engine evidence.
+There is exactly one published manuscript: [QENLO-RESEARCH-PAPER.pdf](../QENLO-RESEARCH-PAPER.pdf) in the repository root. It is the verified final paper and integrates the September 5 small-collection campaign with the historical routing, eligibility preparation, Android, Intel Arc, A6000, real-embedding, external-engine, Phase 0/2, and alpha.5 held-out routing evidence.
 
 This directory contains its reproducible source and audit evidence, not alternative papers. Generated build directories live under the ignored `paper/tmp/` path. Superseded manuscript PDFs were removed; git history retains them if historical comparison is ever needed.
 
-The thesis is conditional execution: eligible work, preparation, predicate representation, batching, selection, runtime ownership, and mutation/residency state matter alongside collection size and device class. The archive supports this engineering conclusion; it does not validate a universal threshold or an adaptive router.
+The thesis is conditional execution and a held-out negative result: the frozen `E*D*B=1,000,000` policy failed its regret gate, and equal eligible counts have opposite winners across named environments. A post-hoc scalar fit has 3.16% maximum regret; it is not held-out validation, but prevents claiming that every scalar policy fails practical limits. Separate workload/state factors motivate research, not a proven multidimensional production router. See the [scoped claim matrix](../research/sota-claim-matrix.md) and [current related work](../research/related-work-current.md).
 
 ## Important audit corrections
 
@@ -18,6 +18,7 @@ The thesis is conditional execution: eligible work, preparation, predicate repre
 ## Contents
 
 - `paper.tex`, `appendix.tex`, `references.bib`: canonical manuscript source, detailed evidence, and audited citations.
+- `../research/scripts/analyze_full_archive.py`: verifies four retained archives, reduces previously underused Phase 0/2 and held-out router evidence, and inventories sample series with exact-duplicate handling.
 - `tables/claim-to-artifact.json`: combined full ledger; CSV provides an index.
 - `audit/`: historical, campaign, citation, and source-contract audits; verifier results and preserved pre-edit manuscripts.
 - `figures/final/`: twelve generated PDF/PNG figure pairs used by the paper. Original top-level figures are retained as research evidence.

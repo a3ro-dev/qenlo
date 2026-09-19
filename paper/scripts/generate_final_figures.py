@@ -30,12 +30,12 @@ def module(name, path):
 def record(name, inputs, note):
     sources.append(dict(figure=name, generator='paper/scripts/generate_final_figures.py', inputs=[dict(path=str(p.relative_to(ROOT)).replace('\\','/'), sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in inputs], interpretation=note))
 
-def save(fig, name, note):
+def save(fig, name, note, inputs=None):
     fig.tight_layout()
     fig.savefig(OUT / (name+'.pdf'), bbox_inches='tight', metadata={'CreationDate':None,'ModDate':None})
     fig.savefig(OUT / (name+'.png'), dpi=180, bbox_inches='tight')
     plt.close(fig)
-    record(name,[MATRIX],note)
+    record(name,inputs or [MATRIX],note)
 
 def main():
     OUT.mkdir(exist_ok=True,parents=True)
@@ -135,7 +135,41 @@ def main():
     for ext in ['pdf','png']:fig.savefig(OUT/('phase_map.'+ext),bbox_inches='tight',dpi=180)
     plt.close(fig)
     record('phase_map',[DATA/'native_crossover_summary.csv',DATA/'a6000_exact_summary.csv'],'Separate panels, not pooled. Native matched revision 3e2a4a9 only; older endpoints deliberately omitted. A6000 pooled per-call descriptive P95 within cell, cross-implementation agreement only. Lines guide eyes.')
-    (ROOT/'paper/audit/figure-sources.json').write_text(json.dumps(sources,indent=2)+'\n')
+
+    archive=DATA/'archive-reanalysis'
+    router_path=archive/'alpha5_heldout_router.csv'
+    crossover_path=archive/'crossover_portability.csv'
+    router=list(csv.DictReader(router_path.open()))
+    portability=list(csv.DictReader(crossover_path.open()))
+    fig,axes=plt.subplots(1,2,figsize=(10,3.6))
+    groups=[('128D / B=8',[r for r in router if int(r['dimension'])==128 and int(r['rows'])==10000]),
+            ('384D / B=1',[r for r in router if int(r['dimension'])==384]),
+            ('768D / B=16',[r for r in router if int(r['dimension'])==768])]
+    markers=['o','s','^']
+    for (label,rr),marker,color in zip(groups,markers,COLORS):
+        axes[0].scatter([float(r['work_units'])/1e6 for r in rr],
+                        [float(r['gpu_p95_ns'])/float(r['cpu_p95_ns']) for r in rr],
+                        label=label,marker=marker,color=color,s=46)
+    other=[r for r in router if int(r['rows'])==1000]
+    axes[0].scatter([float(r['work_units'])/1e6 for r in other],
+                    [float(r['gpu_p95_ns'])/float(r['cpu_p95_ns']) for r in other],
+                    label='1K dense control',marker='D',color=COLORS[5],s=46)
+    axes[0].axvline(1,color='black',ls='--',lw=.9,label='preregistered threshold')
+    axes[0].axhline(1,color='0.4',lw=.8)
+    axes[0].set(xlabel=r'Scalar work $E D B$ (millions)',ylabel='GPU P95 / CPU P95',yscale='log',title='Held-out scalar-router test')
+    axes[0].legend(fontsize=7)
+    for cohort,label,color,marker in [
+        ('h1-rtx4050-windows-dx12','RTX 4050 / DX12',COLORS[0],'o'),
+        ('phase0-rtx4090-linux-vulkan','RTX 4090 / Vulkan',COLORS[1],'s')]:
+        rr=[r for r in portability if r['cohort']==cohort]
+        axes[1].plot([int(r['eligible_rows']) for r in rr],
+                     [float(r['gpu_p95_ns'])/float(r['cpu_p95_ns']) for r in rr],
+                     marker=marker,color=color,label=label)
+    axes[1].axhline(1,color='0.4',lw=.8)
+    axes[1].set(xlabel='Eligible rows E',ylabel='GPU P95 / CPU P95',xscale='log',yscale='log',title='Environment-conditioned crossover')
+    axes[1].legend(fontsize=7)
+    save(fig,'archive_router_failure','Left: 16 preregistered RTX 4050 workloads; near-equal work has different observed winners; monotone counterexamples and uncertainty are discussed in the text. Right: separate 384D, B=1, k=10 cohorts; lines guide the eye and latencies are never pooled. Ratio below one favors GPU. No error bars.',[router_path,crossover_path])
+    (ROOT/'paper/audit/figure-sources.json').write_text(json.dumps(sources,indent=2)+'\n',newline='\r\n')
     print(f'Generated {len(sources)} figure pairs')
 
 if __name__=='__main__':main()

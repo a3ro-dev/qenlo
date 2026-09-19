@@ -41,6 +41,21 @@ These tables are generated from retained machine-readable evidence. They preserv
 \tableinput{tables/final/eligibility_ablation_summary}
 \bottomrule\end{tabular}\end{table}
 
+\subsection{Archive-wide routing and CPU reductions}
+\begin{table}[H]\centering\scriptsize
+\caption{R1 all sixteen held-out workloads for the frozen $EDB=10^6$ rule. Work is in millions; regret compares the selected forced route with the faster forced route. Auto/best compares the separately measured automatic P95 with the faster forced P95 and is not interpreted as overhead.}
+\begin{tabular}{lrrrrrr}\toprule Workload & $EDB/10^6$ & $k$ & Winner & Choice & Regret \% & Auto/best \\\midrule
+\tableinput{tables/final/alpha5_heldout_router}
+\bottomrule\end{tabular}\end{table}
+
+\begin{table}[H]\centering\small
+\caption{H1/P0 crossover cells used for the equal-$E$ contradiction. Both cohorts use 100K$\times$384, $B=1,k=10$, five runs and 5,000 calls/run/backend; source, host CPU, GPU, OS/API, and driver differ.}
+\begin{tabular}{lrrrr}\toprule Environment & $E$ & CPU P95 & WGPU P95 & Winner \\\midrule
+\tableinput{tables/final/archive_crossover}
+\bottomrule\end{tabular}\end{table}
+
+P2's complete reduction contains the six matched Qenlo rows summarized in Table~\ref{tab:phase2}, a routed dense reference verification at 14.474 ms, and FAISS CPU Flat at 11.154 ms. The latter two are time-separated diagnostics and do not turn run drift into an optimization effect. Full rows, source roles, recall, and archive identity are in \path{research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv}.
+
 \subsection{Historical A6000 distributions}
 \begin{table}[H]\centering\small
 \caption{H4 strict real TopK, 1M$\times$768, $E=10,026$, $B=1,k=10$, 5,000 calls/system. Shared prefiltered matrix, host completed calls. cuVS fails correctness and is excluded from qualified comparisons. CUDA prototype is unshipped research code.}
@@ -99,6 +114,9 @@ S2-resources & Device allocations, process RSS, transfers, nested phases & Corre
 H4/H5 & Real strict negative; synthetic formulation reversal & \path{benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/}; \path{research/data/raw/2026-09-02-a6000-cuda/heldout/} \\
 H3 & Seven CPU library rows, no WGPU timing & \path{benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/} \\
 H6/H7 & Physical Android and Arc, aggregate-only & \path{research/data/raw/2026-09-02-android/}; \path{benchmarks/2026-08-31/device-lab/intel-arc/reports.json} \\
+R1 & Frozen $EDB$ rule: 8/16 wrong, 235.7\% max regret, rejected & \path{research/data/raw/alpha5-router-heldout-rtx4050.tar.gz}; archive reanalysis \\
+P0 & Separate 4K--6K reversal; equal-$E$ contradiction with H1 & \path{research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz} \\
+P2 & Sparse CPU gains, dense regression, FAISS CPU context & \path{research/artifacts/qenlo-phase2-a40-2026-09-04-final.tar.gz} \\
 Accounting & Account daily spend, zero retained campaign resources & Campaign \texttt{ledger.jsonl}, billing captures, \texttt{campaign-summary.json} \\
 Semantics & Current source contracts; not retrospective performance & \path{paper/audit/system-ledger.json} \\
 \bottomrule\end{tabular}\end{table}
@@ -114,6 +132,9 @@ The campaign root is \path{research/artifacts/runpod-small-2026-09-05/}. Full id
 \item[S2 corrected source.] \path{bb195fedb6519c26598c6c103e7e182982c2eddd0a06d9c2cf54eb5cb5ceeb19}
 \item[S2 result archive.] \path{9e322d615c0bbed44616faa831493ca030dd49bbce7fe0c4386f49e3b8532fc0}
 \item[H2 eligibility archive.] \path{26e0ccc057c59c0fb4687f8d85a923e88b7bb25257e4e551e22cffe13c1b821f}
+\item[R1 held-out router archive.] \path{8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e}
+\item[P0 complete archive.] \path{7292fd1cd0e7669c9febeaa2d49baedee747811ed65f6bc704ecbcb6e61f51ea}
+\item[P2 CPU archive.] \path{ac3afda446f4943eab128cff458402f7559be53b96c3cf8ce44fcbbd7f8be4df}
 \end{description}
 S2 result integrity is distinct from S2 source identity. The corrected result manifest has 74 non-self entries. The full campaign verifier checks eight retained result archives and nine checksum manifests, covering 1,053 entries and skipping four self-manifest entries. It also checks source roles and the identity of the local and baseline WGSL. Checksums establish byte integrity, not scientific qualification.
 
@@ -125,7 +146,7 @@ No raw evidence or old figure was deleted. The historical inventory hashes every
 
 An incomplete historical CPU development run and duplicate cloud mirrors are excluded from the counts. H3 native Vulkan initialization failed, so there is no GPU latency to rank. Historical Qdrant was deliberately outside the retained comparison because its local-mode search boundary differed; no conclusion about its performance follows. Provider-compatible TopK experiments used an inclusive predicate that yielded 10,148 eligible rows and supplied truth, whereas strict H4 used 10,026 rows and an independent oracle. These experiments remain exploratory negative context and are not pooled with H4. Their approximately one-percent prototype did not beat FAISS, and other provider cells had correctness disagreements. cuVS numerical and runtime failures remain failures, not qualified exact results.
 
-The archive does not test a complete multidimensional routing surface, fixed-$E$ with varying-$N$, controlled metadata and vector correlation, a tuned filtered-ANN frontier, calibrated held-out routing, concurrency, energy, total VRAM peaks, long-running mutation churn, arbitrary crash recovery, MPS, or physical iOS. Historical mobile results cannot certify the final revision. The S2 rerun with the final local selector is absent. These gaps constrain the claims rather than licensing extrapolation.
+The archive does not test a complete multidimensional routing surface, controlled fixed-$E$ with varying-$N$, controlled metadata and vector correlation, a tuned filtered-ANN frontier, a successful calibrated router on held-out data, concurrency, energy, total VRAM peaks, long-running mutation churn, arbitrary crash recovery, MPS, or physical iOS. R1 supplies a held-out rejection, not a positive adaptive result. Historical mobile results cannot certify the final revision. The S2 rerun with the final local selector is absent. These gaps constrain the claims rather than licensing extrapolation.
 
 \subsection{Reproduction and audit procedure}
-Paper-only entry points are \path{paper/scripts/reduce_final_evidence.py}, \path{generate_final_tables.py}, \path{generate_final_figures.py}, and \path{verify_campaign_claims.py}. Historical raw checks are in \path{paper/audit/verify_historical_raw.py}. Reductions go to \path{paper/audit/reduced/}; their parsed CSV rows match the retained originals. Android values are regenerated from retained aggregate records rather than unavailable raw series. Numerical tables and figure inputs are traceable through \path{paper/audit/figure-sources.json}. A clean LaTeX build, citation, reference, and box checks, extracted text, and page renders are recorded in the paper verification output. No command in this authoring workflow creates cloud resources or runs a performance benchmark.
+The archive-wide entry point is \path{research/scripts/analyze_full_archive.py}; it verifies R1/P0/H2/P2 hashes, parses archives without extracting over retained data, emits the routing/CPU reductions, and writes a disposition ledger for tracked or selected archive-internal sample series. Other paper-only entry points are \path{paper/scripts/reduce_final_evidence.py}, \path{generate_final_tables.py}, \path{generate_final_figures.py}, and \path{verify_campaign_claims.py}. Historical raw checks are in \path{paper/audit/verify_historical_raw.py}. Reductions go to \path{paper/audit/reduced/} and \path{research/data/processed/archive-reanalysis/}. Android values are regenerated from retained aggregate records rather than unavailable raw series. Numerical tables and figure inputs are traceable through \path{paper/audit/figure-sources.json}. A clean LaTeX build, citation, reference, and box checks, extracted text, and page renders are recorded in the paper verification output. No command in this authoring workflow creates cloud resources or runs a performance benchmark.

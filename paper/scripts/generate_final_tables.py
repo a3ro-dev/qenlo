@@ -1,13 +1,13 @@
 """Generate all numerical manuscript tables from audited CSV reductions."""
 from pathlib import Path
-import csv, json
+import csv, json, statistics
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'paper/tables/final'
 DATA=ROOT/'paper/audit/reduced/historical'
 def read(p):return list(csv.DictReader(p.open(newline='',encoding='utf-8')))
 def esc(x):return str(x).replace('&',r'\&').replace('_',r'\_').replace('%',r'\%')
 def write(name, rows):
-    (OUT/(name+'.tex')).write_text('\n'.join(' & '.join(map(esc,r))+r' \\' for r in rows)+'\n',encoding='utf-8')
+    (OUT/(name+'.tex')).write_text('\n'.join(' & '.join(map(esc,r))+r' \\' for r in rows)+'\n',encoding='utf-8',newline='\r\n')
 def main():
     OUT.mkdir(parents=True,exist_ok=True)
     m=read(ROOT/'research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv')
@@ -50,5 +50,29 @@ def main():
     short={'cpu-exact-all':'CPU exhaustive','gpu-exact-all':'WGPU exhaustive','gpu-native-batch-8':'WGPU batch 8','gpu-ivf-flat-recall-95':'IVF-Flat','gpu-ivf-sq8-recall-95':'IVF-SQ8','automatic-selective-cpu-route':'Auto selective CPU','automatic-selective-batch-8':'Auto selective WGPU'}
     arc=json.loads((ROOT/'benchmarks/2026-08-31/device-lab/intel-arc/reports.json').read_text())
     write('intel_arc',[(report['suite']+str(i+1) if report['suite']=='quick' else report['suite'],short[c['name']],c['rows'],c['batch_size'],c['samples'],f"{c['p50_us']/1000:.3f}",f"{c['p95_us']/1000:.3f}",f"{c['p99_us']/1000:.3f}") for i,report in enumerate(arc) for c in report['cells']])
+    archive=ROOT/'research/data/processed/archive-reanalysis'
+    router=read(archive/'alpha5_heldout_router.csv')
+    write('archive_router_validation',[
+        ('Development',31,0,'0.0','0.0','threshold selected'),
+        ('Held out',len(router),sum(float(r['choice_regret'])>0 for r in router),
+         f"{100*statistics.median(float(r['choice_regret']) for r in router):.1f}",
+         f"{100*max(float(r['choice_regret']) for r in router):.1f}",'rejected'),
+    ])
+    write('alpha5_heldout_router',[(
+        r['name'],f"{int(r['work_units'])/1e6:.3f}",r['k'],r['winner'].upper(),
+        r['threshold_choice'].upper(),f"{100*float(r['choice_regret']):.1f}",
+        f"{float(r['automatic_over_best']):.3f}") for r in router])
+    crossover=read(archive/'crossover_portability.csv')
+    write('archive_crossover',[(
+        'RTX 4050 / DX12' if r['cohort'].startswith('h1-') else 'RTX 4090 / Vulkan',
+        f"{int(r['eligible_rows']):,}",f"{float(r['cpu_p95_ns'])/1e6:.4f}",
+        f"{float(r['gpu_p95_ns'])/1e6:.4f}",r['winner'].upper()) for r in crossover])
+    phase2=read(archive/'phase2_cpu_optimization.csv')
+    p2={(r['role'],int(r['eligible_rows'])):r for r in phase2}
+    write('phase2_cpu_optimization',[(
+        f"{eligible:,}",f"{float(p2[('baseline',eligible)]['p95_ns'])/1e6:.4f}",
+        f"{float(p2[('optimized',eligible)]['p95_ns'])/1e6:.4f}",
+        f"{100*float(p2[('optimized',eligible)]['change_vs_baseline']):+.1f}",
+        f"{float(p2[('optimized',eligible)]['recall_at_10']):.5f}") for eligible in (1000,4000,100000)])
     print('Generated numerical table bodies')
 if __name__=='__main__':main()

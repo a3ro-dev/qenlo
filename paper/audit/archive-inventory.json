@@ -18,7 +18,7 @@
   },
   "summary": {
     "file_count": 1654,
-    "bytes": 531312849,
+    "bytes": 531313936,
     "cohort_file_counts": {
       "a6000_provider_approximate": 32,
       "a6000_strict_gate": 23,
@@ -52,7 +52,7 @@
       "intel_arc_device_lab": 11957,
       "linux_external_replay": 17614909,
       "phase_archives": 30455658,
-      "research": 16947399,
+      "research": 16948486,
       "small_collection_campaign": 260919409,
       "windows_agnews_endpoints": 84524347,
       "windows_native_crossover": 46377440
@@ -5294,10 +5294,10 @@
     },
     {
       "path": "research/README.md",
-      "size_bytes": 1308,
+      "size_bytes": 2065,
       "type": "text_or_machine_readable",
       "cohort": "research",
-      "sha256": "732141aac6b7c0e9117adb90f758730fa261a3d2caba82b1151432a99eeb6bb8",
+      "sha256": "08580c455b7e3851e34fc88f2ec0f5c0fda62c5fddc7a000ec64dca749dedfab",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
@@ -17495,10 +17495,10 @@
     },
     {
       "path": "research/completion-audit.md",
-      "size_bytes": 3089,
+      "size_bytes": 3419,
       "type": "text_or_machine_readable",
       "cohort": "research",
-      "sha256": "ebd2b0297d34df0e57b3ed016e6d4d4b797d69c53133a1007285a0d341eee69a",
+      "sha256": "ccfc99309b87259d21bd39fce28ff95d9efcdba90b5d811f4e387c3cf4b143f9",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null

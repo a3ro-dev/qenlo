@@ -667,6 +667,153 @@
         "windows_strategies.png"
       ],
       "figure_inventory_note": "The exact top-level inventory contains 34 files across 18 logical families. The newer paper/figures/final directory is a separate generated output and is not counted as historical top-level evidence here.",
+      "software_source_paths": {
+        "windows_dense_endpoint": {
+          "experiment_records": [
+            "benchmarks/2026-08-28/real/measurements/cpu-384-all-v4.json",
+            "benchmarks/2026-08-28/real/measurements/gpu-predicate-384-all-v5.json",
+            "benchmarks/2026-08-28/real/measurements/gpu-rows-384-all-v4.json",
+            "benchmarks/2026-08-28/real/measurements/gpu-mask-384-all-v4.json",
+            "benchmarks/2026-08-28/real/dataset/ag-news-384.json"
+          ],
+          "code_paths": [
+            "crates/qenlo/src/gpu.rs",
+            "crates/qenlo/src/gpu_exact.wgsl",
+            "crates/qenlo/src/lib.rs",
+            "crates/qenlo-bench/src/main.rs",
+            "crates/qenlo-bench/src/replay.rs",
+            "benchmarks/2026-08-28/system.json",
+            "benchmarks/2026-08-28/real/build-final.json"
+          ],
+          "source_note": "The CPU and dense WGPU rows carry separate recorded Git revisions; these paths identify the implementation family and retained build metadata, not a same-revision speedup claim."
+        },
+        "windows_selective_endpoint": {
+          "experiment_records": [
+            "benchmarks/2026-08-28/real/measurements/cpu-384-onepct.json",
+            "benchmarks/2026-08-28/real/measurements/gpu-rows-384-onepct.json",
+            "benchmarks/2026-08-28/real/measurements/gpu-predicate-384-onepct-v4.json",
+            "benchmarks/2026-08-28/real/dataset/ag-news-384.json"
+          ],
+          "code_paths": [
+            "crates/qenlo/src/gpu.rs",
+            "crates/qenlo/src/gpu_exact.wgsl",
+            "crates/qenlo-bench/src/main.rs",
+            "crates/qenlo-bench/src/replay.rs"
+          ],
+          "source_note": "Sparse CPU, sparse compact-row WGPU, and shader-predicate rows retain their own revision labels; the claim is a scoped endpoint comparison."
+        },
+        "windows_native_crossover": {
+          "experiment_records": [
+            "research/data/raw/2026-09-02-native-crossover/cpu-e{2000,3000,4000,6000,8000,10000}",
+            "research/data/raw/2026-09-02-native-crossover/gpu-rows-e{2000,3000,4000,6000,8000,10000}",
+            "research/data/processed/native_crossover_summary.csv",
+            "research/data/processed/static_router_regret.csv"
+          ],
+          "code_paths": [
+            "research/scripts/analyze_results.py",
+            "crates/qenlo/src/gpu.rs",
+            "crates/qenlo/src/gpu_exact.wgsl",
+            "crates/qenlo-bench/src/main.rs"
+          ],
+          "source_note": "All six qualified crossover pairs record revision 3e2a4a9; the processed router table is a post-hoc reduction and does not establish a held-out adaptive router."
+        },
+        "static_router_regret": {
+          "experiment_records": [
+            "research/data/processed/static_router_regret.csv",
+            "research/data/processed/native_crossover_summary.csv"
+          ],
+          "code_paths": [
+            "research/scripts/analyze_results.py"
+          ],
+          "source_note": "Derived from the matched native crossover cohort; no independent online selector run is represented."
+        },
+        "eligibility_materialization_ablation": {
+          "experiment_records": [
+            "research/artifacts/qenlo-phase1-eligibility-2026-09-04.tar.gz",
+            "research/data/processed/eligibility_ablation_summary.csv"
+          ],
+          "code_paths": [
+            "scripts/runpod/phase1-eligibility-ablation.sh",
+            "research/scripts/analyze_results.py",
+            "crates/qenlo/src/gpu.rs",
+            "crates/qenlo/src/gpu_exact.wgsl"
+          ],
+          "source_note": "The archive SHA-256 in the claim record is the source boundary; the reduction is regenerated from the retained archive records."
+        },
+        "linux_library_context": {
+          "experiment_records": [
+            "benchmark-results/2026-09-02-runpod-archive/CAMPAIGN_MANIFEST.json",
+            "benchmark-results/2026-09-02-runpod-archive/retained-archive/artifacts/*",
+            "benchmarks/runpod/2026-09-02-bb51987/manifest.json",
+            "research/data/processed/linux_library_summary.csv"
+          ],
+          "code_paths": [
+            "scripts/oss_replay.py",
+            "crates/qenlo-bench/src/replay.rs",
+            "benchmarks/runpod/2026-09-02-bb51987/README.md"
+          ],
+          "source_note": "The replay archive records revision bb519873 and API/persistence/filter boundaries; it is scoped external context rather than a universal engine ranking."
+        },
+        "android_mali_device_lab": {
+          "experiment_records": [
+            "research/data/processed/android_device_lab.csv",
+            "research/data/raw/2026-09-02-android/PROVENANCE.md",
+            "docs/device-lab.md"
+          ],
+          "code_paths": [
+            "docs/device-lab.md"
+          ],
+          "source_note": "The retained physical-device records identify app 0.1.0 and run IDs but do not retain raw calls, power, or thermal traces; source commit is unrecorded."
+        },
+        "intel_arc_device_lab": {
+          "experiment_records": [
+            "benchmarks/2026-08-31/device-lab/intel-arc/reports.json",
+            "benchmarks/2026-08-31/device-lab/intel-arc/README.md"
+          ],
+          "code_paths": [
+            "benchmarks/2026-08-31/device-lab/intel-arc/README.md",
+            "docs/device-lab.md"
+          ],
+          "source_note": "The JSON suite and quick/full labels are retained; source commit and raw call traces are not."
+        },
+        "a6000_synthetic_cuda_crossover": {
+          "experiment_records": [
+            "research/data/raw/2026-09-02-a6000-cuda/heldout/manifest.json",
+            "research/data/raw/2026-09-02-a6000-cuda/heldout/raw_samples.csv",
+            "research/data/raw/2026-09-02-a6000-cuda/heldout/correctness.csv",
+            "research/data/processed/a6000_exact_summary.csv"
+          ],
+          "code_paths": [
+            "research/scripts/run_cuda_synthetic_matrix.py",
+            "research/scripts/run_faiss_flat_baseline.py",
+            "research/scripts/analyze_results.py"
+          ],
+          "source_note": "This is a PyTorch/CUDA prototype with pre-materialized eligibility and no independent FP64 oracle; it remains contextual."
+        },
+        "a6000_real_strict_gate": {
+          "experiment_records": [
+            "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-gate/summary.json",
+            "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/strict-qenlo-isolated/summary.json",
+            "research/data/processed/a6000_strict_summary.csv"
+          ],
+          "code_paths": [
+            "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/run_strict_topk_research_gate.py",
+            "benchmark-results/2026-09-02-runpod-a6000-strict-research-gate/run_strict_topk_research_gate_v2.py",
+            "scripts/run_topk_a6000_exact_gpu.py"
+          ],
+          "source_note": "The strict rows are retained as a negative external boundary; the research CUDA prototype is not the shipped Rust/WGPU path."
+        },
+        "a6000_provider_approximate_one_percent": {
+          "experiment_records": [
+            "docs/reports/2026-09-02-topk-a6000-assessment.md",
+            "benchmark-results/sota-a6000-topk-2026-09-02/cosine_inclusive/summary.json"
+          ],
+          "code_paths": [
+            "scripts/run_topk_a6000_exact_gpu.py"
+          ],
+          "source_note": "The <= provider filter and supplied/pre-filtered ground truth disqualify this cohort from exact headline comparisons."
+        }
+      },
       "exclusions": [
         {
           "item": "A6000 CUDA/FAISS rows as Qenlo shipped GPU result",
@@ -1808,6 +1955,122 @@
         "amanbayev2026systems"
       ],
       "final_usage_note": "All 15 bibliography entries are cited by the integrated final manuscript; li2025attribute supports workload-dependent filtered-ANN related work."
+    },
+    "archive_reanalysis": {
+      "schema": "qenlo-archive-reanalysis-claims-v1",
+      "generated_by": "research/scripts/analyze_full_archive.py",
+      "claims": [
+        {
+          "id": "AR-01",
+          "exact_claim": "The preregistered E*D*B threshold overfit development evidence: 0/31 development errors became 8/16 held-out errors with 235.7% maximum backend-choice regret.",
+          "source_artifact": [
+            "research/data/processed/archive-reanalysis/summary.json",
+            "research/data/processed/archive-reanalysis/crossover_portability.csv",
+            "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+            "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+            "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+          ],
+          "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
+        },
+        {
+          "id": "AR-02",
+          "exact_claim": "No increasing E*D*B threshold perfectly classifies the observed medians: a GPU winner at 749568 units precedes CPU winners at larger work with k=10. A post-hoc threshold has one error and 3.16% maximum regret; this does not reject every scalar policy at the release regret limits.",
+          "source_artifact": [
+            "research/data/processed/archive-reanalysis/summary.json",
+            "research/data/processed/archive-reanalysis/crossover_portability.csv",
+            "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+            "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+            "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+          ],
+          "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
+        },
+        {
+          "id": "AR-03",
+          "exact_claim": "Equal-E 3K and 4K cells have opposite CPU/GPU winners across retained RTX 4050 and RTX 4090 cohorts; a universal E-only threshold is therefore falsified on the observed cells.",
+          "source_artifact": [
+            "research/data/processed/archive-reanalysis/summary.json",
+            "research/data/processed/archive-reanalysis/crossover_portability.csv",
+            "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+            "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+            "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+          ],
+          "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
+        },
+        {
+          "id": "AR-04",
+          "exact_claim": "Certified FP32 CPU scoring improves sparse A40 cells but regresses the dense cell; dense single-thread FAISS CPU Flat remains 26.9% faster than the frozen Qenlo baseline at slightly lower recall.",
+          "source_artifact": [
+            "research/data/processed/archive-reanalysis/summary.json",
+            "research/data/processed/archive-reanalysis/crossover_portability.csv",
+            "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+            "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+            "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+          ],
+          "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
+        },
+        {
+          "id": "AR-05",
+          "exact_claim": "Automatic-route timing is not interchangeable with forced-route timing: held-out automatic P95 ranges from 0.412x to 5.393x the faster forced route.",
+          "source_artifact": [
+            "research/data/processed/archive-reanalysis/summary.json",
+            "research/data/processed/archive-reanalysis/crossover_portability.csv",
+            "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+            "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+            "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+          ],
+          "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
+        }
+      ],
+      "source_archives": {
+        "phase0": {
+          "path": "research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz",
+          "sha256": "7292fd1cd0e7669c9febeaa2d49baedee747811ed65f6bc704ecbcb6e61f51ea",
+          "bytes": 18695269
+        },
+        "phase1": {
+          "path": "research/artifacts/qenlo-phase1-eligibility-2026-09-04.tar.gz",
+          "sha256": "26e0ccc057c59c0fb4687f8d85a923e88b7bb25257e4e551e22cffe13c1b821f",
+          "bytes": 15270837
+        },
+        "phase2": {
+          "path": "research/artifacts/qenlo-phase2-a40-2026-09-04-final.tar.gz",
+          "sha256": "ac3afda446f4943eab128cff458402f7559be53b96c3cf8ce44fcbbd7f8be4df",
+          "bytes": 7888289
+        },
+        "alpha5_heldout": {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz",
+          "sha256": "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e",
+          "bytes": 4968881
+        }
+      },
+      "sample_series_inventory": {
+        "sample_files_and_archive_members": 303,
+        "unique_sample_series": 282,
+        "duplicate_sample_series": 21,
+        "unique_sample_rows": 1826130,
+        "unique_csv_schemas": 12,
+        "unique_series_by_cohort": {
+          "a6000-provider": 8,
+          "a6000-strict": 3,
+          "a6000-synthetic": 3,
+          "alpha5-heldout": 48,
+          "cpu-optimization": 12,
+          "gpu-tuning": 8,
+          "linux-library": 7,
+          "native-crossover": 12,
+          "other-retained-benchmark": 6,
+          "phase0": 19,
+          "phase1": 13,
+          "small-collection": 133,
+          "windows-endpoints": 10
+        }
+      },
+      "limitations": [
+        "Cohorts differ in source revision, host, device, runtime, and execution order; no latency values are pooled.",
+        "Threshold evaluations are workload-level descriptive counterfactuals over median-run P95, not per-query paired inference.",
+        "The post-hoc minimax thresholds are diagnostics, not deployable calibrated policies.",
+        "Sample rows across schemas are counted for archive coverage only and are not treated as independent observations."
+      ]
     }
   },
   "headline_claims": [
@@ -2871,6 +3134,71 @@
       "limitations": [
         "Sequential stale rejection remains supported."
       ]
+    },
+    {
+      "ledger_component": "archive_reanalysis",
+      "id": "AR-01",
+      "exact_claim": "The preregistered E*D*B threshold overfit development evidence: 0/31 development errors became 8/16 held-out errors with 235.7% maximum backend-choice regret.",
+      "source_artifact": [
+        "research/data/processed/archive-reanalysis/summary.json",
+        "research/data/processed/archive-reanalysis/crossover_portability.csv",
+        "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+        "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+        "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+      ],
+      "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
+    },
+    {
+      "ledger_component": "archive_reanalysis",
+      "id": "AR-02",
+      "exact_claim": "No increasing E*D*B threshold perfectly classifies the observed medians: a GPU winner at 749568 units precedes CPU winners at larger work with k=10. A post-hoc threshold has one error and 3.16% maximum regret; this does not reject every scalar policy at the release regret limits.",
+      "source_artifact": [
+        "research/data/processed/archive-reanalysis/summary.json",
+        "research/data/processed/archive-reanalysis/crossover_portability.csv",
+        "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+        "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+        "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+      ],
+      "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
+    },
+    {
+      "ledger_component": "archive_reanalysis",
+      "id": "AR-03",
+      "exact_claim": "Equal-E 3K and 4K cells have opposite CPU/GPU winners across retained RTX 4050 and RTX 4090 cohorts; a universal E-only threshold is therefore falsified on the observed cells.",
+      "source_artifact": [
+        "research/data/processed/archive-reanalysis/summary.json",
+        "research/data/processed/archive-reanalysis/crossover_portability.csv",
+        "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+        "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+        "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+      ],
+      "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
+    },
+    {
+      "ledger_component": "archive_reanalysis",
+      "id": "AR-04",
+      "exact_claim": "Certified FP32 CPU scoring improves sparse A40 cells but regresses the dense cell; dense single-thread FAISS CPU Flat remains 26.9% faster than the frozen Qenlo baseline at slightly lower recall.",
+      "source_artifact": [
+        "research/data/processed/archive-reanalysis/summary.json",
+        "research/data/processed/archive-reanalysis/crossover_portability.csv",
+        "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+        "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+        "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+      ],
+      "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
+    },
+    {
+      "ledger_component": "archive_reanalysis",
+      "id": "AR-05",
+      "exact_claim": "Automatic-route timing is not interchangeable with forced-route timing: held-out automatic P95 ranges from 0.412x to 5.393x the faster forced route.",
+      "source_artifact": [
+        "research/data/processed/archive-reanalysis/summary.json",
+        "research/data/processed/archive-reanalysis/crossover_portability.csv",
+        "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+        "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+        "research/data/processed/archive-reanalysis/sample_series_inventory.csv"
+      ],
+      "qualification": "Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic."
     }
   ],
   "campaign_rows": [
@@ -30290,6 +30618,21 @@
         }
       ],
       "interpretation": "Separate panels, not pooled. Native matched revision 3e2a4a9 only; older endpoints deliberately omitted. A6000 pooled per-call descriptive P95 within cell, cross-implementation agreement only. Lines guide eyes."
+    },
+    {
+      "figure": "archive_router_failure",
+      "generator": "paper/scripts/generate_final_figures.py",
+      "inputs": [
+        {
+          "path": "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+          "sha256": "045d05d78294716d5a0c08266bf8844d168a556e233d893a14d14bd5d0126576"
+        },
+        {
+          "path": "research/data/processed/archive-reanalysis/crossover_portability.csv",
+          "sha256": "ad1ab0e3fdf2591f25860adcf490e45dccd91cf34d4fa4da6c952fd3d7199002"
+        }
+      ],
+      "interpretation": "Left: 16 preregistered RTX 4050 workloads; near-equal work has different observed winners; monotone counterexamples and uncertainty are discussed in the text. Right: separate 384D, B=1, k=10 cohorts; lines guide the eye and latencies are never pooled. Ratio below one favors GPU. No error bars."
     }
   ],
   "scope": "Research synthesis only; historical and experimental source roles are distinct from final worktree."

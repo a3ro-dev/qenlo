@@ -1,5 +1,5 @@
 {
-  "isolated_build": "D:\\qenloDB\\paper\\tmp\\clean-20260905-235039",
+  "isolated_build": "D:\\qenloDB\\paper\\tmp\\clean-20260917-084150",
   "commands": [
     {
       "command": [
@@ -47,7 +47,7 @@
   ],
   "issues": [],
   "compile_passed": true,
-  "visual_inspection": "passed all 22 final page images",
-  "final_pdf": "D:\\qenloDB\\paper\\output\\pdf\\qenlo-final-research-paper.pdf",
-  "pdf_sha256": "75380b13db339f0c6c86fd4104c014d4eea68c8c9007c9613cb10105e562b96d"
+  "visual_inspection": "pending",
+  "final_pdf": "D:\\qenloDB\\QENLO-RESEARCH-PAPER.pdf",
+  "pdf_sha256": "d3301ffd3379c266db836bacc812a84192a4f071011c97a7eb45e8b3af3c877d"
 }

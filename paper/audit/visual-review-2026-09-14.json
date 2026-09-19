@@ -1,0 +1,25 @@
+{
+  "schema": "qenlo-paper-visual-review-v1",
+  "review_date": "2026-09-14",
+  "pdf": "QENLO-RESEARCH-PAPER.pdf",
+  "pdf_sha256": "004185b12b9806771b0562e335ff1605dff4f8b21ce774a16d2d3165720c6736",
+  "page_count": 27,
+  "render_dpi": 120,
+  "reviewed_pages": "1-27",
+  "review_method": [
+    "three 3x3 page montages covering pages 1-27",
+    "full-size renders for changed routing pages 9-10",
+    "full-size renders for new appendix tables on pages 21-22",
+    "full-size renders for claim ledger, source identities, limitations, and reproduction pages 25-27"
+  ],
+  "checks": {
+    "clipping_or_overflow": "pass",
+    "missing_figures_or_tables": "pass",
+    "figure_labels_and_legends": "pass",
+    "table_legibility": "pass",
+    "equations_and_glyphs": "pass",
+    "references_and_page_breaks": "pass"
+  },
+  "status": "passed",
+  "note": "The final isolated rebuild changed PDF bytes but all 27 rendered pixel hashes remained identical to the inspected build. The PDF text verifier separately records the final per-page pixel hashes. Page 27 contains intentional whitespace after the reproduction procedure; it is not blank."
+}

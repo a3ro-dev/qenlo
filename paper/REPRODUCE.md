@@ -13,11 +13,14 @@ python paper/scripts/verify_campaign_claims.py
 python paper/audit/verify_historical_raw.py
 python paper/scripts/reduce_final_evidence.py
 python paper/scripts/inventory_evidence.py
+python research/scripts/analyze_full_archive.py
 ```
 
 The campaign verifier checks CSV/JSON equality, raw corrected timings and phases, lifecycle timers, source roles, all retained result archives/checksum manifests, and qualified pair counts. Expected results: 182 rows, eight result archives, nine checksum manifests, 1,053 checked entries, four self-manifest entries skipped, 12 selector pairs (5 wins/7 losses), seven qualified Chroma pairs, and one completed-unqualified USearch row. These are integrity and descriptive checks, not significance tests.
 
 The reducer writes to `paper/audit/reduced/` and checks parsed CSV equality against retained originals. Android is reproduced from supplied aggregate records; unavailable raw distributions cannot be recreated. Historical endpoint and localization source revisions are kept distinct. Duplicate archive mirrors are counted once.
+
+The archive reanalysis verifies the SHA-256 identities of the Phase 0, Phase 1, Phase 2, and alpha.5 held-out archives; parses them in place; and writes only to `research/data/processed/archive-reanalysis/`. It inventories tracked and selected archive-internal sample, raw-sample, and lifecycle CSVs, canonicalizes line endings for duplicate detection, and counts sample rows by schema without treating unlike rows as independent trials. It regenerates the held-out router failure, cross-environment winner contradiction, and sparse/dense CPU optimization reductions.
 
 ## Regenerate numerical tables, figures, and ledger
 

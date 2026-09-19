@@ -1,5 +1,25 @@
 # changelog
 
+## 0.1.0-alpha.6 - 2026-09-19
+
+### added
+
+- an archive-wide reanalysis that verifies four retained research archives,
+  records duplicate handling, and keeps incompatible cohorts separate.
+- scoped routing evidence showing that the preregistered alpha.5 scalar rule
+  failed its held-out regret gate; no replacement automatic router is claimed.
+
+### changed
+
+- documentation now opens as a direct, content-first reference instead of a
+  separate promotional landing page. Deep links retain the normal docs shell.
+- Rust, Python, TypeScript, Kotlin, and documentation versions advance together.
+
+### compatibility and limits
+
+- `.qn` format v1, WAL v1, query semantics, native ABI, and the retained
+  alpha.4 routing behavior are unchanged.
+
 ## 0.1.0-alpha.5 - 2026-09-08
 
 ### added

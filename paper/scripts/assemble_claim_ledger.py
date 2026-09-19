@@ -5,6 +5,27 @@ ROOT=Path(__file__).resolve().parents[2]
 def main():
     audit=ROOT/'paper/audit'
     components={k:json.loads((audit/(k+'-ledger.json')).read_text(encoding='utf-8')) for k in ['historical','campaign','system','citation']}
+    archive_summary_path=ROOT/'research/data/processed/archive-reanalysis/summary.json'
+    archive_summary=json.loads(archive_summary_path.read_text(encoding='utf-8'))
+    archive_sources=[
+        'research/data/processed/archive-reanalysis/summary.json',
+        'research/data/processed/archive-reanalysis/crossover_portability.csv',
+        'research/data/processed/archive-reanalysis/alpha5_heldout_router.csv',
+        'research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv',
+        'research/data/processed/archive-reanalysis/sample_series_inventory.csv',
+    ]
+    components['archive_reanalysis']={
+        'schema':'qenlo-archive-reanalysis-claims-v1',
+        'generated_by':'research/scripts/analyze_full_archive.py',
+        'claims':[
+            {'id':f'AR-{i:02d}','exact_claim':claim,'source_artifact':archive_sources,
+             'qualification':'Retained evidence only; cohorts remain separate; post-hoc thresholds are diagnostic.'}
+            for i,claim in enumerate(archive_summary['claims'],1)
+        ],
+        'source_archives':archive_summary['source_archives'],
+        'sample_series_inventory':archive_summary['sample_series_inventory'],
+        'limitations':archive_summary['limitations'],
+    }
     claims=[]
     for kind,d in components.items():
         for i,c in enumerate(d.get('claims',[])):
@@ -59,12 +80,12 @@ def main():
                     runrows=list(csv.DictReader(run.open(encoding='utf-8')));entry['repetitions']=len(runrows)
             entries.append(entry)
     output={'schema':'qenlo-definitive-paper-claims-v1','components':components,'headline_claims':claims,'campaign_rows':entries,'source_matrix_sha256':hashlib.sha256(matrix.read_bytes()).hexdigest(),'figure_sources':json.loads((audit/'figure-sources.json').read_text()),'scope':'Research synthesis only; historical and experimental source roles are distinct from final worktree.'}
-    target=ROOT/'paper/tables/claim-to-artifact.json';target.write_text(json.dumps(output,indent=2)+'\n',encoding='utf-8')
+    target=ROOT/'paper/tables/claim-to-artifact.json';target.write_text(json.dumps(output,indent=2)+'\n',encoding='utf-8',newline='\r\n')
     flat=[]
     for i,c in enumerate(claims):
         flat.append({'claim_id':c.get('id',c.get('claim_id',f'claim-{i+1}')),'claim':c.get('exact_claim',c.get('claim',str(c.get('statement','See full ledger')))),'evidence':json.dumps(c.get('source_artifact',c.get('sources',c.get('source',[])))),'component':c['ledger_component']})
     flat += [{'claim_id':c['claim_id'],'claim':c['claim'],'evidence':c['source_artifact']+' row '+str(c['matrix_row']),'component':'campaign-row'} for c in entries]
     with (ROOT/'paper/tables/claim-to-artifact.csv').open('w',newline='',encoding='utf-8') as f:
-        w=csv.DictWriter(f,fieldnames=['claim_id','claim','evidence','component']);w.writeheader();w.writerows(flat)
+        w=csv.DictWriter(f,fieldnames=['claim_id','claim','evidence','component'],lineterminator='\r\n');w.writeheader();w.writerows(flat)
     print(f'{len(claims)} audited claim records, {len(entries)} campaign rows')
 if __name__=='__main__':main()

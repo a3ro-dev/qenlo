@@ -22,3 +22,17 @@ the repository. Product behavior changes only when a stated gate passes.
 
 The alpha.5 candidate failed its held-out maximum-regret limit and was reverted.
 See `data/processed/alpha5-router-heldout/report.md`.
+
+## Full archive reanalysis
+
+Run `python research/scripts/analyze_full_archive.py` to verify and reduce the
+previously contextual Phase 0 and Phase 2 archives together with the alpha.5
+held-out router suite. The script does not rerun benchmarks or pool incompatible
+latencies. It emits `data/processed/archive-reanalysis/`, including a hash-based
+sample-series inventory and exact-duplicate disposition ledger.
+
+The resulting conclusion is narrower and stronger than a search for one better
+threshold: the retained cells falsify both a universal eligible-count threshold
+and the preregistered `eligible_rows * dimension * batch` rule. A future router
+must keep the workload factors and environment identity separate and pass a new
+end-to-end held-out gate.
