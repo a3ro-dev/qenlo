@@ -123,8 +123,9 @@ def cohort(path: Path) -> str:
 def nearby_manifest_refs(path: Path) -> list[dict[str, str]]:
     refs = []
     candidates = [path.parent / n for n in ("manifest.json", "checksums.json", "verification.json", "CAMPAIGN_MANIFEST.json", "SHA256SUMS", "README.md", "PROVENANCE.md")]
-    candidates += list(path.parent.glob("*.sha256"))
-    candidates += [candidate for candidate in path.parent.glob("*.json") if "manifest" in candidate.name.lower()]
+    # glob order follows the filesystem; sort so Windows and Linux agree.
+    candidates += sorted(path.parent.glob("*.sha256"), key=lambda p: p.name)
+    candidates += sorted((candidate for candidate in path.parent.glob("*.json") if "manifest" in candidate.name.lower()), key=lambda p: p.name)
     seen = set()
     for candidate in candidates:
         key = rel(candidate)
