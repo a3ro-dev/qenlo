@@ -1,0 +1,59 @@
+{
+  "path": "data\\ag-news\\ag-news-100k-384.qnb",
+  "sha256": "ba87a322b6846ce225ce54140cf00ac33250271447ef8f9f83df246131719cba",
+  "crc32": "beb3c848",
+  "dimension": 384,
+  "seed": 42,
+  "source": 4706889458,
+  "raw_sha256_verified": true,
+  "splits": [
+    {
+      "split": "corpus",
+      "rows": 100000,
+      "nonfinite_rows": 0,
+      "zero_rows": 0,
+      "duplicate_excess": 125,
+      "norm_min": 0.9999998783673556,
+      "norm_p50": 1.0000000000364504,
+      "norm_max": 1.0000001161957015
+    },
+    {
+      "split": "tuning",
+      "rows": 1000,
+      "nonfinite_rows": 0,
+      "zero_rows": 0,
+      "duplicate_excess": 0,
+      "norm_min": 0.9999999080536952,
+      "norm_p50": 0.9999999993486648,
+      "norm_max": 1.0000000918961067
+    },
+    {
+      "split": "evaluation",
+      "rows": 5000,
+      "nonfinite_rows": 0,
+      "zero_rows": 0,
+      "duplicate_excess": 8,
+      "norm_min": 0.9999999049760473,
+      "norm_p50": 0.9999999998632276,
+      "norm_max": 1.0000000997443144
+    }
+  ],
+  "exact_content_overlap": {
+    "corpus__tuning": {
+      "shared_unique_vectors": 0,
+      "affected_rows_in_second": 0
+    },
+    "corpus__evaluation": {
+      "shared_unique_vectors": 0,
+      "affected_rows_in_second": 0
+    },
+    "tuning__evaluation": {
+      "shared_unique_vectors": 0,
+      "affected_rows_in_second": 0
+    }
+  },
+  "limitations": [
+    "Byte equality only; near duplicates, article identity and semantic relevance not established.",
+    "These are retrieval benchmark splits, not embedding-model training splits."
+  ]
+}

@@ -1,0 +1,2 @@
+run,batches,queries,p50_batch_ns,p95_batch_ns,p99_batch_ns,wall_ns,qps,k,recall_at_k,recall_at_10,recall_target_passed
+0,4,32,11100,14000,14000,165600,193236.71497584542,10,1,1,true
