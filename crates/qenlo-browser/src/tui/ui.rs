@@ -1,4 +1,4 @@
-use crate::tui::app::{App, Tab};
+use crate::tui::app::{App, FUNCTION_CATALOG, Tab};
 use crate::tui::theme::QENLO_THEME;
 use ratatui::{
     Frame,
@@ -641,54 +641,97 @@ fn render_diagnostics_view(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(p, area);
 }
 
-fn render_help_view(frame: &mut Frame, _app: &App, area: Rect) {
-    let text = vec![
+fn render_help_view(frame: &mut Frame, app: &App, area: Rect) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(8), Constraint::Length(8)])
+        .split(area);
+    let browser = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(34), Constraint::Percentage(66)])
+        .split(chunks[0]);
+
+    let items: Vec<ListItem> = FUNCTION_CATALOG
+        .iter()
+        .map(|(name, _, _)| ListItem::new(*name))
+        .collect();
+    let functions = List::new(items)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(QENLO_THEME.border))
+                .title(" Rust Collection API "),
+        )
+        .highlight_style(
+            Style::default()
+                .fg(QENLO_THEME.bg)
+                .bg(QENLO_THEME.accent)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol("› ");
+    let mut state = ratatui::widgets::ListState::default();
+    state.select(Some(app.function_idx.min(FUNCTION_CATALOG.len() - 1)));
+    frame.render_stateful_widget(functions, browser[0], &mut state);
+
+    let (name, signature, description) =
+        FUNCTION_CATALOG[app.function_idx.min(FUNCTION_CATALOG.len() - 1)];
+    let detail = vec![
         Line::from(Span::styled(
-            " Keyboard Shortcuts & Navigation Reference",
+            name,
             Style::default()
                 .fg(QENLO_THEME.accent)
                 .add_modifier(Modifier::BOLD),
         )),
         Line::raw(""),
-        Line::from(" [Tab] / [Shift+Tab]   Switch active navigation tab"),
-        Line::from(
-            " [1] - [4]             Jump directly to tab (1: Rows, 2: Search, 3: Storage, 4: Diag)",
-        ),
-        Line::from(" [j] / [k] / [↑] / [↓] Navigate rows in the table"),
-        Line::from(" [n] / [p]             Next / Previous page of records"),
-        Line::from(" [Enter]               Inspect full vector components for selected row"),
-        Line::from(" [a]                   Open 'Add Record' modal dialog"),
-        Line::from(" [d] / [Delete]        Delete selected row (durable tombstone)"),
-        Line::from(" [/]                   Filter data grid by User ID"),
-        Line::from(" [s]                   Execute vector cosine query"),
-        Line::from(" [r]                   Generate random query vector"),
-        Line::from(" [f]                   Flush and compact WAL to snapshot"),
-        Line::from(
-            " [:]                   Claude Code-style command prompt (:open, :create, :flush, :quit)",
-        ),
-        Line::from(" [q] / [Ctrl+C]        Quit QenloDB Browser"),
+        Line::from(Span::styled(
+            signature,
+            Style::default().fg(QENLO_THEME.text),
+        )),
+        Line::raw(""),
+        Line::from(description),
         Line::raw(""),
         Line::from(Span::styled(
-            " Interactive Commands (press ':' to activate):",
-            Style::default().fg(QENLO_THEME.accent),
+            "↑/↓ or j/k to browse · press ? for this browser · see SDK docs for full types",
+            Style::default().fg(QENLO_THEME.text_muted),
         )),
-        Line::from("  :open <path> [dim]   Open a durable collection directory or .qn archive"),
-        Line::from("  :create <path> <dim> Create a brand new durable vector collection"),
-        Line::from("  :flush               Flush pending WAL entries to canonical snapshot"),
-        Line::from("  :export <file.qn>    Export collection into portable archive"),
-        Line::from("  :search              Switch to search view"),
-        Line::from("  :quit                Exit application"),
     ];
-
-    let p = Paragraph::new(text).block(
-        Block::default()
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(QENLO_THEME.border))
-            .border_type(BorderType::Rounded)
-            .title(" Help & Command Cheat Sheet ")
-            .style(Style::default().bg(QENLO_THEME.surface)),
+    frame.render_widget(
+        Paragraph::new(detail).wrap(Wrap { trim: true }).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(QENLO_THEME.border))
+                .title(" Function details ")
+                .style(Style::default().bg(QENLO_THEME.surface)),
+        ),
+        browser[1],
     );
-    frame.render_widget(p, area);
+
+    let shortcuts = vec![
+        Line::from(Span::styled(
+            " Shortcuts",
+            Style::default()
+                .fg(QENLO_THEME.accent)
+                .add_modifier(Modifier::BOLD),
+        )),
+        Line::from(" Tab / Shift+Tab or 1-4: switch tabs · j/k: move · n/p: page records"),
+        Line::from(" Enter: inspect · a: add · d: delete · /: filter by User ID · s: search"),
+        Line::from(
+            " r: refresh or random query · f: flush · :open/:create/:export/:quit · q: quit",
+        ),
+    ];
+    frame.render_widget(
+        Paragraph::new(shortcuts).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(QENLO_THEME.border))
+                .title(" Navigation ")
+                .style(Style::default().bg(QENLO_THEME.surface)),
+        ),
+        chunks[1],
+    );
 }
 
 fn render_bottom_bar(frame: &mut Frame, app: &App, area: Rect) {

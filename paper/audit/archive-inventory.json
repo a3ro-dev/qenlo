@@ -17,8 +17,8 @@
     "large_payload_behavior": "use existing manifest/sidecar reference where known; otherwise hash=null and hash_status=skipped_large_payload"
   },
   "summary": {
-    "file_count": 1654,
-    "bytes": 531313936,
+    "file_count": 1833,
+    "bytes": 1151437797,
     "cohort_file_counts": {
       "a6000_provider_approximate": 32,
       "a6000_strict_gate": 23,
@@ -28,12 +28,12 @@
       "benchmarks": 54,
       "eligibility_ablation": 3,
       "gpu_tuning": 44,
-      "historical_processed": 19,
+      "historical_processed": 143,
       "historical_reports": 1,
       "intel_arc_device_lab": 2,
       "linux_external_replay": 153,
       "phase_archives": 3,
-      "research": 91,
+      "research": 146,
       "small_collection_campaign": 976,
       "windows_agnews_endpoints": 121,
       "windows_native_crossover": 84
@@ -47,12 +47,12 @@
       "benchmarks": 136674,
       "eligibility_ablation": 15276350,
       "gpu_tuning": 80090,
-      "historical_processed": 33824,
+      "historical_processed": 2751218,
       "historical_reports": 4345,
       "intel_arc_device_lab": 11957,
       "linux_external_replay": 17614909,
       "phase_archives": 30455658,
-      "research": 16948486,
+      "research": 634354953,
       "small_collection_campaign": 260919409,
       "windows_agnews_endpoints": 84524347,
       "windows_native_crossover": 46377440
@@ -5294,22 +5294,29 @@
     },
     {
       "path": "research/README.md",
-      "size_bytes": 2065,
+      "size_bytes": 4880,
       "type": "text_or_machine_readable",
       "cohort": "research",
-      "sha256": "08580c455b7e3851e34fc88f2ec0f5c0fda62c5fddc7a000ec64dca749dedfab",
+      "sha256": "9174ad4f46778862bc369490672f2b855dace28e54dd6ea17470248f77cf00e8",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
       "path": "research/analysis.md",
-      "size_bytes": 4473,
+      "size_bytes": 5923,
       "type": "text_or_machine_readable",
       "cohort": "research",
-      "sha256": "52827dd4a1684466570606266418ff574ae8522daec3e5e7c9c35e1ace92f832",
+      "sha256": "078e12a0cd0daf3c751434d4ba8d6bc77c01b452573e26e0a00461e12340d739",
       "hash_status": "computed_sha256_canonical_lf",
-      "manifest_references": [],
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
       "duplicate_of": null
     },
     {
@@ -17485,12 +17492,19 @@
     },
     {
       "path": "research/claim-artifact-ledger.md",
-      "size_bytes": 6775,
+      "size_bytes": 10465,
       "type": "text_or_machine_readable",
       "cohort": "research",
-      "sha256": "ea1a40edc8f13c75b75edb194499336aeebd241ff682b8a0a9522e8104e3c76f",
+      "sha256": "cf194a377751d63ea6256f7b141fac31f77a98b579ea21070fc9bbd69096d129",
       "hash_status": "computed_sha256_canonical_lf",
-      "manifest_references": [],
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
       "duplicate_of": null
     },
     {
@@ -17500,7 +17514,14 @@
       "cohort": "research",
       "sha256": "ccfc99309b87259d21bd39fce28ff95d9efcdba90b5d811f4e387c3cf4b143f9",
       "hash_status": "computed_sha256_canonical_lf",
-      "manifest_references": [],
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
       "duplicate_of": null
     },
     {
@@ -17604,6 +17625,1108 @@
       "duplicate_of": null
     },
     {
+      "path": "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+      "size_bytes": 1965,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "045d05d78294716d5a0c08266bf8844d168a556e233d893a14d14bd5d0126576",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/archive-reanalysis/crossover_portability.csv",
+      "size_bytes": 1993,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "ad1ab0e3fdf2591f25860adcf490e45dccd91cf34d4fa4da6c952fd3d7199002",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/archive-reanalysis/phase0_cells.csv",
+      "size_bytes": 3737,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "7285d0409058d27741e06977401a86fa9bcba06e8c558aa60d54da346d5086eb",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+      "size_bytes": 1432,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "42dc891b9204566b7eb1678ba32967e1689d946696afb807a5bea00f33f077cf",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/archive-reanalysis/report.md",
+      "size_bytes": 3250,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "a0dd8429e7ea447072487e613d165908783a1bac25238185e9611adc936c20ec",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/archive-reanalysis/sample_series_inventory.csv",
+      "size_bytes": 96185,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "50db96e50062adb80370233ca73b0085faada84a656bbf35e1192de73fbb6ab7",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/archive-reanalysis/summary.json",
+      "size_bytes": 6921,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "89f160c5429ac53f3aa97130a45e054a2d9473766f1d47f4e61ff225bef7366f",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/cross-host/processes.csv",
+      "size_bytes": 14085,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "33c4c8ba475303588dd9e368ded2b9a7f7d0cd96af8999276f3d6d09871df7da",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/cross-host/summary.csv",
+      "size_bytes": 3670,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "e62396b0491be16f3a137bfc7f663823eaa746adf360365a774480ca7833c4fb",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/E1-dry-run.json",
+      "size_bytes": 195224,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "4afef59b80d10467b349e1b4db8c6b9616816a893fc43ca373612868c18a6b4f",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/E2-dry-run.json",
+      "size_bytes": 237863,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "cd90563a7cf9bc86e406f0dac719262c086cef33e84ee0bf773c51b05c65b716",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/E3-dry-run.json",
+      "size_bytes": 186399,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "35b1a771a5b02bee7ada6bde6135d9247263fc5b5f794807e4ee036d260908a0",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/archive-reanalysis/alpha5_heldout_router.csv",
+      "size_bytes": 1965,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "045d05d78294716d5a0c08266bf8844d168a556e233d893a14d14bd5d0126576",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/archive-reanalysis/alpha5_heldout_router.csv",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/archive-reanalysis/crossover_portability.csv",
+      "size_bytes": 1993,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "ad1ab0e3fdf2591f25860adcf490e45dccd91cf34d4fa4da6c952fd3d7199002",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/archive-reanalysis/crossover_portability.csv",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/archive-reanalysis/phase0_cells.csv",
+      "size_bytes": 3737,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "7285d0409058d27741e06977401a86fa9bcba06e8c558aa60d54da346d5086eb",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/archive-reanalysis/phase0_cells.csv",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/archive-reanalysis/phase2_cpu_optimization.csv",
+      "size_bytes": 1432,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "42dc891b9204566b7eb1678ba32967e1689d946696afb807a5bea00f33f077cf",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/archive-reanalysis/report.md",
+      "size_bytes": 3250,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "a0dd8429e7ea447072487e613d165908783a1bac25238185e9611adc936c20ec",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/archive-reanalysis/report.md",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/archive-reanalysis/sample_series_inventory.csv",
+      "size_bytes": 96185,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "50db96e50062adb80370233ca73b0085faada84a656bbf35e1192de73fbb6ab7",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/archive-reanalysis/sample_series_inventory.csv",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/archive-reanalysis/summary.json",
+      "size_bytes": 6921,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "89f160c5429ac53f3aa97130a45e054a2d9473766f1d47f4e61ff225bef7366f",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/archive-reanalysis/summary.json",
+      "duplicate_group_size": 2
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/campaign-verification.json",
+      "size_bytes": 356,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d6a75f43e878bf1fd6c09a481d391cf8a6e1baf96829fc4f335920abc16e1323",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/corpus-audit.json",
+      "size_bytes": 1564,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "39eabcfc6d1f2cb1a839a7be752d56e6cef6ea35ce358f9313ac5f4fe5f45198",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/provenance.json",
+      "size_bytes": 710,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "8b7b00bb63b7a9486608248da803d47b939911b3b4f64ecc25bcba38c1fd31ed",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/router-audit.json",
+      "size_bytes": 2063,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "2c0449802feb2927c5194865926ab5b79f9b0cf767421de86642cfcb98193de6",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/router-cells.csv",
+      "size_bytes": 3987,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "5c3938af10607c0409ba08d86d95d2653dcdc7383c4efac4115e79e94a7f7f2c",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/router-evidence.png",
+      "size_bytes": 111124,
+      "type": "binary_figure_or_document",
+      "cohort": "historical_processed",
+      "sha256": "58341ebf6ce389fd3368da12b473d0701903722b8c6283e286b85131617415ca",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/router-runs.csv",
+      "size_bytes": 4255,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "afb66f8c33ea0c4a02f65b5e21a512bbdf20bce9e2baa11ec4be483801120b4e",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke-reduction.json",
+      "size_bytes": 1047,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d31b94f9e3714ef2b67e4cdfd4c57938e6fe269a55d9123ee41a65a2b4a4d1be",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/checkpoint-0000.json",
+      "size_bytes": 551,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "55c7e768b254c537751e6c6641a38a1a94f2fd9db32e600f4e107ed6721d2386",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/checkpoint-0001.json",
+      "size_bytes": 2128,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d4995890b9dbc8c7eb37fad8a21697ce1d7fb9e490eaed04be37fe346682f8ac",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/checkpoint-0002.json",
+      "size_bytes": 2290,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "8f71abe23c1b07ac978a17cb89b241ce677edd01c191cb363f379a8bdc7e29f1",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/checkpoint-0003.json",
+      "size_bytes": 2285,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "dbcd6aa240a582b2af2f940efeb1feb6bf291150ac9762fee72dc18728976a9b",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/checkpoint-0004.json",
+      "size_bytes": 2136,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "5e4faca91a29322c7b3c159abe138ba79b5b98dbea3516b72a1e3d39376bebb0",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/checkpoint-0005.json",
+      "size_bytes": 2299,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "9c72a7f5d2cf1bfbdf871cfec646061bf264374f31bfad65b7b9e4f82921f430",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/checkpoint-0006.json",
+      "size_bytes": 2294,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "f6a54c924dcf2b0b34477f61e51b660798885a11ae5c3b8714049569650f02d7",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/environment-1790185772086795400.json",
+      "size_bytes": 2618,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "5243fa1171c108873271ccbd1a67f06929a6f119350ea29d4d525291b5a28e3d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/environment-1790185840130354600.json",
+      "size_bytes": 2618,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "8e16529f68ce1069fa66c03c40c673cac7c3b1743f54cf57797692a92083b713",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/paired-results.csv",
+      "size_bytes": 429,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "79d679e39690839668d485cf33f2cf3909b3c0b83096b27b18a33fdecbe6e290",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/queue.json",
+      "size_bytes": 13411,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "532f47e9d5c34ca10fd8ff55f6fb6eb5bb354ec9cf3478e840dee2d545f2fdc3",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/configuration.txt",
+      "size_bytes": 1875,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d6a2ed7fb6d43633b28bc3cc070f62e39f2c0f96d924b5e5d24b386d09f133f2",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/metadata.csv",
+      "size_bytes": 2618,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "1dcac0db3a0f413960c38c193b3399a20040580d244716ba4e895c543f39252d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 6
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/runs.csv",
+      "size_bytes": 180,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "f66d5be4590a5c7284b105dab6b2d237bd6c743cf076df1229aa8db4a0e2d6f0",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/samples.csv",
+      "size_bytes": 3835,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "12a041b00964010f0ca1f0b57338e7275d5378603566f6852590795950c8e2d0",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/summary.txt",
+      "size_bytes": 314,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "b1e42a21d55feec615cfd2534573d915c0e690f7896239e08bd4016793a44281",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/truth.csv",
+      "size_bytes": 834,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "16b99312e009d144b036687392140d82d79cd18aca0e0be0763eb11e466e6432",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/tuning.csv",
+      "size_bytes": 84,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "72f43fd67fd57bf941c0b2781f6924817d7fcfc877e2d39db092f2fe47f45235",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/gpu/configuration.txt",
+      "size_bytes": 2181,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "ed05faa992198bde755dea572a011815b4b965448da00c0418e3275a9b42a0d8",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/gpu/metadata.csv",
+      "size_bytes": 2618,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "1dcac0db3a0f413960c38c193b3399a20040580d244716ba4e895c543f39252d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/metadata.csv",
+      "duplicate_group_size": 6
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/gpu/runs.csv",
+      "size_bytes": 187,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "7d915a8e00ca30eec74145532ab07b9fd71bf416d5590f537d22487d218051b7",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/gpu/samples.csv",
+      "size_bytes": 6108,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "490b5144f781cf2278b6ad8a80b51e0889c624a82bf64f14ef188f3ba89a07ad",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/gpu/summary.txt",
+      "size_bytes": 325,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "cfd635e563888203e6ce6af8f9f1f3c3f9d3bb9529292c810121cd007734a8d7",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/gpu/truth.csv",
+      "size_bytes": 834,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "16b99312e009d144b036687392140d82d79cd18aca0e0be0763eb11e466e6432",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/truth.csv",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/gpu/tuning.csv",
+      "size_bytes": 87,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "89677ee6e94e61f32bfa35597c70e4ed21f6219a2f42e4fa32e8265c0d10e972",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/reference/configuration.txt",
+      "size_bytes": 1727,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "42e57f712a6d878c86ed5ac7d3ad54eec10ee6facff645f42a2214bdc0f233fd",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/reference/metadata.csv",
+      "size_bytes": 2618,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "1dcac0db3a0f413960c38c193b3399a20040580d244716ba4e895c543f39252d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/metadata.csv",
+      "duplicate_group_size": 6
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/reference/runs.csv",
+      "size_bytes": 180,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "5d3f272ba5fa24f0b02d97c5fbdcd80b3634f55c659662dd630a065894adc348",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/reference/samples.csv",
+      "size_bytes": 3841,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "545a2325bf74b6acf155bf81f191640acf7648b91ac563bd2533c2435c18a4d6",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/reference/summary.txt",
+      "size_bytes": 313,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "0d3d16a6aaa566f8bb2b683a40519d45474d367a3a76abb764a1566c3809b5c5",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/reference/truth.csv",
+      "size_bytes": 834,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "16b99312e009d144b036687392140d82d79cd18aca0e0be0763eb11e466e6432",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/truth.csv",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/reference/tuning.csv",
+      "size_bytes": 84,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "c46dda50b0992e2cbb36c3bfdde46f5b7c3ed2585cfcd6c839b0ffd08f1ae667",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/cpu/configuration.txt",
+      "size_bytes": 1883,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "4484365f8126017d007c93136429424cebe4530fb48e80ec2c86b05f3eca2bf6",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/cpu/metadata.csv",
+      "size_bytes": 2618,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "1dcac0db3a0f413960c38c193b3399a20040580d244716ba4e895c543f39252d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/metadata.csv",
+      "duplicate_group_size": 6
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/cpu/runs.csv",
+      "size_bytes": 182,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "4dc0124a409dbfdd7b1478f3c22390b392d8e6875e740f508db4a3f61fdddc8f",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/cpu/samples.csv",
+      "size_bytes": 1133,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "72abd0a5ff8d84d3111797917f337d542259bf753ad6cda60da5358e861136de",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/cpu/summary.txt",
+      "size_bytes": 314,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "c103bf14d3e6e16975ac15092c4fdc6cf9180c6058a4d3cbd4d10f49d37612d3",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/cpu/truth.csv",
+      "size_bytes": 2050,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "971718d57df0221732479c51de0dd3dc9d83f9d407aac5aa0e483fc85688c244",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/cpu/tuning.csv",
+      "size_bytes": 85,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "a3b7597590cb6eb0f7c9d8c515cac7fc35f71d934e8ab5996419f49f934df2b3",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/gpu/configuration.txt",
+      "size_bytes": 2189,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "7fe59068a77481419dc352f557e8bf7de1481a0c4ea630407e407258f601b435",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/gpu/metadata.csv",
+      "size_bytes": 2618,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "1dcac0db3a0f413960c38c193b3399a20040580d244716ba4e895c543f39252d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/metadata.csv",
+      "duplicate_group_size": 6
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/gpu/runs.csv",
+      "size_bytes": 188,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "4b800afe8e512ff2d0fc87a91b2885c1e5c8393e0ea09c557329b45ed02e536e",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/gpu/samples.csv",
+      "size_bytes": 1444,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "c851a8650fc6da068423dbc2c26bc62b0cc3a0b9ccd5132c6d503ebeba5a30d2",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/gpu/summary.txt",
+      "size_bytes": 326,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "cd025aa94a3b8e567b78d44699eb02eb8cff334a25d6d133943b36242082d08b",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/gpu/truth.csv",
+      "size_bytes": 2050,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "971718d57df0221732479c51de0dd3dc9d83f9d407aac5aa0e483fc85688c244",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/cpu/truth.csv",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/gpu/tuning.csv",
+      "size_bytes": 87,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "46e8a8ec4685aae84c9857975a1c94b3518a2ec3d6963c4a9763f88963ffe6ec",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/reference/configuration.txt",
+      "size_bytes": 1736,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "98ea665f3c07f8808be3bfb62a85f04dacde67c9e2801805e0f07f98d54c9f26",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/reference/metadata.csv",
+      "size_bytes": 2618,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "1dcac0db3a0f413960c38c193b3399a20040580d244716ba4e895c543f39252d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-empty/block-0/cpu/metadata.csv",
+      "duplicate_group_size": 6
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/reference/runs.csv",
+      "size_bytes": 181,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "f871d22e526e6cccd37f54a2ca7e6d36d09d89734752e9191453575041b052ea",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/reference/samples.csv",
+      "size_bytes": 1130,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "80f45b1b1651ec7f740b4a1aae6b135c8a72fe14f925d825e54c999e8bd5dd7e",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/reference/summary.txt",
+      "size_bytes": 314,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "2b4cb403768daf8bb1bd119d088d3f66a6a9e50c25e5cf36ec64dd3619c4bb3f",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/reference/truth.csv",
+      "size_bytes": 2050,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "971718d57df0221732479c51de0dd3dc9d83f9d407aac5aa0e483fc85688c244",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/block-0/cpu/truth.csv",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/s20260923-tiny/reference/tuning.csv",
+      "size_bytes": 85,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "2f48beb441844f7ecc119860ccf9cd42f0eaa6667a9a8c5c6a60f6078c15ba9b",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/source-snapshot.tar",
+      "size_bytes": 829440,
+      "type": "binary_or_other",
+      "cohort": "historical_processed",
+      "sha256": "ad6c370191531f58e91a14f0db845ebcf719d07e94467ae90f60f49668a542b8",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0000.json",
+      "size_bytes": 63,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "5ad8591c7d71ece044e5f644b621f8e91f7468eb3ed891dc0df24e02ae52f672",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0001.json",
+      "size_bytes": 63,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "5ad8591c7d71ece044e5f644b621f8e91f7468eb3ed891dc0df24e02ae52f672",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0000.json",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0002.json",
+      "size_bytes": 63,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "5ad8591c7d71ece044e5f644b621f8e91f7468eb3ed891dc0df24e02ae52f672",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0000.json",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0003.json",
+      "size_bytes": 63,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d5af5b80613b8fcfc4405cc31ea1a467968a52a02a904327f766f404013473c9",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null,
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0004.json",
+      "size_bytes": 63,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d5af5b80613b8fcfc4405cc31ea1a467968a52a02a904327f766f404013473c9",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0003.json",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0005.json",
+      "size_bytes": 63,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d5af5b80613b8fcfc4405cc31ea1a467968a52a02a904327f766f404013473c9",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0003.json",
+      "duplicate_group_size": 3
+    },
+    {
+      "path": "research/data/processed/decision-audit-2026-09-23/smoke/telemetry-0006.json",
+      "size_bytes": 63,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "4fa5b345ebbf0cdeb3d3d60f5da9c4262542e34f5194d6b9aff50f961fb6337b",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-h100/conditions.csv",
+      "size_bytes": 1236,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "99db8c0844e5f7bea9246341bf46cc3eb2e8398766092f2734146fa6abcfe49f",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-h100/paired.csv",
+      "size_bytes": 4729,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "fd60141ae72c2b5dfb0fe02ee8ff3e027918b57cc0dd4123b7a9224b0e840e9b",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-h100/runs.csv",
+      "size_bytes": 4683,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "61ffd1fa03fef8968f8f8e9dfc3135384a390122348e1f8cf08d73643c117f43",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-laptop-4050/conditions.csv",
+      "size_bytes": 2782,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "6377e21d4ead774f2c9ee191fade2e8e173d98728ac92ac853eb794ee4003f4b",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-laptop-4050/paired.csv",
+      "size_bytes": 12572,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "902f909b627f556c15cf9cfe0e5532b5fcf7908cd4f039c7ba281a44172b771f",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-laptop-4050/runs.csv",
+      "size_bytes": 17909,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "a0ad0377937c371a2015eb8e1e0230558f7f1db9c797023d62415ecadf4581a2",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-pods-4090/conditions.csv",
+      "size_bytes": 3069,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "99dd9a2892afcc498db6a4d18fe97d961ea2d6adb92c21e4cebeabcd7bd85d7e",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-pods-4090/paired.csv",
+      "size_bytes": 12551,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "9d62f1f764cadd9dfad678762edfbf3dab3183a11c2c14eadfa5206f278fec75",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-pods-4090/runs.csv",
+      "size_bytes": 19611,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "f9f0aa9e8ce5ae6903b6435606ef2790866c92cfe788d40d7f82452d23c83be8",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-pooled/dose_response.csv",
+      "size_bytes": 10740,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "b10762c6b185d94edc90cff1536f779acd711c8086626582eb560589c88cfc57",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-pooled/host_effects.csv",
+      "size_bytes": 11961,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "ccbc08542dfb05e2378f41e8a4702fe1a36a13b5f090b846382005308d4e3351",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-pooled/host_states.csv",
+      "size_bytes": 8608,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "8844d3f4dee1cafabcbb79a87b390f06ce6a5d8df86b35d5c57ddc3f32054179",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-retrospective/between_block.csv",
+      "size_bytes": 4988,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "9c27cf9b1bdfd8a25babf3c072f0a6efe0995db8c965a4fbf00130adba114529",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-retrospective/block_device_times.csv",
+      "size_bytes": 37145,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d24ae24bd6b8d5736f741fbe7d16663f0d130f7d5917f9b7c029fbcc504d381a",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-retrospective/counterfactual_b1.csv",
+      "size_bytes": 1043,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "0be9e6883765ed64dfcbc702caea647b690514ee5d290a2e166f82e213cb84dc",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-retrospective/counterfactual_b1_blocks.csv",
+      "size_bytes": 5621,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d00d541846d7d9e48363b92befd9f8e78f8e608f475c1c7010422487517a879d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-retrospective/r1_device_selection_runs.csv",
+      "size_bytes": 2699,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "1853e0cbe73d1aaa21db47263fa191577fd216e8274c5570e90656f01b2a5fff",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-retrospective/retro_clock.png",
+      "size_bytes": 134934,
+      "type": "binary_figure_or_document",
+      "cohort": "historical_processed",
+      "sha256": "09eb05c7cba10035251d1191735a8f0e1aac3dd12a34e8331a88d851e639be63",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/dvfs-retrospective/scoring_throughput.csv",
+      "size_bytes": 2325,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "c20e8ded8f4c4853525983c362c8956242c23707becfd85577be073554966eb9",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
       "path": "research/data/processed/eligibility_ablation_summary.csv",
       "size_bytes": 795,
       "type": "text_or_machine_readable",
@@ -17659,6 +18782,176 @@
       "type": "text_or_machine_readable",
       "cohort": "historical_processed",
       "sha256": "73af9254a6159c87c37e3abbdc1a27950c7b75268152e60d706df88c053c481b",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/router-noise-audit/cells.csv",
+      "size_bytes": 5489,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "a0c3976e0ac7cdb7578f76456d34c93b6f5b45fc681cc8f1375f836763d9c277",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/router-noise-audit/summary.json",
+      "size_bytes": 399,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "63eba488f0838bb70c5c8457f3d06e569e25aebde4bcb2d547b671afd6a5037a",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/analyze.py",
+      "size_bytes": 15870,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d73ff491d6ee6c278dca901a690858aea1febde0c533f28273c897fe0f15e77f",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/audit.json",
+      "size_bytes": 3120,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "ef17e20df785091cb506b07ff171638d37b2251d403c34c131552fbaf933208d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/block_metrics.csv",
+      "size_bytes": 41534,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "0f93e6e24bbf832555741f9d423ca3ef1370b530fa2c68378592e1429415af1e",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/coverage.csv",
+      "size_bytes": 2194,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "9fcd4232ce44e771f106aac2134814b95ab41b45c29f6376190be22976ad1fce",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/e0-block-trace.png",
+      "size_bytes": 114121,
+      "type": "binary_figure_or_document",
+      "cohort": "historical_processed",
+      "sha256": "faddea4bfcfefb10aaee7e2e178bd828777478c424bd056b4db1b47775c618d1",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/e0_noise.csv",
+      "size_bytes": 1364,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "de5f4c4a43c0aae44e7fdb059eba0d6ddb9bdb0c41eb1b375c856eff3e108e67",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/e2-latency.png",
+      "size_bytes": 240178,
+      "type": "binary_figure_or_document",
+      "cohort": "historical_processed",
+      "sha256": "4775b04077d6694fc653b4ba45ecd69c28f75d6828c8c1c149366fd05bd2ea2a",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/latency_summary.csv",
+      "size_bytes": 11063,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "b668683d663d045c2cddd56af0795ac7b1d6a967839abd6d0ffc34be0fdff0dc",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/paired_comparisons.csv",
+      "size_bytes": 24962,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "d97f263ad6c7e560e219abcd8025cb5070570d941263612a98cff770b45edf1c",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/render_report.py",
+      "size_bytes": 18499,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "da452d19aec7614fdde37f47d5371f420ca5894b3e322a1ce7ff58508f5eef01",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-analysis-20260924/report.md",
+      "size_bytes": 17086,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "c55368550ed8d526cc29e4082dc266f24467cc5e6db21b177bc7a305688d8aab",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-mechanisms-20260924/audit.json",
+      "size_bytes": 802,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "1017b162d946b541673bd46e010255c2e729bbc86a417bc511e092ec67b089fa",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-mechanisms-20260924/diagnostics_by_cell.csv",
+      "size_bytes": 4405,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "b6140925c91276f8f0bd36f1209f118d9e546921e3a712b90ee06ef7be746e55",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-mechanisms-20260924/edb_ordering_witness.csv",
+      "size_bytes": 383,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "a99d9bdad57b31727aab29bd5a509033402919a074850854f995f74d158eceab",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/processed/runpod-e0-e2-mechanisms-20260924/gpu_clock_snapshots_b1.csv",
+      "size_bytes": 3508,
+      "type": "text_or_machine_readable",
+      "cohort": "historical_processed",
+      "sha256": "437abdccde390f0de091c2a35457506e2f554d02f8c2e55b6f325f88a065b748",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
@@ -18734,6 +20027,244 @@
       "duplicate_of": null
     },
     {
+      "path": "research/data/raw/2026-09-23-affinity-smoke.tar.gz",
+      "size_bytes": 8649234,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "750f3ee1c789a96522efbd816abbfa171aefe630d442fdf84a5988760935c348",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-24-local-filter-ab.tar.gz",
+      "size_bytes": 15487407,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "adb98469cc565505b4e5359c96831faae40af34637c7b435b7332c812bb1cd1b",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.part00",
+      "size_bytes": 94371840,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "cb312b7880e9f292caa1b8c4e031fef9774212b2e9b6888946dcdfe0e63ee91a",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.part01",
+      "size_bytes": 58838889,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "0ff2092b8a3694f6a1f95a6b362914c4731a2db4c820d03c2897519b6a565a07",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+      "size_bytes": 92,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "e078883420f5350547b822ae796dfe7119bc129dc4f105f8f4309bf42bb73647",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-d1r/d1r-b0.tar.gz",
+      "size_bytes": 31383944,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "b2d9bc43f98155aadda73ea45842f63c8fce883f1fd4e8196d1e887c09f65d2d",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-d1r/d1r-b1.tar.gz",
+      "size_bytes": 31128202,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "f9fdbd9d0c6cafea4c4cd9c143f1cfade45db7f2d8fb38c0102fe585e40f1979",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-d1r/d1r-b2.tar.gz",
+      "size_bytes": 31505922,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "4a2272109ebf2a12f8efdf080c19fd86975b026bb20d7bf3a4aeb513bee9cdcc",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-d1r/d1r-b3-partial.tar.gz",
+      "size_bytes": 16142985,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "46cf8aa31584c288162a8708e91991e32e2275dde32a3f07d18867dbbe384ab1",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-d1r/d1r-b3r.tar.gz",
+      "size_bytes": 31101583,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "2734d041f15239f0155d8d7bb1e1eda65813fb5d3f4d8047111c4c16dcde8a69",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-d1r/d1r-b4.tar.gz",
+      "size_bytes": 31427367,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "0dc5c4317b576f4b8ddc0744f7c5a9d00fbb8e00c66f51a403b3d929b12cf022",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-h100/h100.tar.gz",
+      "size_bytes": 40898164,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "ab66198c01278b3a18694dc51bab3e279b60a06b4d19c044ca31dd2a3860f592",
+      "hash_status": "computed_sha256",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/2026-09-25-dvfs-pilot.tar.gz",
+      "size_bytes": 5458285,
+      "type": "binary_archive",
+      "cohort": "research",
+      "sha256": "fa375a9ab5145aaf2daa0a08d97524081578e0b5c699ed805b87df3f05abd2e7",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
       "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz",
       "size_bytes": 4968881,
       "type": "binary_archive",
@@ -18742,9 +20273,21 @@
       "hash_status": "computed_sha256",
       "manifest_references": [
         {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
           "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
           "sha256_values": [
             "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
           ]
         }
       ],
@@ -18757,7 +20300,20 @@
       "cohort": "research",
       "sha256": "0ebf6b8547220139783593a86661d133f7b2a43fbc9be69487f58065e3a7903d",
       "hash_status": "computed_sha256_canonical_lf",
-      "manifest_references": [],
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
       "duplicate_of": null
     },
     {
@@ -18769,9 +20325,21 @@
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
         {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
           "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
           "sha256_values": [
             "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
           ]
         }
       ],
@@ -18785,6 +20353,128 @@
       "sha256": "6467c82444a5c1c1291cbd602b165ea7d229db3cff6e74c6dde54c0b19f1ed74",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.part00",
+      "size_bytes": 94371840,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "97b196cfe5df7faf2423996cf018628647feb28fd4e24e86e88fd9575542f814",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.part01",
+      "size_bytes": 94371840,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "a024fe0625993fa36bbcc4b2ddfb89305f3a250f0d8bfd79d2c486566f1912a0",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.part02",
+      "size_bytes": 32073520,
+      "type": "binary_or_other",
+      "cohort": "research",
+      "sha256": "7b1b6d990317473b8a13b44be0f502a9b3f6c1a6c1e6b5083b246df833ef120b",
+      "hash_status": "computed_sha256",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
+        {
+          "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
+          "sha256_values": [
+            "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e"
+          ]
+        },
+        {
+          "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/data/raw/runpod-e0-e2-partial-20260924.tar.gz.sha256",
+      "size_bytes": 103,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "a7dce34a6f8f8c917c42c7c194cf25497bd59a9530ee5cd022956fbdee7d7bfd",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/data/raw/2026-09-25-dvfs-d1.tar.gz.sha256",
+          "sha256_values": [
+            "44b13d2c9240f48def3fb6151f0c0cbd9b01892a763bcca1457d42257ca2a32e"
+          ]
+        },
         {
           "path": "research/data/raw/alpha5-router-heldout-rtx4050.tar.gz.sha256",
           "sha256_values": [
@@ -19343,13 +21033,54 @@
       "duplicate_of": null
     },
     {
-      "path": "research/experiment-log.md",
-      "size_bytes": 2600,
+      "path": "research/decision-memo-2026-09-25.md",
+      "size_bytes": 11736,
       "type": "text_or_machine_readable",
       "cohort": "research",
-      "sha256": "95d9dfec941368ff9cfdbfb8ad79b8d889a94cce1e9d378c60c33e697b9053bf",
+      "sha256": "f773792201296fa2afe41c2eaf845e1795c627a3035bc7f4baec8961c9dac8b3",
       "hash_status": "computed_sha256_canonical_lf",
-      "manifest_references": [],
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/direction-memo-2026-09-24.md",
+      "size_bytes": 9307,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "fa7504e88bddcf9e0fea6890c94d9c8549b378a438e1d3972e827181990a3a48",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiment-log.md",
+      "size_bytes": 5459,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "23390348ea06e2052374ffd41baa0398ca456101134b8952e3897c62226e0d12",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
       "duplicate_of": null
     },
     {
@@ -19358,6 +21089,158 @@
       "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "fc0d69fccc08b12aa486f6e821d36ed098380022d465d6de341ef323582cdeed",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-d1/protocol.md",
+      "size_bytes": 1872,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "f7f6f0dcd7b3aeb9c4c250c4aab8e0b338329988bbfd7c50d224ed4be766162e",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/experiments/dvfs-d1/protocol.sha256",
+          "sha256_values": [
+            "028b60f808e9bbd332d2a7a9c863aa84495a2031153c3d7e0fed1a72a0910076",
+            "f7f6f0dcd7b3aeb9c4c250c4aab8e0b338329988bbfd7c50d224ed4be766162e"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-d1/protocol.sha256",
+      "size_bytes": 187,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "587082fb3cd9ba45d01b1524a2087a615a733570d43d66867445d355399dcf02",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-d1/runner.log",
+      "size_bytes": 4842,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "7be1b88213150d7764cef37a83da72cca9f2478701954a9b72c71fbe0c63fddb",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/experiments/dvfs-d1/protocol.sha256",
+          "sha256_values": [
+            "028b60f808e9bbd332d2a7a9c863aa84495a2031153c3d7e0fed1a72a0910076",
+            "f7f6f0dcd7b3aeb9c4c250c4aab8e0b338329988bbfd7c50d224ed4be766162e"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-d1r/campaign-log.md",
+      "size_bytes": 11943,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "112ab168b7b3e57c0bef248a23db46c3c51de5bc40555fb44b2a44d749b84886",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/experiments/dvfs-d1r/protocol.sha256",
+          "sha256_values": [
+            "21b3a6581ef975bb12448da4bebfc2ef312051601b996c5175290620961585de"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-d1r/protocol.md",
+      "size_bytes": 1137,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "21b3a6581ef975bb12448da4bebfc2ef312051601b996c5175290620961585de",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/experiments/dvfs-d1r/protocol.sha256",
+          "sha256_values": [
+            "21b3a6581ef975bb12448da4bebfc2ef312051601b996c5175290620961585de"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-d1r/protocol.sha256",
+      "size_bytes": 99,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "5019e1522ccef71c0d634b65760581c2c5d12a325d97fd5c08c73652c5c3e637",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-d2/protocol.md",
+      "size_bytes": 818,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "37b4fa8a54d374c3ebea33af638edd3652fa16a208019cc646149e603c6e2b61",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/experiments/dvfs-d2/protocol.sha256",
+          "sha256_values": [
+            "37b4fa8a54d374c3ebea33af638edd3652fa16a208019cc646149e603c6e2b61",
+            "d7ec4b703d2767ea6888db98d40e056008743eed4665e92dc95b7c61c469bb5e"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-d2/protocol.sha256",
+      "size_bytes": 187,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "4b83c466e8a19a3a411c84abde77205f402f4cf7a8190375b5b3d2a070c1aaee",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-h100/protocol.md",
+      "size_bytes": 834,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "452e5a28b2902f900205db3cf7ce5731f1e807e5288b4c6085aa021d4350ae88",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/experiments/dvfs-h100/protocol.sha256",
+          "sha256_values": [
+            "452e5a28b2902f900205db3cf7ce5731f1e807e5288b4c6085aa021d4350ae88"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/experiments/dvfs-h100/protocol.sha256",
+      "size_bytes": 100,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "95f1a44ae1970c95fd859502e3ad5113cfc95a5850f08ee17df6eb5b3bb59617",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
@@ -19369,17 +21252,58 @@
       "cohort": "research",
       "sha256": "ae05681175d2f6f08d501ac2da6734b82f627bcac358459f310ec03273d3e8cd",
       "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/literature/dvfs-related-work.md",
+      "size_bytes": 10061,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "9d2a5514fb3f5863b551a1ec86baca4a3bffd89648cd1c216d63d5388d01e797",
+      "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
     },
     {
-      "path": "research/methodology-audit.md",
-      "size_bytes": 3649,
+      "path": "research/long-horizon-ledger.md",
+      "size_bytes": 1920,
       "type": "text_or_machine_readable",
       "cohort": "research",
-      "sha256": "0419ace077c6382771a019215fb9a3b779a8e0f048b1ddfccb7b0af7c2024fd1",
+      "sha256": "c0ac167effcc5545db6077df0080d5c5c63cd1288b1ed7a5265baa6e9acace20",
       "hash_status": "computed_sha256_canonical_lf",
-      "manifest_references": [],
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/methodology-audit.md",
+      "size_bytes": 5658,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "9062a987abe2358032c79769875fb5ab269c6f878b31ed3e1082aff53f612e39",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
       "duplicate_of": null
     },
     {
@@ -19389,7 +21313,14 @@
       "cohort": "research",
       "sha256": "30b7f911bf671bc603422261af4ec5fffd0c53ecf9b39063abc5d30363d8ef21",
       "hash_status": "computed_sha256_canonical_lf",
-      "manifest_references": [],
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
       "duplicate_of": null
     },
     {
@@ -19399,7 +21330,14 @@
       "cohort": "eligibility_ablation",
       "sha256": "8be27916756b8848745a5226e4c5597f00ac6dcdb49c553e6319ea03936650fe",
       "hash_status": "computed_sha256_canonical_lf",
-      "manifest_references": [],
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
       "duplicate_of": null
     },
     {
@@ -19409,7 +21347,31 @@
       "cohort": "research",
       "sha256": "ce2bb9f955d8b0f7a4d59db6619d250c95c91c3e1419308f7b732ea18c91eae4",
       "hash_status": "computed_sha256_canonical_lf",
-      "manifest_references": [],
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/related-work-current.md",
+      "size_bytes": 14,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "9d9f2cc91d124e1c4a995d0c99dfa67fda7fa98b6b9ab972c18e6c36dd3de7d2",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
       "duplicate_of": null
     },
     {
@@ -19428,6 +21390,26 @@
       "type": "text_or_machine_readable",
       "cohort": "small_collection_campaign",
       "sha256": "693bd5b7036315653307b0be01fa0c34fa964719546bbfc2816c1f9a360ba7b6",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/analyze_dvfs_d1.py",
+      "size_bytes": 5478,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "88c3d7a250e781f3b5dfb40c3c3bd2f33d191b0d1cdb93205d22d0e9a01f245d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/analyze_full_archive.py",
+      "size_bytes": 27710,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "5a124c18a8f1d2f6601415f24503bd786146f14496055ad168eaefed66ef98bd",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
@@ -19453,11 +21435,111 @@
       "duplicate_of": null
     },
     {
+      "path": "research/scripts/audit_e0_e2_mechanisms.py",
+      "size_bytes": 8079,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "77671a7387efb4f40a09c72d6b141dfdd398bef91a2bb80854977fbd30efb16f",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/audit_router_noise.py",
+      "size_bytes": 5649,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "48235cc1404c177f62964e04d76f3282a0985ac1d131322d37fd1cc111cedab3",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/cross_host.py",
+      "size_bytes": 2841,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "2bed6273071582976daa11f95f3341ad537a3737cfddc4f55ebe451c8a6b9c9a",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/decision_audit.py",
+      "size_bytes": 12789,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "fa1a821f58417b8650e759e66318f7d4967d81157faf6b278cd624d1d0f0edeb",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/dose_response.py",
+      "size_bytes": 2322,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "fdd346984e37abb412aa5318e084a8d1e30b9abcfc3de87671afe04a8fa98e31",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/dvfs_retrospective.py",
+      "size_bytes": 10042,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "089dc218844fe2e75c3879bd342731539afc6b1fc7ac38fe098fe80765bfa8e7",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/dvfs_summary.py",
+      "size_bytes": 1240,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "ff30fb2d9fd26b851a94e8174e76e45454ed1e181c747501d238b90bcf20bcd8",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/extract_tars.py",
+      "size_bytes": 355,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "05b5dfe590c69f2dae493a3e7e81e30f68fc0c33a51b11af40793845332dafec",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
       "path": "research/scripts/generate_plots.py",
       "size_bytes": 12284,
       "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "8cf3ceba1597c4d94399298921aab90be280f18c57275c61858ed3a277678f88",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/pack_raw.py",
+      "size_bytes": 759,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "7ed7b34f17a51baea64313a1a8b6d67511bc96495c25c4bd534297658a0a86b8",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/pool_hosts.py",
+      "size_bytes": 1615,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "cd8357c13db3bfc354b3be74092092fd63be323f771b605d421580da35a9c01c",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null
@@ -19483,6 +21565,56 @@
       "duplicate_of": null
     },
     {
+      "path": "research/scripts/run_decision_queue.py",
+      "size_bytes": 10944,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "eecf269265a49cc62fe4f99b218dbfbce18678ab06264e8cb0683bb603171f94",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/run_dvfs_cell.py",
+      "size_bytes": 2729,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "54c32bed8eeb99e47dec9fb0fcc1db69d52ae19f9367be44ca7067b3e2f3d8bb",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/run_dvfs_d1.py",
+      "size_bytes": 932,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "028b60f808e9bbd332d2a7a9c863aa84495a2031153c3d7e0fed1a72a0910076",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/run_dvfs_d2.py",
+      "size_bytes": 1108,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "d7ec4b703d2767ea6888db98d40e056008743eed4665e92dc95b7c61c469bb5e",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/run_e0_e2_runpod.py",
+      "size_bytes": 6678,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "cf96b36024cf1c7f6359c706d592f2e0c8f7891dc89f6f6b94ce42424b1c9406",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
       "path": "research/scripts/run_faiss_flat_baseline.py",
       "size_bytes": 4652,
       "type": "text_or_machine_readable",
@@ -19493,11 +21625,78 @@
       "duplicate_of": null
     },
     {
+      "path": "research/scripts/run_local_filter_ab.py",
+      "size_bytes": 2236,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "10cae87b37aa2c1fe9d3f6e5027fc88a174d9b81fbe1d7aafe73a46a900dd7bd",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
       "path": "research/scripts/run_phase2_exact_cells.sh",
       "size_bytes": 1025,
       "type": "text_or_machine_readable",
       "cohort": "research",
       "sha256": "420f26e563759533c4988bcf80c54e7d25d5802b4bdfa4088d3f2911518ecd81",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/split_archive.py",
+      "size_bytes": 1205,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "8cd7f1371d02191217872ea056ecf2e158dccfdaca531cc9f7d10c0a18701c2d",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/summarize_decision_queue.py",
+      "size_bytes": 3390,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "1bb240643b185b7516d36904c577b3ccc5513bef92c3e472dc2425243661df5b",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/scripts/tail_table.py",
+      "size_bytes": 1193,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "3b137c6635992a8244ba11cc4cd1a608be00b64125847f7853054d02a11e4094",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/sota-claim-matrix.md",
+      "size_bytes": 7274,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "96739adcfe50c1435b8857f738bf108ad7e399b89368fdf383c2d6ee7b1e9017",
+      "hash_status": "computed_sha256_canonical_lf",
+      "manifest_references": [
+        {
+          "path": "research/README.md",
+          "sha256_values": [
+            "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0"
+          ]
+        }
+      ],
+      "duplicate_of": null
+    },
+    {
+      "path": "research/specs/2026-09-25-clock-lock-and-faiss.md",
+      "size_bytes": 10802,
+      "type": "text_or_machine_readable",
+      "cohort": "research",
+      "sha256": "c2459902a5ca34e9b76d49a00091a11900a6a525574e37224b40eb1c26056761",
       "hash_status": "computed_sha256_canonical_lf",
       "manifest_references": [],
       "duplicate_of": null

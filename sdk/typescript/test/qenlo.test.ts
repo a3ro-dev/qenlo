@@ -32,6 +32,20 @@ test("atomic batches and non-reusable IDs", () => {
   assert.throws(() => db.add(records[0]!), QenloError);
 });
 
+test("rejects out-of-range bigint metadata before typed-array wrapping", () => {
+  using db = Collection.memory(3);
+  assert.throws(
+    () => db.addBatch([{ ...records[0]!, timestamp: 1n << 63n }]),
+    { name: "RangeError", message: "timestamp must be a signed 64-bit integer" },
+  );
+  assert.equal(db.stats().rows, 0);
+  assert.throws(
+    () => db.addBatch([{ ...records[0]!, id: -1n }]),
+    { name: "RangeError", message: "id must be an unsigned 64-bit integer" },
+  );
+  assert.equal(db.stats().rows, 0);
+});
+
 test("durable reopen", () => {
   const root = mkdtempSync(join(tmpdir(), "qenlo-ts-"));
   const path = join(root, "vectors.qenlo");

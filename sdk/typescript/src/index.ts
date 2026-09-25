@@ -78,6 +78,18 @@ type NativeSearch = {
   report: Record<string, unknown>;
 };
 
+const UINT64_MAX = 0xffff_ffff_ffff_ffffn;
+const INT64_MIN = -(1n << 63n);
+const INT64_MAX = (1n << 63n) - 1n;
+
+function validateUint64(value: bigint, name: string): void {
+  if (value < 0n || value > UINT64_MAX) throw new RangeError(`${name} must be an unsigned 64-bit integer`);
+}
+
+function validateInt64(value: bigint, name: string): void {
+  if (value < INT64_MIN || value > INT64_MAX) throw new RangeError(`${name} must be a signed 64-bit integer`);
+}
+
 function libraryName(): string {
   switch (process.platform) {
     case "win32": return "qenlo_ffi.dll";
@@ -216,6 +228,9 @@ export class Collection implements Disposable {
   }
 
   add(record: RecordInput): void {
+    validateUint64(record.id, "id");
+    validateUint64(record.userId, "userId");
+    validateInt64(record.timestamp, "timestamp");
     const vector = this.#vector(record.vector);
     this.#check(nativeAdd(this.#openHandle(), record.id, record.userId, record.timestamp, vector, vector.length));
   }
@@ -227,6 +242,9 @@ export class Collection implements Disposable {
     const timestamps = new BigInt64Array(records.length);
     const vectors = new Float32Array(records.length * this.dimension);
     records.forEach((record, row) => {
+      validateUint64(record.id, "id");
+      validateUint64(record.userId, "userId");
+      validateInt64(record.timestamp, "timestamp");
       ids[row] = record.id;
       users[row] = record.userId;
       timestamps[row] = record.timestamp;
@@ -236,17 +254,22 @@ export class Collection implements Disposable {
   }
 
   delete(id: bigint): void {
+    validateUint64(id, "id");
     this.#check(nativeDelete(this.#openHandle(), id));
   }
 
   deleteBatch(ids: readonly bigint[]): void {
     if (ids.length === 0) return;
+    ids.forEach((id) => validateUint64(id, "id"));
     const native = BigUint64Array.from(ids);
     this.#check(nativeDeleteBatch(this.#openHandle(), native, ids.length));
   }
 
   search(query: readonly number[], filter: Filter = {}, k = 10): SearchResponse {
     if (!Number.isSafeInteger(k) || k < 1 || k > 64) throw new RangeError("k must be in 1..=64");
+    if (filter.userId !== undefined) validateUint64(filter.userId, "userId");
+    if (filter.timestampLower !== undefined) validateInt64(filter.timestampLower, "timestampLower");
+    if (filter.timestampUpper !== undefined) validateInt64(filter.timestampUpper, "timestampUpper");
     const vector = this.#vector(query);
     const value = JSON.parse(takeString(nativeSearch(
       this.#openHandle(), vector, vector.length,

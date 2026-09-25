@@ -53,6 +53,12 @@ def main(target_version: str) -> None:
     ):
         replace(path, old_python, new_python)
     subprocess.run([sys.executable, str(ROOT / "scripts/build_llms_txt.py")], check=True)
+    # CI fails when research evidence changes without a refreshed inventory.
+    subprocess.run(
+        [sys.executable, str(ROOT / "paper/scripts/inventory_evidence.py")],
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
     subprocess.run(
         [sys.executable, str(ROOT / "scripts/check_release_versions.py"), f"sdk-v{target_version}"],
         check=True,

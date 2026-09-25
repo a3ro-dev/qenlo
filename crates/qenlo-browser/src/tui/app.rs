@@ -14,6 +14,59 @@ pub enum Tab {
     Help,
 }
 
+pub const FUNCTION_CATALOG: [(&str, &str, &str); 10] = [
+    (
+        "Collection::new",
+        "new(config).await",
+        "Create an in-memory collection.",
+    ),
+    (
+        "Collection::create",
+        "create(path, config).await",
+        "Create a durable collection at a path.",
+    ),
+    (
+        "Collection::open",
+        "open(path, config).await",
+        "Open an existing durable collection.",
+    ),
+    (
+        "Collection::add",
+        "add(id, user_id, timestamp, vector)",
+        "Insert one vector record.",
+    ),
+    (
+        "Collection::delete",
+        "delete(id)",
+        "Delete a record by ID; deletion is durable.",
+    ),
+    (
+        "Collection::filter",
+        "filter(&Filter)",
+        "Find record IDs matching metadata filters.",
+    ),
+    (
+        "Collection::scan_records",
+        "scan_records(offset, limit, filter)",
+        "Read a page of records and metadata.",
+    ),
+    (
+        "Collection::search",
+        "search(query, &Filter, k).await",
+        "Run nearest-neighbor vector search.",
+    ),
+    (
+        "Collection::flush",
+        "flush()",
+        "Persist pending changes and compact storage.",
+    ),
+    (
+        "Collection::export_qn",
+        "export_qn(path)",
+        "Write a portable .qn snapshot archive.",
+    ),
+];
+
 impl Tab {
     pub fn next(self) -> Self {
         match self {
@@ -41,7 +94,7 @@ impl Tab {
             Tab::VectorSearch => "2  Search",
             Tab::StorageWal => "3  Storage",
             Tab::Diagnostics => "4  Diagnostics",
-            Tab::Help => "?  Help",
+            Tab::Help => "?  Functions",
         }
     }
 }
@@ -81,6 +134,7 @@ pub struct App {
     // Storage & Diagnostics
     pub storage_details: Option<StorageDetailsDto>,
     pub diagnostics: Option<DiagnosticsDto>,
+    pub function_idx: usize,
 
     pub status_message: Option<(String, Instant, bool)>,
     pub should_quit: bool,
@@ -127,6 +181,7 @@ impl App {
             search_active_field: 0,
             storage_details: None,
             diagnostics: None,
+            function_idx: 0,
             status_message: Some((
                 "Welcome to QenloDB Browser. Press ? for help, : for commands.".to_string(),
                 Instant::now(),
@@ -349,6 +404,15 @@ impl App {
             Tab::DataRows => self.handle_rows_key(key).await,
             Tab::VectorSearch => self.handle_search_key(key).await,
             Tab::StorageWal => self.handle_storage_key(key).await,
+            Tab::Help => match key.code {
+                KeyCode::Up | KeyCode::Char('k') => {
+                    self.function_idx = self.function_idx.saturating_sub(1);
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    self.function_idx = (self.function_idx + 1).min(FUNCTION_CATALOG.len() - 1);
+                }
+                _ => {}
+            },
             _ => {}
         }
     }

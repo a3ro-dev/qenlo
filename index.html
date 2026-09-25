@@ -491,6 +491,26 @@
       color: #1D2320;
     }
 
+    .research-feature {
+      max-width: var(--content-max);
+      margin: 56px auto 0;
+      padding: clamp(24px, 4vw, 48px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px 48px;
+      align-items: end;
+      color: #F0F1EB;
+      background: #171C19;
+      border-radius: 12px;
+    }
+    .research-feature__eyebrow { margin: 0 0 18px; color: #F3A59A; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .research-feature h2 { margin: 0 0 16px; max-width: 800px; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.08; letter-spacing: -.035em; }
+    .research-feature p:not(.research-feature__eyebrow) { margin: 0; max-width: 700px; color: #C7CFCA; line-height: 1.65; }
+    .research-feature__links { display: flex; flex-wrap: wrap; gap: 12px; }
+    .research-feature__links a { padding: 12px 16px; border: 1px solid #8E9B94; border-radius: 6px; color: #F0F1EB; font-weight: 600; white-space: nowrap; }
+    .research-feature__links a:hover { background: #2B3730; }
+    @media (max-width: 900px) { .research-feature { grid-template-columns: 1fr; } }
+
     /* Contact & Inquiries Section (Form Consent & Data Minimization) */
     .contact-section {
       max-width: 760px;
@@ -899,7 +919,7 @@
           <span id="motionToggleIcon" aria-hidden="true">&#x23F8;</span>
           <span id="motionToggleText">Pause Motion</span>
         </button>
-        <a href="docs/#/quickstart" style="font-weight:600;text-decoration:none;">Docs</a>
+        <a href="docs/" style="font-weight:600;text-decoration:none;">Docs</a>
         <a href="#contact" style="font-weight:600;text-decoration:none;">Contact</a>
         <a href="privacy.html" style="color:var(--copy);text-decoration:none;">Privacy</a>
       </div>
@@ -920,8 +940,9 @@
         <span class="headline__line">Retrieval</span>
       </h1>
       <p class="intro">
-        One canonical record store for durable, metadata-filtered<br class="desktop-break"> vector search, with optional CPU, GPU, and ANN execution<br class="desktop-break"> paths that never decide what exists.<br>
-        <a href="docs/#/quickstart">Read the documentation</a>
+        An embedded vector store with one canonical record store for durable, metadata-filtered retrieval. Explore the Rust quickstart, collection browser, and the execution paths under active research.<br>
+        <a href="docs/#/quickstart">Start with the quickstart</a><br>
+        <a href="docs/#/browser">Explore the collection browser</a>
       </p>
     </header>
 
@@ -979,6 +1000,18 @@
         <p class="caption">100% Recall@10 vs CPU float64 oracle<br>5,000 queries (prototype evaluation)</p>
         <a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate" aria-label="Read exact retrieval quality results against CPU float64 reference oracle">Results</a>
       </article>
+    </section>
+
+    <section class="research-feature" aria-labelledby="research-feature-title">
+      <div>
+        <p class="research-feature__eyebrow">Current research · GPU power states</p>
+        <h2 id="research-feature-title">The efficient kernel runs slow.</h2>
+        <p>Our compact-row GPU path varied up to 4.6× across tested fresh processes and hosts, while a heavier path was more stable. A load-raising experiment reduced the device-time tail, but its predicted end-to-end speedup failed. We publish both results and the protocols behind them.</p>
+      </div>
+      <div class="research-feature__links">
+        <a href="QENLO-RESEARCH-PAPER.pdf">Read the paper</a>
+        <a href="https://github.com/a3ro-dev/qenlo/tree/main/research">Inspect the evidence</a>
+      </div>
     </section>
 
     <!-- Transparency & Scientific Disclaimer -->

@@ -35,12 +35,17 @@ cargo run -p qenlo-browser -- ./notes.qenlo
 cargo run -p qenlo-browser -- ./notes.qenlo --dimension 384 --create
 ```
 
+The `? Functions` tab is an in-terminal reference for ten common Rust
+`Collection` operations. Use `j`/`k` or the arrow keys to select a function and
+read its signature and purpose. The SDK guide remains the reference for full
+types, error behavior, and optional features.
+
 #### TUI keyboard shortcuts
 | Key | Action |
 |---|---|
 | `Tab` / `Shift+Tab` | Cycle through navigation tabs |
-| `1` to `4`, `?` | Jump directly to Rows, Search, Storage, Diagnostics, or Help |
-| `j` / `k` / `↑` / `↓` | Navigate rows in the table |
+| `1` to `4`, `?` | Jump directly to Rows, Search, Storage, Diagnostics, or Functions |
+| `j` / `k` / `↑` / `↓` | Navigate rows or functions in the active tab |
 | `n` / `p` | Next / previous page of records |
 | `Enter` | Open full vector inspector modal |
 | `a` | Add new record dialog (`Ctrl+R` for random vector) |

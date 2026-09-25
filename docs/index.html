@@ -365,6 +365,90 @@
       plugins: [
         function (hook) {
           hook.doneEach(function () {
+            const section = document.querySelector('.markdown-section');
+            const route = window.location.hash.replace(/^#\/?/, '').split('?')[0];
+            const isHome = route === '';
+            document.body.classList.toggle('docs-home', isHome);
+
+            if (isHome && section) {
+              section.innerHTML = `
+                <div class="docs-landing">
+                  <nav class="docs-landing__nav" aria-label="Documentation navigation">
+                    <a class="docs-landing__brand" href="../index.html" aria-label="Qenlo home">
+                      <img src="../assets/brand/logo/lockup-reversed.svg" alt="Qenlo" width="112" height="32">
+                      <span>DOCUMENTATION</span>
+                    </a>
+                    <div class="docs-landing__nav-links">
+                      <a href="#/quickstart">Quickstart</a>
+                      <a href="#/browser">Collection browser</a>
+                      <a href="#/sdks/rust">SDKs</a>
+                      <a href="https://github.com/a3ro-dev/qenlo">GitHub</a>
+                    </div>
+                  </nav>
+
+                  <main>
+                    <section class="docs-hero" aria-labelledby="docs-title">
+                      <div>
+                        <p class="docs-kicker"><span aria-hidden="true"></span> EMBEDDED VECTOR SEARCH · RESEARCH ALPHA</p>
+                        <h1 id="docs-title">One record store.<br><strong>Exact retrieval.</strong></h1>
+                        <p class="docs-hero__lede">Qenlo is a local-first embedded vector store for durable, metadata-filtered search. A canonical record store anchors the results; optional execution paths are observable and remain subject to the limits documented in this research alpha.</p>
+                        <div class="docs-hero__actions">
+                          <a class="docs-button docs-button--primary" href="#/quickstart">Build from source <span aria-hidden="true">→</span></a>
+                          <a class="docs-button docs-button--secondary" href="#/browser">Open the collection browser <span aria-hidden="true">↗</span></a>
+                        </div>
+                      </div>
+                      <div class="execution-trace" aria-label="Qenlo query flow">
+                        <div class="execution-trace__bar"><span>QUERY FLOW</span><span class="execution-trace__status"><i aria-hidden="true"></i> inspectable</span></div>
+                        <ol class="execution-trace__steps">
+                          <li><span>01</span><div><b>Open a collection</b><small>Local files, explicit configuration</small></div><code>Collection::open</code></li>
+                          <li><span>02</span><div><b>Apply metadata filters</b><small>Eligibility is defined before ranking</small></div><code>Filter</code></li>
+                          <li><span>03</span><div><b>Run and inspect search</b><small>Results include execution details</small></div><code>ExecutionReport</code></li>
+                        </ol>
+                        <div class="execution-trace__footer">CPU exact is the default; GPU and ANN paths are optional.</div>
+                      </div>
+                    </section>
+
+                    <section class="docs-principles" aria-label="Project principles">
+                      <p><span>01 / DATA</span><strong>Canonical records</strong>Durable source of truth</p>
+                      <p><span>02 / SEARCH</span><strong>Metadata first</strong>Filter before ranking</p>
+                      <p><span>03 / SYSTEM</span><strong>Observable paths</strong>Inspect execution reports</p>
+                      <p><span>04 / EVIDENCE</span><strong>Scoped claims</strong>Methods and limits published</p>
+                    </section>
+
+                    <section class="docs-paths" aria-labelledby="paths-title">
+                      <div class="docs-section-heading"><p>FIND YOUR WAY</p><h2 id="paths-title">Start with the task in front of you.</h2></div>
+                      <div class="docs-path-list">
+                        <a href="#/quickstart"><span class="docs-path-list__number">01</span><span><strong>Build and run Qenlo</strong><small>Compile from this checkout, create a collection, search, and reopen it.</small></span><span class="docs-path-list__arrow" aria-hidden="true">↗</span></a>
+                        <a href="#/browser"><span class="docs-path-list__number">02</span><span><strong>Browse a collection</strong><small>Inspect records and collection state with the available browser tooling.</small></span><span class="docs-path-list__arrow" aria-hidden="true">↗</span></a>
+                        <a href="#/concepts"><span class="docs-path-list__number">03</span><span><strong>Understand the model</strong><small>Learn how records, filters, and execution reports fit together.</small></span><span class="docs-path-list__arrow" aria-hidden="true">↗</span></a>
+                        <a href="#/architecture"><span class="docs-path-list__number">04</span><span><strong>Review storage and recovery</strong><small>Read the architecture, file format, and recovery policy.</small></span><span class="docs-path-list__arrow" aria-hidden="true">↗</span></a>
+                        <a href="#/implementation-status"><span class="docs-path-list__number">05</span><span><strong>Check implementation status</strong><small>See what is supported, experimental, and still open.</small></span><span class="docs-path-list__arrow" aria-hidden="true">↗</span></a>
+                      </div>
+                    </section>
+
+                    <section class="docs-sdks" aria-labelledby="sdks-title">
+                      <div><p class="docs-kicker">LANGUAGE GUIDES</p><h2 id="sdks-title">Use the guidance for the code you have.</h2></div>
+                      <div class="docs-sdk-links">
+                        <a href="#/sdks/rust"><span>Rust</span><small>Source checkout</small></a>
+                        <a href="#/sdks/python"><span>Python</span><small>Binding status and examples</small></a>
+                        <a href="#/sdks/typescript"><span>TypeScript</span><small>Binding status and examples</small></a>
+                        <a href="#/sdks/go"><span>Go</span><small>Driver status and examples</small></a>
+                        <a href="#/sdks/kotlin"><span>Kotlin</span><small>Android guidance</small></a>
+                        <a href="#/sdks/swift"><span>Swift</span><small>Apple platform guidance</small></a>
+                      </div>
+                    </section>
+
+                    <aside class="docs-boundary" aria-labelledby="evidence-title">
+                      <p>RESEARCH STATUS</p>
+                      <div><h2 id="evidence-title">Read the evidence with its boundaries.</h2><p>Qenlo is research-grade alpha software. GPU and ANN execution are optional and their availability depends on the build. Performance results apply only to the named hardware, source revision, workload, and timing boundary; they are not universal production guarantees.</p></div>
+                      <a href="#/reports/2026-09-02-strict-topk-research-gate">Research reports <span aria-hidden="true">↗</span></a>
+                    </aside>
+                  </main>
+
+                  <footer class="docs-landing__footer"><span>QENLO · APACHE 2.0 · RESEARCH ALPHA</span><nav aria-label="Project links"><a href="#/verification">Verification</a><a href="#/benchmark-protocol">Benchmark protocol</a><a href="https://github.com/a3ro-dev/qenlo">Source on GitHub</a><a href="../index.html">Project site</a></nav></footer>
+                </div>`;
+            }
+
             if (window.mermaid) {
               mermaid.run({ querySelector: '.mermaid:not([data-processed])' });
             }

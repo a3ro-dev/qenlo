@@ -1,5 +1,30 @@
 # changelog
 
+## 0.1.0-alpha.8 - 2026-09-26
+
+### added
+
+- a selectable `? Functions` view in the terminal browser with ten common Rust
+  `Collection` operations, concise signatures, and keyboard navigation.
+- browser documentation for finding the function view and its shortcuts.
+- a task-first documentation home that routes to the quickstart, browser,
+  concepts, architecture, status, and each SDK guide.
+
+### fixed
+
+- the TypeScript SDK now rejects out-of-range `bigint` IDs, user IDs, and
+  timestamps with `RangeError`. Previously `-1n` or `2n ** 63n` wrapped silently
+  inside `BigUint64Array`/`BigInt64Array` and was stored as a different value.
+- the `research-evidence` CI gate, red since alpha.6, passes again: the evidence
+  inventory now covers the power-state archives, and `bump_alpha.py` refreshes
+  it so a release cannot ship with a stale inventory.
+
+### compatibility and limits
+
+- the catalog is a quick reference; the Rust SDK guide remains the source for
+  complete types and error behavior. Storage and query semantics are unchanged.
+- `.qn` format v1, WAL v1, and the native ABI are unchanged.
+
 ## 0.1.0-alpha.7 - 2026-09-26
 
 ### added
