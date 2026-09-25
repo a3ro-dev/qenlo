@@ -27,3 +27,7 @@ tracing.workspace = true
 web-time.workspace = true
 usearch = { version = "2.26.1", optional = true }
 wgpu = { version = "30.0.1", optional = true }
+
+[[example]]
+name = "gpu_heater"
+required-features = ["gpu-wgpu"]
