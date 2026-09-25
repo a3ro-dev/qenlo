@@ -111,3 +111,30 @@ push. Newest entries last. Release mechanics are in `RELEASING.md`.
   release build was cancelled before any GitHub release or registry upload, the
   tag was deleted, and alpha.10 is re-tagged on the fixed commit. No published
   artifact ever carried the first tag.
+
+## final state (2026-09-26)
+
+- Released and published: alpha.8 (`d1ed007`), alpha.9 (`5300b6c`), alpha.10
+  (`5c2400c`); all on `main`, GitHub prereleases with 11 assets each, and on
+  crates.io, PyPI, and npm (`alpha` dist-tag). Maven Central is still not
+  actually published (job passes without credentials).
+- Verification per RELEASING.md "post-publication proof", Windows only: clean
+  `uv` env from PyPI and clean npm project from the registry for alpha.8,
+  alpha.9, alpha.10: create in-memory collection, add, filtered search,
+  execution report, close. alpha.10 npm works without any workaround; alpha.8/9
+  npm need `QENLO_LIBRARY_PATH` on Windows (noted on their release pages).
+  `sha256sum -c SHA256SUMS` passes for alpha.9 and alpha.10 downloads.
+- GTM (user signed in mid-session): five X posts and one LinkedIn post, voice
+  skill + short style, links in `.claude/gtm-drafts.md`.
+
+## open items / next steps
+
+1. npm `latest` dist-tag still points at 0.1.0-alpha.1; `npm dist-tag add
+   @a3ro.dev/qenlo@0.1.0-alpha.10 latest` needs the maintainer's npm auth.
+2. SDK CI tests TypeScript only on Linux, which is how the Windows layout bug
+   survived; a Windows/macOS job that installs the packed tarball would catch
+   the whole class.
+3. sqlite-vec comparison (roadmap #2), plan above.
+4. Linux/macOS post-publication proofs and a Rust registry consumer build were
+   not run locally (CI builds and tests those platforms from source).
+5. Desktop app Functions tab inherits the web UI; not separately launched.
