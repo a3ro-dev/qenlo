@@ -6,6 +6,7 @@
 //! silently drift from the real SDK surface.
 
 /// One documented `Collection` method shown in the Functions tab.
+#[derive(serde::Serialize)]
 pub struct FunctionDoc {
     pub name: &'static str,
     pub group: &'static str,

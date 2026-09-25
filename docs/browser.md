@@ -79,6 +79,8 @@ Open `http://127.0.0.1:3456` in your browser to:
 - Inspect on-disk `.qdb`, `.wal`, `.lock`, and `HEAD` files.
 - Flush and compact WAL logs or export collections to portable `.qn` archives.
 
+The same `? Functions` reference from the TUI is available here too, as a "Functions" tab: search by name, group, or summary and view each method's signature and example. Because the Tauri desktop app embeds this same web UI, the Functions tab is also available in the desktop app.
+
 ---
 
 ### 3. Tauri v2 desktop app

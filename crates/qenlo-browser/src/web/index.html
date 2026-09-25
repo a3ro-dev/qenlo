@@ -318,6 +318,35 @@
     .badge-tombstone { background: rgba(255, 154, 145, 0.15); color: var(--bad); }
     .badge-rank { background: var(--accent); color: #121614; padding: 2px 6px; }
 
+    /* Function Browser */
+    .fn-group-label {
+      padding: 10px 14px 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-faint);
+    }
+    .fn-item {
+      padding: 8px 14px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+      border-left: 2px solid transparent;
+    }
+    .fn-item:hover { background: var(--surface-raised); color: var(--text); }
+    .fn-item.active { background: var(--surface-raised); color: var(--accent); border-left-color: var(--accent); }
+    .fn-detail-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin: 6px 0 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     /* Sparkline / Vector Preview */
     .vector-bar-cell {
       display: flex;
@@ -574,6 +603,7 @@
     <button class="tab-btn" onclick="switchTab('search')">Vector search</button>
     <button class="tab-btn" onclick="switchTab('storage')">Storage and WAL</button>
     <button class="tab-btn" onclick="switchTab('diagnostics')">Diagnostics</button>
+    <button class="tab-btn" onclick="switchTab('functions')">Functions</button>
   </nav>
 
   <!-- Main Content Views -->
@@ -758,6 +788,29 @@
         </div>
       </div>
     </div>
+
+    <!-- 5. Function Reference View -->
+    <div id="view-functions" class="view">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Collection API reference</div>
+          <div style="font-size:12px; color:var(--text-muted);" id="functions-count">0 of 0</div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Search functions</label>
+          <input type="text" id="functions-search" placeholder="Filter by name, group, or summary…" oninput="renderFunctionList()">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;">
+        <div class="table-container" style="flex:0 0 300px; max-height:640px; overflow-y:auto;">
+          <div id="functions-list"></div>
+        </div>
+        <div class="panel" style="flex:1 1 320px; margin-bottom:0;" id="functions-detail">
+          <div style="color:var(--text-muted);">Select a function to view its signature and example.</div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- Modals -->
@@ -908,7 +961,7 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       
-      const idx = ['records', 'search', 'storage', 'diagnostics'].indexOf(tab);
+      const idx = ['records', 'search', 'storage', 'diagnostics', 'functions'].indexOf(tab);
       if (idx >= 0) {
         document.querySelectorAll('.tab-btn')[idx].classList.add('active');
       }
@@ -916,6 +969,7 @@
 
       if (tab === 'storage') loadStorage();
       if (tab === 'diagnostics') loadDiagnostics();
+      if (tab === 'functions') loadFunctions();
     }
 
     function openModal(id) {
@@ -1294,6 +1348,119 @@
       } catch (e) {}
     }
 
+    // --- Function reference (Collection API) ---
+    let functionCatalog = [];
+    let functionsLoaded = false;
+    let selectedFunctionIndex = null;
+
+    async function loadFunctions() {
+      if (functionsLoaded) return;
+      try {
+        functionCatalog = await api('/functions');
+        functionsLoaded = true;
+        renderFunctionList();
+      } catch (e) {}
+    }
+
+    function filterFunctionIndexes(query) {
+      const q = query.trim().toLowerCase();
+      const all = functionCatalog.map((_, i) => i);
+      if (!q) return all;
+      return all.filter(i => {
+        const f = functionCatalog[i];
+        return f.name.toLowerCase().includes(q)
+          || f.group.toLowerCase().includes(q)
+          || f.summary.toLowerCase().includes(q);
+      });
+    }
+
+    function renderFunctionList() {
+      const query = document.getElementById('functions-search').value;
+      const idxs = filterFunctionIndexes(query);
+      document.getElementById('functions-count').textContent = `${idxs.length} of ${functionCatalog.length}`;
+
+      const list = document.getElementById('functions-list');
+      list.innerHTML = '';
+
+      if (idxs.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'padding:20px; text-align:center; color:var(--text-muted); font-size:13px;';
+        empty.textContent = 'no functions match';
+        list.appendChild(empty);
+        return;
+      }
+
+      let lastGroup = null;
+      idxs.forEach(i => {
+        const f = functionCatalog[i];
+        if (f.group !== lastGroup) {
+          lastGroup = f.group;
+          const header = document.createElement('div');
+          header.className = 'fn-group-label';
+          header.textContent = f.group;
+          list.appendChild(header);
+        }
+        const item = document.createElement('div');
+        item.className = 'fn-item' + (i === selectedFunctionIndex ? ' active' : '');
+        item.textContent = f.name;
+        item.onclick = () => {
+          selectedFunctionIndex = i;
+          renderFunctionList();
+        };
+        list.appendChild(item);
+      });
+
+      if (selectedFunctionIndex === null || !idxs.includes(selectedFunctionIndex)) {
+        selectedFunctionIndex = idxs[0];
+      }
+      renderFunctionDetail();
+    }
+
+    function renderFunctionDetail() {
+      const detail = document.getElementById('functions-detail');
+      detail.innerHTML = '';
+      const f = functionCatalog[selectedFunctionIndex];
+      if (!f) {
+        const empty = document.createElement('div');
+        empty.style.color = 'var(--text-muted)';
+        empty.textContent = 'Select a function to view its signature and example.';
+        detail.appendChild(empty);
+        return;
+      }
+
+      const title = document.createElement('div');
+      title.style.cssText = 'font-size:16px; font-weight:600; margin-bottom:4px;';
+      title.textContent = 'Collection::' + f.name;
+      detail.appendChild(title);
+
+      const group = document.createElement('div');
+      group.style.cssText = 'font-size:12px; color:var(--text-muted); margin-bottom:14px;';
+      group.textContent = f.group;
+      detail.appendChild(group);
+
+      const sigLabel = document.createElement('label');
+      sigLabel.textContent = 'Signature';
+      detail.appendChild(sigLabel);
+      const sig = document.createElement('div');
+      sig.className = 'mono fn-detail-block';
+      sig.textContent = f.signature;
+      detail.appendChild(sig);
+
+      const summary = document.createElement('div');
+      summary.style.cssText = 'margin-bottom:14px;';
+      summary.textContent = f.summary;
+      detail.appendChild(summary);
+
+      const exLabel = document.createElement('label');
+      exLabel.textContent = 'Example';
+      detail.appendChild(exLabel);
+      const example = document.createElement('div');
+      example.className = 'mono fn-detail-block';
+      example.style.marginBottom = '0';
+      example.textContent = f.example;
+      detail.appendChild(example);
+    }
+
     function formatBytes(bytes) {
       if (!bytes || bytes === 0) return '0 B';
       const k = 1024;
@@ -1311,6 +1478,14 @@
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
         document.querySelectorAll('.modal-backdrop.open').forEach((modal) => closeModal(modal.id));
+      }
+      if (event.key === '/' && currentTab === 'functions') {
+        const active = document.activeElement;
+        const searchInput = document.getElementById('functions-search');
+        if (active !== searchInput && active?.tagName !== 'INPUT' && active?.tagName !== 'TEXTAREA') {
+          event.preventDefault();
+          searchInput.focus();
+        }
       }
     });
     updateStatus().then(() => loadRecords());

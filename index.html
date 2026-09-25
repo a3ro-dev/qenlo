@@ -237,7 +237,10 @@
 
     /* Cards */
     .cards {
-      flex: 1 1 auto;
+      /* Size containment ignores content, and cards are sized from 100cqh, so
+         the row needs a definite basis. With `auto`, later sections in .stage
+         squeezed it to zero and the cards rendered 2px wide. */
+      flex: 1 0 min(554px, 72svh);
       container-type: size;
       display: flex;
       justify-content: space-between;
@@ -864,6 +867,7 @@
         grid-template-columns: repeat(2, max-content);
         justify-content: center;
         align-content: center;
+        flex-basis: min(1140px, 80svh); /* two card rows */
         --card-w: min((100cqw - var(--gap))/2, (100cqh - var(--gap))/2 * 429/554, 429px);
       }
       .card:last-child {
@@ -940,9 +944,10 @@
         <span class="headline__line">Retrieval</span>
       </h1>
       <p class="intro">
-        An embedded vector store with one canonical record store for durable, metadata-filtered retrieval. Explore the Rust quickstart, collection browser, and the execution paths under active research.<br>
+        An embedded vector store with one canonical record store: metadata filters run before ranking, and search is exact on CPU by default. Every research number below links to its source and its boundary.<br>
         <a href="docs/#/quickstart">Start with the quickstart</a><br>
-        <a href="docs/#/browser">Explore the collection browser</a>
+        <a href="docs/#/browser">Explore the collection browser</a><br>
+        <a href="https://github.com/a3ro-dev/qenlo#install">Install from crates.io, PyPI, or npm</a>
       </p>
     </header>
 
@@ -952,39 +957,39 @@
       <article class="card card--speed">
         <video class="card__media" autoplay muted loop playsinline preload="metadata" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/167977c6-8539-46b1-9a15-8dba566f50b8.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130045_1a612b69-4854-4b34-8043-ccb91f2c60af.mp4"></video>
         <svg class="card__grain" viewBox="0 0 429 554" aria-hidden="true"><rect width="429" height="554" filter="url(#cardNoise)"/></svg>
-        <h2 class="card__title">Million-Vector Scale<br>Strict TopK Cohort</h2>
+        <h2 class="card__title">Power State, Not Kernel<br>Same Query, Different Speed</h2>
         <svg class="gauge" viewBox="0 0 326 326" aria-hidden="true">
           <defs><linearGradient id="arc"><stop stop-color="#ff6796"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
           <path d="M6.91 135.48A158.5 158.5 0 0 1 311.94 108.79" fill="none" stroke="url(#arc)" stroke-width="2.2"/>
           <g id="gaugeTicks"/>
         </svg>
         <div class="metric metric--speed">
-          <span class="dot-number" data-dots="1" aria-label="1"><span class="sr-only">1</span></span>
-          <span class="metric__unit">M</span>
+          <span class="dot-number" data-dots="4.6" aria-label="4.6"><span class="sr-only">4.6</span></span>
+          <span class="metric__unit">&times;</span>
         </div>
-        <p class="caption">1,000,000 &times; 768<br>1% eligible, batch 1, k=10</p>
-        <a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate" aria-label="Read strict TopK benchmark report evidence for million vector scale">Evidence</a>
+        <p class="caption">Light-path kernel time across five RTX 4090 hosts<br>Heavy path stayed within 1&ndash;7%</p>
+        <a class="learn-more" href="QENLO-RESEARCH-PAPER.pdf" aria-label="Read the GPU power-state study behind the 4.6x light-path variation">Evidence</a>
       </article>
 
       <!-- Card 2 -->
       <article class="card card--context">
         <video class="card__media" autoplay muted loop playsinline preload="metadata" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/0446d1d5-e65e-4db5-8090-3e30d09afc43.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130054_dd005674-d693-4d81-80a5-357f7f10b3a3.mp4"></video>
         <svg class="card__grain" viewBox="0 0 429 554" aria-hidden="true"><rect width="429" height="554" filter="url(#cardNoise)"/></svg>
-        <h2 class="card__title">Completed-Call Latency<br>Host to GPU and Back</h2>
+        <h2 class="card__title">Failed Bets Stay Visible<br>Held-Out Router Gate</h2>
         <div class="context-window" aria-hidden="true"><div class="window-lines"><span></span><span></span><span></span></div></div>
         <div class="metric metric--context">
-          <span class="dot-number" data-dots="0.17" aria-label="0.17"><span class="sr-only">0.17</span></span>
-          <span class="metric__unit">ms</span>
+          <span class="dot-number" data-dots="235.7" aria-label="235.7"><span class="sr-only">235.7</span></span>
+          <span class="metric__unit">%</span>
         </div>
-        <p class="caption">P95 on RTX A6000<br>Qenlo CUDA prototype</p>
-        <a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate" aria-label="Read strict TopK latency benchmark method for 0.17 milliseconds P95">Method</a>
+        <p class="caption">Max regret vs a 25% preregistered limit<br>Rule reverted</p>
+        <a class="learn-more" href="https://github.com/a3ro-dev/qenlo/blob/main/research/data/processed/alpha5-router-heldout/report.md" aria-label="Read the held-out router gate report showing 235.7 percent maximum regret">Report</a>
       </article>
 
       <!-- Card 3 (Corrected truth-in-advertising claim: Rigorous Oracle Verification) -->
       <article class="card card--connections">
         <video class="card__media" autoplay muted loop playsinline preload="metadata" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/da8d0242-4dee-4f6d-813f-a5887e86ad77.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130103_7550f407-f14b-40a6-9616-7a26d7a8bd9f.mp4"></video>
         <svg class="card__grain" viewBox="0 0 429 554" aria-hidden="true"><rect width="429" height="554" filter="url(#cardNoise)"/></svg>
-        <h2 class="card__title">Rigorous Oracle Verification<br>Exact Retrieval Quality</h2>
+        <h2 class="card__title">Every Number Traceable<br>Hashed Evidence Archive</h2>
         <svg class="connections-map" viewBox="0 0 429 238" preserveAspectRatio="none" aria-hidden="true">
           <g fill="none" stroke="#fff">
             <path opacity=".3" d="M0 117h46c15 0 22 8 26 25 5 23 12 31 31 31h174c18 0 25-8 30-31 4-17 11-25 26-25h96"/>
@@ -994,11 +999,11 @@
           <g fill="#fff4a7"><circle cx="45" cy="117" r="6.5"/><circle cx="133" cy="61" r="6.5"/><circle cx="319" cy="61" r="6.5"/></g>
         </svg>
         <div class="metric metric--connections">
-          <span class="dot-number" data-dots="100" aria-label="100"><span class="sr-only">100</span></span>
-          <span class="metric__unit">%</span>
+          <span class="dot-number" data-dots="1.8" aria-label="1.8"><span class="sr-only">1.8</span></span>
+          <span class="metric__unit">K</span>
         </div>
-        <p class="caption">100% Recall@10 vs CPU float64 oracle<br>5,000 queries (prototype evaluation)</p>
-        <a class="learn-more" href="docs/#/reports/2026-09-02-strict-topk-research-gate" aria-label="Read exact retrieval quality results against CPU float64 reference oracle">Results</a>
+        <p class="caption">1,833 retained evidence files<br>SHA-256 inventory, checked in CI</p>
+        <a class="learn-more" href="https://github.com/a3ro-dev/qenlo/blob/main/research/README.md" aria-label="Read the research evidence index behind the 1,833-file hashed inventory">Evidence</a>
       </article>
     </section>
 
@@ -1016,7 +1021,7 @@
 
     <!-- Transparency & Scientific Disclaimer -->
     <aside class="research-callout" role="note" aria-label="Research status and scientific disclosure">
-      <strong>Scientific Integrity &amp; Prototype Status:</strong> Qenlo is an early research-grade alpha software project licensed under Apache 2.0. Measurements quoted above reflect a PyTorch CUDA predicate prototype evaluated against a CPU float64 reference oracle on a dedicated RunPod RTX A6000 instance. Benchmarks do not represent universal production guarantees. Read our complete research logs, environment checksums, and threats to validity in the <a href="docs/#/reports/2026-09-02-strict-topk-research-gate" style="text-decoration:underline;font-weight:600;">Strict Research-Gate Addendum</a>.
+      <strong>Scientific Integrity &amp; Evidence Status:</strong> Qenlo is a research-grade alpha project licensed under Apache 2.0. The numbers above are device timestamps from a five-host RTX 4090 power-state study (not end-to-end latency), a preregistered held-out gate that a candidate CPU/GPU router failed and stayed reverted, and a SHA-256 inventory of retained evidence files regenerated and diffed in CI &mdash; none is a universal production guarantee. Read the full protocols, raw archives, and known gaps in the <a href="https://github.com/a3ro-dev/qenlo/blob/main/research/README.md" style="text-decoration:underline;font-weight:600;">research evidence index</a>.
     </aside>
   </main>
 
@@ -1166,7 +1171,7 @@
 
   <script>
     // Dot Matrix Font Glyph definitions
-    const g={"0":["01110","10001","10011","10101","11001","10001","01110"],"1":["010","110","010","010","010","010","111"],"5":["11111","10000","10000","11110","00001","00001","11110"],"6":["01110","10000","10000","11110","10001","10001","01110"],"7":["11111","00001","00010","00100","01000","01000","01000"],".":["0","0","0","0","0","0","1"],E:["11111","10000","10000","11110","10000","10000","11111"],x:["00000","00000","10001","01010","00100","01010","10001"],a:["00000","00000","01110","00001","01111","10001","01111"],c:["00000","00000","01111","10000","10000","10000","01111"],t:["010","010","111","010","010","010","001"]};
+    const g={"0":["01110","10001","10011","10101","11001","10001","01110"],"1":["010","110","010","010","010","010","111"],"2":["01110","10001","00001","00010","00100","01000","11111"],"3":["11111","00010","00100","00010","00001","10001","01110"],"4":["00010","00110","01010","10010","11111","00010","00010"],"5":["11111","10000","10000","11110","00001","00001","11110"],"6":["01110","10000","10000","11110","10001","10001","01110"],"7":["11111","00001","00010","00100","01000","01000","01000"],"8":["01110","10001","10001","01110","10001","10001","01110"],".":["0","0","0","0","0","0","1"],E:["11111","10000","10000","11110","10000","10000","11111"],x:["00000","00000","10001","01010","00100","01010","10001"],a:["00000","00000","01110","00001","01111","10001","01111"],c:["00000","00000","01111","10000","10000","10000","01111"],t:["010","010","111","010","010","010","001"]};
     
     document.querySelectorAll('[data-dots]').forEach(e => {
       let x = 0, s = '', p = e.classList.contains('dot-word') ? 4 : 5, r = e.classList.contains('dot-word') ? 1.8 : e.closest('.metric--context') ? 2.32 : 1.55;

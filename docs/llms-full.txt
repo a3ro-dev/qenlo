@@ -43,7 +43,12 @@ Description: Build from source, create collections, insert, search, and reopen
 
 # Quickstart
 
-This repository is a prerelease source tree. Published package installs are not available until release CI and registry verification finish.
+Qenlo alphas are published to crates.io (`qenlo`), PyPI (`qenlo`), and npm
+(`@a3ro.dev/qenlo`, dist-tag `alpha`). Install commands with the current version
+are in the [Rust](sdks/rust.md), [Python](sdks/python.md), and
+[TypeScript](sdks/typescript.md) guides. The full Rust API reference is on
+[docs.rs](https://docs.rs/qenlo/latest/qenlo/struct.Collection.html), and the
+terminal browser's `?` tab lists every `Collection` method with an example.
 
 ## Rust from this checkout
 
@@ -222,6 +227,8 @@ Open `http://127.0.0.1:3456` in your browser to:
 - Run vector queries with visual similarity meters (`████████░░ 0.9541`) and latency breakdowns.
 - Inspect on-disk `.qdb`, `.wal`, `.lock`, and `HEAD` files.
 - Flush and compact WAL logs or export collections to portable `.qn` archives.
+
+The same `? Functions` reference from the TUI is available here too, as a "Functions" tab: search by name, group, or summary and view each method's signature and example. Because the Tauri desktop app embeds this same web UI, the Functions tab is also available in the desktop app.
 
 ---
 
@@ -432,7 +439,7 @@ Add `qenlo` to `Cargo.toml`:
 
 ```toml
 [dependencies]
-qenlo = "0.1.0-alpha.9"
+qenlo = "0.1.0-alpha.10"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -481,7 +488,7 @@ The Python SDK provides typed bindings for Qenlo using precompiled binary wheels
 ## Installation
 
 ```bash
-pip install "qenlo==0.1.0a9"
+pip install "qenlo==0.1.0a10"
 ```
 
 ## Quick example

@@ -43,6 +43,7 @@ def main(target_version: str) -> None:
         "sdk/kotlin/build.gradle.kts",
         "docs/_navbar.md",
         "docs/sdks/rust.md",
+        "README.md",
     ):
         replace(path, current, target_version)
     for path in (
@@ -50,6 +51,7 @@ def main(target_version: str) -> None:
         "sdk/python/uv.lock",
         "sdk/python/README.md",
         "docs/sdks/python.md",
+        "README.md",
     ):
         replace(path, old_python, new_python)
     subprocess.run([sys.executable, str(ROOT / "scripts/build_llms_txt.py")], check=True)

@@ -1,6 +1,11 @@
 # Quickstart
 
-This repository is a prerelease source tree. Published package installs are not available until release CI and registry verification finish.
+Qenlo alphas are published to crates.io (`qenlo`), PyPI (`qenlo`), and npm
+(`@a3ro.dev/qenlo`, dist-tag `alpha`). Install commands with the current version
+are in the [Rust](sdks/rust.md), [Python](sdks/python.md), and
+[TypeScript](sdks/typescript.md) guides. The full Rust API reference is on
+[docs.rs](https://docs.rs/qenlo/latest/qenlo/struct.Collection.html), and the
+terminal browser's `?` tab lists every `Collection` method with an example.
 
 ## Rust from this checkout
 

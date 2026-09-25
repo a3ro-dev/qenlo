@@ -1,5 +1,42 @@
 # changelog
 
+## 0.1.0-alpha.10 - 2026-09-26
+
+### added
+
+- the web UI (`qenlo-browser --web`) and the desktop app, which embeds the same
+  server, now have a Functions tab: the 33 public `Collection` methods grouped
+  by task, with signature, summary, and example, filtered as you type (`/`
+  focuses search). `GET /api/functions` serves the same catalog the terminal
+  browser uses, so one drift test covers all three surfaces.
+
+### changed
+
+- the README now opens with registry install commands and short Rust, Python,
+  and TypeScript examples, followed by a research table that gives each finding
+  its number, its boundary, and a link to the retained evidence, failed bets
+  included.
+- the landing page headline numbers now come from shipped code and retained
+  evidence: 4.6x light-path device-time variation across five RTX 4090 hosts,
+  235.7% held-out regret for the reverted routing rule, and 1,833 hashed
+  evidence files. The previous numbers came from a PyTorch CUDA prototype that
+  is not shipped and that lost to FAISS in its own gate.
+- the quickstart points to registry installs and the docs.rs API reference;
+  it no longer says published packages are unavailable.
+- `bump_alpha.py` also updates the README install commands.
+
+### fixed
+
+- the three landing-page cards rendered about 2px wide. `.cards` is a size
+  container whose cards are sized from `100cqh`, and the section added below it
+  in alpha.8 squeezed its height to zero; it now has a definite flex basis.
+- the landing page's dot-matrix digits only defined 0, 1, 5, 6, and 7, so any
+  other digit drew as 0. All digits now render.
+
+### compatibility and limits
+
+- storage, query semantics, SDK APIs, and the native ABI are unchanged from
+  alpha.9. The browser server adds one read-only route, `GET /api/functions`.
 ## 0.1.0-alpha.9 - 2026-09-26
 
 ### added

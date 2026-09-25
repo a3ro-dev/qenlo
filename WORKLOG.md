@@ -60,3 +60,40 @@ push. Newest entries last. Release mechanics are in `RELEASING.md`.
   and the directory lock without `close()` (now `FinalizationRegistry`).
 - Deliberately not done: `scan_records(filter)` materializes every matching
   slot per page (O(matches) per page). Candidate for alpha.10 if measured.
+
+## alpha.9 shipped
+
+- Found while verifying alpha.8 assets: `SHA256SUMS` hashed itself mid-write,
+  so `sha256sum -c` always failed one line. Fixed in `sdk-release.yml` before
+  tagging alpha.9 (`5300b6c`). The alpha.8 asset digests all match GitHub's
+  recorded digests; only the self-line is bogus.
+- Line endings: Python `write_text` on Windows turned two LF `.rs` files into
+  CRLF in `212eb52`; restored in `5300b6c`. Use byte writes from now on.
+
+## alpha.10
+
+- Landing page: the three hero cards had rendered ~2px wide on the live site
+  since alpha.8. `.cards` is `container-type: size` and sizes cards from
+  `100cqh`; with `flex: 1 1 auto`, the research section added below it took
+  the height and `100cqh` resolved to 0 (a `min-height` alone did not fix it;
+  a definite flex basis did). Verified 426px desktop, 361px tablet, 347px
+  mobile in a browser. The dot-matrix glyph set lacked 2/3/4/8 (Sonnet caught
+  it), so 4.6 would have drawn as 0.0.
+- Hero numbers replaced: prototype 1M / 0.17 ms / 100% (unshipped PyTorch CUDA
+  prototype that lost to FAISS in its own gate) → 4.6x, 235.7%, 1,833, each
+  traced to a file. README restructured (install, examples, research table);
+  wording fixed where the draft implied causation ("speed tracks power state")
+  or overstated ("learned rule"). All 1,833 inventory entries are hashed, so
+  "every file" is accurate.
+- Web/desktop function browser: `GET /api/functions` from the same catalog;
+  checked in a browser (`/` focuses search; "batch" → 3 of 33).
+- Deferred with reason: sqlite-vec comparison (roadmap #2). Needs a release
+  build of the bench and matched filter semantics; too heavy for a modest
+  overnight run. Next step: add an `SqliteVec` backend to
+  `scripts/oss_replay.py` (~25 lines) and run the 100K x 384 cell.
+
+## GTM
+
+- X and LinkedIn were unavailable until the user signed in mid-session.
+  Posted on X (voice skill + short style): CI glob-order story and alpha.8.
+  Drafts and a posted log live in `.claude/gtm-drafts.md` (untracked).

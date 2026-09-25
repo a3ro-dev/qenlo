@@ -29,71 +29,21 @@
   <a href="docs/architecture.md"><img src="https://img.shields.io/badge/Acceleration-AVX2%20|%20NEON%20|%20WebGPU-059669?style=flat-square" alt="Acceleration"></a>
 </p>
 
-Qenlo is a local, embedded vector store for applications that need durable records, metadata filtering, and exact cosine search without operating a separate database service.
+Qenlo is a local, embedded vector store: one process owns a canonical durable record store, applies metadata filters before ranking, and runs exact search on CPU by default, with optional WGPU, USearch, and PyTorch execution paths. It is built for engineers embedding vector search directly into an application and for researchers who want to check the evidence behind any number before relying on it. Qenlo is not a distributed vector database, a hosted service, or a fastest-in-class ANN engine.
 
-It is best suited to small and medium collections owned by one application: desktop search, offline RAG, local document or code retrieval, and application memory. Qenlo is alpha software. It is not a distributed vector database, an embedding service, or a fastest-in-class search engine.
+## Install
 
-## Why Qenlo exists
+| Language | Command |
+| --- | --- |
+| Rust | `qenlo = "0.1.0-alpha.10"` in `Cargo.toml` |
+| Python | `pip install qenlo==0.1.0a10` |
+| TypeScript | `npm install @a3ro.dev/qenlo@alpha` |
 
-Vector indexes are disposable; application data is not. Qenlo keeps IDs, normalized FP32 vectors, metadata, tombstones, and generation state in one canonical store. CPU, WGPU, USearch, and PyTorch structures are derived execution paths that can be rebuilt without changing which records exist.
+Go, Kotlin, and Swift are preview SDKs — see [docs/sdks/go.md](docs/sdks/go.md), [docs/sdks/kotlin.md](docs/sdks/kotlin.md), and [docs/sdks/swift.md](docs/sdks/swift.md). Maven Central is not published; releases are tagged `sdk-v0.1.0-alpha.N` on [GitHub Releases](https://github.com/a3ro-dev/qenlo/releases).
 
-This gives an embedded application:
+## Quick example
 
-- durable local collections with atomic mutation batches;
-- exact search over rows selected by user and timestamp filters;
-- deterministic distance-then-ID result ordering;
-- optional portable-GPU, ANN, and tensor execution;
-- explicit backend, fallback, preparation, and allocation diagnostics; and
-- no daemon or automatic network traffic.
-
-## Good fit
-
-Use Qenlo when one process owns the collection, exact results are useful, metadata filters can substantially reduce the candidate set, and local persistence matters. Typical examples are desktop semantic search, offline retrieval, per-user document collections, local agent memory, and device-level search research.
-
-Use something else when you need relational joins, multi-node replication, hosted ingestion, high write concurrency, billion-scale ANN, built-in encryption, or a production service-level agreement. See [use cases](docs/use-cases.md) and [trade-offs](docs/trade-offs.md).
-
-## Status
-
-Qenlo is research-grade alpha software. The repository has strong correctness, recovery, and evidence-preservation tests, but it does not establish production readiness:
-
-- the automatic router has not been validated on held-out workloads;
-- current CPU performance is not a competitive bound on optimized CPU libraries;
-- WGPU availability and performance depend on the adapter, driver, and backend;
-- concurrency, sustained mutation churn, crash schedules, and energy use need broader evaluation; and
-- mobile packaging and current-revision physical-device validation remain incomplete.
-
-The [Qenlo research paper](QENLO-RESEARCH-PAPER.pdf), *The Efficient Kernel Runs Slow*, studies RTX 4050, RTX 4090, and H100 systems. The compact-row GPU path runs in lower power states and its device time varies up to 4.6× across the tested fresh processes and hosts. The heavier path varies by at most 1% within a machine and 7% across five RTX 4090 pod hosts. Source: [`paper/v2/`](paper/v2/). The earlier evidence audit of Qenlo's CPU/GPU routing is preserved as [`paper/archive/qenlo-evidence-audit-v1.pdf`](paper/archive/qenlo-evidence-audit-v1.pdf), with its source in `paper/paper.tex`. Neither paper claims a universal CPU/GPU threshold. Read them or the [verification notes](docs/verification.md) before quoting benchmark numbers.
-
-### Research, with the failed bets visible
-
-| Question | What the evidence says | Start with |
-| --- | --- | --- |
-| Can one workload-size rule choose CPU or GPU? | A rule that fit 31 development pairs failed a preregistered held-out gate: 235.7% maximum regret against a 25% limit. It was reverted. | [Held-out gate](research/data/processed/alpha5-router-heldout/report.md) · [evidence audit](paper/archive/qenlo-evidence-audit-v1.pdf) |
-| Why does the same GPU query vary across machines? | The compact-row GPU path entered lower power states in a four-GPU study. Its device time varied across fresh processes and hosts; a heavier path was more stable. A GPU-load intervention reduced the compact path's device-time tail, but the predicted 10% end-to-end gain failed. | [Current paper](QENLO-RESEARCH-PAPER.pdf) · [protocols and data](research/README.md) |
-| Does a faster kernel imply a faster search call? | No. Host filtering, transfers, dispatch, and readback matter. Qenlo reports both call latency and execution diagnostics so comparisons can keep these costs in view. | [Benchmark protocol](docs/benchmark-protocol.md) · [execution reports](docs/concepts.md) |
-
-The [research evidence index](research/README.md) links protocols, raw archives, reductions, and known gaps. Results describe their tested hardware and workloads; they are not release-wide speedup claims.
-
-GitHub release assets and package registries are separate publication stages. See the [CI and release map](docs/ci.md) for triggers, gates, and outputs.
-
-## Quickstart
-
-Qenlo uses the Rust toolchain pinned in `rust-toolchain.toml`.
-
-```powershell
-cargo run -p qenlo --example quickstart -- ./demo.qenlo cpu
-```
-
-To require WGPU on Windows:
-
-```powershell
-$env:WGPU_BACKEND = 'dx12'
-cargo run -p qenlo --features gpu-wgpu --example quickstart -- ./gpu-demo.qenlo gpu
-```
-
-Required-GPU mode returns an error if initialization or execution fails; it does not silently substitute CPU execution. The example prints the adapter, graphics backend, dispatch count, and transfer sizes.
-
-## Rust example
+Rust:
 
 ```rust
 use qenlo::{Collection, CollectionConfig, Filter, NewRecord, TimestampRange};
@@ -121,7 +71,62 @@ async fn example() -> Result<(), qenlo::Error> {
 }
 ```
 
-`Collection::new` creates an in-memory collection. Durable collections use `create` once and `open` on later starts. Public operations include atomic mixed commits, add/delete batches, exact and batch search, filtering, preparation, statistics, flush, and close.
+Python:
+
+```python
+from qenlo import Collection, Filter, Record
+
+with Collection.memory(dimension=3) as db:
+    db.add(Record(id=1, user_id=7, timestamp=10, vector=(1.0, 0.0, 0.0)))
+    db.add(Record(id=2, user_id=7, timestamp=20, vector=(0.0, 1.0, 0.0)))
+
+    response = db.search(query=(1.0, 0.0, 0.0), filter=Filter(user_id=7), k=10)
+    print(f"Matched ID: {response.results[0].id}")
+```
+
+TypeScript:
+
+```typescript
+import { Collection } from "@a3ro.dev/qenlo";
+
+using db = Collection.memory(3);
+db.add({ id: 1n, userId: 7n, timestamp: 10n, vector: [1.0, 0.0, 0.0] });
+db.add({ id: 2n, userId: 7n, timestamp: 20n, vector: [0.0, 1.0, 0.0] });
+
+const response = db.search([1.0, 0.0, 0.0], { userId: 7n }, 10);
+console.log(`Matched ID: ${response.results[0]?.id}`);
+```
+
+`Collection::new` / `Collection.memory` open an in-memory collection; `create` / `open` are for durable, reopenable collections. Public operations cover atomic mixed commits, add/delete batches, exact and batch search, filtering, preparation, statistics, flush, and close.
+
+## Research: what we measured
+
+| Finding | Number | Boundary | Evidence |
+| --- | --- | --- | --- |
+| The compact-row GPU path ran in lower power states, and its device time varied across fresh processes and hosts | up to 4.6x device-time variation across five RTX 4090 pod hosts (4.2x on a fresh laptop process); the heavier path stayed within 1-7% | Device timestamps for specific query cells, not end-to-end latency; a small extra GPU load cut the light path's slow tail, but the predicted >=10% end-to-end gain failed on every GPU | [research/README.md](research/README.md) · [paper/v2/](paper/v2/) |
+| A fitted CPU/GPU routing rule failed its preregistered held-out gate | 235.7% maximum regret vs a 25% limit (rule fit on 31 development pairs) | Reverted; alpha.4's static routing shipped instead | [held-out gate report](research/data/processed/alpha5-router-heldout/report.md) |
+| A faster kernel does not imply a faster search call | qualitative | Host filtering, transfers, dispatch, and readback also cost time; Qenlo reports call latency and execution diagnostics separately so comparisons keep both in view | [benchmark protocol](docs/benchmark-protocol.md) · [execution reports](docs/concepts.md) |
+| Every retained evidence file is hashed and checked in CI | 1,833 git-tracked files | SHA-256 identities regenerated and diffed by the `research-evidence` CI job on every push and pull request | [research/README.md](research/README.md) · [CI map](docs/ci.md) |
+
+Read [QENLO-RESEARCH-PAPER.pdf](QENLO-RESEARCH-PAPER.pdf) — *The Efficient Kernel Runs Slow* — or the [verification notes](docs/verification.md) before quoting any number above; each row links to its boundaries, not just its headline.
+
+## Why Qenlo exists
+
+Vector indexes are disposable; application data is not. Qenlo keeps IDs, normalized FP32 vectors, metadata, tombstones, and generation state in one canonical store. CPU, WGPU, USearch, and PyTorch structures are derived execution paths that can be rebuilt without changing which records exist.
+
+## Good fit
+
+Use Qenlo when one process owns the collection, exact results are useful, metadata filters can substantially reduce the candidate set, and local persistence matters: desktop semantic search, offline retrieval, per-user document collections, local agent memory, device-level search research. Use something else for relational joins, multi-node replication, hosted ingestion, high write concurrency, billion-scale ANN, built-in encryption, or a production SLA. See [use cases](docs/use-cases.md) and [trade-offs](docs/trade-offs.md).
+
+## Status and limits
+
+Qenlo is research-grade alpha software with strong correctness, recovery, and evidence-preservation tests, but it does not establish production readiness:
+
+- no automatic CPU/GPU router has passed a held-out gate (see the table above);
+- current CPU performance is not a competitive bound on optimized CPU libraries;
+- WGPU availability and performance depend on the adapter, driver, and backend;
+- concurrency, sustained mutation churn, crash schedules, and energy use need broader evaluation; and
+- mobile packaging and current-revision physical-device validation remain incomplete.
 
 ## Execution paths
 
@@ -132,7 +137,7 @@ async fn example() -> Result<(), qenlo::Error> {
 | USearch HNSW | Optional approximate search | Recall must be measured for the actual data and filters |
 | PyTorch tensor | Optional Python exhaustive snapshot | Derived, not durable; CUDA and CPU measured, MPS unverified |
 
-Automatic mode reports which route actually ran and why. Profiles are hardware-bound. Without a matching profile, the built-in threshold is a fallback policy, not a transferable performance law.
+Automatic mode reports which route actually ran and why. Without a matching hardware profile, the built-in threshold is a fallback policy, not a transferable performance law.
 
 ## Persistence model
 
@@ -150,7 +155,7 @@ cargo run -p qenlo-browser -- ./demo.qenlo
 cargo run -p qenlo-browser -- --web ./demo.qenlo --port 3456
 ```
 
-See the [browser guide](docs/browser.md).
+The terminal UI's `?` tab is a function browser covering all 33 public `Collection` methods, with `/` to type-to-filter by name, group, or summary; an automated test fails if the catalog drifts from the real API. See the [browser guide](docs/browser.md).
 
 ## Verify the workspace
 
@@ -167,6 +172,7 @@ Benchmark commands and evidence requirements are documented in the [benchmark pr
 
 - [Documentation home](docs/README.md)
 - [Quickstart](docs/quickstart.md)
+- [Rust API reference on docs.rs](https://docs.rs/qenlo/latest/qenlo/)
 - [Concepts](docs/concepts.md)
 - [Use cases](docs/use-cases.md)
 - [Trade-offs](docs/trade-offs.md)

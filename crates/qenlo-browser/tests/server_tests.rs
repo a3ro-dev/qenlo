@@ -3,6 +3,7 @@ use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
 use qenlo_browser::server::app_router;
 use qenlo_browser::state::{BrowserSession, SharedState};
+use qenlo_browser::tui::functions::FUNCTION_CATALOG;
 use serde_json::{Value, json};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -164,4 +165,38 @@ async fn test_rest_api_full_flow() {
         .await
         .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn test_get_functions_matches_catalog() {
+    let session = BrowserSession::new();
+    let shared_state: SharedState = Arc::new(RwLock::new(session));
+    let app = app_router(shared_state);
+
+    let res = app
+        .oneshot(
+            Request::builder()
+                .uri("/api/functions")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+
+    let bytes = res.into_body().collect().await.unwrap().to_bytes();
+    let body: Value = serde_json::from_slice(&bytes).unwrap();
+    let functions = body.as_array().unwrap();
+
+    assert_eq!(functions.len(), FUNCTION_CATALOG.len());
+    assert_eq!(functions[0]["name"], "new");
+
+    for (entry, doc) in functions.iter().zip(FUNCTION_CATALOG.iter()) {
+        assert_eq!(entry["name"], doc.name);
+        assert!(!entry["name"].as_str().unwrap().is_empty());
+        assert!(!entry["group"].as_str().unwrap().is_empty());
+        assert!(!entry["signature"].as_str().unwrap().is_empty());
+        assert!(!entry["summary"].as_str().unwrap().is_empty());
+        assert!(!entry["example"].as_str().unwrap().is_empty());
+    }
 }

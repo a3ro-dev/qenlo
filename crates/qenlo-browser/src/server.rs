@@ -1,4 +1,5 @@
 use crate::state::SharedState;
+use crate::tui::functions::FUNCTION_CATALOG;
 use axum::{
     Router,
     extract::{Path as AxPath, Query, State},
@@ -89,6 +90,7 @@ pub fn app_router(state: SharedState) -> Router {
         .route("/api/export", post(export_collection))
         .route("/api/storage", get(get_storage))
         .route("/api/diagnostics", get(get_diagnostics))
+        .route("/api/functions", get(get_functions))
         .with_state(state)
 }
 
@@ -275,4 +277,8 @@ async fn get_storage(State(state): State<SharedState>) -> impl IntoResponse {
 async fn get_diagnostics(State(state): State<SharedState>) -> impl IntoResponse {
     let session = state.read().await;
     Json(session.get_diagnostics())
+}
+
+async fn get_functions() -> impl IntoResponse {
+    Json(&FUNCTION_CATALOG[..])
 }
