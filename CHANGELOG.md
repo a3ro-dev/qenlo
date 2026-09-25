@@ -25,6 +25,9 @@
 - a TypeScript `Collection` that was never closed held its native handle and
   durable directory lock for the life of the process. A `FinalizationRegistry`
   now frees it after garbage collection; `close()` remains the reliable path.
+- release `SHA256SUMS` files listed a hash of themselves taken mid-write, so
+  `sha256sum -c SHA256SUMS` always reported one failure. The file now covers
+  only the release assets.
 
 ### compatibility and limits
 

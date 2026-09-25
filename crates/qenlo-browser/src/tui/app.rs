@@ -135,7 +135,8 @@ impl App {
             function_filter_mode: false,
             function_filter_query: String::new(),
             status_message: Some((
-                "Welcome to QenloDB Browser. Press ? for help, : for commands.".to_string(),
+                "Welcome to QenloDB Browser. Press ? for functions and shortcuts, : for commands."
+                    .to_string(),
                 Instant::now(),
                 false,
             )),
