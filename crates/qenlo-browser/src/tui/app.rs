@@ -1,6 +1,7 @@
 use crate::state::{
     BrowserStatus, DiagnosticsDto, RecordDto, SearchHitDto, SharedState, StorageDetailsDto,
 };
+use crate::tui::functions::filter_functions;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use qenlo::{Filter, TimestampRange};
 use std::time::Instant;
@@ -13,59 +14,6 @@ pub enum Tab {
     Diagnostics,
     Help,
 }
-
-pub const FUNCTION_CATALOG: [(&str, &str, &str); 10] = [
-    (
-        "Collection::new",
-        "new(config).await",
-        "Create an in-memory collection.",
-    ),
-    (
-        "Collection::create",
-        "create(path, config).await",
-        "Create a durable collection at a path.",
-    ),
-    (
-        "Collection::open",
-        "open(path, config).await",
-        "Open an existing durable collection.",
-    ),
-    (
-        "Collection::add",
-        "add(id, user_id, timestamp, vector)",
-        "Insert one vector record.",
-    ),
-    (
-        "Collection::delete",
-        "delete(id)",
-        "Delete a record by ID; deletion is durable.",
-    ),
-    (
-        "Collection::filter",
-        "filter(&Filter)",
-        "Find record IDs matching metadata filters.",
-    ),
-    (
-        "Collection::scan_records",
-        "scan_records(offset, limit, filter)",
-        "Read a page of records and metadata.",
-    ),
-    (
-        "Collection::search",
-        "search(query, &Filter, k).await",
-        "Run nearest-neighbor vector search.",
-    ),
-    (
-        "Collection::flush",
-        "flush()",
-        "Persist pending changes and compact storage.",
-    ),
-    (
-        "Collection::export_qn",
-        "export_qn(path)",
-        "Write a portable .qn snapshot archive.",
-    ),
-];
 
 impl Tab {
     pub fn next(self) -> Self {
@@ -135,6 +83,8 @@ pub struct App {
     pub storage_details: Option<StorageDetailsDto>,
     pub diagnostics: Option<DiagnosticsDto>,
     pub function_idx: usize,
+    pub function_filter_mode: bool,
+    pub function_filter_query: String,
 
     pub status_message: Option<(String, Instant, bool)>,
     pub should_quit: bool,
@@ -182,6 +132,8 @@ impl App {
             storage_details: None,
             diagnostics: None,
             function_idx: 0,
+            function_filter_mode: false,
+            function_filter_query: String::new(),
             status_message: Some((
                 "Welcome to QenloDB Browser. Press ? for help, : for commands.".to_string(),
                 Instant::now(),
@@ -197,6 +149,17 @@ impl App {
 
     pub fn set_status(&mut self, msg: impl Into<String>, is_error: bool) {
         self.status_message = Some((msg.into(), Instant::now(), is_error));
+    }
+
+    /// Catalog indices matching the current Functions-tab filter query.
+    pub fn filtered_function_indices(&self) -> Vec<usize> {
+        filter_functions(&self.function_filter_query)
+    }
+
+    /// Keep `function_idx` inside the current filtered result set.
+    fn clamp_function_idx(&mut self) {
+        let len = self.filtered_function_indices().len();
+        self.function_idx = self.function_idx.min(len.saturating_sub(1));
     }
 
     pub async fn refresh_data(&mut self) {
@@ -351,6 +314,35 @@ impl App {
             return;
         }
 
+        // Functions Tab Filter Mode (`/`)
+        if self.function_filter_mode {
+            match key.code {
+                KeyCode::Esc => {
+                    self.function_filter_mode = false;
+                    self.function_filter_query.clear();
+                    self.clamp_function_idx();
+                }
+                KeyCode::Enter => {
+                    self.function_filter_mode = false;
+                }
+                KeyCode::Backspace => {
+                    self.function_filter_query.pop();
+                    self.clamp_function_idx();
+                }
+                KeyCode::Up => self.function_idx = self.function_idx.saturating_sub(1),
+                KeyCode::Down => {
+                    self.function_idx += 1;
+                    self.clamp_function_idx();
+                }
+                KeyCode::Char(c) => {
+                    self.function_filter_query.push(c);
+                    self.clamp_function_idx();
+                }
+                _ => {}
+            }
+            return;
+        }
+
         // Tab Switching
         match key.code {
             KeyCode::Tab => {
@@ -392,6 +384,10 @@ impl App {
                 self.filter_mode = true;
                 return;
             }
+            KeyCode::Char('/') if self.current_tab == Tab::Help => {
+                self.function_filter_mode = true;
+                return;
+            }
             KeyCode::Char('q') => {
                 self.should_quit = true;
                 return;
@@ -409,7 +405,8 @@ impl App {
                     self.function_idx = self.function_idx.saturating_sub(1);
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
-                    self.function_idx = (self.function_idx + 1).min(FUNCTION_CATALOG.len() - 1);
+                    self.function_idx += 1;
+                    self.clamp_function_idx();
                 }
                 _ => {}
             },

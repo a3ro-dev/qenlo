@@ -35,10 +35,15 @@ cargo run -p qenlo-browser -- ./notes.qenlo
 cargo run -p qenlo-browser -- ./notes.qenlo --dimension 384 --create
 ```
 
-The `? Functions` tab is an in-terminal reference for ten common Rust
-`Collection` operations. Use `j`/`k` or the arrow keys to select a function and
-read its signature and purpose. The SDK guide remains the reference for full
-types, error behavior, and optional features.
+The `? Functions` tab is an in-terminal reference covering every public method
+of `qenlo::Collection` (grouped as Open & create, Write, Read & filter,
+Search, Tuning & diagnostics, and Persistence & lifecycle), kept in sync with
+the SDK by an automated test. Use `j`/`k` or the arrow keys to select a
+function and read its signature, summary, and a short usage example. Press
+`/` to type-to-filter the list by name, group, or summary (case-insensitive);
+`Backspace` edits the query, `Esc` clears it and exits filter mode, and
+`Enter` exits filter mode while keeping the query applied. The SDK guide
+remains the reference for full types, error behavior, and optional features.
 
 #### TUI keyboard shortcuts
 | Key | Action |
@@ -50,7 +55,7 @@ types, error behavior, and optional features.
 | `Enter` | Open full vector inspector modal |
 | `a` | Add new record dialog (`Ctrl+R` for random vector) |
 | `d` / `Delete` | Durable row deletion |
-| `/` | Live filter table by user ID |
+| `/` | Live filter table by user ID (Rows tab) or filter the function list by name/group/summary (Functions tab, `Esc` clears) |
 | `s` | Run vector cosine similarity search |
 | `r` | Generate normalized random query vector |
 | `f` | Flush and compact WAL to snapshot |

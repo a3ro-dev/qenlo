@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ctypes
 import json
+import warnings
 from dataclasses import dataclass
 from os import PathLike
 from typing import Any, Iterable, Literal, Sequence
@@ -449,6 +450,16 @@ class Collection:
         self.close()
 
     def __del__(self) -> None:
-        if getattr(self, "_handle", None) is not None:
-            LIB.qenlo_collection_free(self._handle)
-            self._handle = None
+        handle = getattr(self, "_handle", None)
+        if handle is None:
+            return
+        self._handle = None
+        # Interpreter shutdown may already have cleared these module globals to None.
+        if warnings is None or LIB is None or last_error is None:
+            return
+        LIB.qenlo_collection_free(handle)
+        detail = last_error()
+        suffix = f": {detail}" if detail else ""
+        warnings.warn(
+            f"unclosed qenlo.Collection {self!r}{suffix}", ResourceWarning, stacklevel=2
+        )

@@ -1,5 +1,35 @@
 # changelog
 
+## 0.1.0-alpha.9 - 2026-09-26
+
+### added
+
+- the terminal browser's `? Functions` tab now covers all 33 public Rust
+  `Collection` methods, grouped by task, each with its real signature, a
+  one-line summary, and a short example. Press `/` to filter by name, group, or
+  summary; `Esc` clears. A test re-parses `crates/qenlo/src/lib.rs` and fails if
+  the catalog misses or invents a method, and a render test keeps the summary
+  and example visible on an 80x24 terminal.
+- the Python SDK emits `ResourceWarning` for a `Collection` that is garbage
+  collected without `close()`, like an unclosed file, and includes any native
+  close error in the message.
+
+### fixed
+
+- `Collection::get_record` and `Collection::scan_records` returned stale data
+  after `close()` released the directory lock; they now return empty results,
+  like `filter`.
+- `qenlo_collection_free` ran `close()` outside the panic guard and discarded
+  its error. It now uses the same guard as every other native entry point, and
+  `qenlo_last_error()` reports a close or flush failure after free.
+- a TypeScript `Collection` that was never closed held its native handle and
+  durable directory lock for the life of the process. A `FinalizationRegistry`
+  now frees it after garbage collection; `close()` remains the reliable path.
+
+### compatibility and limits
+
+- `.qn` format v1, WAL v1, and the native ABI signatures are unchanged.
+- code that read records after `close()` now receives empty results.
 ## 0.1.0-alpha.8 - 2026-09-26
 
 ### added

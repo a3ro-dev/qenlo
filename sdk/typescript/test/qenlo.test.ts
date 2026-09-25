@@ -3,6 +3,8 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { setFlagsFromString } from "node:v8";
+import { runInNewContext } from "node:vm";
 import { Collection, QenloError, type RecordInput } from "../src/index.js";
 
 const records: readonly RecordInput[] = [
@@ -78,6 +80,38 @@ test("portable .qn round trip", () => {
     using imported = Collection.importQn(path, 3);
     assert.equal(imported.stats().generation, 5n);
     assert.deepEqual(imported.search([1, 0, 0]).results.map((hit) => hit.id), [2n, 4n, 6n]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("finalizer releases a leaked durable handle's OS lock", async () => {
+  const root = mkdtempSync(join(tmpdir(), "qenlo-ts-gc-"));
+  const path = join(root, "vectors.qenlo");
+  try {
+    (() => {
+      // No reference escapes this scope, so the Collection becomes unreachable
+      // once this call returns and never has close() called on it.
+      Collection.create(path, 3);
+    })();
+
+    setFlagsFromString("--expose-gc");
+    const gc = runInNewContext("gc") as () => void;
+
+    let opened: Collection | undefined;
+    for (let attempt = 0; attempt < 20 && !opened; attempt++) {
+      gc();
+      // Finalizer callbacks run asynchronously; give the event loop a few turns.
+      await new Promise((resolve) => setImmediate(resolve));
+      try {
+        opened = Collection.open(path, 3);
+      } catch {
+        // The native OS lock has not been released yet; retry after another GC pass.
+      }
+    }
+
+    assert.notEqual(opened, undefined, "expected the leaked handle's finalizer to release the OS lock");
+    opened!.close();
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

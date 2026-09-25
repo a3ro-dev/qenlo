@@ -166,6 +166,13 @@ function parseReport(value: Record<string, unknown>): ExecutionReport {
   };
 }
 
+// Fallback cleanup for a handle whose owning Collection was garbage collected without close():
+// frees the native allocation so a durable collection's OS lock isn't held for the process lifetime.
+// The held value is the raw handle only, never the Collection, so it can't keep it alive.
+const collectionFinalizer = new FinalizationRegistry<Pointer>((handle) => {
+  nativeCollectionFree(handle);
+});
+
 export class Collection implements Disposable {
   readonly dimension: number;
   #handle: Pointer | null;
@@ -174,6 +181,7 @@ export class Collection implements Disposable {
     if (handle === null) throw new QenloError(lastError());
     this.#handle = handle;
     this.dimension = dimension;
+    collectionFinalizer.register(this, handle, this);
   }
 
   static memory(dimension: number, options: CollectionOptions = {}): Collection {
@@ -305,6 +313,7 @@ export class Collection implements Disposable {
     if (this.#handle !== null) {
       const handle = this.#handle;
       this.#handle = null;
+      collectionFinalizer.unregister(this);
       const status = nativeClose(handle);
       nativeCollectionFree(handle);
       this.#check(status);

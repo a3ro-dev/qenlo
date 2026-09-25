@@ -1,4 +1,5 @@
-use crate::tui::app::{App, FUNCTION_CATALOG, Tab};
+use crate::tui::app::{App, Tab};
+use crate::tui::functions::FUNCTION_CATALOG;
 use crate::tui::theme::QENLO_THEME;
 use ratatui::{
     Frame,
@@ -642,26 +643,41 @@ fn render_diagnostics_view(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_help_view(frame: &mut Frame, app: &App, area: Rect) {
+    // Keep the function details readable on 80x24; show every shortcut only
+    // when the terminal is tall enough.
+    let full_shortcuts = area.height >= 24;
+    let nav_height = if full_shortcuts { 7 } else { 3 };
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(8), Constraint::Length(8)])
+        .constraints([Constraint::Min(8), Constraint::Length(nav_height)])
         .split(area);
     let browser = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(34), Constraint::Percentage(66)])
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
         .split(chunks[0]);
 
-    let items: Vec<ListItem> = FUNCTION_CATALOG
+    let filtered = app.filtered_function_indices();
+
+    let items: Vec<ListItem> = filtered
         .iter()
-        .map(|(name, _, _)| ListItem::new(*name))
+        .map(|&i| {
+            let f = &FUNCTION_CATALOG[i];
+            ListItem::new(f.name)
+        })
         .collect();
+
+    let list_title = format!(
+        " Rust Collection API ({}/{}) ",
+        filtered.len(),
+        FUNCTION_CATALOG.len()
+    );
     let functions = List::new(items)
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(QENLO_THEME.border))
-                .title(" Rust Collection API "),
+                .title(list_title),
         )
         .highlight_style(
             Style::default()
@@ -671,56 +687,77 @@ fn render_help_view(frame: &mut Frame, app: &App, area: Rect) {
         )
         .highlight_symbol("› ");
     let mut state = ratatui::widgets::ListState::default();
-    state.select(Some(app.function_idx.min(FUNCTION_CATALOG.len() - 1)));
+    state.select(if filtered.is_empty() {
+        None
+    } else {
+        Some(app.function_idx.min(filtered.len() - 1))
+    });
     frame.render_stateful_widget(functions, browser[0], &mut state);
 
-    let (name, signature, description) =
-        FUNCTION_CATALOG[app.function_idx.min(FUNCTION_CATALOG.len() - 1)];
-    let detail = vec![
-        Line::from(Span::styled(
-            name,
-            Style::default()
-                .fg(QENLO_THEME.accent)
-                .add_modifier(Modifier::BOLD),
-        )),
-        Line::raw(""),
-        Line::from(Span::styled(
-            signature,
-            Style::default().fg(QENLO_THEME.text),
-        )),
-        Line::raw(""),
-        Line::from(description),
-        Line::raw(""),
-        Line::from(Span::styled(
-            "↑/↓ or j/k to browse · press ? for this browser · see SDK docs for full types",
-            Style::default().fg(QENLO_THEME.text_muted),
-        )),
-    ];
+    let selected = (!filtered.is_empty())
+        .then(|| &FUNCTION_CATALOG[filtered[app.function_idx.min(filtered.len() - 1)]]);
+    let detail_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(Style::default().fg(QENLO_THEME.border))
+        .title(match selected {
+            Some(f) => format!(" {} ", f.group),
+            None => " Function details ".to_string(),
+        })
+        .style(Style::default().bg(QENLO_THEME.surface));
+
+    let detail = if let Some(f) = selected {
+        vec![
+            Line::from(Span::styled(
+                format!("Collection::{}", f.name),
+                Style::default()
+                    .fg(QENLO_THEME.accent)
+                    .add_modifier(Modifier::BOLD),
+            )),
+            Line::from(Span::styled(
+                f.signature,
+                Style::default().fg(QENLO_THEME.text),
+            )),
+            Line::raw(""),
+            Line::from(f.summary),
+            Line::raw(""),
+            Line::from(Span::styled(
+                f.example,
+                Style::default()
+                    .fg(QENLO_THEME.ok)
+                    .add_modifier(Modifier::ITALIC),
+            )),
+        ]
+    } else {
+        vec![
+            Line::raw(""),
+            Line::from(Span::styled(
+                format!(" no functions match '{}'", app.function_filter_query),
+                Style::default().fg(QENLO_THEME.text_muted),
+            )),
+        ]
+    };
     frame.render_widget(
-        Paragraph::new(detail).wrap(Wrap { trim: true }).block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(QENLO_THEME.border))
-                .title(" Function details ")
-                .style(Style::default().bg(QENLO_THEME.surface)),
-        ),
+        Paragraph::new(detail)
+            .wrap(Wrap { trim: true })
+            .block(detail_block),
         browser[1],
     );
 
-    let shortcuts = vec![
-        Line::from(Span::styled(
-            " Shortcuts",
-            Style::default()
-                .fg(QENLO_THEME.accent)
-                .add_modifier(Modifier::BOLD),
-        )),
-        Line::from(" Tab / Shift+Tab or 1-4: switch tabs · j/k: move · n/p: page records"),
-        Line::from(" Enter: inspect · a: add · d: delete · /: filter by User ID · s: search"),
-        Line::from(
-            " r: refresh or random query · f: flush · :open/:create/:export/:quit · q: quit",
-        ),
-    ];
+    let functions_hint =
+        Line::from(" /: filter functions · Esc: clear · j/k: move · Tab: next tab");
+    let shortcuts = if !full_shortcuts {
+        vec![functions_hint]
+    } else {
+        vec![
+            functions_hint,
+            Line::from(" Tab / Shift+Tab or 1-4: switch tabs · j/k: move · n/p: page records"),
+            Line::from(" Enter: inspect · a: add · d: delete · /: filter by User ID · s: search"),
+            Line::from(
+                " r: refresh or random query · f: flush · :open/:create/:export/:quit · q: quit",
+            ),
+        ]
+    };
     frame.render_widget(
         Paragraph::new(shortcuts).block(
             Block::default()
@@ -766,6 +803,31 @@ fn render_bottom_bar(frame: &mut Frame, app: &App, area: Rect) {
                     .add_modifier(Modifier::BOLD),
             ),
             Span::styled(&app.filter_input, Style::default().fg(QENLO_THEME.text)),
+            Span::styled("█", Style::default().fg(QENLO_THEME.accent)),
+        ]);
+        let p = Paragraph::new(filter_line).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(QENLO_THEME.accent))
+                .border_type(BorderType::Rounded)
+                .style(Style::default().bg(QENLO_THEME.surface_raised)),
+        );
+        frame.render_widget(p, area);
+        return;
+    }
+
+    if app.function_filter_mode {
+        let filter_line = Line::from(vec![
+            Span::styled(
+                " Filter functions: ",
+                Style::default()
+                    .fg(QENLO_THEME.accent)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                &app.function_filter_query,
+                Style::default().fg(QENLO_THEME.text),
+            ),
             Span::styled("█", Style::default().fg(QENLO_THEME.accent)),
         ]);
         let p = Paragraph::new(filter_line).block(

@@ -796,7 +796,11 @@ impl Collection {
 
     /// Retrieve a single canonical record by ID, including tombstones.
     pub fn get_record(&self, id: u64) -> Option<Record> {
-        self.inner.read_blocking().store.get(id).cloned()
+        let state = self.inner.read_blocking();
+        if state.closed {
+            return None;
+        }
+        state.store.get(id).cloned()
     }
 
     /// Return a paginated slice of records matching an optional filter, along with total matching count.
@@ -807,6 +811,9 @@ impl Collection {
         filter: Option<&Filter>,
     ) -> (Vec<Record>, usize) {
         let state = self.inner.read_blocking();
+        if state.closed {
+            return (Vec::new(), 0);
+        }
         match filter {
             Some(f) => {
                 let slots = state.store.filter(f);
@@ -2255,6 +2262,24 @@ mod tests {
                 [2]
             );
             reopened.close().unwrap();
+            std::fs::remove_dir_all(path).unwrap();
+        });
+    }
+
+    #[test]
+    fn closed_collection_serves_no_reads() {
+        block_on(async {
+            let path = temp_dir("closed-reads");
+            let config = CollectionConfig::cpu_exact(2);
+            let collection = Collection::create(&path, config).await.unwrap();
+            collection.add(1, 7, 0, &[1.0, 0.0]).unwrap();
+            collection.close().unwrap();
+
+            assert!(collection.get_record(1).is_none());
+            let (records, total) = collection.scan_records(0, 10, None);
+            assert!(records.is_empty());
+            assert_eq!(total, 0);
+
             std::fs::remove_dir_all(path).unwrap();
         });
     }

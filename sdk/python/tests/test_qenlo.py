@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import gc
 import math
+import warnings
 from array import array
 
 import pytest
@@ -133,3 +135,28 @@ def test_closed_collection_fails_without_native_access() -> None:
     db.close()
     with pytest.raises(QenloError, match="closed"):
         db.stats()
+
+
+def test_unclosed_collection_warns_on_gc() -> None:
+    def make_and_drop() -> None:
+        Collection.memory(3)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        make_and_drop()
+        gc.collect()
+
+    assert any(issubclass(w.category, ResourceWarning) for w in caught)
+
+
+def test_closed_collection_does_not_warn_on_gc() -> None:
+    def make_and_drop() -> None:
+        db = Collection.memory(3)
+        db.close()
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        make_and_drop()
+        gc.collect()
+
+    assert not any(issubclass(w.category, ResourceWarning) for w in caught)

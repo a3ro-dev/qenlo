@@ -87,6 +87,7 @@ QENLO_API char *qenlo_stats(QenloCollection *collection);
 QENLO_API int32_t qenlo_export_qn(QenloCollection *collection, const char *path);
 QENLO_API int32_t qenlo_flush(QenloCollection *collection);
 QENLO_API int32_t qenlo_close(QenloCollection *collection);
+/* After free, qenlo_last_error() reports a close/flush failure, or is empty on success. */
 QENLO_API void qenlo_collection_free(QenloCollection *collection);
 QENLO_API char *qenlo_last_error(void);
 QENLO_API void qenlo_string_free(char *value);

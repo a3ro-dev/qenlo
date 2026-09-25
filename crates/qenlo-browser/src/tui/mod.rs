@@ -1,4 +1,5 @@
 pub mod app;
+pub mod functions;
 pub mod theme;
 pub mod ui;
 

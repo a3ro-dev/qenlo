@@ -1045,6 +1045,9 @@ pub unsafe extern "C" fn qenlo_close(handle: *mut QenloCollection) -> i32 {
 #[unsafe(no_mangle)]
 /// Close and free a collection handle.
 ///
+/// After this call, `qenlo_last_error()` reports a close/flush failure, or is
+/// empty on success.
+///
 /// # Safety
 /// `handle` must be null or a live allocation returned by this library. A
 /// non-null handle must be transferred exactly once and never used afterward.
@@ -1052,7 +1055,7 @@ pub unsafe extern "C" fn qenlo_collection_free(handle: *mut QenloCollection) {
     if !handle.is_null() {
         // SAFETY: caller transfers a live allocation returned by this library exactly once.
         let handle = unsafe { Box::from_raw(handle) };
-        let _ = handle.collection.close();
+        let _ = ffi_status(|| handle.collection.close());
     }
 }
 
@@ -1323,6 +1326,33 @@ mod tests {
             qenlo_snapshot_free(captured);
             qenlo_collection_free(handle);
         }
+    }
+
+    #[test]
+    fn free_of_healthy_collection_reports_no_error_and_releases_the_lock() {
+        let root = std::env::temp_dir().join(format!(
+            "qenlo-ffi-free-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let path = CString::new(root.to_string_lossy().as_bytes()).unwrap();
+        // SAFETY: handles and pointers are live for every call and are transferred once.
+        unsafe {
+            let handle = qenlo_collection_create(path.as_ptr(), 2);
+            assert!(!handle.is_null());
+            qenlo_collection_free(handle);
+            assert!(take_string(qenlo_last_error()).is_empty());
+
+            // The OS lock was released by the close inside free, so reopening succeeds.
+            let reopened = qenlo_collection_open(path.as_ptr(), 2);
+            assert!(!reopened.is_null());
+            qenlo_collection_free(reopened);
+            assert!(take_string(qenlo_last_error()).is_empty());
+        }
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
