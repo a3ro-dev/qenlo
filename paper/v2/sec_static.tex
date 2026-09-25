@@ -1,0 +1,27 @@
+% Static sections (system, setup, related work). Included from main.tex.
+
+\section{The query paths and why their load differs}\label{sec:system}
+We study Qenlo, an embedded Rust vector store that answers exact (exhaustive) filtered cosine top-$k$ queries over a canonical collection of $N$ normalized FP32 vectors of dimension $D$ with per-row metadata. A predicate selects $E$ eligible rows; the query returns the $k$ eligible rows nearest to the query. Every execution path below returns the same result set (all runs pass an FP64-oracle recall@10 gate of 0.99; observed recall is 1.0 except where noted), so choosing a path is a pure latency decision.
+
+\paragraph{CPU scan.} A single-threaded AVX2 scan over the eligible rows. For $E\le 4{,}096$ it scores in FP32 and rescores boundary candidates in FP64; above that it accumulates in FP64 throughout. The kernel switch is part of the implementation and applies equally to every condition we compare.
+
+\paragraph{GPU paths (WGPU/WGSL).} Vectors, identifiers and metadata are resident on the device. Each query uploads the query vector and an eligibility description, runs a scoring kernel and a top-$k$ selection kernel, and blocks on a readback of $k$ candidates, which the host merges. The paths differ only in how eligibility reaches the device:
+\begin{itemize}
+\item \emph{Compact rows (the light path).} The host materializes the sorted list of $E$ eligible row ids and uploads $4E$ bytes. Scoring and selection touch only those $E$ rows, so device work is proportional to $E$.
+\item \emph{Shader predicate (the heavy path).} The host uploads per-row liveness ($4N$ bytes) and the predicate bounds; the kernels run over all $N$ rows and evaluate the predicate in the shader. Selection scans all $N$ scores $k$ times in one workgroup, so device work is proportional to $N$ regardless of $E$.
+\end{itemize}
+The heavy path therefore does up to $N/E$ times more device work for the same answer (1{,}000$\times$ at $E=100$, $N=10^5$). This asymmetry is the lever of the paper: the two paths put very different loads on the GPU while computing identical results.
+
+\paragraph{Timing boundary.} Latency is measured from the host search call to host-visible ordered results, including eligibility preparation, upload, dispatch, synchronization, readback and merge. Device-side scoring and selection times come from GPU timestamp queries in the same calls; they overlap host phases and are not additive. Host row materialization is timed separately on the CPU.
+
+\section{Experimental design}\label{sec:setup}
+\paragraph{Workload.} 100{,}000 AG News sentence embeddings (all-MiniLM-L12-v2, $D=384$; \citealp{nielsen2022agnews}) form the corpus; 5{,}000 disjoint held-out embeddings are the queries. Synthetic unique timestamps are attached to rows and a timestamp range selects exactly $E\in\{100, 1\text{K}, 3\text{K}, 10\text{K}, 30\text{K}\}$ eligible rows ($0.1\%$--$30\%$). Batch size is 1 and $k=10$, the regime of an interactive retrieval or agent-memory lookup.
+
+\paragraph{Unit of replication.} Every condition runs in a fresh process: dataset load, 200 warm-up queries, then three passes over the 5{,}000 queries (15{,}000 timed calls). The per-process statistic is the lower median of the three per-pass percentiles. A \emph{block} runs every condition once in a shuffled order; blocks are the independent replicates. Paired effects are computed within a block and summarized by the median over blocks of per-block log-ratios, with 95\% percentile-bootstrap intervals over blocks (20{,}000 draws). The 15{,}000 calls within a process are repeated measurements and are never treated as independent.
+
+\paragraph{Telemetry.} \texttt{nvidia-smi} samples SM clock, memory clock, performance state (P-state), utilization and power every 50\,ms for the whole life of each process.
+
+\paragraph{Intervention: a GPU heater.} To move the GPU's power state without touching the measured process, a separate process (the \emph{heater}) repeatedly dispatches a small compute kernel (64 workgroups $\times$ 256 threads, 500 dependent FMAs each), waits for it, and sleeps 1\,ms. Its own reported utilization is a few percent. The heater can only \emph{compete} with the measured process for the GPU, so any speed-up it produces is conservative evidence that the measured process was limited by power state rather than by capacity. The heavy path, which already holds a high P-state, is the built-in negative control: under a pure contention account the heater slows both paths, while under a power-state account it speeds up the light path and slows only the heavy one.
+
+\paragraph{Hosts and preregistration.} (i) A Windows~11 laptop (Intel i5-13420H, RTX 4050 Laptop GPU, driver 616.56, Vulkan, AC power). (ii) Five cloud pods with an RTX 4090 each, on five different hosts (Linux, Vulkan, drivers 570.195 and 580.126--580.173), one block per pod, so host-to-host differences enter only between-block variance. (iii) One H100 SXM pod (Linux, Vulkan) running a reduced design. Each protocol, with its predictions and refutation criteria, was written and hashed before its data were collected (Appendix~\ref{app:protocols}). Clock locking (\texttt{nvidia-smi -lgc}) was not available: it requires administrator rights on the laptop and was refused inside the cloud containers.
+
