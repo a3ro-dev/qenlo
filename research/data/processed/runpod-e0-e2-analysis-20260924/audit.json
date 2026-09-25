@@ -1,0 +1,149 @@
+{
+  "archive_sha256": "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0",
+  "archive_hash_matches_user": true,
+  "manifest": {
+    "source_revision": "e5d85adbb638caa05a99fb8d1ef0a96147091cf0",
+    "binary_sha256": "b28e16ffda779304f10bc6fea61ec6fe368ce0923590593e2ab27443bc70285b",
+    "dataset_sha256": "ba87a322b6846ce225ce54140cf00ac33250271447ef8f9f83df246131719cba",
+    "runner_sha256": "c0ae079bc4ddbac8ad4efef2a4a25c5be8418e9a1276edb5bcd7dda71a24ae56",
+    "deadline_seconds": 21600,
+    "wgpu_backend": "vulkan",
+    "cooldown_seconds": 30
+  },
+  "expected_summaries": 260,
+  "observed_summaries": 227,
+  "parsed_summaries": 227,
+  "missing_expected": 33,
+  "missing_by_cell": {
+    "e2/b16-e30000": 13,
+    "e2/b16-e100000": 20
+  },
+  "incomplete_directories": [
+    "e2/b16-e30000/block-01/cpu"
+  ],
+  "issues": [
+    "nonzero return code: e2\\b1-e100\\block-02\\gpu-mask\\summary.txt"
+  ],
+  "has_complete_marker": false,
+  "config_values": {
+    "platform": [
+      "linux-x86_64"
+    ],
+    "package_version": [
+      "0.1.0-alpha.6"
+    ],
+    "git_revision": [
+      "unavailable"
+    ],
+    "dataset_crc32": [
+      "beb3c848"
+    ],
+    "source_crc32": [
+      "188d6ef2"
+    ],
+    "dimensions": [
+      "384"
+    ],
+    "rows": [
+      "100000"
+    ],
+    "repetitions": [
+      "3"
+    ],
+    "warmup_queries": [
+      "200"
+    ],
+    "recall_target": [
+      "0.99"
+    ],
+    "gpu_row_preparation": [
+      "one-pass"
+    ],
+    "filter_mode": [
+      "shared"
+    ],
+    "percentile": [
+      "nearest-rank"
+    ],
+    "query_latency": [
+      "batch-call-completion"
+    ],
+    "eligible_fraction_actual": [
+      "0.001",
+      "0.01",
+      "0.03",
+      "0.1",
+      "0.3",
+      "1"
+    ],
+    "backend": [
+      "cpu",
+      "gpu-mask",
+      "gpu-predicate",
+      "gpu-rows"
+    ]
+  },
+  "gpu_names_from_run_records": {
+    "NVIDIA GeForce RTX 4090": 454
+  },
+  "gpu_clock_sm_mhz_range": [
+    210.0,
+    2775.0
+  ],
+  "gpu_temperature_c_range": [
+    23.0,
+    35.0
+  ],
+  "gpu_power_w_range": [
+    12.24,
+    131.26
+  ],
+  "summary_recall_value_counts": [
+    {
+      "field": "evaluation_recall_at_10",
+      "value": "0.99998",
+      "count": 20
+    },
+    {
+      "field": "evaluation_recall_at_10",
+      "value": "1",
+      "count": 207
+    },
+    {
+      "field": "evaluation_recall_at_k",
+      "value": "0.99998",
+      "count": 20
+    },
+    {
+      "field": "evaluation_recall_at_k",
+      "value": "1",
+      "count": 207
+    },
+    {
+      "field": "tuning_recall_at_10",
+      "value": "1",
+      "count": 227
+    },
+    {
+      "field": "tuning_recall_at_k",
+      "value": "1",
+      "count": 227
+    }
+  ],
+  "sample_rows_checked": 2181693,
+  "minimum_sample_recall_at_10": 0.9,
+  "sample_actual_backend_counts": {
+    "Cpu": 619719,
+    "Wgpu": 1561974
+  },
+  "runner_log_lines": 151137,
+  "runner_log_missing_script_errors": 150941,
+  "run_start_unix_range": [
+    1790245424.4434035,
+    1790268525.0889
+  ],
+  "continuation_log_lines": 0,
+  "stopper_log": "bash: line 1: [: missing `]'",
+  "bootstrap_draws": 20000,
+  "bootstrap_seed": 20260924
+}
