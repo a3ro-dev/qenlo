@@ -1,0 +1,28 @@
+{
+  "archive_sha256": "e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0",
+  "planned_summaries": 260,
+  "present_summaries": 227,
+  "complete_marker": false,
+  "summary_less_destinations": [
+    "e2/16/30000/1/cpu"
+  ],
+  "nonzero_exit_with_summary": {
+    "e2/1/100/2/gpu-mask": 101
+  },
+  "evaluation_recall_at_10_counts": {
+    "1": 207,
+    "0.99998": 20
+  },
+  "recall_0_99998_cells": [
+    "b1-e100000/cpu",
+    "b1-e100000/gpu-mask",
+    "b1-e100000/gpu-predicate",
+    "b1-e100000/gpu-rows"
+  ],
+  "b1_gpu_clock_vs_p95_pairs": {
+    "concordant": 80,
+    "discordant": 31,
+    "tie": 114
+  },
+  "note": "concordant = the block with the higher end-of-run SM clock snapshot has the lower P95; within-cell pairs only; snapshot association, not continuous telemetry or causation"
+}

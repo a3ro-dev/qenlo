@@ -1,0 +1,31 @@
+{
+  "contrasts": [
+    {
+      "cell": "empty",
+      "comparison": "gpu/cpu",
+      "paired_blocks": 1,
+      "dataset_seeds": 1,
+      "geomean_p95_ratio": 497.38461538461553,
+      "ci95_lo": 497.38461538461553,
+      "ci95_hi": 497.38461538461553,
+      "ci98_75_lo": 497.38461538461553,
+      "ci98_75_hi": 497.38461538461553,
+      "worst_block_ratio": 497.38461538461536,
+      "best_block_ratio": 497.38461538461536
+    },
+    {
+      "cell": "tiny",
+      "comparison": "gpu/cpu",
+      "paired_blocks": 1,
+      "dataset_seeds": 1,
+      "geomean_p95_ratio": 73.27142857142854,
+      "ci95_lo": 73.27142857142854,
+      "ci95_hi": 73.27142857142854,
+      "ci98_75_lo": 73.27142857142854,
+      "ci98_75_hi": 73.27142857142854,
+      "worst_block_ratio": 73.27142857142857,
+      "best_block_ratio": 73.27142857142857
+    }
+  ],
+  "interpretation": "Ratios below one favor numerator. Conditional paired-block intervals; only two dataset seeds. Adjust for the preregistered comparison family; no optional stopping or population claim."
+}

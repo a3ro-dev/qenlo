@@ -1,6 +1,6 @@
 {
-  "pdf_sha256": "d3301ffd3379c266db836bacc812a84192a4f071011c97a7eb45e8b3af3c877d",
-  "page_count": 27,
+  "pdf_sha256": "830015648112e045b2a0909463d0ef21103c9e754419eb5b3c16c7bcd1f68f6f",
+  "page_count": 33,
   "text_checks_passed": true,
   "expected_values": [
     "9.409",
@@ -25,62 +25,70 @@
     "26.9",
     "0.9400778694252952",
     "References",
-    "FP64"
+    "FP64",
+    "227 of 260",
+    "614,400",
+    "1,152,000",
+    "0.99998",
+    "424,640",
+    "6,794,240",
+    "1.673",
+    "e4ca1336"
   ],
   "rendered_all_pages": true,
   "pages": [
     {
       "page": 1,
-      "text_characters": 4021,
+      "text_characters": 3901,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "fd7165bb36264c43b929b288d9bbb37597107fac7a9419c7bea184fa826f2cf8",
+      "pixel_sha256": "ba25746cad875701fe905cb2269d574fd7107ce0aff2d928e20f1175fcfee37b",
       "render_path": "paper/tmp/final-pages/page-01.png",
       "visual_status": "pending"
     },
     {
       "page": 2,
-      "text_characters": 3978,
+      "text_characters": 4195,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "0e9adf5491178327c9a19b1db575f8ba9d15a3e3c15c9824fa797ad7efaa4489",
+      "pixel_sha256": "e5dde48938091c3fb44ccd5dddf6762db31d7f7cd010c245fc2196ca3bf95153",
       "render_path": "paper/tmp/final-pages/page-02.png",
       "visual_status": "pending"
     },
     {
       "page": 3,
-      "text_characters": 3822,
+      "text_characters": 4827,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "e8e27c7c7e0a2c0647c4b57e9d7734fd5f7c072bd9422d81da57c37ad64a5631",
+      "pixel_sha256": "fb7b5dab47578b86ea5668b48499fb4a1205be9f1b512dbc54fde3a94b987453",
       "render_path": "paper/tmp/final-pages/page-03.png",
       "visual_status": "pending"
     },
     {
       "page": 4,
-      "text_characters": 3117,
+      "text_characters": 4036,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "abcfc910f769b3d99f0c7754dc229341fc66786f3699b4042a873cda7b9b06df",
+      "pixel_sha256": "ac0c691a6101ae90dd7bd84c085b54487b5ba9f1a4aba529f632c0a4958fae09",
       "render_path": "paper/tmp/final-pages/page-04.png",
       "visual_status": "pending"
     },
     {
       "page": 5,
-      "text_characters": 1551,
+      "text_characters": 2365,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "070b2557d522a0d0a022397c725825d60ef2e8042583256252a0362c6ec75eb0",
+      "pixel_sha256": "1e4eee94d332d748c4f8f410d47907bdb514e5000b90726d89af5d8e31eeb7ae",
       "render_path": "paper/tmp/final-pages/page-05.png",
       "visual_status": "pending"
     },
@@ -130,200 +138,266 @@
     },
     {
       "page": 10,
-      "text_characters": 3507,
+      "text_characters": 4005,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "bcf022f9574954461cc7a2721835f8df7b7ed38074af12ab0699153a3c428e93",
+      "pixel_sha256": "88ba0df7c87e714c5c1ab3274f669c260f038b62085b750b942c9e7e3a2df498",
       "render_path": "paper/tmp/final-pages/page-10.png",
       "visual_status": "pending"
     },
     {
       "page": 11,
-      "text_characters": 2641,
+      "text_characters": 3716,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "4d57357efaa19ab9cf106d5d1c400a55c62efaa8714c7cd8830f2348fce55f5a",
+      "pixel_sha256": "5157b1a30d9b4d323eb3a4ef5b44dfe31e148994c35f197384c5666630cfad77",
       "render_path": "paper/tmp/final-pages/page-11.png",
       "visual_status": "pending"
     },
     {
       "page": 12,
-      "text_characters": 2796,
+      "text_characters": 3862,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "3fb1d5ecbc2fea3573da61b161c8ae904b318c0a12ee3719ed2b6d8cf417db0f",
+      "pixel_sha256": "e3d7c57dc7588ccb1a75803784d43951dbd215a16e2cc980bb1a4613605e715b",
       "render_path": "paper/tmp/final-pages/page-12.png",
       "visual_status": "pending"
     },
     {
       "page": 13,
-      "text_characters": 2032,
+      "text_characters": 3478,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "85c47bd214bc8091f54ea24a3c96e6e0bf968551e4b59b8fb0e76913ca5fbb18",
+      "pixel_sha256": "613f49a462228f98185b81eddba75ad1af3d79cc3f8285e9cc5e2499fc533d75",
       "render_path": "paper/tmp/final-pages/page-13.png",
       "visual_status": "pending"
     },
     {
       "page": 14,
-      "text_characters": 2720,
+      "text_characters": 3442,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "149595c190983506ca84732d28e43de81ac79df137b61730c277fb045d6f60a8",
+      "pixel_sha256": "de41631067029213e236816836b6cf07c5a7e2db7ec57149ba82e33300f2fa58",
       "render_path": "paper/tmp/final-pages/page-14.png",
       "visual_status": "pending"
     },
     {
       "page": 15,
-      "text_characters": 3349,
+      "text_characters": 3233,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "5a81ce795266bf16abc3e6e5137b5765d173a95f7f78b6ecc7194e41efb47679",
+      "pixel_sha256": "3341ec6499b9f2c4cf13923c5a9f43146e616c870bb463423a6f170251302b9f",
       "render_path": "paper/tmp/final-pages/page-15.png",
       "visual_status": "pending"
     },
     {
       "page": 16,
-      "text_characters": 4616,
+      "text_characters": 1996,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "705eef4a30f4cbbb3c348637554897070c649df510706f638953d20a505928d5",
+      "pixel_sha256": "01e8f4878e1522764f1a7d2cc95153d944ce4c2600c740fa79e9be9accb0a03e",
       "render_path": "paper/tmp/final-pages/page-16.png",
       "visual_status": "pending"
     },
     {
       "page": 17,
-      "text_characters": 3765,
+      "text_characters": 2145,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "c840f123b507449eb247780a23546c72692b333d866bb632f88103203e64dc9e",
+      "pixel_sha256": "73501ccfc9a18ef4d0fd3a7e8ca6ce74fc2e79c3518bf2a3823126c56569fc02",
       "render_path": "paper/tmp/final-pages/page-17.png",
       "visual_status": "pending"
     },
     {
       "page": 18,
-      "text_characters": 1082,
+      "text_characters": 3535,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "9c006a544a887284a17b0603b6c45a266a51a2a3f0e060a7f59f8b02fdf74b8a",
+      "pixel_sha256": "854d2c39d881242bcf22eee6e414b8d226041c688db4e7915333bdf908492564",
       "render_path": "paper/tmp/final-pages/page-18.png",
       "visual_status": "pending"
     },
     {
       "page": 19,
-      "text_characters": 2012,
+      "text_characters": 4370,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "e10610a2a74a0d9100082d35d116562f944fb38a304b8e1dd7ee86d8f3e2f6c2",
+      "pixel_sha256": "aabbfce05d64fe402bb45a1a6bf6cef71376e65660730861f8b5a08b6f7069b4",
       "render_path": "paper/tmp/final-pages/page-19.png",
       "visual_status": "pending"
     },
     {
       "page": 20,
-      "text_characters": 1596,
+      "text_characters": 4678,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "ef6e5226aec3197721a3c6808aa2527a52265491bd6370f0a4ed016b249752c7",
+      "pixel_sha256": "beb34318f73e5987685c6e935736dcb23a0e8b856e3cd198ee4210aef1806c43",
       "render_path": "paper/tmp/final-pages/page-20.png",
       "visual_status": "pending"
     },
     {
       "page": 21,
-      "text_characters": 1900,
+      "text_characters": 4003,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "a7164b393dff005bc84907cd77c7a07a12f80d6cace17c39853f5fef22933265",
+      "pixel_sha256": "376164208e5c731c62107cb6df683d145e974c48a8738475535622193228cf37",
       "render_path": "paper/tmp/final-pages/page-21.png",
       "visual_status": "pending"
     },
     {
       "page": 22,
-      "text_characters": 2273,
+      "text_characters": 1370,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "4e92b1b5c30e4a82c95ad42ad9bbd1ae8761f7d0c7ffad15bd264c37bf1f70ce",
+      "pixel_sha256": "37f3c4082230bae0c22ecea2213b0b5669d816baee79f0ac17fee7ff5bdbfccc",
       "render_path": "paper/tmp/final-pages/page-22.png",
       "visual_status": "pending"
     },
     {
       "page": 23,
-      "text_characters": 1067,
+      "text_characters": 2014,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "e9b2a9d13d8b4d954e839da00bb8d2a0f41a2306a436e2229837ce846b76ea7c",
+      "pixel_sha256": "d4ce8dffdd0673b3d2eae84116459bfd494f72598f74e45d579d173155e379ba",
       "render_path": "paper/tmp/final-pages/page-23.png",
       "visual_status": "pending"
     },
     {
       "page": 24,
-      "text_characters": 3304,
+      "text_characters": 1598,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "119ad42c9c46907603c8a990ebeaf846a2526b0a6a1db428279e02693200f35c",
+      "pixel_sha256": "af299c232cc12b3334d99f308bd857161aa51e6925b3c7e6b7d89ab1a25baa24",
       "render_path": "paper/tmp/final-pages/page-24.png",
       "visual_status": "pending"
     },
     {
       "page": 25,
-      "text_characters": 3193,
+      "text_characters": 1900,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "7cc5b4f93fdf879e35831d8aba1f30b213df970f54d77e64d3b1af1adc0fbe79",
+      "pixel_sha256": "680e73a0d8fc749fe6ba02cc81961df652cf7d73f18b5c82cddc92274d4cba13",
       "render_path": "paper/tmp/final-pages/page-25.png",
       "visual_status": "pending"
     },
     {
       "page": 26,
-      "text_characters": 4251,
+      "text_characters": 2017,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "f3cfa04cb358d01bf34fd91b48b07e40d377244852792d5d49c5d00f87b4a0c8",
+      "pixel_sha256": "e1520bb207ca1d4cc3a58672b9f1c93446f1b30b8954ef6872bc9e5db2eade28",
       "render_path": "paper/tmp/final-pages/page-26.png",
       "visual_status": "pending"
     },
     {
       "page": 27,
-      "text_characters": 603,
+      "text_characters": 4738,
       "render_size": [
         1020,
         1320
       ],
-      "pixel_sha256": "47ecf92520444339368761052c1be56d9ed18de162f986c9a7107e4ab9391f48",
+      "pixel_sha256": "7527663e85191668461426c9863d81f64d21481b768df9380f650b36d7db9b75",
       "render_path": "paper/tmp/final-pages/page-27.png",
+      "visual_status": "pending"
+    },
+    {
+      "page": 28,
+      "text_characters": 1656,
+      "render_size": [
+        1020,
+        1320
+      ],
+      "pixel_sha256": "ead0f0b24f64269c2c621618b9d7dab4b3a7e9538043d87bbc936a209f774b9b",
+      "render_path": "paper/tmp/final-pages/page-28.png",
+      "visual_status": "pending"
+    },
+    {
+      "page": 29,
+      "text_characters": 2114,
+      "render_size": [
+        1020,
+        1320
+      ],
+      "pixel_sha256": "d1640e17c468d171396eb06068d94c06ebcc05e71e488b44dccd2c8a63e1c969",
+      "render_path": "paper/tmp/final-pages/page-29.png",
+      "visual_status": "pending"
+    },
+    {
+      "page": 30,
+      "text_characters": 1999,
+      "render_size": [
+        1020,
+        1320
+      ],
+      "pixel_sha256": "619242d5cf50a41dad8e079752d6d5779ed997f8376d28dea39381bddfa67def",
+      "render_path": "paper/tmp/final-pages/page-30.png",
+      "visual_status": "pending"
+    },
+    {
+      "page": 31,
+      "text_characters": 3064,
+      "render_size": [
+        1020,
+        1320
+      ],
+      "pixel_sha256": "41afa39853c660172ab09efeedc21be127059b82f120cbf1474a76069c96d361",
+      "render_path": "paper/tmp/final-pages/page-31.png",
+      "visual_status": "pending"
+    },
+    {
+      "page": 32,
+      "text_characters": 3909,
+      "render_size": [
+        1020,
+        1320
+      ],
+      "pixel_sha256": "8d87fe58bb01a0c3c6c578ac5e899a87f8eba3bb9d65955914804bccca599255",
+      "render_path": "paper/tmp/final-pages/page-32.png",
+      "visual_status": "pending"
+    },
+    {
+      "page": 33,
+      "text_characters": 2534,
+      "render_size": [
+        1020,
+        1320
+      ],
+      "pixel_sha256": "74d8a83cdbd42603773c702a8c0ec1f0a6ba024ff73b2f12aec73b15489998ef",
+      "render_path": "paper/tmp/final-pages/page-33.png",
       "visual_status": "pending"
     }
   ],

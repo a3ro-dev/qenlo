@@ -1,5 +1,5 @@
 {
-  "isolated_build": "D:\\qenloDB\\paper\\tmp\\clean-20260917-084150",
+  "isolated_build": "D:\\qenloDB\\paper\\tmp\\clean-20260925-180543",
   "commands": [
     {
       "command": [
@@ -49,5 +49,5 @@
   "compile_passed": true,
   "visual_inspection": "pending",
   "final_pdf": "D:\\qenloDB\\QENLO-RESEARCH-PAPER.pdf",
-  "pdf_sha256": "d3301ffd3379c266db836bacc812a84192a4f071011c97a7eb45e8b3af3c877d"
+  "pdf_sha256": "830015648112e045b2a0909463d0ef21103c9e754419eb5b3c16c7bcd1f68f6f"
 }

@@ -36,3 +36,45 @@ threshold: the retained cells falsify both a universal eligible-count threshold
 and the preregistered `eligible_rows * dimension * batch` rule. A future router
 must keep the workload factors and environment identity separate and pass a new
 end-to-end held-out gate.
+
+## Partial E0/E2 campaign (2026-09-24)
+
+1. Verify `data/raw/runpod-e0-e2-partial-20260924.tar.gz` against SHA-256
+   `e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0`.
+2. `python scripts/audit_e0_e2_mechanisms.py` re-verifies coverage and exit
+   codes from the tarball in place. It writes diagnostics, clock associations,
+   and the ordering witness to `data/processed/runpod-e0-e2-mechanisms-20260924/`.
+3. Latency statistics are in `data/processed/runpod-e0-e2-analysis-20260924/`.
+   To regenerate them, extract the tarball with Python `tarfile` (GNU tar
+   rejects its trailing bytes), then run `analyze.py --extracted-root <dir>/e0-e2`
+   and `render_report.py`.
+
+The campaign is partial and single-host. It motivates E1/E3/E4 (see
+`direction-memo-2026-09-24.md`) and is not a basis for a routing threshold.
+The audit fixes future measurement integrity (batch-total accounting and
+zero-exit resume validation) and removes unused host row-list materialization
+from required shader-predicate batches. These source changes do not rewrite the
+archive and have no campaign-host speedup claim.
+
+## GPU power-state study (2026-09-25)
+
+The current [paper](../QENLO-RESEARCH-PAPER.pdf) and its [source](../paper/v2/)
+compare a compact eligible-row GPU path with a heavier shader-predicate path.
+The protocols were recorded before measurement in
+[`experiments/dvfs-d1/`](experiments/dvfs-d1/),
+[`experiments/dvfs-d1r/`](experiments/dvfs-d1r/), and
+[`experiments/dvfs-h100/`](experiments/dvfs-h100/). The study uses an RTX 4050
+laptop, six RTX 4090 hosts across the retained and new campaigns, and one H100.
+
+| Observation | Boundary |
+| --- | --- |
+| The light path's kernel time varied up to 4.2× between fresh laptop processes and 4.3–4.6× across the five new RTX 4090 pod hosts; the heavy path stayed within 1–7%. | These are device timestamps for specific query cells, not end-to-end search latency or a general hardware ranking. |
+| A small separate GPU load removed most of the light path's slow device-time tail. | The predicted ≥10% end-to-end gain failed on every GPU. The heater also adds contention and is an experimental control, not a recommended product setting. |
+| The earlier scalar CPU/GPU router failed its held-out gate. | This study does not establish that power state moves Qenlo's CPU/GPU crossover or validate a replacement router. |
+
+Raw archives live in [`data/raw/`](data/raw/); reduced host and intervention
+tables live in [`data/processed/dvfs-pooled/`](data/processed/dvfs-pooled/),
+[`data/processed/dvfs-laptop-4050/`](data/processed/dvfs-laptop-4050/),
+[`data/processed/dvfs-pods-4090/`](data/processed/dvfs-pods-4090/), and
+[`data/processed/dvfs-h100/`](data/processed/dvfs-h100/). Read the paper's
+experimental design and scorecard before reusing any number.

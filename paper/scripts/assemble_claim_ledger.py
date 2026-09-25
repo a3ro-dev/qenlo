@@ -26,6 +26,30 @@ def main():
         'sample_series_inventory':archive_summary['sample_series_inventory'],
         'limitations':archive_summary['limitations'],
     }
+    e0e2=ROOT/'research/data/processed/runpod-e0-e2-analysis-20260924'
+    mech=ROOT/'research/data/processed/runpod-e0-e2-mechanisms-20260924'
+    def art(*paths):
+        return [{'path':str(p.relative_to(ROOT)).replace('\\','/'),'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in paths]
+    archive=ROOT/'research/data/raw/runpod-e0-e2-partial-20260924.tar.gz'
+    e0e2_claims=[
+        ('E0E2-01','Partial campaign: 227 of 260 planned block summaries (E0 20/20, E2 207/240), no completion marker; 13 missing at B=16/E=30,000 and 20 at B=16/E=100,000.',art(archive,e0e2/'coverage.csv',mech/'audit.json'),'Never described as complete; no imputation.'),
+        ('E0E2-02','One included gpu-mask block (B=1/E=100/block 2) exited 101 after writing its summary; one CPU destination (B=16/E=30,000/block 1) has no summary and counts as missing.',art(e0e2/'block_metrics.csv',mech/'audit.json'),'Included and flagged; omission changes rows/mask P95 ratio 0.197 to 0.198.'),
+        ('E0E2-03','All 20 B=1/E=100,000 summaries (four engines, CPU included) report recall@10 exactly 0.99998; the other 207 report 1.',art(mech/'audit.json'),'Reported unrounded; oracle-boundary property of the dense cell.'),
+        ('E0E2-04','E0 same-cell block ratios reach about 1.94x (P50) and 1.99x (P95) at the all-pairs 95th percentile; gpu-rows is bimodal.',art(e0e2/'e0_noise.csv',e0e2/'block_metrics.csv'),'One cell (B=1, E=3,000), one host; 45 dependent pairs are descriptive.'),
+        ('E0E2-05','Faster GPU blocks are associated with higher end-of-run SM clock snapshots (80 concordant, 31 discordant, 114 tied within-cell pairs).',art(mech/'gpu_clock_snapshots_b1.csv',mech/'audit.json'),'Association from before/after snapshots; DVFS causation is a hypothesis.'),
+        ('E0E2-06','At f<=0.01 and B in {1,16}, gpu-rows is 3.2-6.1x faster than gpu-predicate and gpu-mask (paired P50/P95), clearing the conservative E0 screen; predicate is faster at B=1/f=1 without clearing it.',art(e0e2/'paired_comparisons.csv'),'Single corpus, predicate shape, N, D, k; no f*(16) estimate.'),
+        ('E0E2-07','Same-host ordering witness: gpu-rows wins at EDB=614,400 (B=16/E=100, 5/5 blocks) while CPU wins at EDB=1,152,000 (B=1/E=3,000, 9/10 E0 blocks).',art(mech/'edb_ordering_witness.csv',e0e2/'paired_comparisons.csv'),'Post hoc; E0 ratio does not clear the same-engine A/A band.'),
+        ('E0E2-08','In the measured binary, host row materialization is 2.206 of 4.333 ms (51%) of the median gpu-rows call at B=1/E=30,000 and is also paid by predicate and mask modes.',art(mech/'diagnostics_by_cell.csv'),'Overlapping counters; mechanism verified in measured source, not causally decomposed. Audited source now avoids the unused list for required predicates.'),
+        ('E0E2-09','qenlo-bench summed per-response batch-total upload/readback/lock-wait fields, overstating batch-B values B-fold (E2 B=16 upload 6,794,240 = 16 x 424,640; S2 batch-8 517,120 = 8 x 64,640).',art(mech/'diagnostics_by_cell.csv',ROOT/'crates/qenlo-bench/src/main.rs'),'Fixed in run format v4; retained raw fields unchanged; latency unaffected.'),
+        ('E0E2-10','Required shader-predicate batches now count eligibility without materializing or sorting an unused host row list.',art(ROOT/'crates/qenlo-core/src/lib.rs',ROOT/'crates/qenlo/src/lib.rs'),'Behavior and diagnostics tested locally; automatic predicate execution still retains fallback rows; no campaign-host speedup claim.'),
+        ('E0E2-11','The E0/E2 runner now refuses to resume past an existing summary unless its sibling run record exists, has exit code zero, and the summary passes completion and recall gates.',art(ROOT/'research/scripts/run_e0_e2_runpod.py'),'Future-run integrity change only; retained exit-101 evidence is untouched and remains included/flagged.'),
+    ]
+    components['e0_e2_partial']={
+        'schema':'qenlo-e0-e2-partial-claims-v1',
+        'generated_by':['research/data/processed/runpod-e0-e2-analysis-20260924/analyze.py','research/scripts/audit_e0_e2_mechanisms.py'],
+        'archive_sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),
+        'claims':[{'id':i,'exact_claim':c,'source_artifact':a,'qualification':q} for i,c,a,q in e0e2_claims],
+    }
     claims=[]
     for kind,d in components.items():
         for i,c in enumerate(d.get('claims',[])):

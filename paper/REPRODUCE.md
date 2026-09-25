@@ -22,17 +22,43 @@ The reducer writes to `paper/audit/reduced/` and checks parsed CSV equality agai
 
 The archive reanalysis verifies the SHA-256 identities of the Phase 0, Phase 1, Phase 2, and alpha.5 held-out archives; parses them in place; and writes only to `research/data/processed/archive-reanalysis/`. It inventories tracked and selected archive-internal sample, raw-sample, and lifecycle CSVs, canonicalizes line endings for duplicate detection, and counts sample rows by schema without treating unlike rows as independent trials. It regenerates the held-out router failure, cross-environment winner contradiction, and sparse/dense CPU optimization reductions.
 
+## Audit the partial E0/E2 campaign
+
+```powershell
+python research/scripts/audit_e0_e2_mechanisms.py
+python -c "import tarfile; tarfile.open('research/data/raw/runpod-e0-e2-partial-20260924.tar.gz').extractall('paper/tmp/e0e2', filter='data')"
+python research/data/processed/runpod-e0-e2-analysis-20260924/analyze.py --extracted-root paper/tmp/e0e2/e0-e2
+python research/data/processed/runpod-e0-e2-analysis-20260924/render_report.py
+```
+
+The first command verifies SHA-256 `e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0` and reads the tarball in place. Expected results: 227 of 260 summaries, no completion marker, one summary-less destination (`e2/16/30000/1/cpu`), one nonzero exit with a summary (`e2/1/100/2/gpu-mask`: 101), and recall@10 values of 1 (207) and 0.99998 (20). Use Python `tarfile` for extraction: GNU tar stops at the archive's 6,575 trailing non-gzip bytes. Extraction goes to the ignored `paper/tmp/`; the retained archive is never modified. Bootstrap endpoints depend on the seed in the third decimal, so compare against the retained CSVs rather than re-deriving them with another seed.
+
 ## Regenerate numerical tables, figures, and ledger
 
 ```powershell
 python paper/scripts/generate_final_tables.py
+python paper/scripts/generate_e0e2_tables.py
 python paper/scripts/generate_final_figures.py
 python paper/scripts/assemble_claim_ledger.py
 ```
 
-The numerical tables use the verified campaign matrix and regenerated historical CSVs. The figure script reuses historical plotting functions with output redirected into `paper/figures/final/`; the native crossover panel deliberately omits incompatible older endpoint revisions. Existing top-level figures are never overwritten. It writes PDF and reviewable PNG for all twelve current figures and records exact input paths/hashes in `paper/audit/figure-sources.json`.
+The numerical tables use the verified campaign matrix and regenerated historical CSVs. The figure script reuses historical plotting functions with output redirected into `paper/figures/final/`; the native crossover panel deliberately omits incompatible older endpoint revisions. Existing top-level figures are never overwritten. It writes PDF and reviewable PNG for all fourteen current figures, including the E0/E2 noise and representation panel, and records exact input paths/hashes in `paper/audit/figure-sources.json`.
 
 The full claim ledger embeds historical, campaign, semantic-source, and citation components and all 182 matrix rows. Missing information is not silently filled with nearby cohort values. The CSV is a short index into the JSON.
+
+## Verify campaign-motivated code changes
+
+```powershell
+cargo test -p qenlo-core
+cargo test -p qenlo --features gpu-wgpu
+cargo test -p qenlo-bench --features gpu-wgpu
+```
+
+These tests cover exact count/materialization equivalence across deleted rows and
+timestamp extremes, both timestamp materialization paths, required shader
+predicate diagnostics with no host row list, and batch-total counter handling.
+They are correctness and accounting checks, not performance evidence. The local
+GPU suite skips device-dependent tests only when no adapter is available.
 
 ## Source and result identity
 
@@ -66,4 +92,5 @@ The PDF verifier extracts layout-preserving text, checks headline values and ref
 - There is no script here to run cloud workloads or publish an artifact.
 - USD 0.9400778694252952 is captured daily account spend; billing lag and unrelated usage prevent clean campaign-only attribution.
 - Completed-call, device phases, process RSS, and owned accelerator/tensor allocations have different scopes. No efficiency score combines them.
+- Retained batch-greater-than-one upload/readback/lock-wait fields written before run format v4 are B times the per-call value.
 - Current mobile packaging, physical iOS/MPS performance, final-selector corrected-cell latency, calibrated routing, ANN frontiers, and energy/concurrency remain untested.

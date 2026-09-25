@@ -1,0 +1,40 @@
+\section{Protocols, predictions and deviations}\label{app:protocols}
+Four protocols were written and SHA-256 hashed before their data existed: the laptop experiment D1 (\path{research/experiments/dvfs-d1/protocol.md}), the RTX 4090 pod replication D1R (\path{dvfs-d1r/}), the H100 arm (\path{dvfs-h100/}) and an API/batch follow-up D2 (\path{dvfs-d2/}, not yet run). One exploratory pilot preceded them (\path{research/data/raw/2026-09-25-dvfs-pilot/}) and is used only to motivate the design. D1 predicted, for batch-1 queries:
+P1, the heater lowers light-path end-to-end P50 by at least 10\% (ratio $<0.9$, interval excluding 1) at $E\le 3{,}000$;
+P2, the heater does not speed up the heavy path (ratio $\ge 0.95$);
+P3, the light path's ratio is below the heavy path's;
+P4, the heater lowers light-path device time while host row materialization stays within $\pm10\%$.
+The same rules were applied unchanged to every host.
+
+\begin{table}[h]\centering\small
+\caption{Preregistered predictions by GPU and $E$. P3 is shown for end-to-end P50 / device time. ``n/a'': P1 was registered only for $E\le 3{,}000$.}\label{tab:scorecard}
+\begin{tabular}{lrcccc}\toprule
+GPU & $E$ & P1 call $<0.9$ & P2 heavy $\ge 0.95$ & P3 light $<$ heavy & P4 device $\downarrow$, host flat \\\midrule
+\tableinput{tables/scorecard}
+\bottomrule\end{tabular}\end{table}
+
+P1 fails everywhere at the block level; the pilot's $1.9\times$ end-to-end speed-up on the laptop did not replicate reliably across blocks. P2 and the device-time half of P3 hold in every cell. P4 fails where the heater also slowed host-side work. On the H100 pod, host row materialization became 40--48\% slower with the heater running, which shows that the heater process took host CPU time as well as GPU time. The end-to-end slowdowns on that host are therefore not evidence against the power-state account. They show that our heater is not a clean GPU-only perturbation.
+
+
+\begin{table}[h]\centering\scriptsize
+\caption{Paired heater-on / heater-off ratios (median over blocks of per-block ratios, 95\% block-bootstrap interval). Below 1 = faster with the heater. Device = top-$k$ kernel time; call = end-to-end P50. $n$ = blocks.}\label{tab:heater}
+\begin{tabular}{lrrllll}\toprule
+GPU & $E$ & $n$ & Light device & Heavy device & Light call & Heavy call \\\midrule
+\tableinput{tables/heater_effects}
+\bottomrule\end{tabular}\end{table}
+
+\paragraph{Deviations.} (i) The clock summary in the preregistered analysis script took the median over the whole process, including data loading; we added a GPU-active median (utilization $>0$) before inspecting any cross-host comparison and report both in the released CSVs. (ii) Two pod setup attempts failed because of script bugs (a missing dataset copy, a mis-specified pod) and were re-run before any cell completed; no completed cell was discarded. (iii) The pod first assigned to block~3 ran host-side work roughly $10\times$ slower than the others. At the user's request, and before any of its results were inspected, block~3 was re-run from scratch on a new pod (Ryzen~9 7950X). The 14 cells the slow pod completed are retained (\path{d1r-b3-partial.tar.gz}) and excluded from the tables. A stray setup process ran for about 30\,s on the block~4 pod during three cells; dropping those cells changes the affected light-path ratio from 0.967 to 0.966. (iv) The cross-host table (Table~\ref{tab:crosshost}) and the device-time framing were not preregistered; they were suggested by the retained September~24 archive and are therefore partly exploratory, although the pods and H100 supplied new data for them.
+
+\section{CPU/GPU crossover}\label{app:crossover}
+\begin{table}[h]\centering\small
+\caption{Median-block end-to-end P50 (ms) for the single-threaded CPU scan, the light GPU path with the heater off and on (winner against CPU in parentheses), and the heavy GPU path. The heater never changed a winner.}\label{tab:crossover}
+\begin{tabular}{lrrllr}\toprule
+GPU & $E$ & CPU & Light, heater off & Light, heater on & Heavy \\\midrule
+\tableinput{tables/crossover}
+\bottomrule\end{tabular}\end{table}
+
+\section{The held-out router failure that motivated this study}\label{app:router}
+The system's earlier research campaign (preserved unchanged in \path{paper/paper.tex}) selected a scalar routing rule, GPU if $E\cdot D\cdot B\ge 10^6$, with zero errors on 31 development CPU/GPU pairs. On a preregistered held-out suite of 16 workloads on an RTX 4050 laptop it chose the slower route in 8, with median regret 0.4\% and maximum regret 235.7\%. Each route was measured in a single process with five in-process runs. An audit of that archive found that the automatic arm differed from the forced arm of the same backend by more than 25\% in 9 of 16 cells, and that two of the eight ``wrong'' labels were within 3.2\% regret. In light of Section~\ref{sec:repro}, labels near parity in such a suite partly measure the GPU's power state during each process, and the per-workload count is not a stable statistic. The maximum-regret rejection survives: a $3.36\times$ ratio exceeds every within-host spread we measured except the laptop light path's $4.2\times$. The earlier manuscript also documents representation, preparation and harness findings that are not repeated here.
+
+\section{Cost and resources}
+New cloud runs used five RTX 4090 pods (one block each), one H100 SXM pod and a 4-minute H100 probe, at \$0.74 and \$3.49 per hour. The operator's ledger totals about US\$6 (\path{research/experiments/dvfs-d1r/campaign-log.md}). All pods were deleted after their data were downloaded and hash-checked. A container-level Vulkan fix (pointing the loader at \texttt{libEGL\_nvidia.so.0} rather than the toolkit's GLX ICD) was required on every pod and is documented in the log; it probably explains an earlier ``no Vulkan'' failure on an A6000.

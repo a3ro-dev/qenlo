@@ -653,6 +653,21 @@ fn backend(name: &str) -> Result<BackendSelection> {
     })
 }
 
+/// `ExecutionReport` repeats batch-total transfer counters and lock wait on every response of
+/// one native batch, so summing responses would overstate a batch-B call B times.
+fn batch_total<T: PartialEq>(
+    values: impl IntoIterator<Item = T>,
+) -> std::result::Result<Option<T>, String> {
+    let mut values = values.into_iter();
+    let first = values.next();
+    if let Some(first) = &first
+        && values.any(|value| value != *first)
+    {
+        return Err("responses of one batch disagree on a batch-total counter".into());
+    }
+    Ok(first)
+}
+
 fn bytes(value: Measurement<u64>) -> Option<u64> {
     match value {
         Measurement::Available(value) => Some(value),
@@ -828,7 +843,7 @@ async fn run_cell(
     let source = source_state();
     writeln!(
         manifest,
-        "format=qenlo-bench-run-v3\nstatus=incomplete-until-summary-exists\ndataset={}\ndataset_crc32={:08x}\nsource=prepared-f32-rows-see-preparation-record\nseed={}\norder_seed={}\nrows={}\ndimensions={}\ncorpus_range=0..{}\ntuning_range={}..{}\nevaluation_range={}..{}\nbackend={}\ngpu_row_preparation={}\nmetadata={}\nfraction_requested={}\neligible_count={}\neligible_fraction_actual={}\nbatch={}\nfilter_mode=shared\nk={}\nwarmup_queries={}\nrepetitions={}\nrecall_target={}\nexpansion_search={}\nvector_budget_bytes={}\ngpu_budget_bytes={}\nplatform={}-{}\npackage_version={}\ngit_revision={}\npercentile=nearest-rank\nquery_latency=batch-call-completion\nqps_window=includes-driver-validation-and-csv\nhost_rss_bytes=unavailable:no-portable-process-measurement\nprocess_allocator_scope=gross-process-wide-rust-allocator-traffic-during-completed-call\nprocess_allocated_bytes=gross-not-live-or-peak-bytes\nvector_budget_scope=source-plus-normalized-corpus-payload-only\ngpu_allocation_scope=qenlo-owned-not-physical-vram\nmissing_csv_measurement=empty:not-reported-by-backend\nscale_gate=untested-by-this-single-cell\nload_ns={}",
+        "format=qenlo-bench-run-v4\nbatch_counter_scope=upload-readback-lock-wait-are-per-batch-call-totals\nstatus=incomplete-until-summary-exists\ndataset={}\ndataset_crc32={:08x}\nsource=prepared-f32-rows-see-preparation-record\nseed={}\norder_seed={}\nrows={}\ndimensions={}\ncorpus_range=0..{}\ntuning_range={}..{}\nevaluation_range={}..{}\nbackend={}\ngpu_row_preparation={}\nmetadata={}\nfraction_requested={}\neligible_count={}\neligible_fraction_actual={}\nbatch={}\nfilter_mode=shared\nk={}\nwarmup_queries={}\nrepetitions={}\nrecall_target={}\nexpansion_search={}\nvector_budget_bytes={}\ngpu_budget_bytes={}\nplatform={}-{}\npackage_version={}\ngit_revision={}\npercentile=nearest-rank\nquery_latency=batch-call-completion\nqps_window=includes-driver-validation-and-csv\nhost_rss_bytes=unavailable:no-portable-process-measurement\nprocess_allocator_scope=gross-process-wide-rust-allocator-traffic-during-completed-call\nprocess_allocated_bytes=gross-not-live-or-peak-bytes\nvector_budget_scope=source-plus-normalized-corpus-payload-only\ngpu_allocation_scope=qenlo-owned-not-physical-vram\nmissing_csv_measurement=empty:not-reported-by-backend\nscale_gate=untested-by-this-single-cell\nload_ns={}",
         path.display(),
         data.checksum,
         data.spec.seed,
@@ -1181,13 +1196,28 @@ async fn run_cell(
             let device_selection_ns = duration_ns(&first_report.phases.selection)
                 .map(|value| value.to_string())
                 .unwrap_or_default();
+            let upload = batch_total(
+                responses
+                    .iter()
+                    .map(|response| bytes(response.report.upload_bytes.clone())),
+            )?
+            .flatten();
+            let readback = batch_total(
+                responses
+                    .iter()
+                    .map(|response| bytes(response.report.readback_bytes.clone())),
+            )?
+            .flatten();
+            let lock_wait_ns = batch_total(
+                responses
+                    .iter()
+                    .map(|response| response.report.lock_wait.as_nanos()),
+            )?
+            .unwrap_or_default();
             let mut recall = 0.0;
             let mut results = 0;
-            let mut upload = Some(0_u64);
-            let mut readback = Some(0_u64);
             let mut allocated = Some(0_u64);
             let mut backend_counts = BTreeMap::<String, usize>::new();
-            let mut lock_wait_ns = 0;
             let mut cpu_distance_path = String::from("not-applicable");
             let mut routing_reasons = BTreeMap::<String, usize>::new();
             let mut fallback = false;
@@ -1214,19 +1244,12 @@ async fn run_cell(
                 }
                 recall += query_recall;
                 results += ids.len();
-                upload = upload
-                    .zip(bytes(response.report.upload_bytes))
-                    .map(|(a, b)| a + b);
-                readback = readback
-                    .zip(bytes(response.report.readback_bytes))
-                    .map(|(a, b)| a + b);
                 allocated = allocated
                     .zip(bytes(response.report.qenlo_allocation_bytes))
                     .map(|(a, b)| a.max(b));
                 *backend_counts
                     .entry(format!("{:?}", response.report.actual_backend))
                     .or_default() += 1;
-                lock_wait_ns += response.report.lock_wait.as_nanos();
                 if let Some(path) = response.report.cpu_distance_path {
                     cpu_distance_path = format!("{path:?}");
                 }
@@ -1405,6 +1428,17 @@ fn validate_results(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn batch_totals_are_not_multiplied_by_batch_size() {
+        // Every response of one B=16 GPU batch carries the same 424,640-byte batch total.
+        let batch = [Some(424_640_u64); 16];
+        assert_eq!(batch_total(batch), Ok(Some(Some(424_640))));
+        assert_eq!(batch_total([None::<u64>, None]), Ok(Some(None)));
+        assert_eq!(batch_total(Vec::<u128>::new()), Ok(None));
+        assert!(batch_total([Some(1_u64), Some(2)]).is_err());
+        assert!(batch_total([Some(1_u64), None]).is_err());
+    }
 
     #[test]
     fn skewed_eligibility_differs_and_scores_and_order_are_validated() {

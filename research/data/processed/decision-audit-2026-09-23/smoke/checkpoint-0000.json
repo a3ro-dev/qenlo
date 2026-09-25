@@ -1,0 +1,21 @@
+{
+  "command": [
+    "D:\\qenloDB\\target\\release\\qenlo-bench.exe",
+    "prepare",
+    "--dataset",
+    "D:\\qenloDB\\research\\data\\processed\\decision-audit-2026-09-23\\smoke\\data-n256-d16-s20260923.qnb",
+    "--rows",
+    "256",
+    "--dimensions",
+    "16",
+    "--tuning",
+    "32",
+    "--evaluation",
+    "32",
+    "--seed",
+    "20260923"
+  ],
+  "hashes": {
+    "D:\\qenloDB\\research\\data\\processed\\decision-audit-2026-09-23\\smoke\\data-n256-d16-s20260923.qnb": "16068de2091ec92e57dd9ae004fa73085c0f6950543531a4e82808ebedad893f"
+  }
+}

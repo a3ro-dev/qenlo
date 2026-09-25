@@ -1,0 +1,11 @@
+{
+  "revision": "e5d85adbb638caa05a99fb8d1ef0a96147091cf0",
+  "python": "3.14.3 (tags/v3.14.3:323c59a, Feb  3 2026, 16:04:56) [MSC v.1944 64 bit (AMD64)]",
+  "numpy": "2.4.3",
+  "inputs": {
+    "research\\scripts\\analyze_full_archive.py": "5a124c18a8f1d2f6601415f24503bd786146f14496055ad168eaefed66ef98bd",
+    "research\\data\\raw\\alpha5-router-heldout-rtx4050.tar.gz": "8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e",
+    "research\\artifacts\\runpod-small-2026-09-05\\report\\performance-matrix.csv": "93e3557ded9e3776db170f34a689085c20868d795e4b07746f811a0befc900bb",
+    "research\\scripts\\decision_audit.py": "fa1a821f58417b8650e759e66318f7d4967d81157faf6b278cd624d1d0f0edeb"
+  }
+}

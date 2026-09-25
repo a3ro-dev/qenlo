@@ -454,7 +454,7 @@ struct EligibilityPlan {
     representation: EligibilityRepresentation,
     rows: Option<Arc<[u32]>>,
     transfer_bytes: u64,
-    contiguous_runs: usize,
+    contiguous_runs: Option<usize>,
     materialization: Measurement<Duration>,
     predicate_traversals: u32,
     cache_hit: Option<bool>,
@@ -481,6 +481,7 @@ impl EligibilityPlan {
         mode: GpuFilterMode,
         preparation: GpuRowPreparation,
         cache: &Mutex<Option<CachedGpuRows>>,
+        retain_rows: bool,
     ) -> Self {
         let generation = store.generation();
         let corpus_size = store.len();
@@ -492,7 +493,13 @@ impl EligibilityPlan {
         let materialization;
         let mut cache_hit = None;
         let mut predicate_traversals = 1;
-        let rows = if uses_host_rows && preparation == GpuRowPreparation::Cached {
+        let rows = if !retain_rows {
+            debug_assert_eq!(mode, GpuFilterMode::GpuPredicate);
+            materialization = Measurement::unavailable(
+                "shader predicate counts eligibility without materializing host rows",
+            );
+            None
+        } else if uses_host_rows && preparation == GpuRowPreparation::Cached {
             let cached = cache
                 .lock()
                 .expect("GPU row cache poisoned")
@@ -503,7 +510,7 @@ impl EligibilityPlan {
                 predicate_traversals = 0;
                 cache_hit = Some(true);
                 materialization = Measurement::Available(Duration::ZERO);
-                rows
+                Some(rows)
             } else {
                 let started = Instant::now();
                 let rows: Arc<[u32]> = store.filter(filter).into();
@@ -514,7 +521,7 @@ impl EligibilityPlan {
                     filter: *filter,
                     rows: Arc::clone(&rows),
                 });
-                rows
+                Some(rows)
             }
         } else {
             if uses_host_rows && preparation == GpuRowPreparation::LegacyTwoPass {
@@ -525,10 +532,12 @@ impl EligibilityPlan {
             let started = Instant::now();
             let rows: Arc<[u32]> = store.filter(filter).into();
             materialization = Measurement::Available(started.elapsed());
-            rows
+            Some(rows)
         };
-        let eligible_count = rows.len();
-        let contiguous_runs = contiguous_run_count(&rows);
+        let eligible_count = rows
+            .as_deref()
+            .map_or_else(|| store.filter_count(filter), <[u32]>::len);
+        let contiguous_runs = rows.as_deref().map(contiguous_run_count);
         let representation = if eligible_count == 0 {
             EligibilityRepresentation::Empty
         } else {
@@ -555,9 +564,9 @@ impl EligibilityPlan {
             corpus_size,
             predicate_kind,
             representation,
-            // Retain canonical rows even for shader execution so an automatic CPU decision or
-            // GPU fallback can consume the same traversal without recompiling eligibility.
-            rows: Some(rows),
+            // Automatic execution retains canonical rows so a CPU decision or GPU fallback can
+            // reuse the traversal. Required shader execution needs only the count for reporting.
+            rows,
             transfer_bytes,
             contiguous_runs,
             materialization,
@@ -575,7 +584,10 @@ impl EligibilityPlan {
         output.gpu_row_preparation = uses_host_rows.then_some(row_preparation);
         output.predicate_traversals = self.predicate_traversals;
         output.row_materialization = self.materialization.clone();
-        output.materialized_rows = Measurement::Available(self.eligible_count as u64);
+        output.materialized_rows = self.rows.as_ref().map_or_else(
+            || Measurement::unavailable("shader predicate did not materialize host rows"),
+            |rows| Measurement::Available(rows.len() as u64),
+        );
         output.row_cache_hit = uses_host_rows.then_some(self.cache_hit).flatten();
         output.eligibility_predicate_kind = Some(self.predicate_kind);
         output.eligibility_representation = Some(self.representation);
@@ -587,7 +599,10 @@ impl EligibilityPlan {
             self.eligible_count as f64 / self.corpus_size as f64
         });
         output.eligibility_transfer_bytes = Measurement::Available(self.transfer_bytes);
-        output.eligible_contiguous_runs = Measurement::Available(self.contiguous_runs as u64);
+        output.eligible_contiguous_runs = self.contiguous_runs.map_or_else(
+            || Measurement::unavailable("shader predicate has no host row sequence"),
+            |runs| Measurement::Available(runs as u64),
+        );
         output.eligibility_cacheable = Some(uses_host_rows);
         output.eligibility_resident = Some(false);
     }
@@ -1752,6 +1767,7 @@ impl CollectionState {
         } = context;
         #[cfg(feature = "gpu-wgpu")]
         if let Backend::Wgpu(gpu) = &self.backend {
+            let automatic = matches!(self.config.backend, BackendSelection::Automatic(_));
             let uses_host_rows = matches!(
                 gpu.filter_mode(),
                 GpuFilterMode::CpuMask | GpuFilterMode::CpuEligibleRows
@@ -1762,9 +1778,9 @@ impl CollectionState {
                 gpu.filter_mode(),
                 row_preparation,
                 row_cache,
+                uses_host_rows || automatic,
             );
             let eligible_rows = plan.eligible_count;
-            let automatic = matches!(self.config.backend, BackendSelection::Automatic(_));
             let matched_profile = router_profile.as_ref().filter(|profile| {
                 profile.adapter_name == gpu.capabilities().adapter_name
                     && profile.dimension == self.store.dimension()
@@ -2714,13 +2730,17 @@ mod tests {
                     mode,
                     GpuRowPreparation::OnePass,
                     &cache,
+                    mode != GpuFilterMode::GpuPredicate,
                 );
                 assert_eq!(plan.generation, store.generation());
                 assert_eq!(plan.eligible_count, expected.len());
                 if let Some(rows) = plan.rows {
                     assert_eq!(rows.as_ref(), expected.as_slice());
+                    assert_eq!(plan.contiguous_runs, Some(contiguous_run_count(&expected)));
+                } else {
+                    assert_eq!(mode, GpuFilterMode::GpuPredicate);
+                    assert_eq!(plan.contiguous_runs, None);
                 }
-                assert_eq!(plan.contiguous_runs, contiguous_run_count(&expected));
             }
         }
 
@@ -2731,6 +2751,7 @@ mod tests {
             GpuFilterMode::CpuEligibleRows,
             GpuRowPreparation::Cached,
             &cache,
+            true,
         );
         assert_eq!(first.cache_hit, Some(false));
         let second = EligibilityPlan::compile(
@@ -2739,6 +2760,7 @@ mod tests {
             GpuFilterMode::CpuEligibleRows,
             GpuRowPreparation::Cached,
             &cache,
+            true,
         );
         assert_eq!(second.cache_hit, Some(true));
         store.add(200, 4, 0, [0.5, 1.0]).unwrap();
@@ -2748,6 +2770,7 @@ mod tests {
             GpuFilterMode::CpuEligibleRows,
             GpuRowPreparation::Cached,
             &cache,
+            true,
         );
         assert_eq!(after_mutation.cache_hit, Some(false));
         assert_eq!(after_mutation.eligible_count, store.filter(&filter).len());
@@ -2801,6 +2824,59 @@ mod tests {
                 assert_eq!(response.report.row_cache_hit, Some(expected_hit));
                 assert_eq!(response.report.predicate_traversals, traversals);
             }
+        });
+    }
+
+    #[cfg(feature = "gpu-wgpu")]
+    #[test]
+    fn required_shader_predicate_batch_does_not_materialize_host_rows() {
+        block_on(async {
+            let created = Collection::new(CollectionConfig {
+                dimension: 2,
+                backend: BackendSelection::WgpuRequired(GpuFilterMode::GpuPredicate),
+                gpu_allocation_budget_bytes: DEFAULT_GPU_BUDGET_BYTES,
+            })
+            .await;
+            let collection = match created {
+                Ok(collection) => collection,
+                Err(error) if std::env::var_os("QENLO_REQUIRE_GPU").is_none() => {
+                    eprintln!("GPU unavailable: {error}");
+                    return;
+                }
+                Err(error) => panic!("GPU required: {error}"),
+            };
+            collection.add(1, 7, 0, &[1.0, 0.0]).unwrap();
+            collection.add(2, 8, 0, &[0.0, 1.0]).unwrap();
+            collection.prepare().await.unwrap();
+
+            let response = collection
+                .search_batch(
+                    &[&[1.0, 0.0]],
+                    &Filter::new(Some(7), TimestampRange::ALL),
+                    1,
+                )
+                .await
+                .unwrap()
+                .remove(0);
+            assert_eq!(response.results[0].id, 1);
+            assert!(matches!(
+                response.report.eligible_rows,
+                Measurement::Available(1)
+            ));
+            assert!(matches!(
+                response.report.materialized_rows,
+                Measurement::Unavailable(_)
+            ));
+            assert!(matches!(
+                response.report.row_materialization,
+                Measurement::Unavailable(_)
+            ));
+            assert_eq!(
+                response.report.eligibility_representation,
+                Some(EligibilityRepresentation::ShaderPredicate)
+            );
+            assert_eq!(response.report.predicate_traversals, 1);
+            assert_eq!(response.report.gpu_row_preparation, None);
         });
     }
 

@@ -37,3 +37,25 @@ explicitly states a within-cohort comparison.
 These limitations prevent a claim of one-command regeneration of every contextual
 number. They do not break the direct raw-evidence path for the headline native
 crossover, static-policy counterfactual, or eligibility-materialization ablation.
+
+## Addendum 2026-09-24: partial E0/E2 campaign and harness correction
+
+Applies to the current `paper/paper.tex` (Section "Noise floor and representation
+ablation"). Direction and claim classes are argued in
+`research/direction-memo-2026-09-24.md`. The machine-readable counterpart is the
+`e0_e2_partial` component of `paper/tables/claim-to-artifact.json`.
+
+| Manuscript claim or object | Retained evidence | Regeneration path | Audit status |
+|---|---|---|---|
+| 227 of 260 block summaries (E0 20/20, E2 207/240); no COMPLETE marker; 33 missing slots in two B=16 cells | `research/data/raw/runpod-e0-e2-partial-20260924.tar.gz`, SHA-256 `e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0` | `python research/scripts/audit_e0_e2_mechanisms.py` (reads tarball in place); `runpod-e0-e2-analysis-20260924/analyze.py` on a Python-extracted copy | Independently re-verified 2026-09-24. GNU tar aborts on 6,575 trailing bytes; Python `tarfile` reads all 2,132 members |
+| Exit-101 gpu-mask block with summary; summary-less CPU destination | same archive, `*.run.json` and destination listings | same scripts -> `audit.json`, `block_metrics.csv` | Included/flagged and missing, respectively; runner halted on the exit and a resume skipped the existing summary |
+| 20 summaries with recall@10 exactly 0.99998 (all engines, B=1/E=100,000) | summaries in archive | `audit_e0_e2_mechanisms.py` -> `audit.json` | Reported unrounded |
+| E0 noise floor (block ratios ~1.94x/1.99x) | E0 blocks | `analyze.py` -> `e0_noise.csv`; `paper/scripts/generate_e0e2_tables.py` | One cell, one host. Seed-dependent CI endpoint differs between `e0_noise.csv` (0.614) and `latency_summary.csv` (0.625) |
+| E2 representation/batch ratios and crossover limits | E2 blocks | `analyze.py` -> `paired_comparisons.csv`, `latency_summary.csv` | All 92 cell medians and 132 paired ratios recomputed exactly from `runs.csv` |
+| Same-host EDB ordering witness | E0 + E2 blocks | `audit_e0_e2_mechanisms.py` -> `edb_ordering_witness.csv` | Post hoc; does not clear the same-engine A/A band |
+| Mechanism diagnostics (selection, materialization, upload) | `samples.csv` per block | `audit_e0_e2_mechanisms.py` -> `diagnostics_by_cell.csv` | Overlapping counters; descriptive |
+| Harness overstated batch-B transfer and lock-wait fields B-fold; S2 batch-8 transfer corrected to 64,640 / 8,224 bytes | archive B=16 samples; S2 matrix fields; `crates/qenlo-bench/src/main.rs` | arithmetic in paper; unit test `batch_totals_are_not_multiplied_by_batch_size`; local B=16 run shows 424,640 | Fixed (run format v4). Retained raw fields unchanged |
+| Range-filter materialization change (bounded probe then scan) | `crates/qenlo-core/src/lib.rs`; `research/data/raw/2026-09-24-local-filter-ab` | `cargo test -p qenlo-core`; `python research/scripts/run_local_filter_ab.py` | Local laptop evidence only; no campaign-host claim |
+| Required shader-predicate batches avoid unused host row-list materialization | `crates/qenlo-core/src/lib.rs`; `crates/qenlo/src/lib.rs`; measured mechanism diagnostics | `cargo test -p qenlo-core`; `cargo test -p qenlo --features gpu-wgpu` | Behavior and diagnostics verified locally; no campaign-host speedup claim; automatic routing still retains fallback rows |
+| Resume validation rejects summary-bearing nonzero exits | `research/scripts/run_e0_e2_runpod.py`; retained exit-101 run record | pure-function regression probe described in the experiment log | Future-run integrity fixed; retained evidence unchanged and exception remains disclosed |
+| No production router or threshold change | `crates/qenlo/src/lib.rs` routing unchanged | — | Deliberately not claimed; needs E1/E3/E4 |

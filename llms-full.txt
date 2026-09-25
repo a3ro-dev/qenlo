@@ -29,7 +29,7 @@ Qenlo is a local-first embedded vector store for durable, exact retrieval over m
 - [Verification record](verification.md): checks that have been run and their scope.
 - [Measured results](results-2026-08-28.md): retained benchmark evidence.
 - [Implementation status](implementation-status.md): supported, preview, and open work.
-- [Research paper](../QENLO-RESEARCH-PAPER.pdf): audited methodology and limits.
+- [Research paper](../QENLO-RESEARCH-PAPER.pdf): GPU power states and the latency of light vector-search queries. The earlier [evidence audit](../paper/archive/qenlo-evidence-audit-v1.pdf) covers routing methodology and limits.
 
 Need a specific answer? Start with the quickstart, then use the sidebar to move deeper.
 
@@ -397,7 +397,7 @@ This page describes Qenlo's current code and evidence. It does not infer competi
 
 The September 5, 2026 campaign contains 182 status rows: 131 completed, 42 marked failed or unavailable, seven failed, and two invalid-harness rows. Only 130 qualify because one completed USearch row misses its recall gate. On one RTX 4090/Vulkan host, exact WGPU P95 was 0.897 ms for 100k by 768, batch one, `k=1`, and 0.896 ms for batch eight, `k=64`, at 10% eligibility. PyTorch CUDA was faster in both cells. Those WGPU rows used a lane-minimum selector candidate that won five and lost seven of 12 frozen-baseline pairs and was subsequently rejected.
 
-These numbers do not describe the retained selector and select no deployment default. See [the performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) and [the final paper](../QENLO-RESEARCH-PAPER.pdf) for timing boundaries and limitations.
+These numbers do not describe the retained selector and select no deployment default. See [the performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) and [the evidence audit](../paper/archive/qenlo-evidence-audit-v1.pdf) for timing boundaries and limitations.
 
 Alpha.5 evaluated a simpler automatic-routing rule derived from the retained
 campaign. It fit the development pairs but failed the preregistered held-out
@@ -422,7 +422,7 @@ Add `qenlo` to `Cargo.toml`:
 
 ```toml
 [dependencies]
-qenlo = "0.1.0-alpha.6"
+qenlo = "0.1.0-alpha.7"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -471,7 +471,7 @@ The Python SDK provides typed bindings for Qenlo using precompiled binary wheels
 ## Installation
 
 ```bash
-pip install "qenlo==0.1.0a5"
+pip install "qenlo==0.1.0a7"
 ```
 
 ## Quick example
@@ -1948,7 +1948,7 @@ Several items that looked open in the earlier positioning report are already com
 | Earlier action | Current evidence | Disposition |
 | --- | --- | --- |
 | Add a telemetry opt-out | The [feature matrix](feature-matrix.md) says core and SDKs make no automatic network requests. [Device-lab upload](device-lab.md) is explicit and host-controlled; the collector is a separate service. | Complete. Preserve this privacy boundary with regression tests and release review. |
-| Publish the paper/writeup | A [verified 22-page PDF](../QENLO-RESEARCH-PAPER.pdf), source, figures, claim ledger, and [reproduction instructions](../paper/REPRODUCE.md) are committed. | Repository publication complete. A DOI, arXiv entry, or external engineering article remains optional distribution work. |
+| Publish the paper/writeup | The [research paper](../QENLO-RESEARCH-PAPER.pdf) (source `paper/v2/`) and the preserved [v1 evidence audit](../paper/archive/qenlo-evidence-audit-v1.pdf), with its source, figures, claim ledger and [reproduction instructions](../paper/REPRODUCE.md), are committed. The next experiments are specified in `research/specs/2026-09-25-clock-lock-and-faiss.md`. | Repository publication complete. A DOI, arXiv entry, or external engineering article remains optional distribution work. |
 | Benchmark LanceDB | The retained [100K x 384 replay](../benchmarks/runpod/2026-09-02-bb51987/README.md) includes LanceDB Flat with raw artifacts and disclosed timing boundaries. | Complete for one historical cohort. Do not imply broad coverage. |
 | Benchmark sqlite-vec | No retained sqlite-vec adapter or result was found. | Open. This is the remaining closest-competitor gap. |
 | Close the 1M x 768 gate | The [strict A6000 experiment](reports/2026-09-02-strict-topk-research-gate.md) ran and failed the pre-registered 2x CPU gate; Qenlo's prototype also lost to FAISS GPU Flat in that cell. | Complete as a negative result. Publish the verdict; do not rerun until a named implementation change creates a falsifiable new hypothesis. |

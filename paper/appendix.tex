@@ -56,6 +56,29 @@ These tables are generated from retained machine-readable evidence. They preserv
 
 P2's complete reduction contains the six matched Qenlo rows summarized in Table~\ref{tab:phase2}, a routed dense reference verification at 14.474 ms, and FAISS CPU Flat at 11.154 ms. The latter two are time-separated diagnostics and do not turn run drift into an optimization effect. Full rows, source roles, recall, and archive identity are in \path{research/data/processed/archive-reanalysis/phase2_cpu_optimization.csv}.
 
+\subsection{E0/E2 partial campaign}
+\begin{table}[H]\centering\small
+\caption{E0/E2 completed block summaries per engine and cell (completed/planned). $f=E/100{,}000$. The archive has no completion marker. The CPU $B=16$, $E=30$K block~1 destination exists without a summary and counts as missing. No value is imputed.}\label{tab:e0e2-coverage}
+\begin{tabular}{lrrrrrrrr}\toprule Exp. & $B$ & $E$ & $f$ & CPU & Rows & Predicate & Mask & Total \\\midrule
+\tableinput{tables/final/e0e2_coverage}
+\bottomrule\end{tabular}\end{table}
+\begin{table}[H]\centering\scriptsize
+\caption{E2 median block P50 batch-call latency (ms) with 95\% block-bootstrap intervals; five blocks unless $n$ is shown. An $n=1$ cell has no interval. ``missing'' cells were planned and not measured.}\label{tab:e2-p50}
+\begin{tabular}{rrllll}\toprule $B$ & $f$ & CPU & Rows & Predicate & Mask \\\midrule
+\tableinput{tables/final/e2_latency_p50}
+\bottomrule\end{tabular}\end{table}
+\begin{table}[H]\centering\scriptsize
+\caption{E2 median block P95 batch-call latency (ms) with 95\% block-bootstrap intervals, as in Table~\ref{tab:e2-p50}. At $B=1$, $f=1$, all four engines report recall@10 of exactly 0.99998; all other cells report 1.}\label{tab:e2-p95}
+\begin{tabular}{rrllll}\toprule $B$ & $f$ & CPU & Rows & Predicate & Mask \\\midrule
+\tableinput{tables/final/e2_latency_p95}
+\bottomrule\end{tabular}\end{table}
+\begin{table}[H]\centering\scriptsize
+\caption{E2 paired ratios against the dense mask, notation as in Table~\ref{tab:e2-paired}. Omitting the exit-code-101 mask block at $B=1$, $f=0.001$ changes the rows/mask P95 ratio from 0.197 to 0.198.}\label{tab:e2-mask}
+\begin{tabular}{rrrllll}\toprule $B$ & $f$ & $n$ & Rows/mask P50 & Rows/mask P95 & Predicate/mask P50 & Predicate/mask P95 \\\midrule
+\tableinput{tables/final/e2_rows_vs_mask}
+\bottomrule\end{tabular}\end{table}
+Per-block values, including within-block run spread, process return code, and start time, are in \path{research/data/processed/runpod-e0-e2-analysis-20260924/block_metrics.csv}. The E0 modified-$z$ rule flags CPU block 6 at P95 (0.756 ms) and gpu-rows blocks 5 and 6 at P50 (0.432 and 0.366 ms) and P95 (0.506 and 0.424 ms); none is removed. Two derived files report different bootstrap lower endpoints for the E0 gpu-rows P95 median, 0.614 ms in \path{e0_noise.csv} and 0.625 ms in \path{latency_summary.csv}, because they use different seeds; Table~\ref{tab:e0} uses the former. Minimum per-call recall@10 across 2,181,693 sample rows is 0.9, while every summary passes its aggregate target. Recorded GPU telemetry spans 210--2,775 MHz SM clock, 23--35\,$^\circ$C, and 12.24--131.26 W, as before/after snapshots only. Driver, CUDA, and host-CPU identities are not recorded in the archive.
+
 \subsection{Historical A6000 distributions}
 \begin{table}[H]\centering\small
 \caption{H4 strict real TopK, 1M$\times$768, $E=10,026$, $B=1,k=10$, 5,000 calls/system. Shared prefiltered matrix, host completed calls. cuVS fails correctness and is excluded from qualified comparisons. CUDA prototype is unshipped research code.}
@@ -117,6 +140,10 @@ H6/H7 & Physical Android and Arc, aggregate-only & \path{research/data/raw/2026-
 R1 & Frozen $EDB$ rule: 8/16 wrong, 235.7\% max regret, rejected & \path{research/data/raw/alpha5-router-heldout-rtx4050.tar.gz}; archive reanalysis \\
 P0 & Separate 4K--6K reversal; equal-$E$ contradiction with H1 & \path{research/artifacts/qenlo-phase0-runpod-complete-2026-09-04.tar.gz} \\
 P2 & Sparse CPU gains, dense regression, FAISS CPU context & \path{research/artifacts/qenlo-phase2-a40-2026-09-04-final.tar.gz} \\
+E0 & Same-cell block ratios near $2\times$; GPU bimodality associated with clock snapshots & \path{research/data/raw/runpod-e0-e2-partial-20260924.tar.gz}; \path{research/data/processed/runpod-e0-e2-analysis-20260924/e0_noise.csv} \\
+E2 & 227/260 summaries; sparse rows 3.2--6.1$\times$ faster than predicate/mask; no $f^*(16)$ & Same archive; \path{paired_comparisons.csv}, \path{latency_summary.csv}, \path{coverage.csv} \\
+E0/E2 witness & Same-host $EDB$ ordering contradiction, post hoc & \path{research/data/processed/runpod-e0-e2-mechanisms-20260924/edb_ordering_witness.csv} \\
+Harness & Batch transfer counters overstated $B$-fold; S2 batch-8 corrected & \path{crates/qenlo-bench/src/main.rs}; mechanisms \path{diagnostics_by_cell.csv} \\
 Accounting & Account daily spend, zero retained campaign resources & Campaign \texttt{ledger.jsonl}, billing captures, \texttt{campaign-summary.json} \\
 Semantics & Current source contracts; not retrospective performance & \path{paper/audit/system-ledger.json} \\
 \bottomrule\end{tabular}\end{table}
@@ -135,6 +162,11 @@ The campaign root is \path{research/artifacts/runpod-small-2026-09-05/}. Full id
 \item[R1 held-out router archive.] \path{8e3b5fe6ec6ab9f295752ec894c89b094c4ddf4dd0ee38849d9d78c9a7fcc01e}
 \item[P0 complete archive.] \path{7292fd1cd0e7669c9febeaa2d49baedee747811ed65f6bc704ecbcb6e61f51ea}
 \item[P2 CPU archive.] \path{ac3afda446f4943eab128cff458402f7559be53b96c3cf8ce44fcbbd7f8be4df}
+\item[E0/E2 partial archive.] \path{e4ca1336757cf55a5f5150a8bcc601ab3538cb7e9e9c2270c137e5a72fd51ed0}
+\item[E0/E2 attested source.] \path{e5d85adbb638caa05a99fb8d1ef0a96147091cf0}
+\item[E0/E2 attested binary.] \path{b28e16ffda779304f10bc6fea61ec6fe368ce0923590593e2ab27443bc70285b}
+\item[E0/E2 attested dataset.] \path{ba87a322b6846ce225ce54140cf00ac33250271447ef8f9f83df246131719cba}
+\item[E0/E2 runner (recomputed).] \path{c0ae079bc4ddbac8ad4efef2a4a25c5be8418e9a1276edb5bcd7dda71a24ae56}
 \end{description}
 S2 result integrity is distinct from S2 source identity. The corrected result manifest has 74 non-self entries. The full campaign verifier checks eight retained result archives and nine checksum manifests, covering 1,053 entries and skipping four self-manifest entries. It also checks source roles and the identity of the local and baseline WGSL. Checksums establish byte integrity, not scientific qualification.
 
@@ -146,7 +178,7 @@ No raw evidence or old figure was deleted. The historical inventory hashes every
 
 An incomplete historical CPU development run and duplicate cloud mirrors are excluded from the counts. H3 native Vulkan initialization failed, so there is no GPU latency to rank. Historical Qdrant was deliberately outside the retained comparison because its local-mode search boundary differed; no conclusion about its performance follows. Provider-compatible TopK experiments used an inclusive predicate that yielded 10,148 eligible rows and supplied truth, whereas strict H4 used 10,026 rows and an independent oracle. These experiments remain exploratory negative context and are not pooled with H4. Their approximately one-percent prototype did not beat FAISS, and other provider cells had correctness disagreements. cuVS numerical and runtime failures remain failures, not qualified exact results.
 
-The archive does not test a complete multidimensional routing surface, controlled fixed-$E$ with varying-$N$, controlled metadata and vector correlation, a tuned filtered-ANN frontier, a successful calibrated router on held-out data, concurrency, energy, total VRAM peaks, long-running mutation churn, arbitrary crash recovery, MPS, or physical iOS. R1 supplies a held-out rejection, not a positive adaptive result. Historical mobile results cannot certify the final revision. The S2 rerun with the final local selector is absent. These gaps constrain the claims rather than licensing extrapolation.
+The archive does not test a complete multidimensional routing surface, controlled fixed-$E$ with varying-$N$, controlled metadata and vector correlation, a tuned filtered-ANN frontier, a successful calibrated router on held-out data, concurrency, energy, total VRAM peaks, long-running mutation churn, arbitrary crash recovery, MPS, or physical iOS. R1 supplies a held-out rejection, not a positive adaptive result. Historical mobile results cannot certify the final revision. The S2 rerun with the final local selector is absent. E2 lacks its batch-16 cells at $E=100$K and most of $E=30$K, an automatic-path arm, continuous GPU telemetry, and repeated noise controls outside one sparse batch-one cell. These gaps constrain the claims rather than licensing extrapolation.
 
 \subsection{Reproduction and audit procedure}
-The archive-wide entry point is \path{research/scripts/analyze_full_archive.py}; it verifies R1/P0/H2/P2 hashes, parses archives without extracting over retained data, emits the routing/CPU reductions, and writes a disposition ledger for tracked or selected archive-internal sample series. Other paper-only entry points are \path{paper/scripts/reduce_final_evidence.py}, \path{generate_final_tables.py}, \path{generate_final_figures.py}, and \path{verify_campaign_claims.py}. Historical raw checks are in \path{paper/audit/verify_historical_raw.py}. Reductions go to \path{paper/audit/reduced/} and \path{research/data/processed/archive-reanalysis/}. Android values are regenerated from retained aggregate records rather than unavailable raw series. Numerical tables and figure inputs are traceable through \path{paper/audit/figure-sources.json}. A clean LaTeX build, citation, reference, and box checks, extracted text, and page renders are recorded in the paper verification output. No command in this authoring workflow creates cloud resources or runs a performance benchmark.
+The archive-wide entry point is \path{research/scripts/analyze_full_archive.py}; it verifies R1/P0/H2/P2 hashes, parses archives without extracting over retained data, emits the routing/CPU reductions, and writes a disposition ledger for tracked or selected archive-internal sample series. Other paper-only entry points are \path{paper/scripts/reduce_final_evidence.py}, \path{generate_final_tables.py}, \path{generate_final_figures.py}, and \path{verify_campaign_claims.py}. Historical raw checks are in \path{paper/audit/verify_historical_raw.py}. Reductions go to \path{paper/audit/reduced/} and \path{research/data/processed/archive-reanalysis/}. Android values are regenerated from retained aggregate records rather than unavailable raw series. Numerical tables and figure inputs are traceable through \path{paper/audit/figure-sources.json}. A clean LaTeX build, citation, reference, and box checks, extracted text, and page renders are recorded in the paper verification output. E0/E2 has three read-only stages: \path{research/data/processed/runpod-e0-e2-analysis-20260924/analyze.py} and \path{render_report.py} produce the latency statistics from a Python-extracted copy of the archive; \path{research/scripts/audit_e0_e2_mechanisms.py} reads the tarball in place and produces diagnostics, clock associations, and the ordering witness; and \path{paper/scripts/generate_e0e2_tables.py} writes the table bodies. Cargo tests separately verify the post-audit batch-counter, range-materialization, and required-predicate changes; they do not regenerate or revise campaign measurements. No command in this authoring workflow creates cloud resources or runs a performance benchmark.
