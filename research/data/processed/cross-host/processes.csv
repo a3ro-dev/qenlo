@@ -1,0 +1,189 @@
+host,engine,E,sel_ms,score_ms,p50_ms
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.24304,0.02016,0.712179
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.237056,0.01984,0.708419
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.236416,0.02,0.709099
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.23536,0.019584,0.706269
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.210464,0.018112,0.680029
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.102976,0.010304,0.42292
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.12416,0.011776,0.369739
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.204864,0.017568,0.679909
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.251264,0.0208,0.722379
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.25056,0.020544,0.726719
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100,0.017888,0.005664,0.185799
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100,0.704352,0.022688,0.996149
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100,0.01792,0.005696,0.192929
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100,0.704352,0.022688,0.990439
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100,0.017888,0.0056,0.18531
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100,0.704352,0.022688,1.007229
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100,0.017888,0.0056,0.18298
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100,0.704352,0.022688,1.005118
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100,0.017888,0.0056,0.183299
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100,0.704352,0.022688,0.989038
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,1000,0.055648,0.009504,0.284929
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,1000,0.710816,0.023744,1.053958
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,1000,0.053376,0.00912,0.287539
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,1000,0.710784,0.023744,1.032587
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,1000,0.05328,0.009152,0.284009
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,1000,0.710784,0.023744,1.046297
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,1000,0.06464,0.010368,0.338768
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,1000,0.710848,0.023744,1.047478
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,1000,0.051008,0.00848,0.28552
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,1000,0.710816,0.023744,1.059588
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,10000,0.421952,0.028096,1.377038
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,10000,0.702656,0.033184,1.687717
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,10000,0.336704,0.021792,1.099519
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,10000,0.702656,0.033184,1.670928
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,10000,0.450944,0.02992,1.467318
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,10000,0.702624,0.033184,1.709677
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,10000,0.51216,0.034176,1.567658
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,10000,0.702624,0.033184,1.693638
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,10000,0.439616,0.029088,1.515378
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,10000,0.702624,0.033184,1.669117
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100000,1.054944,0.16672,2.549297
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100000,0.696608,0.16768,1.520448
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100000,1.044704,0.16672,1.946018
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100000,0.700032,0.16768,1.542658
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100000,1.044384,0.16672,2.556797
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100000,0.695456,0.16768,1.536918
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100000,1.044416,0.16672,2.570178
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100000,0.69552,0.16768,1.547488
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,100000,1.044224,0.16672,2.396799
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,100000,0.694944,0.167648,1.535089
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.198368,0.017024,0.646859
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,3000,0.711168,0.026112,1.182768
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.133344,0.012448,0.421739
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,3000,0.711136,0.026112,1.084968
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.098208,0.009728,0.437859
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,3000,0.7112,0.026112,1.191718
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.243424,0.020288,0.718679
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,3000,0.711168,0.026112,1.156058
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,3000,0.102592,0.010272,0.44453
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,3000,0.7112,0.026112,1.159559
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,30000,1.128704,0.103552,3.880835
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,30000,1.293552,0.10352,4.255435
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,30000,1.108224,0.102496,3.636226
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,30000,1.304816,0.104448,4.248764
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,30000,1.182768,0.106112,4.333374
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,30000,1.376384,0.108576,4.350814
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,30000,1.296128,0.108544,4.494063
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,30000,1.376704,0.108512,4.346924
+"RTX 4090 host A (Linux, Sep 24)",gpu-rows,30000,1.296032,0.108384,4.428123
+"RTX 4090 host A (Linux, Sep 24)",gpu-predicate,30000,1.385792,0.108896,4.354324
+RTX 4050 Laptop (Windows),gpu-predicate,100,0.92736,0.119616,2.0301
+RTX 4050 Laptop (Windows),gpu-predicate,1000,0.949952,0.12624,2.06675
+RTX 4050 Laptop (Windows),gpu-predicate,10000,0.939968,0.195232,2.2243
+RTX 4050 Laptop (Windows),gpu-predicate,3000,0.956256,0.140448,2.1916
+RTX 4050 Laptop (Windows),gpu-predicate,30000,0.991872,0.449312,2.9926
+RTX 4050 Laptop (Windows),gpu-rows,100,0.018048,0.005024,0.17605
+RTX 4050 Laptop (Windows),gpu-rows,1000,0.029632,0.008384,0.3485
+RTX 4050 Laptop (Windows),gpu-rows,10000,0.52216,0.167488,2.0382
+RTX 4050 Laptop (Windows),gpu-rows,3000,0.229568,0.056832,0.8462
+RTX 4050 Laptop (Windows),gpu-rows,30000,0.579424,0.275872,2.23505
+RTX 4050 Laptop (Windows),gpu-predicate,100,0.92752,0.119456,2.0435
+RTX 4050 Laptop (Windows),gpu-predicate,1000,0.953952,0.126432,2.1233
+RTX 4050 Laptop (Windows),gpu-predicate,10000,0.940704,0.195264,2.28505
+RTX 4050 Laptop (Windows),gpu-predicate,3000,0.952416,0.14016,2.1811
+RTX 4050 Laptop (Windows),gpu-predicate,30000,0.991424,0.449248,2.84895
+RTX 4050 Laptop (Windows),gpu-rows,100,0.018624,0.005312,0.3331
+RTX 4050 Laptop (Windows),gpu-rows,1000,0.029568,0.008352,0.2269
+RTX 4050 Laptop (Windows),gpu-rows,10000,0.444928,0.145696,1.6575
+RTX 4050 Laptop (Windows),gpu-rows,3000,0.055232,0.014912,0.3974
+RTX 4050 Laptop (Windows),gpu-rows,30000,0.721504,0.303456,2.7875
+RTX 4050 Laptop (Windows),gpu-predicate,100,0.9272,0.119648,2.0099
+RTX 4050 Laptop (Windows),gpu-predicate,1000,0.949056,0.12624,1.9595
+RTX 4050 Laptop (Windows),gpu-predicate,10000,0.940512,0.1952,2.10315
+RTX 4050 Laptop (Windows),gpu-predicate,3000,0.951008,0.140256,2.0821
+RTX 4050 Laptop (Windows),gpu-predicate,30000,0.992096,0.449216,2.6212
+RTX 4050 Laptop (Windows),gpu-rows,100,0.015488,0.004896,0.16935
+RTX 4050 Laptop (Windows),gpu-rows,1000,0.029568,0.008352,0.2199
+RTX 4050 Laptop (Windows),gpu-rows,10000,0.425312,0.141088,1.5534
+RTX 4050 Laptop (Windows),gpu-rows,3000,0.144544,0.036896,0.6417
+RTX 4050 Laptop (Windows),gpu-rows,30000,0.519168,0.268256,2.1841
+RTX 4050 Laptop (Windows),gpu-predicate,100,0.927264,0.119616,1.9839
+RTX 4050 Laptop (Windows),gpu-predicate,1000,0.949888,0.1264,1.9839
+RTX 4050 Laptop (Windows),gpu-predicate,10000,0.940768,0.19504,2.1739
+RTX 4050 Laptop (Windows),gpu-predicate,3000,0.952096,0.140192,2.1133
+RTX 4050 Laptop (Windows),gpu-predicate,30000,0.992352,0.449408,2.7966
+RTX 4050 Laptop (Windows),gpu-rows,100,0.015648,0.00496,0.1772
+RTX 4050 Laptop (Windows),gpu-rows,1000,0.029584,0.008384,0.2306
+RTX 4050 Laptop (Windows),gpu-rows,10000,0.460736,0.14992,1.6741
+RTX 4050 Laptop (Windows),gpu-rows,3000,0.055232,0.014944,0.3944
+RTX 4050 Laptop (Windows),gpu-rows,30000,0.592384,0.277504,2.26675
+RTX 4050 Laptop (Windows),gpu-predicate,100,0.927264,0.119648,2.0112
+RTX 4050 Laptop (Windows),gpu-predicate,1000,0.949344,0.126336,2.04745
+RTX 4050 Laptop (Windows),gpu-predicate,10000,0.940384,0.195168,2.2049
+RTX 4050 Laptop (Windows),gpu-predicate,3000,0.952,0.140192,2.0734
+RTX 4050 Laptop (Windows),gpu-predicate,30000,0.991456,0.44912,2.6887
+RTX 4050 Laptop (Windows),gpu-rows,100,0.018432,0.005152,0.2752
+RTX 4050 Laptop (Windows),gpu-rows,1000,0.029504,0.008416,0.2274
+RTX 4050 Laptop (Windows),gpu-rows,10000,0.594976,0.188192,2.152
+RTX 4050 Laptop (Windows),gpu-rows,3000,0.10592,0.027264,0.5427
+RTX 4050 Laptop (Windows),gpu-rows,30000,0.722592,0.303648,2.7403
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,100,0.677376,0.022656,0.8119885
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,1000,0.680768,0.02368,0.828013
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,10000,0.673152,0.032992,0.835203
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,3000,0.684704,0.026048,0.827762
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,30000,0.651648,0.043872,0.880601
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,100,0.017792,0.00592,0.103005
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,1000,0.028192,0.005856,0.1220785
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,10000,0.142368,0.011616,0.431006
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,3000,0.054528,0.006944,0.181963
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,30000,0.304192,0.018912,0.780741
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,100,0.69104,0.02208,0.828339
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,1000,0.695008,0.023136,0.8357075
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,10000,0.687232,0.032512,0.860439
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,3000,0.700448,0.025504,0.848707
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,30000,0.664128,0.043264,0.894052
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,100,0.017568,0.005312,0.088856
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,1000,0.028224,0.005472,0.109265
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,10000,0.1304,0.00976,0.3730125
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,3000,0.050656,0.005952,0.162534
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,30000,0.315168,0.018336,0.735466
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,100,0.684448,0.023904,1.0039305
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,1000,0.688896,0.024704,0.959755
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,10000,0.679104,0.033632,0.9524905
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,3000,0.690656,0.026848,1.175792
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,30000,0.658912,0.044384,1.3004925
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,100,0.017888,0.007584,0.145081
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,1000,0.036096,0.009856,0.207017
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,10000,0.213824,0.019232,0.651564
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,3000,0.148704,0.018976,0.477653
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,30000,0.606912,0.044864,1.6949555
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,100,0.644128,0.021728,0.777695
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,1000,0.650432,0.022752,0.786782
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,10000,0.643392,0.031904,0.809464
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,3000,0.651584,0.024992,0.7945405
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,30000,0.618784,0.042496,0.845121
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,100,0.017152,0.005088,0.086221
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,1000,0.0272,0.005312,0.107781
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,10000,0.127744,0.010144,0.37405
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,3000,0.05024,0.00608,0.16028
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,30000,0.287488,0.018144,0.7067815
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,100,0.665856,0.021984,0.963029
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,1000,0.672064,0.023008,0.9866385
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,10000,0.665696,0.032224,1.076629
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,3000,0.673056,0.025248,1.012238
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-predicate,30000,0.64048,0.042752,1.260238
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,100,0.01776,0.005664,0.18916
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,1000,0.056448,0.009728,0.2804745
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,10000,0.589216,0.03952,1.664653
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,3000,0.216256,0.018432,0.629479
+"RTX 4090 host B (Linux pods, Sep 25)",gpu-rows,30000,0.989632,0.061952,2.7016205
+H100 SXM (Linux pod),gpu-predicate,1000,0.982304,0.028,1.286334
+H100 SXM (Linux pod),gpu-predicate,10000,0.97184,0.038048,1.349324
+H100 SXM (Linux pod),gpu-predicate,3000,0.987552,0.030048,1.280806
+H100 SXM (Linux pod),gpu-rows,1000,0.03888,0.010272,0.217439
+H100 SXM (Linux pod),gpu-rows,10000,0.204832,0.016032,0.6460265
+H100 SXM (Linux pod),gpu-rows,3000,0.094336,0.012224,0.3650315
+H100 SXM (Linux pod),gpu-predicate,1000,0.987136,0.028096,1.277511
+H100 SXM (Linux pod),gpu-predicate,10000,0.976768,0.03824,1.3336105
+H100 SXM (Linux pod),gpu-predicate,3000,0.987776,0.030368,1.287106
+H100 SXM (Linux pod),gpu-rows,1000,0.038528,0.010144,0.216257
+H100 SXM (Linux pod),gpu-rows,10000,0.206496,0.015808,0.611875
+H100 SXM (Linux pod),gpu-rows,3000,0.103904,0.013664,0.379834
+H100 SXM (Linux pod),gpu-predicate,1000,0.9872,0.028096,1.26414
+H100 SXM (Linux pod),gpu-predicate,10000,0.9768,0.03824,1.335249
+H100 SXM (Linux pod),gpu-predicate,3000,0.987808,0.030464,1.287321
+H100 SXM (Linux pod),gpu-rows,1000,0.039296,0.010624,0.223548
+H100 SXM (Linux pod),gpu-rows,10000,0.188288,0.014528,0.588049
+H100 SXM (Linux pod),gpu-rows,3000,0.087712,0.011616,0.3415115
