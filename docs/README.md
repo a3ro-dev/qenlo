@@ -16,6 +16,6 @@ Qenlo is a local-first embedded vector store for durable, exact retrieval over m
 - [Verification record](verification.md): checks that have been run and their scope.
 - [Measured results](results-2026-08-28.md): retained benchmark evidence.
 - [Implementation status](implementation-status.md): supported, preview, and open work.
-- [Research paper](../QENLO-RESEARCH-PAPER.pdf): audited methodology and limits.
+- [Research paper](../QENLO-RESEARCH-PAPER.pdf): GPU power states and the latency of light vector-search queries. The earlier [evidence audit](../paper/archive/qenlo-evidence-audit-v1.pdf) covers routing methodology and limits.
 
 Need a specific answer? Start with the quickstart, then use the sidebar to move deeper.

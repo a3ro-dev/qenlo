@@ -62,7 +62,7 @@ Qenlo is research-grade alpha software. The repository has strong correctness, r
 - concurrency, sustained mutation churn, crash schedules, and energy use need broader evaluation; and
 - mobile packaging and current-revision physical-device validation remain incomplete.
 
-The research paper reports observations for named hardware and source revisions. It does not claim a universal CPU/GPU threshold. Read the single canonical [Qenlo research paper](QENLO-RESEARCH-PAPER.pdf) or [verification notes](docs/verification.md) before quoting benchmark numbers.
+The [Qenlo research paper](QENLO-RESEARCH-PAPER.pdf), *The Efficient Kernel Runs Slow*, reports that on four GPUs the driver runs Qenlo's work-efficient GPU query path in low power states. That makes its latency host-dependent (up to 4x), while a heavier path reproduces within 1-7%. Source: [`paper/v2/`](paper/v2/). The earlier evidence audit of Qenlo's CPU/GPU routing is preserved as [`paper/archive/qenlo-evidence-audit-v1.pdf`](paper/archive/qenlo-evidence-audit-v1.pdf), with its source in `paper/paper.tex`. Neither paper claims a universal CPU/GPU threshold. Read them or the [verification notes](docs/verification.md) before quoting benchmark numbers.
 
 GitHub release assets and package registries are separate publication stages. See the [CI and release map](docs/ci.md) for triggers, gates, and outputs.
 
