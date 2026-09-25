@@ -131,10 +131,12 @@ def main():
         axes[1].plot([int(r['eligible']) for r in rr],[float(r['p95_ms']) for r in rr],'o-',label=label,color=col)
     for ax,title in zip(axes,['Historical RTX 4050 / 384D / B=1','Historical A6000 / 768D / B=1']):
         ax.set(xscale='log',yscale='log',xlabel='Eligible rows (log scale)',ylabel='P95 (ms; log scale)',title=title);ax.legend(fontsize=7)
-    fig.tight_layout()
-    for ext in ['pdf','png']:fig.savefig(OUT/('phase_map.'+ext),bbox_inches='tight',dpi=180)
-    plt.close(fig)
-    record('phase_map',[DATA/'native_crossover_summary.csv',DATA/'a6000_exact_summary.csv'],'Separate panels, not pooled. Native matched revision 3e2a4a9 only; older endpoints deliberately omitted. A6000 pooled per-call descriptive P95 within cell, cross-implementation agreement only. Lines guide eyes.')
+    save(
+        fig,
+        'phase_map',
+        'Separate panels, not pooled. Native matched revision 3e2a4a9 only; older endpoints deliberately omitted. A6000 pooled per-call descriptive P95 within cell, cross-implementation agreement only. Lines guide eyes.',
+        [DATA/'native_crossover_summary.csv',DATA/'a6000_exact_summary.csv'],
+    )
 
     archive=DATA/'archive-reanalysis'
     router_path=archive/'alpha5_heldout_router.csv'
@@ -169,6 +171,29 @@ def main():
     axes[1].set(xlabel='Eligible rows E',ylabel='GPU P95 / CPU P95',xscale='log',yscale='log',title='Environment-conditioned crossover')
     axes[1].legend(fontsize=7)
     save(fig,'archive_router_failure','Left: 16 preregistered RTX 4050 workloads; near-equal work has different observed winners; monotone counterexamples and uncertainty are discussed in the text. Right: separate 384D, B=1, k=10 cohorts; lines guide the eye and latencies are never pooled. Ratio below one favors GPU. No error bars.',[router_path,crossover_path])
+
+    e0e2 = DATA/'runpod-e0-e2-analysis-20260924'
+    blocks_path, latency_path = e0e2/'block_metrics.csv', e0e2/'latency_summary.csv'
+    blocks = list(csv.DictReader(blocks_path.open(encoding='utf-8')))
+    latency = list(csv.DictReader(latency_path.open(encoding='utf-8')))
+    fig, axes = plt.subplots(1, 3, figsize=(10.5, 3.4))
+    for engine, color, marker in [('cpu', COLORS[0], 'o'), ('gpu-rows', COLORS[1], 's')]:
+        rr = sorted((r for r in blocks if r['experiment'] == 'e0' and r['engine'] == engine), key=lambda r: int(r['block']))
+        axes[0].plot([int(r['block']) for r in rr], [float(r['p95_ns'])/1e6 for r in rr], marker=marker, color=color, label=engine)
+    axes[0].set(xlabel='E0 block (execution order)', ylabel='Block P95 (ms)', title='E0: B=1, E=3,000 repeated')
+    axes[0].legend(fontsize=7)
+    engines = [('cpu', 'CPU', COLORS[0], 'o'), ('gpu-rows', 'rows', COLORS[1], 's'), ('gpu-predicate', 'predicate', COLORS[2], '^'), ('gpu-mask', 'mask', COLORS[3], 'D')]
+    for ax, batch in zip(axes[1:], ('1', '16')):
+        for engine, label, color, marker in engines:
+            rr = sorted((r for r in latency if r['experiment'] == 'e2' and r['batch'] == batch and r['engine'] == engine and r['metric'] == 'p95_ns'), key=lambda r: float(r['fraction']))
+            x = [float(r['fraction']) for r in rr]
+            y = [float(r['median_ns'])/1e6 for r in rr]
+            lo = [v - float(r['ci95_low_ns'])/1e6 for v, r in zip(y, rr)]
+            hi = [float(r['ci95_high_ns'])/1e6 - v for v, r in zip(y, rr)]
+            ax.errorbar(x, y, yerr=[lo, hi], marker=marker, color=color, label=label, capsize=2, lw=1, ms=4)
+        ax.set(xscale='log', yscale='log', xlabel='Eligible fraction f', ylabel='Median block P95 (ms)', title=f'E2: B={batch}' + (' (f=0.3 partial, f=1 missing)' if batch == '16' else ''))
+        ax.legend(fontsize=7)
+    save(fig, 'e0e2_noise_representation', 'Partial E0/E2 archive e4ca1336 (227/260 summaries). Left: E0 block P95, all blocks retained. Middle/right: E2 median block P95 with 95% block-bootstrap intervals; missing cells absent, not interpolated.', [blocks_path, latency_path])
     (ROOT/'paper/audit/figure-sources.json').write_text(json.dumps(sources,indent=2)+'\n',newline='\r\n')
     print(f'Generated {len(sources)} figure pairs')
 

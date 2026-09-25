@@ -17,3 +17,26 @@ The retained real 100k×384 Rust cohort shows the expected CPU/GPU reversal: all
 At 100k×384 with all rows eligible, the controlled Windows cohort compares identical data, query ranges, process boundary, and hardware. Expansion 128 was selected on 1,000 tuning queries (recall 0.9932); held-out USearch reached recall 0.99224 and P95 3.625 ms. Exact WGPU reached recall 0.99998 and P95 3.240 ms. Its nominal 1.12× advantage has a whole-run bootstrap interval [0.77,1.54], so the experiment does not establish a reliable latency winner. It does show that exact GPU is competitive with HNSW above 0.99 recall in this cell. Batching and router behavior have smaller device-lab evidence; correlation remains open.
 
 H1 is partially supported: exhaustive GPU beats CPU in a dense real Rust workload, is latency-competitive with one tuned USearch point at recall above 0.99, and a transparent CUDA exhaustive implementation beats FAISS Flat at large E. Chroma's separate Windows cell is faster (1.130 ms P95 at recall 0.99414), so no system-independent ANN victory is claimed. The USearch interval crosses parity. H4 has supporting device-lab evidence only; H5 has one controlled point rather than a curve; H6 remains inconclusive beyond correctness of the current threshold decisions.
+
+## Partial E0/E2 campaign (2026-09-24)
+
+The Runpod RTX 4090/Vulkan E0/E2 archive is partial: 227 of 260 planned block
+summaries (E0 20/20, E2 207/240), no completion marker, and 33 missing slots in
+the last two batch-16 cells. E0 shows same-cell block ratios up to about 2×.
+GPU blocks are bimodal and associated with end-of-run clock snapshots. E2 shows
+compact GPU rows 3.2–6.1× faster than shader predicates or dense masks at
+f ≤ 0.01 for both batches, while predicates are faster at B=1/f=1. Batch moves
+the CPU/GPU winner by more than an order of magnitude in E. A same-host witness
+contradicts every increasing EDB threshold (post hoc). Host row materialization
+is 51% of the gpu-rows call at B=1/E=30,000. The paper now frames routing as a
+backend × representation × preparation decision with noise-calibrated
+certification; see `direction-memo-2026-09-24.md`. No router or threshold was
+changed.
+
+The audit produced behavior-preserving implementation changes rather than a new
+policy. Batch-total counters are no longer multiplied by batch size; broad
+timestamp-range row materialization can abandon index traversal and sorting for
+a sequential scan; and required shader-predicate batches count eligibility
+without allocating an unused row list. The campaign runner also refuses to
+resume past a summary paired with a missing or nonzero run record. Correctness
+and accounting tests pass locally. No campaign-host speedup is claimed.

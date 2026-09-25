@@ -10,7 +10,7 @@ def main():
     text_path=paper/'audit/final-text.txt'
     subprocess.run(['pdftotext','-layout',str(pdf),str(text_path)],check=True)
     text=text_path.read_text(encoding='utf-8')
-    expected=['9.409','0.897','14.800','15.343','18.695','0.671','28.599','0.896','3.055','6.202','2.936','0.384','101.296','52.169','23.9','235.7','8 of 16','17.0','28.0','26.9','0.9400778694252952','References','FP64']
+    expected=['9.409','0.897','14.800','15.343','18.695','0.671','28.599','0.896','3.055','6.202','2.936','0.384','101.296','52.169','23.9','235.7','8 of 16','17.0','28.0','26.9','0.9400778694252952','References','FP64','227 of 260','614,400','1,152,000','0.99998','424,640','6,794,240','1.673','e4ca1336']
     missing=[s for s in expected if s not in text]
     assert not missing,missing
     assert '??' not in text and '\ufffd' not in text,'Missing or corrupt text marker'
@@ -20,7 +20,7 @@ def main():
         content=p.extract_text() or ''
         assert len(content.strip())>100,f'Unexpectedly blank page {i}'
         pages.append({'page':i,'text_characters':len(content)})
-    assert len(set(re.findall(r'Figure (\d+):',text)))==13,'Missing figure captions'
+    assert len(set(re.findall(r'Figure (\d+):',text)))==14,'Missing figure captions'
     assert len(set(re.findall(r'\[(\d+)\]',text)))>=15,'Missing numbered bibliography entries'
     subprocess.run(['pdftoppm','-png','-r','120',str(pdf),str(out/'page')],check=True)
     pdf_sha256=hashlib.sha256(pdf.read_bytes()).hexdigest()

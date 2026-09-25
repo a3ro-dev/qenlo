@@ -149,5 +149,20 @@
       }
     ],
     "interpretation": "Left: 16 preregistered RTX 4050 workloads; near-equal work has different observed winners; monotone counterexamples and uncertainty are discussed in the text. Right: separate 384D, B=1, k=10 cohorts; lines guide the eye and latencies are never pooled. Ratio below one favors GPU. No error bars."
+  },
+  {
+    "figure": "e0e2_noise_representation",
+    "generator": "paper/scripts/generate_final_figures.py",
+    "inputs": [
+      {
+        "path": "research/data/processed/runpod-e0-e2-analysis-20260924/block_metrics.csv",
+        "sha256": "bc3135c4c7211a88cf48d0dbde771ce52a501cbd7563d03c8525e23cbf4a75e1"
+      },
+      {
+        "path": "research/data/processed/runpod-e0-e2-analysis-20260924/latency_summary.csv",
+        "sha256": "794cc87a88597b5d172dd2d0f9b69288df04bfb668de0c2b8b64a4b93ff94ee2"
+      }
+    ],
+    "interpretation": "Partial E0/E2 archive e4ca1336 (227/260 summaries). Left: E0 block P95, all blocks retained. Middle/right: E2 median block P95 with 95% block-bootstrap intervals; missing cells absent, not interpolated."
   }
 ]
