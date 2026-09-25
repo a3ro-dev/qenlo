@@ -28,6 +28,8 @@ def main(tag: str) -> int:
     py_expected = {expected, to_pep440(expected)}
     workspace = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
     python = tomllib.loads((ROOT / "sdk/python/pyproject.toml").read_text(encoding="utf-8"))
+    cargo_lock = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))
+    uv_lock = tomllib.loads((ROOT / "sdk/python/uv.lock").read_text(encoding="utf-8"))
     npm = json.loads((ROOT / "sdk/typescript/package.json").read_text(encoding="utf-8"))
     kotlin = (ROOT / "sdk/kotlin/build.gradle.kts").read_text(encoding="utf-8")
 
@@ -41,6 +43,21 @@ def main(tag: str) -> int:
         "Kotlin": re.search(r'^version = "([^"]+)"$', kotlin, re.MULTILINE).group(1),
     }
     mismatches = {name: value for name, value in values.items() if value != expected}
+    mismatches.update(
+        {
+            f"Cargo.lock {package['name']}": package["version"]
+            for package in cargo_lock["package"]
+            if package["name"].startswith("qenlo-") or package["name"] == "qenlo"
+            if package["version"] != expected
+        }
+    )
+    mismatches.update(
+        {
+            "uv.lock qenlo": package["version"]
+            for package in uv_lock["package"]
+            if package["name"] == "qenlo" and package["version"] != to_pep440(expected)
+        }
+    )
     if mismatches:
         detail = ", ".join(f"{name}={value}" for name, value in mismatches.items())
         raise SystemExit(f"release version {expected} does not match: {detail}")

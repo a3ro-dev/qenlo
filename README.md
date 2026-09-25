@@ -62,7 +62,17 @@ Qenlo is research-grade alpha software. The repository has strong correctness, r
 - concurrency, sustained mutation churn, crash schedules, and energy use need broader evaluation; and
 - mobile packaging and current-revision physical-device validation remain incomplete.
 
-The [Qenlo research paper](QENLO-RESEARCH-PAPER.pdf), *The Efficient Kernel Runs Slow*, reports that on four GPUs the driver runs Qenlo's work-efficient GPU query path in low power states. That makes its latency host-dependent (up to 4x), while a heavier path reproduces within 1-7%. Source: [`paper/v2/`](paper/v2/). The earlier evidence audit of Qenlo's CPU/GPU routing is preserved as [`paper/archive/qenlo-evidence-audit-v1.pdf`](paper/archive/qenlo-evidence-audit-v1.pdf), with its source in `paper/paper.tex`. Neither paper claims a universal CPU/GPU threshold. Read them or the [verification notes](docs/verification.md) before quoting benchmark numbers.
+The [Qenlo research paper](QENLO-RESEARCH-PAPER.pdf), *The Efficient Kernel Runs Slow*, studies RTX 4050, RTX 4090, and H100 systems. The compact-row GPU path runs in lower power states and its device time varies up to 4.6× across the tested fresh processes and hosts. The heavier path varies by at most 1% within a machine and 7% across five RTX 4090 pod hosts. Source: [`paper/v2/`](paper/v2/). The earlier evidence audit of Qenlo's CPU/GPU routing is preserved as [`paper/archive/qenlo-evidence-audit-v1.pdf`](paper/archive/qenlo-evidence-audit-v1.pdf), with its source in `paper/paper.tex`. Neither paper claims a universal CPU/GPU threshold. Read them or the [verification notes](docs/verification.md) before quoting benchmark numbers.
+
+### Research, with the failed bets visible
+
+| Question | What the evidence says | Start with |
+| --- | --- | --- |
+| Can one workload-size rule choose CPU or GPU? | A rule that fit 31 development pairs failed a preregistered held-out gate: 235.7% maximum regret against a 25% limit. It was reverted. | [Held-out gate](research/data/processed/alpha5-router-heldout/report.md) · [evidence audit](paper/archive/qenlo-evidence-audit-v1.pdf) |
+| Why does the same GPU query vary across machines? | The compact-row GPU path entered lower power states in a four-GPU study. Its device time varied across fresh processes and hosts; a heavier path was more stable. A GPU-load intervention reduced the compact path's device-time tail, but the predicted 10% end-to-end gain failed. | [Current paper](QENLO-RESEARCH-PAPER.pdf) · [protocols and data](research/README.md) |
+| Does a faster kernel imply a faster search call? | No. Host filtering, transfers, dispatch, and readback matter. Qenlo reports both call latency and execution diagnostics so comparisons can keep these costs in view. | [Benchmark protocol](docs/benchmark-protocol.md) · [execution reports](docs/concepts.md) |
+
+The [research evidence index](research/README.md) links protocols, raw archives, reductions, and known gaps. Results describe their tested hardware and workloads; they are not release-wide speedup claims.
 
 GitHub release assets and package registries are separate publication stages. See the [CI and release map](docs/ci.md) for triggers, gates, and outputs.
 

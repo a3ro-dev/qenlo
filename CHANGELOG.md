@@ -1,5 +1,27 @@
 # changelog
 
+## 0.1.0-alpha.7 - 2026-09-26
+
+### added
+
+- a research evidence index that connects the held-out router rejection and the
+  GPU power-state study to protocols, raw archives, reductions, and limits.
+- a sequential alpha-version bump command that updates package manifests,
+  active install examples, lock entries, and generated documentation together.
+
+### changed
+
+- the Python install examples and lock entry now match the package version.
+- the main README exposes both successful and failed research bets in a compact
+  claim-to-evidence map.
+
+### compatibility and limits
+
+- the current branch also includes the post-alpha.6 filter, benchmark-accounting,
+  and experimental GPU-path work described in its source history. No new
+  automatic router or cross-host speedup guarantee is claimed.
+- `.qn` format v1, WAL v1, native ABI, and SDK API contracts are unchanged.
+
 ## 0.1.0-alpha.6 - 2026-09-19
 
 ### added

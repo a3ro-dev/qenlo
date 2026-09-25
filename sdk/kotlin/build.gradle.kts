@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.qenlo"
-version = "0.1.0-alpha.6"
+version = "0.1.0-alpha.7"
 
 repositories { mavenCentral() }
 
