@@ -97,3 +97,17 @@ push. Newest entries last. Release mechanics are in `RELEASING.md`.
 - X and LinkedIn were unavailable until the user signed in mid-session.
   Posted on X (voice skill + short style): CI glob-order story and alpha.8.
   Drafts and a posted log live in `.claude/gtm-drafts.md` (untracked).
+
+## alpha.10 re-tag
+
+- Post-publication proof (RELEASING.md) on alpha.8: PyPI wheel works on
+  Windows; the npm package fails with "native library not found". Cause: the
+  release job packed `native/windows-x64/qenlo_ffi.dll`, the loader looks for
+  `native/win32-x64/` (Node's `process.platform`). Every npm version back to at
+  least alpha.3 has this layout; SDK CI only exercises Linux and local dev uses
+  a `win32-x64` folder, so nothing caught it. Moving the published DLL into
+  `win32-x64/` made the same package pass (search + 18-field report).
+- The first alpha.10 tag (`806ca76`) was pushed before this was found. Its
+  release build was cancelled before any GitHub release or registry upload, the
+  tag was deleted, and alpha.10 is re-tagged on the fixed commit. No published
+  artifact ever carried the first tag.

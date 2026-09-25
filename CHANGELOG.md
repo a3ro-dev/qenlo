@@ -27,6 +27,13 @@
 
 ### fixed
 
+- the npm package could not load its native library on Windows. The release
+  workflow packed the DLL under `native/windows-x64/`, but the loader looks in
+  `native/${process.platform}-${process.arch}`, which is `win32-x64` in Node.
+  Found by installing alpha.8 from npm into an empty project. The workflow now
+  packs `win32-x64` and fails the release if the tarball lacks any platform's
+  library. For `@a3ro.dev/qenlo` alpha.9 and earlier on Windows, set
+  `QENLO_LIBRARY_PATH` to the packaged `native/windows-x64/qenlo_ffi.dll`.
 - the three landing-page cards rendered about 2px wide. `.cards` is a size
   container whose cards are sized from `100cqh`, and the section added below it
   in alpha.8 squeezed its height to zero; it now has a definite flex basis.

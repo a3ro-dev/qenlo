@@ -102,9 +102,10 @@ jobs:
       - name: Assemble package-native layouts
         shell: bash
         run: |
-          mkdir -p sdk/typescript/native/{linux-x64,windows-x64,darwin-arm64}
+          # Node's loader looks in native/${process.platform}-${process.arch}; Windows is win32.
+          mkdir -p sdk/typescript/native/{linux-x64,win32-x64,darwin-arm64}
           cp artifacts/native/qenlo-native-linux-x64/libqenlo_ffi.so sdk/typescript/native/linux-x64/
-          cp artifacts/native/qenlo-native-windows-x64/qenlo_ffi.dll sdk/typescript/native/windows-x64/
+          cp artifacts/native/qenlo-native-windows-x64/qenlo_ffi.dll sdk/typescript/native/win32-x64/
           cp artifacts/native/qenlo-native-darwin-arm64/libqenlo_ffi.dylib sdk/typescript/native/darwin-arm64/
 
           mkdir -p sdk/go/native/{linux-amd64,windows-amd64,darwin-arm64}
@@ -126,6 +127,9 @@ jobs:
           pnpm run build
           mkdir -p ../../dist/sdk
           pnpm pack --pack-destination ../../dist/sdk
+          for lib in linux-x64/libqenlo_ffi.so win32-x64/qenlo_ffi.dll darwin-arm64/libqenlo_ffi.dylib; do
+            tar -tzf ../../dist/sdk/*.tgz | grep -qx "package/native/$lib" || { echo "npm package lacks native/$lib"; exit 1; }
+          done
       - name: Verify and pack Go
         shell: bash
         run: |
