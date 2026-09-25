@@ -4,6 +4,7 @@ use std::alloc::{Layout, alloc, dealloc, handle_alloc_error};
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap};
 use std::fmt;
+use std::ops::Bound;
 use std::ptr::NonNull;
 use std::sync::OnceLock;
 
@@ -599,31 +600,74 @@ impl CoreStore {
                         .contains(self.records[slot as usize].timestamp)
                 })
                 .collect(),
-            None if predicate.timestamp == TimestampRange::ALL => self
-                .records
-                .iter()
-                .enumerate()
-                .filter(|(_, record)| record.live)
-                .map(|(slot, _)| slot as u32)
-                .collect(),
+            None if predicate.timestamp == TimestampRange::ALL => self.scan_live(|_| true),
             None => {
                 let lower = predicate.timestamp.lower.unwrap_or(i64::MIN);
-                let mut slots: Vec<_> = match predicate.timestamp.upper {
-                    Some(upper) => self
-                        .timestamps
-                        .range(lower..upper)
-                        .flat_map(|(_, slots)| slots.iter().copied())
-                        .collect(),
-                    None => self
-                        .timestamps
-                        .range(lower..)
-                        .flat_map(|(_, slots)| slots.iter().copied())
-                        .collect(),
-                };
+                let upper = predicate
+                    .timestamp
+                    .upper
+                    .map_or(Bound::Unbounded, Bound::Excluded);
+                let range = self
+                    .timestamps
+                    .range((Bound::Included(lower), upper))
+                    .flat_map(|(_, slots)| slots.iter().copied());
+                // Index traversal plus sort costs far more per row than a sequential slot-order
+                // scan, so a broad range abandons the index after a bounded probe.
+                // ponytail: fixed 1/16 probe, measured locally only; tune per host if it matters.
+                let probe_limit = self.records.len() / RANGE_SCAN_PROBE_DIVISOR;
+                let mut slots = Vec::new();
+                for slot in range {
+                    if slots.len() == probe_limit {
+                        return self
+                            .scan_live(|record| predicate.timestamp.contains(record.timestamp));
+                    }
+                    slots.push(slot);
+                }
                 slots.sort_unstable();
                 slots
             }
         }
+    }
+
+    /// Count matching live rows without materializing or sorting row slots.
+    pub fn filter_count(&self, predicate: &Predicate) -> usize {
+        if predicate.timestamp.is_empty() {
+            return 0;
+        }
+
+        match predicate.user_id {
+            Some(user_id) => self.users.get(&user_id).map_or(0, |slots| {
+                slots
+                    .iter()
+                    .filter(|&&slot| {
+                        predicate
+                            .timestamp
+                            .contains(self.records[slot as usize].timestamp)
+                    })
+                    .count()
+            }),
+            None if predicate.timestamp == TimestampRange::ALL => self.live_len,
+            None => {
+                let lower = predicate.timestamp.lower.unwrap_or(i64::MIN);
+                let upper = predicate
+                    .timestamp
+                    .upper
+                    .map_or(Bound::Unbounded, Bound::Excluded);
+                self.timestamps
+                    .range((Bound::Included(lower), upper))
+                    .map(|(_, slots)| slots.len())
+                    .sum()
+            }
+        }
+    }
+
+    fn scan_live(&self, keep: impl Fn(&Record) -> bool) -> Vec<u32> {
+        self.records
+            .iter()
+            .enumerate()
+            .filter(|(_, record)| record.live && keep(record))
+            .map(|(slot, _)| slot as u32)
+            .collect()
     }
 
     pub fn search(
@@ -884,6 +928,8 @@ pub enum CpuDistancePath {
 // The certified two-pass path wins for selective scans but loses once its extra pass exceeds the
 // measured benefit. This conservative boundary is replaced by the adaptive cost model later.
 const CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
+/// A timestamp range yielding more than `rows / divisor` slots switches to a sequential scan.
+const RANGE_SCAN_PROBE_DIVISOR: usize = 16;
 
 /// Report the optimized exact distance implementation selected on this CPU.
 pub fn cpu_distance_path() -> CpuDistancePath {
@@ -1259,6 +1305,109 @@ mod tests {
     }
 
     #[test]
+    fn timestamp_ranges_match_brute_force_on_index_and_scan_paths() {
+        let rows = 1_000_u64;
+        let mut store = CoreStore::new(2).unwrap();
+        for id in 0..rows {
+            // Scrambled, partly duplicated timestamps plus both i64 extremes.
+            let timestamp = match id {
+                0 => i64::MIN,
+                1 => i64::MAX,
+                _ => (id * 7_919 % 500) as i64 - 250,
+            };
+            store.add(id, id % 3, timestamp, [1.0, id as f32]).unwrap();
+        }
+        for id in (0..rows).step_by(7) {
+            store.delete(id).unwrap();
+        }
+        let brute = |range: TimestampRange| -> Vec<u32> {
+            store
+                .records()
+                .filter(|(_, record)| record.is_live() && range.contains(record.timestamp()))
+                .map(|(slot, _)| slot)
+                .collect()
+        };
+        let bounds = [
+            None,
+            Some(i64::MIN),
+            Some(-250),
+            Some(-248),
+            Some(-10),
+            Some(0),
+            Some(245),
+            Some(i64::MAX),
+        ];
+        let mut index_path = false;
+        let mut scan_path = false;
+        for lower in bounds {
+            for upper in bounds {
+                let range = TimestampRange::new(lower, upper);
+                let expected = if range.is_empty() {
+                    Vec::new()
+                } else {
+                    brute(range)
+                };
+                // Probe limit is rows / 16 = 62 for this store.
+                index_path |= !expected.is_empty() && expected.len() <= 62;
+                scan_path |= expected.len() > 62;
+                assert_eq!(
+                    store.filter(&Predicate::new(None, range)),
+                    expected,
+                    "{range:?}"
+                );
+                assert_eq!(
+                    store.filter_count(&Predicate::new(None, range)),
+                    expected.len(),
+                    "{range:?}"
+                );
+            }
+        }
+        assert!(
+            index_path && scan_path,
+            "both materialization paths must be exercised"
+        );
+    }
+
+    #[test]
+    fn filter_count_matches_materialization_for_user_and_timestamp_predicates() {
+        let mut store = CoreStore::new(2).unwrap();
+        for id in 0..257_u64 {
+            store
+                .add(
+                    id,
+                    id % 11,
+                    (id.wrapping_mul(97) % 401) as i64 - 200,
+                    [1.0, 0.5],
+                )
+                .unwrap();
+        }
+        for id in (0..257_u64).step_by(5) {
+            store.delete(id).unwrap();
+        }
+
+        let bounds = [
+            None,
+            Some(i64::MIN),
+            Some(-200),
+            Some(-37),
+            Some(0),
+            Some(199),
+            Some(i64::MAX),
+        ];
+        for user_id in (0..11).map(Some).chain([None]) {
+            for lower in bounds {
+                for upper in bounds {
+                    let predicate = Predicate::new(user_id, TimestampRange::new(lower, upper));
+                    assert_eq!(
+                        store.filter_count(&predicate),
+                        store.filter(&predicate).len()
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn predicate_clauses_are_joined_by_and() {
         let store = store();
         let predicate = Predicate::new(Some(7), TimestampRange::new(Some(0), None));
@@ -1595,5 +1744,48 @@ mod tests {
             Err(Error::DimensionMismatch { .. })
         ));
         assert_eq!(Sq8Vector::quantize(&[0.0, 0.0]), Err(Error::ZeroNormVector));
+    }
+}
+
+#[cfg(test)]
+mod filter_timing {
+    use super::*;
+
+    /// Local timing probe for timestamp-range materialization (E0/E2 mechanism audit).
+    /// `cargo test -p qenlo-core --release filter_timing -- --ignored --nocapture`
+    #[test]
+    #[ignore = "timing probe, not a correctness test"]
+    fn timestamp_range_materialization_timing() {
+        let rows = 100_000_u64;
+        let mut store = CoreStore::new(384).unwrap();
+        let mut vector = vec![0.0_f32; 384];
+        // Independent metadata: timestamps are a fixed permutation of slot order.
+        for id in 0..rows {
+            vector[(id % 384) as usize] = 1.0;
+            let timestamp = (id.wrapping_mul(48_271) % rows) as i64 - 50_000;
+            store.add(id, id % 97, timestamp, &vector).unwrap();
+            vector[(id % 384) as usize] = 0.0;
+        }
+        for eligible in [
+            100_i64, 1_000, 3_000, 6_000, 8_000, 10_000, 12_000, 14_000, 20_000, 30_000, 100_000,
+        ] {
+            let predicate = Predicate {
+                user_id: None,
+                timestamp: TimestampRange {
+                    lower: None,
+                    upper: Some(eligible - 50_000),
+                },
+            };
+            let mut samples = (0..51)
+                .map(|_| {
+                    let started = std::time::Instant::now();
+                    let slots = std::hint::black_box(store.filter(&predicate));
+                    assert_eq!(slots.len() as i64, eligible);
+                    started.elapsed().as_nanos()
+                })
+                .collect::<Vec<_>>();
+            samples.sort_unstable();
+            println!("E={eligible} median_ns={}", samples[25]);
+        }
     }
 }
