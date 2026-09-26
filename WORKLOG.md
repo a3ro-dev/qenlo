@@ -129,8 +129,9 @@ push. Newest entries last. Release mechanics are in `RELEASING.md`.
 
 ## open items / next steps
 
-1. npm `latest` dist-tag still points at 0.1.0-alpha.1; `npm dist-tag add
-   @a3ro.dev/qenlo@0.1.0-alpha.10 latest` needs the maintainer's npm auth.
+1. Done: the maintainer moved npm `latest` from 0.1.0-alpha.1 to
+   0.1.0-alpha.10. The publish workflow still tags only `alpha`, so `latest`
+   will lag again on the next release unless it is moved at publish time.
 2. SDK CI tests TypeScript only on Linux, which is how the Windows layout bug
    survived; a Windows/macOS job that installs the packed tarball would catch
    the whole class.
