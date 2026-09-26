@@ -5,7 +5,7 @@ The Python SDK provides typed bindings for Qenlo using precompiled binary wheels
 ## Installation
 
 ```bash
-pip install "qenlo==0.1.0a10"
+pip install "qenlo==0.1.0a11"
 ```
 
 ## Quick example

@@ -139,3 +139,20 @@ push. Newest entries last. Release mechanics are in `RELEASING.md`.
 4. Linux/macOS post-publication proofs and a Rust registry consumer build were
    not run locally (CI builds and tests those platforms from source).
 5. Desktop app Functions tab inherits the web UI; not separately launched.
+
+## alpha.11 (2026-09-26)
+
+- Building qenlo-memory (github.com/a3ro-dev/qenlo-memory, a cross-agent memory
+  on the Python SDK) showed that `flush()` never compacted. It returned early on
+  `durable_generation == generation`, which every WAL commit satisfies, so one
+  WAL file per write piled up and `open` replayed all of them. Fix: track the
+  loaded or written snapshot generation (`OpenedStore.snapshot_generation`,
+  `Collection.snapshot_generation`), and skip only when the snapshot is
+  current. `close()` keeps the old durable-only check so it never writes a
+  full snapshot. Rust regression test `flush_compacts_committed_wal_files`;
+  checked through the Python FFI too (300 WAL files -> 0, reopen keeps 300 rows).
+- Python README: wheel list now matches what is published (no Linux aarch64 or
+  Intel macOS), and the backend strings match the FFI's `Debug` output.
+- Deliberately unchanged: records have no payload and deleted ids are never
+  reused. qenlo-memory keeps text in sqlite next to the collection, which is
+  the intended pattern.

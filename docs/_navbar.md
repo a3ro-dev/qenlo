@@ -1,4 +1,4 @@
-* v0.1.0-alpha.10
+* v0.1.0-alpha.11
 * [GitHub](https://github.com/a3ro-dev/qenlo)
 * [Architecture](architecture.md)
 * [Privacy](../privacy.html)

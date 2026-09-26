@@ -1,5 +1,21 @@
 # changelog
 
+## 0.1.0-alpha.11 - 2026-09-26
+
+### fixed
+
+- `flush()` never compacted a durable collection. It returned early whenever the
+  durable generation matched the current one, and every WAL commit makes them
+  match, so the snapshot-and-prune path was unreachable. Each write left one
+  WAL file behind and every `open` replayed all of them. `flush()` now writes a
+  snapshot and deletes the WAL files it covers whenever the newest snapshot is
+  behind. `close()` still only publishes state that isn't durable yet, so it
+  does not get slower. Found while building qenlo-memory, which writes one
+  memory per call.
+- the Python README listed Linux aarch64 and Intel macOS wheels that were never
+  published, and documented `requested_backend` values that the FFI does not
+  emit. Both now match the release.
+
 ## 0.1.0-alpha.10 - 2026-09-26
 
 ### added

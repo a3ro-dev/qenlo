@@ -68,6 +68,8 @@ pub(crate) struct OpenedStore {
     pub store: CoreStore,
     pub recovered_interrupted_write: bool,
     pub lock: File,
+    /// Generation of the snapshot that was loaded; WAL replay may have advanced past it.
+    pub snapshot_generation: u64,
 }
 
 pub(crate) struct OpenedPortable {
@@ -203,6 +205,7 @@ pub(crate) fn open_with_limit(
             store,
             recovered_interrupted_write: true,
             lock,
+            snapshot_generation: generation,
         });
     }
 
@@ -254,6 +257,7 @@ pub(crate) fn open_with_limit(
         store,
         recovered_interrupted_write: interrupted,
         lock,
+        snapshot_generation: generation,
     })
 }
 

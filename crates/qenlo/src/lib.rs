@@ -1166,7 +1166,9 @@ impl Collection {
         }
     }
 
-    /// Sync pending canonical data. Normal durable mutations are already synced.
+    /// Write a snapshot of the current generation and delete the WAL files it covers.
+    ///
+    /// Durable mutations are already synced; flushing bounds how much WAL `open` replays.
     pub fn flush(&self) -> Result<(), Error> {
         self.inner.write_blocking().flush()
     }
@@ -1226,6 +1228,8 @@ struct CollectionState {
     fallback_reason: Option<String>,
     path: Option<PathBuf>,
     durable_generation: Option<u64>,
+    /// Newest on-disk snapshot. WAL commits advance `durable_generation` but not this.
+    snapshot_generation: Option<u64>,
     recovered_interrupted_write: bool,
     closed: bool,
     storage_lock: Option<std::fs::File>,
@@ -1258,6 +1262,7 @@ impl CollectionState {
             fallback_reason,
             path: None,
             durable_generation: None,
+            snapshot_generation: None,
             recovered_interrupted_write: false,
             closed: false,
             storage_lock: None,
@@ -1295,6 +1300,7 @@ impl CollectionState {
             fallback_reason,
             path: None,
             durable_generation: None,
+            snapshot_generation: None,
             recovered_interrupted_write: opened.recovered_interrupted_write,
             closed: false,
             storage_lock: None,
@@ -1311,6 +1317,7 @@ impl CollectionState {
         collection.storage_lock = Some(lock);
         collection.path = Some(path);
         collection.durable_generation = Some(collection.store.generation());
+        collection.snapshot_generation = collection.durable_generation;
         Ok(collection)
     }
 
@@ -1327,6 +1334,7 @@ impl CollectionState {
         collection.storage_lock = Some(lock);
         collection.path = Some(path);
         collection.durable_generation = Some(0);
+        collection.snapshot_generation = Some(0);
         Ok(collection)
     }
 
@@ -1389,6 +1397,7 @@ impl CollectionState {
             fallback_reason,
             path: Some(path),
             durable_generation: Some(durable_generation),
+            snapshot_generation: Some(opened.snapshot_generation),
             recovered_interrupted_write: opened.recovered_interrupted_write,
             closed: false,
             storage_lock: Some(opened.lock),
@@ -2008,18 +2017,21 @@ impl CollectionState {
         }
     }
 
-    /// Durably publish the current canonical generation.
+    /// Durably publish the current canonical generation as a snapshot and prune the WAL files it covers.
     pub fn flush(&mut self) -> Result<(), Error> {
         self.ensure_open()?;
         let Some(path) = &self.path else {
             return Ok(());
         };
-        if self.durable_generation == Some(self.store.generation()) {
+        // Checking `durable_generation` here made flush a no-op after every WAL commit, so the WAL
+        // grew forever and every open replayed all of it.
+        if self.snapshot_generation == Some(self.store.generation()) {
             return Ok(());
         }
         storage::write_snapshot_with_limit(path, &self.store, self.storage_options.max_load_bytes)
             .map_err(|error| Error::Storage(error.to_string()))?;
         self.durable_generation = Some(self.store.generation());
+        self.snapshot_generation = self.durable_generation;
         Ok(())
     }
 
@@ -2028,7 +2040,10 @@ impl CollectionState {
         if self.closed {
             return Ok(());
         }
-        self.flush()?;
+        // WAL-committed state is already durable; only publish what isn't, so close stays cheap.
+        if self.durable_generation != Some(self.store.generation()) {
+            self.flush()?;
+        }
         self.closed = true;
         self.storage_lock = None;
         Ok(())
@@ -2227,6 +2242,46 @@ mod tests {
                     .collect::<Vec<_>>(),
                 [2]
             );
+        });
+    }
+
+    #[test]
+    fn flush_compacts_committed_wal_files() {
+        block_on(async {
+            let path = temp_dir("flush-compacts");
+            let wal_count = |path: &PathBuf| {
+                std::fs::read_dir(path)
+                    .unwrap()
+                    .filter(|entry| {
+                        entry
+                            .as_ref()
+                            .unwrap()
+                            .file_name()
+                            .to_string_lossy()
+                            .ends_with(".qwal")
+                    })
+                    .count()
+            };
+            let config = CollectionConfig::cpu_exact(2);
+            let collection = Collection::create(&path, config.clone()).await.unwrap();
+            for id in 1..=5 {
+                collection.add(id, 1, 0, &[1.0, id as f32]).unwrap();
+            }
+            collection.delete(2).unwrap();
+            assert_eq!(wal_count(&path), 6);
+            collection.flush().unwrap();
+            assert_eq!(wal_count(&path), 0);
+            collection.flush().unwrap();
+            collection.add(6, 1, 0, &[0.0, 1.0]).unwrap();
+            collection.close().unwrap();
+            assert_eq!(wal_count(&path), 1, "close must not rewrite a snapshot");
+
+            let reopened = Collection::open(&path, config).await.unwrap();
+            assert_eq!(reopened.stats().live_rows, 5);
+            reopened.flush().unwrap();
+            assert_eq!(wal_count(&path), 0);
+            reopened.close().unwrap();
+            std::fs::remove_dir_all(path).unwrap();
         });
     }
 

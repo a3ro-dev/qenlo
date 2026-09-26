@@ -9,12 +9,12 @@ returns an execution report with routing and resource measurements.
 ## Installation
 
 ```bash
-pip install "qenlo==0.1.0a10"
+pip install "qenlo==0.1.0a11"
 ```
 
 Pre-built binary wheels bundle the native Rust engine for:
-- Linux (`x86_64`, `aarch64`)
-- macOS (`Apple Silicon arm64`, `Intel x86_64`)
+- Linux (`x86_64`, manylinux 2.28)
+- macOS (Apple Silicon `arm64`, macOS 14+)
 - Windows (`x86_64`)
 
 For source checkouts or development builds, set `QENLO_LIBRARY_PATH` to point to your compiled `qenlo_ffi.dll`, `libqenlo_ffi.so`, or `libqenlo_ffi.dylib`.
@@ -65,13 +65,17 @@ path = "./my_collection.qenlo"
 # 1. Create a new durable collection directory
 with Collection.create(path, dimension=128) as db:
     db.add(Record(id=1, user_id=7, timestamp=10, vector=my_vector))
-    db.flush()  # Compact and ensure full disk sync
+    db.flush()  # write a snapshot and delete the WAL files it covers
 
 # 2. Reopen across application restarts
 with Collection.open(path, dimension=128) as db:
     response = db.search(query=my_query, filter=Filter(user_id=7), k=10)
     print(f"Found {len(response.results)} matches")
 ```
+
+Every durable `add`, `delete`, or batch call commits one WAL file, and `open` replays the WAL files newer than
+the last snapshot. Call `flush()` now and then (for example every few hundred writes) to fold them into a
+snapshot. `close()` does not snapshot, so it stays cheap.
 
 ---
 
@@ -120,7 +124,7 @@ Install the optional dependency only in desktop applications that already need
 PyTorch:
 
 ```bash
-pip install 'qenlo[torch]==0.1.0a10'
+pip install 'qenlo[torch]==0.1.0a11'
 ```
 
 `TorchIndex` is an exhaustive, resident FP32 matrix index. It is derived from a
@@ -169,8 +173,8 @@ CUDA and MPS require separate platform runs.
 
 ### `ExecutionReport`
 - `operation_id`: `int` — Unique monotonically increasing query ID
-- `requested_backend`: `str` — `Cpu`, `GpuPredicate`, or `Automatic`
-- `actual_backend`: `str` — Hardware engine that executed the search
+- `requested_backend`: `str` — the configured policy, e.g. `CpuExact`, `Automatic(GpuPredicate)`, or `WgpuRequired(GpuPredicate)`
+- `actual_backend`: `str` — the engine that ran the search: `Cpu`, `Wgpu`, or `Usearch`
 - `algorithm`: `str` — Search algorithm (`Exact`, `IvfFlat`, etc.)
 - `filter_execution`: `str` — Filter strategy evaluated
 - `index_generation`: `int` — Generation watermark observed
