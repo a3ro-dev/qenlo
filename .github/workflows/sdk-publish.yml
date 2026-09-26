@@ -89,6 +89,8 @@ jobs:
           mkdir -p dist
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.tgz' --dir dist
           npm publish ./dist/*.tgz --access public --tag alpha --provenance
+          # every release is an alpha for now, so `latest` follows the newest one instead of lagging.
+          npm dist-tag add "@a3ro.dev/qenlo@${RELEASE_TAG#sdk-v}" latest
 
   maven-central:
     needs: verify

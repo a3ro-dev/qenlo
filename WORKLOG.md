@@ -156,3 +156,6 @@ push. Newest entries last. Release mechanics are in `RELEASING.md`.
 - Deliberately unchanged: records have no payload and deleted ids are never
   reused. qenlo-memory keeps text in sqlite next to the collection, which is
   the intended pattern.
+- Published alpha.11 (crates.io, PyPI, npm `alpha`); proof on Windows from PyPI: in-memory add/search/report,
+  and a durable collection's `flush()` leaves 0 WAL files. npm `latest` still pointed at alpha.10, so
+  `sdk-publish.yml` now moves `latest` to each release after publishing (future releases).
