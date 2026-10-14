@@ -1,6 +1,6 @@
 # Compatibility policy
 
-Qenlo is pre-1.0. Application APIs may change between alpha releases, but a
+Qenlo is pre-1.0. Application APIs may change between pre-1.0 releases, but a
 release does not silently reinterpret durable data or native calls.
 
 ## Portable and durable data
@@ -15,7 +15,7 @@ release does not silently reinterpret durable data or native calls.
 
 ## SDK and native ABI
 
-Rust, Python, and TypeScript are the supported alpha SDKs. Go, Kotlin/JVM, and
+Rust, Python, and TypeScript are the supported beta SDKs. Go, Kotlin/JVM, and
 Swift are previews: they are tested in the repository, but their packaging and
 platform coverage are not release gates.
 

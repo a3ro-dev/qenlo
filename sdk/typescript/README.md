@@ -7,8 +7,8 @@ Qenlo delivers exact filtered vector search with native C ABI performance, expli
 ## Installation
 
 ```bash
-pnpm add @a3ro.dev/qenlo@alpha
-# or: npm install @a3ro.dev/qenlo@alpha
+pnpm add @a3ro.dev/qenlo@beta
+# or: npm install @a3ro.dev/qenlo@beta
 ```
 
 Platform binaries are packaged directly in the module for:

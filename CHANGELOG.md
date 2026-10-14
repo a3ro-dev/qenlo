@@ -1,5 +1,53 @@
 # changelog
 
+## 0.1.0-beta.1 - 2026-10-14
+
+first beta. the storage format, the `qenlo` API, and the SDKs are unchanged from
+alpha.11; this release is about doing the same work with less memory and less
+waiting. all numbers are from one Windows laptop (12 threads, AVX2/FMA),
+384-dimension vectors, `cargo run -p qenlo-core --release --example footprint`.
+
+### changed
+
+- every vector was held twice in memory: once per record and again in an
+  aligned scan matrix that exact search builds. vectors now live once, in one
+  32-byte-aligned buffer padded to eight floats, and search scans it directly.
+  heap per row went from 3,374 to 2,034 bytes (-40%) at 2k rows.
+- every write threw that scan matrix away, so the first search after an add
+  re-copied the whole collection. that is the add-then-recall pattern of an
+  agent memory. add-then-search at 2k rows went from 848 us to 65 us (13x).
+- the FP32 distance kernels keep four independent accumulators instead of one,
+  so the FMA latency chain no longer serializes the scan. user-filtered search
+  at 2k rows: 23 us -> 19 us.
+- the timestamp index is one ordered (timestamp, slot) set instead of a set per
+  timestamp, which cost about 100 bytes per row when timestamps are unique.
+- snapshots and WAL files checksum a whole vector per update instead of four
+  bytes at a time. opening a 100k x 384 snapshot went from 453 ms to 165 ms;
+  writing one from 708 ms to 422 ms, most of which is now fsync.
+- memory admission (`StorageOptions::max_load_bytes`) budgets the one in-memory
+  copy, so the default 512 MiB admits about twice as many rows as before.
+- the automatic CPU/GPU router counts eligible rows without materializing them.
+- npm releases are published under their channel tag (`beta` now) and `latest`.
+
+### security
+
+- the web browser API (`qenlo-browser --web`, desktop app) rejects requests
+  whose Host or Origin is not localhost, a loopback address, or the host it was
+  explicitly bound to. it can create, mutate and export collections at
+  caller-chosen paths, and a DNS-rebinding page could otherwise drive it.
+- rustls 0.23.46 and quinn-proto 0.11.19 (seven RustSec advisories, reached
+  through the telemetry exporter), and ratatui 0.30, which drops the unsound
+  lru 0.12. `cargo audit` is clean.
+- the C ABI rejects slice lengths above `isize::MAX` bytes as errors instead of
+  passing them to `slice::from_raw_parts`.
+
+### breaking (Rust, `qenlo-core` only)
+
+- `CoreStore::record`, `get`, and `records` return a borrowed `RecordRef`
+  instead of `&Record`. `RecordRef::to_record()` copies a row out.
+  `CoreStore::derived_scan_matrix_bytes` is replaced by `vector_bytes`. the
+  `qenlo` crate API is unchanged.
+
 ## 0.1.0-alpha.11 - 2026-09-26
 
 ### fixed

@@ -15,7 +15,7 @@ Description: Core introduction, boundaries, and documentation index
 
 Qenlo is a local-first embedded vector store for durable, exact retrieval over metadata-filtered collections. It keeps one canonical record store and makes the execution path observable.
 
-> **Research-grade alpha.** GPU and ANN paths are optional. Benchmark observations are scoped to their named hardware, source revision, workload, and timing boundary.
+> **Research-grade beta.** GPU and ANN paths are optional. Benchmark observations are scoped to their named hardware, source revision, workload, and timing boundary.
 
 ## Start here
 
@@ -44,7 +44,7 @@ Description: Build from source, create collections, insert, search, and reopen
 # Quickstart
 
 Qenlo alphas are published to crates.io (`qenlo`), PyPI (`qenlo`), and npm
-(`@a3ro.dev/qenlo`, dist-tag `alpha`). Install commands with the current version
+(`@a3ro.dev/qenlo`, dist-tag `beta`). Install commands with the current version
 are in the [Rust](sdks/rust.md), [Python](sdks/python.md), and
 [TypeScript](sdks/typescript.md) guides. The full Rust API reference is on
 [docs.rs](https://docs.rs/qenlo/latest/qenlo/struct.Collection.html), and the
@@ -439,7 +439,7 @@ Add `qenlo` to `Cargo.toml`:
 
 ```toml
 [dependencies]
-qenlo = "0.1.0-alpha.11"
+qenlo = "0.1.0-beta.1"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -488,7 +488,7 @@ The Python SDK provides typed bindings for Qenlo using precompiled binary wheels
 ## Installation
 
 ```bash
-pip install "qenlo==0.1.0a11"
+pip install "qenlo==0.1.0b1"
 ```
 
 ## Quick example
@@ -536,8 +536,8 @@ Native Node.js FFI bindings for Qenlo with TypeScript type definitions and expli
 ## Installation
 
 ```bash
-pnpm add @a3ro.dev/qenlo@alpha
-# or npm install @a3ro.dev/qenlo@alpha
+pnpm add @a3ro.dev/qenlo@beta
+# or npm install @a3ro.dev/qenlo@beta
 ```
 
 ## Quick example
@@ -769,10 +769,10 @@ sudden-power-loss durability is not claimed. CRC32 is not authentication.
 
 The default `StorageOptions::max_load_bytes` is 512 MiB. Both read and durable
 write admission check snapshot size and the estimate
-`rows * (32 + 4 * dimension + 64 * ceil(dimension / 16) + 512)` with checked
-arithmetic. The aligned term accounts for the disposable exact-CPU scan matrix
-that may appear on the first query; the final 512 bytes per row allow for metadata
-indexes and bookkeeping. This estimate includes tombstones, does not measure resident set size (RSS), and does
+`rows * (32 + 32 * ceil(dimension / 8) + 512)` with checked arithmetic. Each
+vector is held once, in a single 32-byte-aligned buffer padded to eight floats per
+row that exact CPU search scans directly, beside a 32-byte metadata row; the final
+512 bytes per row allow for metadata indexes and bookkeeping. This estimate includes tombstones, does not measure resident set size (RSS), and does
 not pre-reserve memory. The host supplies options on create or open; they are not a
 persisted machine policy.
 
@@ -994,7 +994,7 @@ Description: Storage, SDK, ABI, and prerelease change guarantees
 
 # Compatibility policy
 
-Qenlo is pre-1.0. Application APIs may change between alpha releases, but a
+Qenlo is pre-1.0. Application APIs may change between pre-1.0 releases, but a
 release does not silently reinterpret durable data or native calls.
 
 ## Portable and durable data
@@ -1009,7 +1009,7 @@ release does not silently reinterpret durable data or native calls.
 
 ## SDK and native ABI
 
-Rust, Python, and TypeScript are the supported alpha SDKs. Go, Kotlin/JVM, and
+Rust, Python, and TypeScript are the supported beta SDKs. Go, Kotlin/JVM, and
 Swift are previews: they are tested in the repository, but their packaging and
 platform coverage are not release gates.
 

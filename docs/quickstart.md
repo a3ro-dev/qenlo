@@ -1,7 +1,7 @@
 # Quickstart
 
 Qenlo alphas are published to crates.io (`qenlo`), PyPI (`qenlo`), and npm
-(`@a3ro.dev/qenlo`, dist-tag `alpha`). Install commands with the current version
+(`@a3ro.dev/qenlo`, dist-tag `beta`). Install commands with the current version
 are in the [Rust](sdks/rust.md), [Python](sdks/python.md), and
 [TypeScript](sdks/typescript.md) guides. The full Rust API reference is on
 [docs.rs](https://docs.rs/qenlo/latest/qenlo/struct.Collection.html), and the

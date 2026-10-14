@@ -4,7 +4,7 @@
 
 Qenlo is a local-first, embedded vector store for durable exact retrieval over metadata-filtered collections. It gives an application one canonical record store and several optional execution paths without requiring a database server.
 
-Qenlo is research-grade alpha software. Product copy must not present benchmark observations as universal performance claims or imply production validation that has not happened.
+Qenlo is research-grade beta software. Product copy must not present benchmark observations as universal performance claims or imply production validation that has not happened.
 
 ## Primary users
 

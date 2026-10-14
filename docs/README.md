@@ -2,7 +2,7 @@
 
 Qenlo is a local-first embedded vector store for durable, exact retrieval over metadata-filtered collections. It keeps one canonical record store and makes the execution path observable.
 
-> **Research-grade alpha.** GPU and ANN paths are optional. Benchmark observations are scoped to their named hardware, source revision, workload, and timing boundary.
+> **Research-grade beta.** GPU and ANN paths are optional. Benchmark observations are scoped to their named hardware, source revision, workload, and timing boundary.
 
 ## Start here
 

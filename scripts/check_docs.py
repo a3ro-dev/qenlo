@@ -27,12 +27,13 @@ def main() -> int:
     }
 
     assert npm_version == version
-    assert py_version == version.replace("-alpha.", "a")
+    channel = version.split("-")[1].split(".")[0] if "-" in version else "latest"
+    assert py_version == version.replace("-alpha.", "a").replace("-beta.", "b").replace("-rc.", "rc")
     assert f'qenlo = "{version}"' in docs["docs/sdks/rust.md"]
     assert f'qenlo=={py_version}' in docs["docs/sdks/python.md"]
     assert "match_record.score" not in docs["docs/sdks/rust.md"]
     assert "match_record.distance" in docs["docs/sdks/rust.md"]
-    assert "@a3ro.dev/qenlo@alpha" in docs["docs/sdks/typescript.md"]
+    assert f"@a3ro.dev/qenlo@{channel}" in docs["docs/sdks/typescript.md"]
     assert "Rust (supported)" in docs["docs/feature-matrix.md"]
     assert "Python (supported)" in docs["docs/feature-matrix.md"]
     assert "TypeScript (supported)" in docs["docs/feature-matrix.md"]
@@ -44,7 +45,7 @@ def main() -> int:
         for path in (ROOT / "sdk").glob("*/README.md")
     }
     assert f'qenlo=={py_version}' in sdk_readmes["python"]
-    assert "@a3ro.dev/qenlo@alpha" in sdk_readmes["typescript"]
+    assert f"@a3ro.dev/qenlo@{channel}" in sdk_readmes["typescript"]
     assert "mavenCentral()" not in sdk_readmes["kotlin"]
     assert '.package(url: "https://github.com/a3ro-dev/qenlo.git"' not in sdk_readmes["apple"]
     for text in sdk_readmes.values():

@@ -14,7 +14,7 @@
   <a href="https://github.com/a3ro-dev/qenlo/releases"><img src="https://img.shields.io/github/v/release/a3ro-dev/qenlo?filter=sdk-v*&amp;display_name=tag&amp;style=flat-square&amp;label=SDK%20release" alt="GitHub SDK release"></a>
   <a href="https://crates.io/crates/qenlo"><img src="https://img.shields.io/crates/v/qenlo.svg?style=flat-square&amp;label=crates.io" alt="qenlo on crates.io"></a>
   <a href="https://pypi.org/project/qenlo/"><img src="https://img.shields.io/pypi/v/qenlo.svg?style=flat-square&amp;label=PyPI" alt="qenlo on PyPI"></a>
-  <a href="https://www.npmjs.com/package/@a3ro.dev/qenlo"><img src="https://img.shields.io/npm/v/%40a3ro.dev%2Fqenlo/alpha.svg?style=flat-square&amp;label=npm" alt="Qenlo on npm"></a>
+  <a href="https://www.npmjs.com/package/@a3ro.dev/qenlo"><img src="https://img.shields.io/npm/v/%40a3ro.dev%2Fqenlo/beta.svg?style=flat-square&amp;label=npm" alt="Qenlo on npm"></a>
   <a href="https://github.com/a3ro-dev/qenlo/actions/workflows/sdk-publish.yml"><img src="https://img.shields.io/badge/Maven_Central-not_configured-6b7280?style=flat-square" alt="Maven Central not configured"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square" alt="License Apache-2.0"></a>
 </p>
@@ -35,9 +35,9 @@ Qenlo is a local, embedded vector store: one process owns a canonical durable re
 
 | Language | Command |
 | --- | --- |
-| Rust | `qenlo = "0.1.0-alpha.11"` in `Cargo.toml` |
-| Python | `pip install qenlo==0.1.0a11` |
-| TypeScript | `npm install @a3ro.dev/qenlo@alpha` |
+| Rust | `qenlo = "0.1.0-beta.1"` in `Cargo.toml` |
+| Python | `pip install qenlo==0.1.0b1` |
+| TypeScript | `npm install @a3ro.dev/qenlo@beta` |
 
 Go, Kotlin, and Swift are preview SDKs — see [docs/sdks/go.md](docs/sdks/go.md), [docs/sdks/kotlin.md](docs/sdks/kotlin.md), and [docs/sdks/swift.md](docs/sdks/swift.md). Maven Central is not published; releases are tagged `sdk-v0.1.0-alpha.N` on [GitHub Releases](https://github.com/a3ro-dev/qenlo/releases).
 
@@ -120,7 +120,7 @@ Use Qenlo when one process owns the collection, exact results are useful, metada
 
 ## Status and limits
 
-Qenlo is research-grade alpha software with strong correctness, recovery, and evidence-preservation tests, but it does not establish production readiness:
+Qenlo is research-grade beta software with strong correctness, recovery, and evidence-preservation tests, but it does not establish production readiness:
 
 - no automatic CPU/GPU router has passed a held-out gate (see the table above);
 - current CPU performance is not a competitive bound on optimized CPU libraries;
