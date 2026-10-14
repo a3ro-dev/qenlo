@@ -237,6 +237,7 @@ unsafe fn output_values<'a, T>(
     if value.is_null() {
         return Err(format!("{name} output pointer is null"));
     }
+    check_slice_len::<T>(required, name)?;
     // SAFETY: caller promises `len` writable values and `required <= len`.
     Ok(unsafe { slice::from_raw_parts_mut(value, required) })
 }
@@ -248,6 +249,7 @@ unsafe fn floats<'a>(value: *const f32, len: usize) -> Result<&'a [f32], String>
     if value.is_null() {
         return Err("vector pointer is null".to_owned());
     }
+    check_slice_len::<f32>(len, "vector")?;
     // SAFETY: the caller promises `len` readable f32 values.
     Ok(unsafe { slice::from_raw_parts(value, len) })
 }
@@ -259,8 +261,17 @@ unsafe fn values<'a, T>(value: *const T, len: usize, name: &str) -> Result<&'a [
     if value.is_null() {
         return Err(format!("{name} pointer is null"));
     }
+    check_slice_len::<T>(len, name)?;
     // SAFETY: the caller promises `len` readable values.
     Ok(unsafe { slice::from_raw_parts(value, len) })
+}
+
+/// `slice::from_raw_parts` is undefined above `isize::MAX` bytes; reject such lengths instead.
+fn check_slice_len<T>(len: usize, name: &str) -> Result<(), String> {
+    if len > isize::MAX as usize / std::mem::size_of::<T>().max(1) {
+        return Err(format!("{name} length {len} exceeds the addressable size"));
+    }
+    Ok(())
 }
 
 unsafe fn path(value: *const c_char) -> Result<String, String> {
@@ -1094,6 +1105,16 @@ mod tests {
         // SAFETY: value was returned by this library and is freed once.
         unsafe { qenlo_string_free(value) };
         output
+    }
+
+    #[test]
+    fn unaddressable_lengths_are_errors_not_undefined_behavior() {
+        let value = 1.0_f32;
+        // SAFETY: the length is rejected before any slice is formed.
+        let error = unsafe { floats(&value, usize::MAX / 2) }.unwrap_err();
+        assert!(error.contains("exceeds the addressable size"));
+        assert!(check_slice_len::<u64>(isize::MAX as usize / 8, "ids").is_ok());
+        assert!(check_slice_len::<u64>(isize::MAX as usize / 8 + 1, "ids").is_err());
     }
 
     #[test]
