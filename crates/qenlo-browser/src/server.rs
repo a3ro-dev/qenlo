@@ -2,8 +2,9 @@ use crate::state::SharedState;
 use crate::tui::functions::FUNCTION_CATALOG;
 use axum::{
     Router,
-    extract::{Path as AxPath, Query, State},
-    http::StatusCode,
+    extract::{Path as AxPath, Query, Request, State},
+    http::{StatusCode, header},
+    middleware::{self, Next},
     response::{Html, IntoResponse, Json},
     routing::{get, post},
 };
@@ -99,12 +100,53 @@ pub async fn run_server(
     host: &str,
     port: u16,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let app = app_router(state);
+    let bind_host = host
+        .trim_start_matches('[')
+        .trim_end_matches(']')
+        .to_owned();
+    let app = app_router(state).layer(middleware::from_fn_with_state(bind_host, local_only));
     let addr: SocketAddr = format!("{host}:{port}").parse()?;
     println!("⬡ QenloDB Web Browser running on http://{}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
     Ok(())
+}
+
+/// Reject requests whose Host or Origin is not this machine (or the host it was bound to).
+///
+/// The API opens, writes, and exports files. Without this, a web page that rebinds its own DNS
+/// name to 127.0.0.1 could drive it as a same-origin client.
+async fn local_only(
+    State(bind_host): State<String>,
+    request: Request,
+    next: Next,
+) -> Result<axum::response::Response, StatusCode> {
+    if !is_local_request(request.headers(), &bind_host) {
+        return Err(StatusCode::FORBIDDEN);
+    }
+    Ok(next.run(request).await)
+}
+
+fn is_local_request(headers: &axum::http::HeaderMap, bind_host: &str) -> bool {
+    let text = |name| headers.get(name).and_then(|value| value.to_str().ok());
+    let host_ok = text(header::HOST).is_some_and(|host| allowed_authority(host, bind_host));
+    let origin_ok = text(header::ORIGIN).is_none_or(|origin| {
+        origin
+            .split_once("://")
+            .is_some_and(|(_, authority)| allowed_authority(authority, bind_host))
+    });
+    host_ok && origin_ok
+}
+
+/// `authority` is `host[:port]` or `[v6][:port]`.
+pub fn allowed_authority(authority: &str, bind_host: &str) -> bool {
+    let name = match authority.strip_prefix('[') {
+        Some(rest) => rest.split_once(']').map_or(rest, |(name, _)| name),
+        None => authority.split(':').next().unwrap_or(authority),
+    };
+    let name = name.to_ascii_lowercase();
+    matches!(name.as_str(), "localhost" | "127.0.0.1" | "::1")
+        || (!bind_host.is_empty() && name == bind_host.to_ascii_lowercase())
 }
 
 async fn serve_index() -> Html<&'static str> {

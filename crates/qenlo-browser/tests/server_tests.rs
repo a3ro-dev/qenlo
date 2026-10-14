@@ -200,3 +200,28 @@ async fn test_get_functions_matches_catalog() {
         assert!(!entry["example"].as_str().unwrap().is_empty());
     }
 }
+
+#[test]
+fn only_local_or_bound_hosts_may_reach_the_api() {
+    use qenlo_browser::server::allowed_authority;
+    for local in [
+        "localhost:8080",
+        "127.0.0.1:8080",
+        "[::1]:8080",
+        "LOCALHOST",
+        "127.0.0.1",
+    ] {
+        assert!(allowed_authority(local, "127.0.0.1"), "{local}");
+    }
+    // DNS rebinding: an attacker's name resolving to 127.0.0.1 still carries its own Host.
+    for remote in [
+        "evil.example:8080",
+        "localhost.evil.example",
+        "127.0.0.1.nip.io",
+        "[::2]:80",
+    ] {
+        assert!(!allowed_authority(remote, "127.0.0.1"), "{remote}");
+    }
+    assert!(allowed_authority("192.168.1.20:8080", "192.168.1.20"));
+    assert!(!allowed_authority("192.168.1.21:8080", "192.168.1.20"));
+}
