@@ -800,7 +800,7 @@ impl Collection {
         if state.closed {
             return None;
         }
-        state.store.get(id).cloned()
+        state.store.get(id).map(|record| record.to_record())
     }
 
     /// Return a paginated slice of records matching an optional filter, along with total matching count.
@@ -822,7 +822,7 @@ impl Collection {
                     .into_iter()
                     .skip(offset)
                     .take(limit)
-                    .filter_map(|slot| state.store.record(slot).cloned())
+                    .filter_map(|slot| state.store.record(slot).map(|record| record.to_record()))
                     .collect();
                 (records, total)
             }
@@ -833,7 +833,7 @@ impl Collection {
                     .records()
                     .skip(offset)
                     .take(limit)
-                    .map(|(_, r)| r.clone())
+                    .map(|(_, r)| r.to_record())
                     .collect();
                 (records, total)
             }
@@ -853,7 +853,7 @@ impl Collection {
                     .store
                     .record(slot)
                     .expect("canonical filter returns valid rows")
-                    .clone()
+                    .to_record()
             })
             .collect();
         Ok(CanonicalSnapshot {
@@ -982,7 +982,7 @@ impl Collection {
         if self.diagnostics.load(Ordering::Relaxed) == Diagnostics::Detailed as u8 {
             if matches!(response.report.eligible_rows, Measurement::Unavailable(_)) {
                 response.report.eligible_rows =
-                    Measurement::Available(state.store.filter(filter).len() as u64);
+                    Measurement::Available(state.store.filter_count(filter) as u64);
             }
             response.report.total_duration = started.elapsed();
         }
@@ -1697,13 +1697,8 @@ impl CollectionState {
             #[cfg(feature = "gpu-wgpu")]
             Backend::Wgpu(gpu) => {
                 let automatic_eligible_rows =
-                    matches!(self.config.backend, BackendSelection::Automatic(_)).then(|| {
-                        if *filter == Filter::ALL {
-                            self.store.live_len()
-                        } else {
-                            self.store.filter(filter).len()
-                        }
-                    });
+                    matches!(self.config.backend, BackendSelection::Automatic(_))
+                        .then(|| self.store.filter_count(filter));
                 if automatic_eligible_rows.is_some_and(route_automatic_to_cpu) {
                     let eligible_rows = automatic_eligible_rows.expect("checked as present");
                     routing_reason = Some(format!(

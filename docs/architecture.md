@@ -74,10 +74,10 @@ sudden-power-loss durability is not claimed. CRC32 is not authentication.
 
 The default `StorageOptions::max_load_bytes` is 512 MiB. Both read and durable
 write admission check snapshot size and the estimate
-`rows * (32 + 4 * dimension + 64 * ceil(dimension / 16) + 512)` with checked
-arithmetic. The aligned term accounts for the disposable exact-CPU scan matrix
-that may appear on the first query; the final 512 bytes per row allow for metadata
-indexes and bookkeeping. This estimate includes tombstones, does not measure resident set size (RSS), and does
+`rows * (32 + 32 * ceil(dimension / 8) + 512)` with checked arithmetic. Each
+vector is held once, in a single 32-byte-aligned buffer padded to eight floats per
+row that exact CPU search scans directly, beside a 32-byte metadata row; the final
+512 bytes per row allow for metadata indexes and bookkeeping. This estimate includes tombstones, does not measure resident set size (RSS), and does
 not pre-reserve memory. The host supplies options on create or open; they are not a
 persisted machine policy.
 

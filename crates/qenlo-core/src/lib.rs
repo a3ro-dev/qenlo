@@ -1,12 +1,9 @@
 //! Portable canonical storage and exact filtered vector search for Qenlo.
 
-use std::alloc::{Layout, alloc, dealloc, handle_alloc_error};
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap};
 use std::fmt;
 use std::ops::Bound;
-use std::ptr::NonNull;
-use std::sync::OnceLock;
 
 /// Inclusive-lower, exclusive-upper timestamp range.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -84,6 +81,64 @@ impl Record {
         self.live
     }
 }
+
+/// A borrowed view of one canonical row. Vectors live in one contiguous store buffer.
+#[derive(Clone, Copy, Debug)]
+pub struct RecordRef<'a> {
+    id: u64,
+    user_id: u64,
+    timestamp: i64,
+    vector: &'a [f32],
+    live: bool,
+}
+
+impl RecordRef<'_> {
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+
+    pub fn user_id(&self) -> u64 {
+        self.user_id
+    }
+
+    pub fn timestamp(&self) -> i64 {
+        self.timestamp
+    }
+
+    pub fn vector(&self) -> &[f32] {
+        self.vector
+    }
+
+    pub fn is_live(&self) -> bool {
+        self.live
+    }
+
+    /// Copy this row out of the store.
+    pub fn to_record(&self) -> Record {
+        Record {
+            id: self.id,
+            user_id: self.user_id,
+            timestamp: self.timestamp,
+            vector: self.vector.to_vec(),
+            live: self.live,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+struct RowMeta {
+    id: u64,
+    user_id: u64,
+    timestamp: i64,
+    live: bool,
+}
+
+/// Eight f32 values on a 32-byte boundary, so AVX2 loads never split a cache line.
+#[repr(C, align(32))]
+#[derive(Clone, Copy, Debug, Default)]
+struct Lane([f32; LANE]);
+
+const LANE: usize = 8;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SearchHit {
@@ -215,115 +270,22 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 /// Canonical record storage with metadata indexes and exact cosine search.
-#[derive(Debug)]
+///
+/// Vectors are canonical in one row-major, 32-byte-aligned buffer whose rows are zero-padded to a
+/// multiple of eight floats. Exact search scans that buffer directly, so there is no second copy
+/// to build after a write.
+#[derive(Clone, Debug)]
 pub struct CoreStore {
     dimension: usize,
-    records: Vec<Record>,
+    lanes_per_row: usize,
+    rows: Vec<RowMeta>,
+    vectors: Vec<Lane>,
     ids: HashMap<u64, u32>,
     users: BTreeMap<u64, BTreeSet<u32>>,
-    timestamps: BTreeMap<i64, BTreeSet<u32>>,
+    // One flat ordered set: timestamps are usually unique, and a set per key costs ~100 B/row.
+    timestamps: BTreeSet<(i64, u32)>,
     live_len: usize,
     generation: u64,
-    scan_matrix: OnceLock<AlignedScanMatrix>,
-}
-
-impl Clone for CoreStore {
-    fn clone(&self) -> Self {
-        Self {
-            dimension: self.dimension,
-            records: self.records.clone(),
-            ids: self.ids.clone(),
-            users: self.users.clone(),
-            timestamps: self.timestamps.clone(),
-            live_len: self.live_len,
-            generation: self.generation,
-            // The scan matrix is derived state. Clones rebuild it on first use instead of
-            // duplicating a potentially large cache behind the caller's back.
-            scan_matrix: OnceLock::new(),
-        }
-    }
-}
-
-/// Disposable cache-line-aligned row-major view of canonical vectors.
-#[derive(Debug)]
-struct AlignedScanMatrix {
-    ptr: NonNull<f32>,
-    len: usize,
-    dimension: usize,
-    stride: usize,
-    layout: Option<Layout>,
-}
-
-// The allocation is immutable after construction and is freed only when the owning matrix drops.
-unsafe impl Send for AlignedScanMatrix {}
-unsafe impl Sync for AlignedScanMatrix {}
-
-impl AlignedScanMatrix {
-    fn from_records(records: &[Record], dimension: usize) -> Self {
-        let stride = dimension
-            .checked_add(15)
-            .expect("canonical dimensions already fit address space")
-            / 16
-            * 16;
-        let len = records
-            .len()
-            .checked_mul(stride)
-            .expect("canonical vectors already fit address space");
-        if len == 0 {
-            return Self {
-                ptr: NonNull::dangling(),
-                len,
-                dimension,
-                stride,
-                layout: None,
-            };
-        }
-        let layout = Layout::array::<f32>(len)
-            .expect("canonical vectors already fit address space")
-            .align_to(64)
-            .expect("64-byte alignment is valid")
-            .pad_to_align();
-        // SAFETY: layout has non-zero size and valid 64-byte alignment.
-        let raw = unsafe { alloc(layout) }.cast::<f32>();
-        let ptr = NonNull::new(raw).unwrap_or_else(|| handle_alloc_error(layout));
-        for (row, record) in records.iter().enumerate() {
-            // SAFETY: each canonical vector has exactly `dimension` values and each row range is
-            // disjoint and contained in the allocation.
-            unsafe {
-                ptr.as_ptr()
-                    .add(row * stride)
-                    .copy_from_nonoverlapping(record.vector.as_ptr(), dimension);
-            }
-        }
-        Self {
-            ptr,
-            len,
-            dimension,
-            stride,
-            layout: Some(layout),
-        }
-    }
-
-    fn row(&self, slot: u32) -> &[f32] {
-        let start = slot as usize * self.stride;
-        debug_assert!(start + self.dimension <= self.len);
-        // SAFETY: construction allocates `len` initialized f32 values and the checked row range
-        // stays within that allocation. The matrix is immutable for its lifetime.
-        unsafe { std::slice::from_raw_parts(self.ptr.as_ptr().add(start), self.dimension) }
-    }
-
-    fn bytes(&self) -> usize {
-        self.len * std::mem::size_of::<f32>()
-    }
-}
-
-impl Drop for AlignedScanMatrix {
-    fn drop(&mut self) {
-        if let Some(layout) = self.layout {
-            // SAFETY: `ptr` was allocated with this exact layout and has not been freed.
-            unsafe { dealloc(self.ptr.as_ptr().cast(), layout) };
-        }
-    }
 }
 
 impl CoreStore {
@@ -333,13 +295,14 @@ impl CoreStore {
         }
         Ok(Self {
             dimension,
-            records: Vec::new(),
+            lanes_per_row: dimension.div_ceil(LANE),
+            rows: Vec::new(),
+            vectors: Vec::new(),
             ids: HashMap::new(),
             users: BTreeMap::new(),
-            timestamps: BTreeMap::new(),
+            timestamps: BTreeSet::new(),
             live_len: 0,
             generation: 0,
-            scan_matrix: OnceLock::new(),
         })
     }
 
@@ -364,13 +327,21 @@ impl CoreStore {
         records: impl IntoIterator<Item = Result<RestoredRecord, E>>,
     ) -> Result<Self, E> {
         let mut store = Self::new(dimension)?;
+        let records = records.into_iter();
+        // Snapshots know their row count; reserve once instead of growing by doubling.
+        let expected = records.size_hint().0;
+        store.rows.reserve_exact(expected);
+        store
+            .vectors
+            .reserve_exact(expected.saturating_mul(store.lanes_per_row));
+        store.ids.reserve(expected);
         for restored in records {
             let restored = restored?;
             if store.ids.contains_key(&restored.id) {
                 return Err(Error::DuplicateId(restored.id).into());
             }
             validate_stored_vector(&restored.vector, dimension)?;
-            let slot = u32::try_from(store.records.len()).map_err(|_| Error::CapacityExceeded)?;
+            let slot = u32::try_from(store.rows.len()).map_err(|_| Error::CapacityExceeded)?;
             store.ids.insert(restored.id, slot);
             if restored.live {
                 store
@@ -378,23 +349,61 @@ impl CoreStore {
                     .entry(restored.user_id)
                     .or_default()
                     .insert(slot);
-                store
-                    .timestamps
-                    .entry(restored.timestamp)
-                    .or_default()
-                    .insert(slot);
+                store.timestamps.insert((restored.timestamp, slot));
                 store.live_len += 1;
             }
-            store.records.push(Record {
-                id: restored.id,
-                user_id: restored.user_id,
-                timestamp: restored.timestamp,
-                vector: restored.vector,
-                live: restored.live,
-            });
+            store.push_row(
+                RowMeta {
+                    id: restored.id,
+                    user_id: restored.user_id,
+                    timestamp: restored.timestamp,
+                    live: restored.live,
+                },
+                &restored.vector,
+            );
         }
         store.generation = generation;
         Ok(store)
+    }
+
+    fn push_row(&mut self, meta: RowMeta, vector: &[f32]) {
+        debug_assert_eq!(vector.len(), self.dimension);
+        let start = self.vectors.len();
+        if self.vectors.capacity() - start < self.lanes_per_row {
+            // Grow by half instead of doubling: the vector buffer dominates resident memory.
+            self.vectors
+                .reserve_exact(self.lanes_per_row.max(start / 2));
+        }
+        self.vectors
+            .resize(start + self.lanes_per_row, Lane::default());
+        for (lane, chunk) in self.vectors[start..].iter_mut().zip(vector.chunks(LANE)) {
+            lane.0[..chunk.len()].copy_from_slice(chunk);
+        }
+        self.rows.push(meta);
+    }
+
+    /// The padded row (a multiple of eight floats, zero tail) as stored.
+    fn padded_row(&self, slot: u32) -> &[f32] {
+        let start = slot as usize * self.lanes_per_row;
+        let lanes = &self.vectors[start..start + self.lanes_per_row];
+        // SAFETY: `Lane` is `repr(C)` around `[f32; 8]` with size 32 and align 32, so a slice of
+        // lanes is a contiguous, initialized run of `8 * lanes.len()` f32 values.
+        unsafe { std::slice::from_raw_parts(lanes.as_ptr().cast::<f32>(), lanes.len() * LANE) }
+    }
+
+    fn row(&self, slot: u32) -> &[f32] {
+        &self.padded_row(slot)[..self.dimension]
+    }
+
+    fn view(&self, slot: u32) -> RecordRef<'_> {
+        let meta = &self.rows[slot as usize];
+        RecordRef {
+            id: meta.id,
+            user_id: meta.user_id,
+            timestamp: meta.timestamp,
+            vector: self.row(slot),
+            live: meta.live,
+        }
     }
 
     pub fn dimension(&self) -> usize {
@@ -403,11 +412,11 @@ impl CoreStore {
 
     /// Total allocated row slots, including tombstones.
     pub fn len(&self) -> usize {
-        self.records.len()
+        self.rows.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.records.is_empty()
+        self.rows.is_empty()
     }
 
     pub fn live_len(&self) -> usize {
@@ -418,30 +427,25 @@ impl CoreStore {
         self.generation
     }
 
-    /// Bytes retained by the disposable aligned exact-scan view, or zero before first use.
-    pub fn derived_scan_matrix_bytes(&self) -> usize {
-        self.scan_matrix.get().map_or(0, AlignedScanMatrix::bytes)
+    /// Bytes held by canonical vectors, including row padding and spare capacity.
+    pub fn vector_bytes(&self) -> usize {
+        self.vectors.capacity() * std::mem::size_of::<Lane>()
     }
 
-    pub fn record(&self, slot: u32) -> Option<&Record> {
-        self.records.get(slot as usize)
+    pub fn record(&self, slot: u32) -> Option<RecordRef<'_>> {
+        ((slot as usize) < self.rows.len()).then(|| self.view(slot))
     }
 
-    pub fn get(&self, id: u64) -> Option<&Record> {
-        self.ids
-            .get(&id)
-            .and_then(|&slot| self.records.get(slot as usize))
+    pub fn get(&self, id: u64) -> Option<RecordRef<'_>> {
+        self.ids.get(&id).map(|&slot| self.view(slot))
     }
 
     pub fn slot_of(&self, id: u64) -> Option<u32> {
         self.ids.get(&id).copied()
     }
 
-    pub fn records(&self) -> impl ExactSizeIterator<Item = (u32, &Record)> {
-        self.records
-            .iter()
-            .enumerate()
-            .map(|(slot, record)| (slot as u32, record))
+    pub fn records(&self) -> impl ExactSizeIterator<Item = (u32, RecordRef<'_>)> {
+        (0..self.rows.len() as u32).map(|slot| (slot, self.view(slot)))
     }
 
     pub fn add(
@@ -467,20 +471,21 @@ impl CoreStore {
     ) -> Result<u32, Error> {
         debug_assert!(!self.ids.contains_key(&id));
         debug_assert_eq!(vector.len(), self.dimension);
-        let slot = u32::try_from(self.records.len()).map_err(|_| Error::CapacityExceeded)?;
+        let slot = u32::try_from(self.rows.len()).map_err(|_| Error::CapacityExceeded)?;
         let generation = self.next_generation()?;
 
-        let _ = self.scan_matrix.take();
-        self.records.push(Record {
-            id,
-            user_id,
-            timestamp,
-            vector,
-            live: true,
-        });
+        self.push_row(
+            RowMeta {
+                id,
+                user_id,
+                timestamp,
+                live: true,
+            },
+            &vector,
+        );
         self.ids.insert(id, slot);
         self.users.entry(user_id).or_default().insert(slot);
-        self.timestamps.entry(timestamp).or_default().insert(slot);
+        self.timestamps.insert((timestamp, slot));
         self.live_len += 1;
         self.generation = generation;
         Ok(slot)
@@ -488,16 +493,21 @@ impl CoreStore {
 
     pub fn delete(&mut self, id: u64) -> Result<(), Error> {
         let slot = *self.ids.get(&id).ok_or(Error::UnknownId(id))?;
-        let record = &self.records[slot as usize];
+        let record = self.rows[slot as usize];
         if !record.live {
             return Err(Error::AlreadyDeleted(id));
         }
         let generation = self.next_generation()?;
-        let (user_id, timestamp) = (record.user_id, record.timestamp);
 
-        self.records[slot as usize].live = false;
-        remove_slot(&mut self.users, user_id, slot);
-        remove_slot(&mut self.timestamps, timestamp, slot);
+        self.rows[slot as usize].live = false;
+        let remove_user = self.users.get_mut(&record.user_id).is_some_and(|slots| {
+            slots.remove(&slot);
+            slots.is_empty()
+        });
+        if remove_user {
+            self.users.remove(&record.user_id);
+        }
+        self.timestamps.remove(&(record.timestamp, slot));
         self.live_len -= 1;
         self.generation = generation;
         Ok(())
@@ -539,7 +549,7 @@ impl CoreStore {
 
         let mut states = HashMap::<u64, bool>::with_capacity(mutations.len());
         let mut normalized = Vec::with_capacity(mutations.len());
-        let mut next_len = self.records.len();
+        let mut next_len = self.rows.len();
         for mutation in mutations {
             match mutation {
                 Mutation::Add {
@@ -562,11 +572,10 @@ impl CoreStore {
                     states.insert(*id, true);
                 }
                 Mutation::Delete(id) => {
-                    let live = states.get(id).copied().or_else(|| {
-                        self.ids
-                            .get(id)
-                            .map(|slot| self.records[*slot as usize].live)
-                    });
+                    let live = states
+                        .get(id)
+                        .copied()
+                        .or_else(|| self.ids.get(id).map(|slot| self.rows[*slot as usize].live));
                     match live {
                         None => return Err(Error::UnknownId(*id)),
                         Some(false) => return Err(Error::AlreadyDeleted(*id)),
@@ -597,24 +606,18 @@ impl CoreStore {
                 .filter(|&slot| {
                     predicate
                         .timestamp
-                        .contains(self.records[slot as usize].timestamp)
+                        .contains(self.rows[slot as usize].timestamp)
                 })
                 .collect(),
             None if predicate.timestamp == TimestampRange::ALL => self.scan_live(|_| true),
             None => {
-                let lower = predicate.timestamp.lower.unwrap_or(i64::MIN);
-                let upper = predicate
-                    .timestamp
-                    .upper
-                    .map_or(Bound::Unbounded, Bound::Excluded);
                 let range = self
-                    .timestamps
-                    .range((Bound::Included(lower), upper))
-                    .flat_map(|(_, slots)| slots.iter().copied());
+                    .timestamp_range(predicate.timestamp)
+                    .map(|&(_, slot)| slot);
                 // Index traversal plus sort costs far more per row than a sequential slot-order
                 // scan, so a broad range abandons the index after a bounded probe.
                 // ponytail: fixed 1/16 probe, measured locally only; tune per host if it matters.
-                let probe_limit = self.records.len() / RANGE_SCAN_PROBE_DIVISOR;
+                let probe_limit = self.rows.len() / RANGE_SCAN_PROBE_DIVISOR;
                 let mut slots = Vec::new();
                 for slot in range {
                     if slots.len() == probe_limit {
@@ -642,27 +645,29 @@ impl CoreStore {
                     .filter(|&&slot| {
                         predicate
                             .timestamp
-                            .contains(self.records[slot as usize].timestamp)
+                            .contains(self.rows[slot as usize].timestamp)
                     })
                     .count()
             }),
             None if predicate.timestamp == TimestampRange::ALL => self.live_len,
-            None => {
-                let lower = predicate.timestamp.lower.unwrap_or(i64::MIN);
-                let upper = predicate
-                    .timestamp
-                    .upper
-                    .map_or(Bound::Unbounded, Bound::Excluded);
-                self.timestamps
-                    .range((Bound::Included(lower), upper))
-                    .map(|(_, slots)| slots.len())
-                    .sum()
-            }
+            None => self.timestamp_range(predicate.timestamp).count(),
         }
     }
 
-    fn scan_live(&self, keep: impl Fn(&Record) -> bool) -> Vec<u32> {
-        self.records
+    fn timestamp_range(
+        &self,
+        range: TimestampRange,
+    ) -> std::collections::btree_set::Range<'_, (i64, u32)> {
+        let lower = (range.lower.unwrap_or(i64::MIN), 0);
+        // Slots start at zero, so (upper, 0) is the first entry at `upper`.
+        let upper = range
+            .upper
+            .map_or(Bound::Unbounded, |upper| Bound::Excluded((upper, 0)));
+        self.timestamps.range((Bound::Included(lower), upper))
+    }
+
+    fn scan_live(&self, keep: impl Fn(&RowMeta) -> bool) -> Vec<u32> {
+        self.rows
             .iter()
             .enumerate()
             .filter(|(_, record)| record.live && keep(record))
@@ -734,6 +739,29 @@ impl CoreStore {
         self.search_normalized_rows_reference(&query, predicate, slots, k)
     }
 
+    /// Revalidate one compiled row: strictly ascending, live, and matching the predicate.
+    fn eligible_row(
+        &self,
+        slot: u32,
+        previous: &mut Option<u32>,
+        predicate: &Predicate,
+    ) -> Result<&RowMeta, Error> {
+        if previous.is_some_and(|prior| slot <= prior) {
+            return Err(Error::InvalidEligibleRow(slot));
+        }
+        *previous = Some(slot);
+        match self.rows.get(slot as usize) {
+            Some(row)
+                if row.live
+                    && predicate.user_id.is_none_or(|user| user == row.user_id)
+                    && predicate.timestamp.contains(row.timestamp) =>
+            {
+                Ok(row)
+            }
+            _ => Err(Error::InvalidEligibleRow(slot)),
+        }
+    }
+
     fn search_normalized_rows_reference(
         &self,
         query: &[f32],
@@ -741,40 +769,15 @@ impl CoreStore {
         slots: &[u32],
         k: usize,
     ) -> Result<SearchOutput, Error> {
-        let mut best = BinaryHeap::with_capacity(k);
+        let mut best = TopK::new(k);
         let dot = dot_implementation();
         let mut previous = None;
         for &slot in slots {
-            if previous.is_some_and(|prior| slot <= prior) {
-                return Err(Error::InvalidEligibleRow(slot));
-            }
-            previous = Some(slot);
-            let Some(record) = self.records.get(slot as usize) else {
-                return Err(Error::InvalidEligibleRow(slot));
-            };
-            if !record.live
-                || predicate.user_id.is_some_and(|user| user != record.user_id)
-                || !predicate.timestamp.contains(record.timestamp)
-            {
-                return Err(Error::InvalidEligibleRow(slot));
-            }
-            let hit = RankedHit(SearchHit {
-                id: record.id,
-                distance: (1.0 - dot(query, &record.vector)) as f32,
-            });
-            if best.len() < k {
-                best.push(hit);
-            } else if best.peek().is_some_and(|worst| hit < *worst) {
-                *best.peek_mut().expect("heap contains k entries") = hit;
-            }
+            let row = self.eligible_row(slot, &mut previous, predicate)?;
+            best.offer(row.id, (1.0 - dot(query, self.row(slot))) as f32);
         }
-        let hits = best
-            .into_sorted_vec()
-            .into_iter()
-            .map(|hit| hit.0)
-            .collect();
         Ok(SearchOutput {
-            hits,
+            hits: best.into_hits(),
             evaluated_rows: slots.len(),
         })
     }
@@ -795,72 +798,35 @@ impl CoreStore {
         let Some(error_bound) = fp32_dot_error_bound(self.dimension) else {
             return self.search_normalized_rows_reference(query, predicate, slots, k);
         };
-        let matrix = self
-            .scan_matrix
-            .get_or_init(|| AlignedScanMatrix::from_records(&self.records, self.dimension));
-        let mut approximate_best = BinaryHeap::with_capacity(k);
+        // Pad the query like the stored rows so the FP32 pass runs whole lanes with no tail.
+        let mut padded_query = vec![0.0; self.lanes_per_row * LANE];
+        padded_query[..self.dimension].copy_from_slice(query);
+        let mut approximate_best = TopK::new(k);
         let mut candidates = Vec::with_capacity(k * 2);
         let mut previous = None;
         for &slot in slots {
-            if previous.is_some_and(|prior| slot <= prior) {
-                return Err(Error::InvalidEligibleRow(slot));
-            }
-            previous = Some(slot);
-            let Some(record) = self.records.get(slot as usize) else {
-                return Err(Error::InvalidEligibleRow(slot));
-            };
-            if !record.live
-                || predicate.user_id.is_some_and(|user| user != record.user_id)
-                || !predicate.timestamp.contains(record.timestamp)
+            let row = self.eligible_row(slot, &mut previous, predicate)?;
+            let approximate_distance = 1.0 - approximate_dot(&padded_query, self.padded_row(slot));
+            approximate_best.offer(row.id, approximate_distance);
+            // Every row that could still reach the exact top k after FP32 error is re-ranked.
+            if approximate_best
+                .cutoff()
+                .is_none_or(|cutoff| approximate_distance <= cutoff + 2.0 * error_bound)
             {
-                return Err(Error::InvalidEligibleRow(slot));
-            }
-
-            let approximate_distance = 1.0 - approximate_dot(query, matrix.row(slot));
-            let hit = RankedHit(SearchHit {
-                id: record.id,
-                distance: approximate_distance,
-            });
-            if approximate_best.len() < k {
-                approximate_best.push(hit);
-                candidates.push(slot);
-                continue;
-            }
-            if approximate_best.peek().is_some_and(|worst| hit < *worst) {
-                *approximate_best
-                    .peek_mut()
-                    .expect("heap contains k entries") = hit;
-            }
-            let cutoff = approximate_best
-                .peek()
-                .expect("heap contains k entries")
-                .0
-                .distance;
-            if approximate_distance <= cutoff + 2.0 * error_bound {
                 candidates.push(slot);
             }
         }
 
         let exact_dot = dot_implementation();
-        let mut best = BinaryHeap::with_capacity(k);
+        let mut best = TopK::new(k);
         for slot in candidates {
-            let record = &self.records[slot as usize];
-            let hit = RankedHit(SearchHit {
-                id: record.id,
-                distance: (1.0 - exact_dot(query, matrix.row(slot))) as f32,
-            });
-            if best.len() < k {
-                best.push(hit);
-            } else if best.peek().is_some_and(|worst| hit < *worst) {
-                *best.peek_mut().expect("heap contains k entries") = hit;
-            }
+            best.offer(
+                self.rows[slot as usize].id,
+                (1.0 - exact_dot(query, self.row(slot))) as f32,
+            );
         }
         Ok(SearchOutput {
-            hits: best
-                .into_sorted_vec()
-                .into_iter()
-                .map(|hit| hit.0)
-                .collect(),
+            hits: best.into_hits(),
             evaluated_rows: slots.len(),
         })
     }
@@ -880,6 +846,48 @@ enum OwnedMutation {
         vector: Vec<f32>,
     },
     Delete(u64),
+}
+
+/// Bounded max-heap keeping the k smallest (distance, ID) pairs.
+struct TopK {
+    k: usize,
+    heap: BinaryHeap<RankedHit>,
+}
+
+impl TopK {
+    fn new(k: usize) -> Self {
+        Self {
+            k,
+            heap: BinaryHeap::with_capacity(k),
+        }
+    }
+
+    fn offer(&mut self, id: u64, distance: f32) {
+        let hit = RankedHit(SearchHit { id, distance });
+        if self.heap.len() < self.k {
+            self.heap.push(hit);
+        } else if let Some(mut worst) = self.heap.peek_mut()
+            && hit < *worst
+        {
+            *worst = hit;
+        }
+    }
+
+    /// The current k-th distance, once k rows have been offered.
+    fn cutoff(&self) -> Option<f32> {
+        if self.heap.len() < self.k {
+            return None;
+        }
+        self.heap.peek().map(|worst| worst.0.distance)
+    }
+
+    fn into_hits(self) -> Vec<SearchHit> {
+        self.heap
+            .into_sorted_vec()
+            .into_iter()
+            .map(|hit| hit.0)
+            .collect()
+    }
 }
 
 // Only k distances are retained; the largest (distance, ID) is replaced first.
@@ -1075,18 +1083,35 @@ unsafe fn dot_f32_avx2(left: &[f32], right: &[f32]) -> f32 {
     #[cfg(target_arch = "x86_64")]
     use std::arch::x86_64::*;
     debug_assert_eq!(left.len(), right.len());
-    let mut sum = _mm256_setzero_ps();
-    let end = left.len() / 8 * 8;
-    for offset in (0..end).step_by(8) {
-        // SAFETY: each unaligned load stays within eight valid elements.
+    // Four independent accumulators hide the add latency; one chain would serialize every lane.
+    let step = |acc: __m256, offset: usize| {
+        // SAFETY: callers pass offsets with eight valid elements in both inputs.
         let (a, b) = unsafe {
             (
                 _mm256_loadu_ps(left.as_ptr().add(offset)),
                 _mm256_loadu_ps(right.as_ptr().add(offset)),
             )
         };
-        sum = _mm256_add_ps(sum, _mm256_mul_ps(a, b));
+        _mm256_add_ps(acc, _mm256_mul_ps(a, b))
+    };
+    let (mut s0, mut s1, mut s2, mut s3) = (
+        _mm256_setzero_ps(),
+        _mm256_setzero_ps(),
+        _mm256_setzero_ps(),
+        _mm256_setzero_ps(),
+    );
+    let wide = left.len() / 32 * 32;
+    for offset in (0..wide).step_by(32) {
+        s0 = step(s0, offset);
+        s1 = step(s1, offset + 8);
+        s2 = step(s2, offset + 16);
+        s3 = step(s3, offset + 24);
     }
+    let end = left.len() / 8 * 8;
+    for offset in (wide..end).step_by(8) {
+        s0 = step(s0, offset);
+    }
+    let sum = _mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3));
     let mut lanes = [0.0; 8];
     // SAFETY: lanes has room for all eight floats and unaligned stores are allowed.
     unsafe { _mm256_storeu_ps(lanes.as_mut_ptr(), sum) };
@@ -1142,18 +1167,35 @@ unsafe fn dot_f32_avx2_fma(left: &[f32], right: &[f32]) -> f32 {
     #[cfg(target_arch = "x86_64")]
     use std::arch::x86_64::*;
     debug_assert_eq!(left.len(), right.len());
-    let mut sum = _mm256_setzero_ps();
-    let end = left.len() / 8 * 8;
-    for offset in (0..end).step_by(8) {
-        // SAFETY: each unaligned load stays within eight valid elements.
+    // Four independent accumulators hide the FMA latency; one chain would serialize every lane.
+    let step = |acc: __m256, offset: usize| {
+        // SAFETY: callers pass offsets with eight valid elements in both inputs.
         let (a, b) = unsafe {
             (
                 _mm256_loadu_ps(left.as_ptr().add(offset)),
                 _mm256_loadu_ps(right.as_ptr().add(offset)),
             )
         };
-        sum = _mm256_fmadd_ps(a, b, sum);
+        _mm256_fmadd_ps(a, b, acc)
+    };
+    let (mut s0, mut s1, mut s2, mut s3) = (
+        _mm256_setzero_ps(),
+        _mm256_setzero_ps(),
+        _mm256_setzero_ps(),
+        _mm256_setzero_ps(),
+    );
+    let wide = left.len() / 32 * 32;
+    for offset in (0..wide).step_by(32) {
+        s0 = step(s0, offset);
+        s1 = step(s1, offset + 8);
+        s2 = step(s2, offset + 16);
+        s3 = step(s3, offset + 24);
     }
+    let end = left.len() / 8 * 8;
+    for offset in (wide..end).step_by(8) {
+        s0 = step(s0, offset);
+    }
+    let sum = _mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3));
     let mut lanes = [0.0; 8];
     // SAFETY: lanes has room for all eight floats and unaligned stores are allowed.
     unsafe { _mm256_storeu_ps(lanes.as_mut_ptr(), sum) };
@@ -1244,16 +1286,6 @@ fn validate_stored_vector(vector: &[f32], dimension: usize) -> Result<(), Error>
         return Err(Error::NonUnitStoredVector);
     }
     Ok(())
-}
-
-fn remove_slot<K: Ord + Copy>(index: &mut BTreeMap<K, BTreeSet<u32>>, key: K, slot: u32) {
-    let remove_key = index.get_mut(&key).is_some_and(|slots| {
-        slots.remove(&slot);
-        slots.is_empty()
-    });
-    if remove_key {
-        index.remove(&key);
-    }
 }
 
 #[cfg(test)]
@@ -1694,40 +1726,24 @@ mod tests {
     }
 
     #[test]
-    fn derived_scan_matrix_is_aligned_disposable_and_mutation_safe() {
+    fn contiguous_rows_are_aligned_padded_and_mutation_safe() {
         let mut store = CoreStore::new(3).unwrap();
         store.add(9, 1, 0, [1.0, 2.0, 3.0]).unwrap();
-        assert_eq!(store.derived_scan_matrix_bytes(), 0);
-        store.search([1.0, 2.0, 3.0], &Predicate::ALL, 1).unwrap();
-        if let Some(matrix) = store.scan_matrix.get() {
-            assert_eq!(matrix.ptr.as_ptr() as usize % 64, 0);
-            assert_eq!(
-                store.derived_scan_matrix_bytes(),
-                16 * std::mem::size_of::<f32>()
-            );
-        } else {
-            // Targets without a certified FP32 SIMD implementation use the
-            // reference path and do not materialize a derived scan matrix.
-            assert_eq!(store.derived_scan_matrix_bytes(), 0);
-        }
-
-        let clone = store.clone();
-        assert_eq!(clone.derived_scan_matrix_bytes(), 0);
         store.add(10, 1, 1, [3.0, 2.0, 1.0]).unwrap();
-        assert_eq!(store.derived_scan_matrix_bytes(), 0);
-        let optimized = store.search([3.0, 2.0, 1.0], &Predicate::ALL, 2).unwrap();
+        assert_eq!(store.padded_row(1).as_ptr() as usize % 32, 0);
+        assert_eq!(store.padded_row(1).len(), 8);
+        assert!(store.padded_row(1)[3..].iter().all(|value| *value == 0.0));
+        assert_eq!(store.record(1).unwrap().vector().len(), 3);
+        assert_eq!(store.get(9).unwrap().to_record().vector(), store.row(0));
+        let clone = store.clone();
+        store.add(11, 1, 2, [0.0, 0.0, 1.0]).unwrap();
+        assert_eq!(clone.len(), 2);
+        let optimized = store.search([3.0, 2.0, 1.0], &Predicate::ALL, 3).unwrap();
         let reference = store
-            .search_reference([3.0, 2.0, 1.0], &Predicate::ALL, 2)
+            .search_reference([3.0, 2.0, 1.0], &Predicate::ALL, 3)
             .unwrap();
         assert_eq!(optimized, reference);
-        if fp32_dot_implementation().is_some() {
-            assert_eq!(
-                store.derived_scan_matrix_bytes(),
-                32 * std::mem::size_of::<f32>()
-            );
-        } else {
-            assert_eq!(store.derived_scan_matrix_bytes(), 0);
-        }
+        assert_eq!(optimized.hits[0].id, 10);
     }
 
     #[test]
