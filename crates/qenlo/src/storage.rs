@@ -291,6 +291,7 @@ pub(crate) fn append_wal(
     writer.write_all(&end_generation.to_le_bytes())?;
     writer.write_all(&count.to_le_bytes())?;
     let mut bytes = WAL_HEADER_BYTES + CHECKSUM_BYTES;
+    let mut scratch = Vec::new();
     for mutation in mutations {
         match mutation {
             CoreMutation::Add {
@@ -303,9 +304,7 @@ pub(crate) fn append_wal(
                 writer.write_all(&id.to_le_bytes())?;
                 writer.write_all(&user_id.to_le_bytes())?;
                 writer.write_all(&timestamp.to_le_bytes())?;
-                for value in *vector {
-                    writer.write_all(&value.to_bits().to_le_bytes())?;
-                }
+                write_f32s(&mut writer, vector, &mut scratch)?;
                 bytes = bytes
                     .checked_add(32 + u64::from(dimension) * 4)
                     .ok_or(StorageError::LoadLimitExceeded)?;
@@ -380,6 +379,7 @@ fn replay_wal(
     }
     let count = usize::try_from(count).map_err(|_| StorageError::LoadLimitExceeded)?;
     let mut mutations = Vec::with_capacity(count);
+    let mut scratch = Vec::new();
     for _ in 0..count {
         let tag = reader.array::<8>()?;
         if tag[1..].iter().any(|byte| *byte != 0) {
@@ -390,10 +390,7 @@ fn replay_wal(
                 let id = reader.u64()?;
                 let user_id = reader.u64()?;
                 let timestamp = reader.i64()?;
-                let mut vector = Vec::with_capacity(dimension);
-                for _ in 0..dimension {
-                    vector.push(f32::from_bits(reader.u32()?));
-                }
+                let vector = read_f32s(&mut reader, dimension, &mut scratch)?;
                 mutations.push(WalMutation::Add {
                     id,
                     user_id,
@@ -502,14 +499,13 @@ fn write_snapshot_to(file: File, store: &CoreStore) -> Result<(), StorageError> 
     writer.write_all(&generation.to_le_bytes())?;
     writer.write_all(&(store.len() as u64).to_le_bytes())?;
     writer.write_all(&(store.live_len() as u64).to_le_bytes())?;
+    let mut scratch = Vec::new();
     for (_, record) in store.records() {
         writer.write_all(&record.id().to_le_bytes())?;
         writer.write_all(&record.user_id().to_le_bytes())?;
         writer.write_all(&record.timestamp().to_le_bytes())?;
         writer.write_all(&[u8::from(record.is_live()), 0, 0, 0, 0, 0, 0, 0])?;
-        for value in record.vector() {
-            writer.write_all(&value.to_bits().to_le_bytes())?;
-        }
+        write_f32s(&mut writer, record.vector(), &mut scratch)?;
     }
     let (mut writer, checksum) = writer.finish();
     writer.write_all(&checksum.to_le_bytes())?;
@@ -686,6 +682,7 @@ fn read_snapshot(
     // ordered indexes. This is admission accounting, not measured allocator RSS.
     check_admission(dimension, rows_u64, max_load_bytes)?;
     let mut actual_live = 0_u64;
+    let mut scratch = Vec::new();
     let records = (0..rows).map(|_| -> Result<RestoredRecord, StorageError> {
         let id = reader.u64()?;
         let user_id = reader.u64()?;
@@ -696,10 +693,7 @@ fn read_snapshot(
         }
         let live = flags[0] == 1;
         actual_live += u64::from(live);
-        let mut vector = Vec::with_capacity(dimension);
-        for _ in 0..dimension {
-            vector.push(f32::from_bits(reader.u32()?));
-        }
+        let vector = read_f32s(&mut reader, dimension, &mut scratch)?;
         Ok(RestoredRecord {
             id,
             user_id,
@@ -738,20 +732,15 @@ fn check_admission(dimension: usize, rows: u64, max_load_bytes: u64) -> Result<(
         .checked_mul(4)
         .and_then(|bytes| bytes.checked_add(32))
         .ok_or(StorageError::LoadLimitExceeded)?;
-    // Exact CPU search materializes a second row-major view whose stride is rounded
-    // to 16 floats for 64-byte alignment. Admit that first-query allocation up front.
-    let scan_row_bytes = u64::from(dimension)
-        .checked_add(15)
-        .map(|values| values / 16)
-        .and_then(|values| values.checked_mul(16 * 4))
-        .ok_or(StorageError::LoadLimitExceeded)?;
+    // In memory, each vector is stored once, padded to a multiple of eight floats, beside a
+    // 32-byte metadata row. The 512 bytes cover the ID map and both ordered indexes.
+    let memory_row_bytes = u64::from(dimension).div_ceil(8) * 32 + 32;
     let file_bytes = rows
         .checked_mul(canonical_row_bytes)
         .and_then(|bytes| bytes.checked_add(HEADER_BYTES + CHECKSUM_BYTES))
         .ok_or(StorageError::LoadLimitExceeded)?;
-    let admission_bytes = canonical_row_bytes
-        .checked_add(scan_row_bytes)
-        .and_then(|bytes| bytes.checked_add(512))
+    let admission_bytes = memory_row_bytes
+        .checked_add(512)
         .and_then(|bytes| rows.checked_mul(bytes))
         .ok_or(StorageError::LoadLimitExceeded)?;
     if rows > u64::from(u32::MAX) || file_bytes > max_load_bytes || admission_bytes > max_load_bytes
@@ -1012,6 +1001,28 @@ impl<R: Read> Read for CheckedReader<R> {
     }
 }
 
+// One write and one checksum update per vector; per-float updates dominated snapshot time.
+fn write_f32s(writer: &mut impl Write, values: &[f32], scratch: &mut Vec<u8>) -> io::Result<()> {
+    scratch.clear();
+    scratch.extend(values.iter().flat_map(|value| value.to_le_bytes()));
+    writer.write_all(scratch)
+}
+
+fn read_f32s(
+    reader: &mut impl Read,
+    dimension: usize,
+    scratch: &mut Vec<u8>,
+) -> io::Result<Vec<f32>> {
+    scratch.resize(dimension * 4, 0);
+    reader.read_exact(scratch)?;
+    Ok(scratch
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .map(|bytes| f32::from_le_bytes(*bytes))
+        .collect())
+}
+
 fn read_u32_unchecked(reader: &mut impl Read) -> io::Result<u32> {
     let mut bytes = [0; 4];
     reader.read_exact(&mut bytes)?;
@@ -1198,33 +1209,32 @@ mod tests {
     fn write_and_open_share_admission_limits_before_publication() {
         let path = temp_dir("write-budget");
         let mut store = populated_store();
-        // Two 2D rows need canonical rows plus a 64-byte aligned scan row and indexes:
-        // 2 * (32 + 8 + 64 + 512) = 1,232 bytes.
+        // Two 2D rows need one padded 32-byte vector, a metadata row, and indexes:
+        // 2 * (32 + 32 + 512) = 1,152 bytes.
         assert!(matches!(
-            create_with_limit(&path, &store, 1231),
+            create_with_limit(&path, &store, 1151),
             Err(StorageError::LoadLimitExceeded)
         ));
         assert!(!path.exists());
-        drop(create_with_limit(&path, &store, 1232).unwrap());
-        drop(open_with_limit(&path, 1232).unwrap());
+        drop(create_with_limit(&path, &store, 1152).unwrap());
+        drop(open_with_limit(&path, 1152).unwrap());
         let previous = store.generation();
         store.add(3, 1, 0, [1.0, 0.0]).unwrap();
         assert!(matches!(
-            write_snapshot_with_limit(&path, &store, 1232),
+            write_snapshot_with_limit(&path, &store, 1152),
             Err(StorageError::LoadLimitExceeded)
         ));
         assert!(!snapshot_path(&path, store.generation(), ".pending").exists());
         assert_eq!(
-            open_with_limit(&path, 1232).unwrap().store.generation(),
+            open_with_limit(&path, 1152).unwrap().store.generation(),
             previous
         );
-        // At 768 dimensions the aligned first-query matrix is another 3,072 bytes;
-        // a flat 512-byte bookkeeping allowance alone is not conservative.
+        // At 768 dimensions the vector alone is 3,072 bytes: 3,072 + 32 + 512 = 3,616.
         assert!(matches!(
-            check_admission(768, 1, 6687),
+            check_admission(768, 1, 3615),
             Err(StorageError::LoadLimitExceeded)
         ));
-        check_admission(768, 1, 6688).unwrap();
+        check_admission(768, 1, 3616).unwrap();
         assert!(matches!(
             check_admission(usize::MAX, u64::MAX, u64::MAX),
             Err(StorageError::LoadLimitExceeded)
@@ -1359,5 +1369,37 @@ mod tests {
         .unwrap();
         assert!(matches!(open(&gap), Err(StorageError::Corrupt(_))));
         fs::remove_dir_all(gap).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod snapshot_timing {
+    use super::*;
+
+    /// `cargo test -p qenlo --release snapshot_timing -- --ignored --nocapture`
+    #[test]
+    #[ignore = "timing probe, not a correctness test"]
+    fn snapshot_write_and_open_timing() {
+        let path = std::env::temp_dir().join(format!("qenlo-timing-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&path);
+        let mut store = CoreStore::new(384).unwrap();
+        let mut vector = vec![0.25_f32; 384];
+        for id in 0..100_000_u64 {
+            vector[(id % 384) as usize] = 1.0;
+            store.add(id, id % 4, id as i64, &vector).unwrap();
+            vector[(id % 384) as usize] = 0.25;
+        }
+        let started = std::time::Instant::now();
+        drop(create_with_limit(&path, &store, u64::MAX).unwrap());
+        let write = started.elapsed();
+        let started = std::time::Instant::now();
+        let opened = open_with_limit(&path, u64::MAX).unwrap();
+        println!(
+            "100k x 384 snapshot write={write:?} open={:?}",
+            started.elapsed()
+        );
+        assert_eq!(opened.store.live_len(), 100_000);
+        drop(opened);
+        fs::remove_dir_all(&path).unwrap();
     }
 }
