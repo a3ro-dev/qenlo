@@ -16,7 +16,7 @@ plt.rcParams.update({"font.size": 7.5, "axes.edgecolor": MUTED, "axes.labelcolor
                      "ytick.color": MUTED, "axes.spines.top": False, "axes.spines.right": False, "axes.grid": True,
                      "grid.color": "#e6e5e1", "grid.linewidth": 0.6, "legend.frameon": False, "pdf.fonttype": 42})
 HOSTS = ["RTX 4050 Laptop (Windows)", "RTX 4090 host A (Linux, Sep 24)", "RTX 4090 host B (Linux pods, Sep 25)", "H100 SXM (Linux pod)"]
-SHORT = {HOSTS[0]: "4050\nlaptop", HOSTS[1]: "4090\nhost A", HOSTS[2]: "4090\nhost B", HOSTS[3]: "H100"}
+SHORT = {HOSTS[0]: "4050\nlaptop", HOSTS[1]: "4090\nhost A", HOSTS[2]: "4090\npods B", HOSTS[3]: "H100"}
 E_SHOW = 3000
 
 
@@ -41,7 +41,7 @@ for i, h in enumerate(HOSTS):
                           label=None if i else ("heavy path (scans all N)" if eng == "gpu-predicate" else "light path (scans E rows)"))
 ax[0].set_yscale("log"); ax[0].set_xticks(range(len(HOSTS)), [SHORT[h] for h in HOSTS])
 ax[0].set_ylabel("device top-k time per query (ms)")
-ax[0].set_title("(a) one query cell, four GPUs", loc="left")
+ax[0].set_title("(a) one query cell, $E$ = 3,000", loc="left")
 ax[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.28), fontsize=6.5, ncol=1)
 # (b)
 base = ROOT / "research/data/raw/2026-09-25-dvfs-d1"
@@ -54,7 +54,7 @@ d = next((base / f"block-{b}" / "gpu-rows-e10000-h1" for b in range(5) if (base 
 if d:
     t, c = clock(d); ax[1].plot(t, c, color=LIGHT, lw=0.9, ls=(0, (2, 1.4)), label="light + heater")
 ax[1].set(xlabel="seconds since process start", ylabel="SM clock (MHz)")
-ax[1].set_title("(b) clock the driver picks", loc="left")
+ax[1].set_title("(b) SM clock in one process", loc="left")
 ax[1].legend(fontsize=6.5, loc="upper center", bbox_to_anchor=(0.5, -0.28), ncol=3)
 # (c) heater collapses the light kernel's slow tail (device time / best on that GPU)
 dr = list(csv.DictReader(open(ROOT / "research/data/processed/dvfs-pooled/dose_response.csv")))
@@ -71,7 +71,7 @@ for i, (g, _) in enumerate(GPUS):
             ax[2].scatter([i + dx + off] * len(v), v, s=11, marker=mk, facecolor=fill, edgecolor=col, linewidth=0.8, zorder=3)
 ax[2].set_yscale("log"); ax[2].set_xticks(range(3), [g[1] for g in GPUS])
 ax[2].set_ylabel("device time / best on that GPU")
-ax[2].set_title("(c) add GPU load", loc="left")
+ax[2].set_title("(c) heater off vs on", loc="left")
 ax[2].set_yticks([1, 1.5, 2, 3, 4], ["1", "1.5", "2", "3", "4"]); ax[2].minorticks_off()
 ax[2].text(0.5, -0.30, "hollow = heater off, filled = heater on" + chr(10) + "square = light, triangle = heavy", transform=ax[2].transAxes, ha="center", va="top", fontsize=6.5, color=MUTED)
 fig.tight_layout()

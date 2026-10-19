@@ -1,6 +1,6 @@
 # Qenlo research paper source
 
-**Current paper:** [QENLO-RESEARCH-PAPER.pdf](../QENLO-RESEARCH-PAPER.pdf). Its source is in [`v2/`](v2/): run `bash paper/v2/build.sh`; tables and figures come from `paper/v2/scripts/`. The paper is *The Efficient Kernel Runs Slow: GPU Power States Decide the Latency of Light Vector-Search Queries*. Its thesis, evidence and rejected alternatives are in [`research/decision-memo-2026-09-25.md`](../research/decision-memo-2026-09-25.md). The next experiments, a locked-clock A/B and FAISS as a second engine, are specified in [`research/specs/2026-09-25-clock-lock-and-faiss.md`](../research/specs/2026-09-25-clock-lock-and-faiss.md).
+**Current paper:** [QENLO-RESEARCH-PAPER.pdf](../QENLO-RESEARCH-PAPER.pdf). Its source is in [`v2/`](v2/): run `bash paper/v2/build.sh`; tables and figures come from `paper/v2/scripts/`. The paper is *The Efficient Kernel Runs Slow: GPU Power States and the Reproducibility of Light Vector-Search Kernels*. Its thesis, evidence and rejected alternatives are in [`research/decision-memo-2026-09-25.md`](../research/decision-memo-2026-09-25.md). The next experiments, a locked-clock A/B and FAISS as a second engine, are specified in [`research/specs/2026-09-25-clock-lock-and-faiss.md`](../research/specs/2026-09-25-clock-lock-and-faiss.md).
 
 The rest of this file describes the **preserved v1 evidence audit** ([`archive/qenlo-evidence-audit-v1.pdf`](archive/qenlo-evidence-audit-v1.pdf), source `paper.tex`/`appendix.tex`). It is kept for provenance; the new paper cites it for the held-out router result.
 
