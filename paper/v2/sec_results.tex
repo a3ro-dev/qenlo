@@ -48,8 +48,29 @@ Path & GPU & $n$ & median & p90 & $>1.5\times$ & median & p90 & $>1.5\times$ \\\
 \end{itemize}
 The device-level predictions, which isolate the GPU, held; the end-to-end prediction did not.
 
+\section{Locking the clock}\label{sec:lock}
+On the laptop we ran the direct test. Each condition ran in a fresh process with the driver's default clocks (U), with SM and memory locked at the heavy path's boost (2,670 and 8,001\,MHz; Lhi), or locked at the light path's low state (585 and 810\,MHz; Llo). The heater was crossed with U and Lhi. The design was 6 cells $\times$ 5 conditions $\times$ 5 blocks $=150$ processes, preregistered and hashed before any data (Appendix~\ref{app:protocols}). No run was excluded, the observed SM clock matched the lock in every locked run, and the GPU never exceeded 50\,\textdegree C.
+
+\begin{table}[t]\centering\footnotesize
+\caption{Locked-clock experiment on the laptop: median top-$k$ device time per query (ms) over five blocks, and max/min across blocks. Light = compact rows, heavy = shader predicate; heater off. U = unlocked, Lhi = locked at 2,670/8,001\,MHz, Llo = locked at 585/810\,MHz.}\label{tab:lock}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{rcccccccc}\toprule
+& \multicolumn{6}{c}{Light} & \multicolumn{2}{c}{Heavy, Lhi} \\\cmidrule(lr){2-7}\cmidrule(lr){8-9}
+& \multicolumn{2}{c}{U} & \multicolumn{2}{c}{Lhi} & \multicolumn{2}{c}{Llo} & & \\
+$E$ & ms & max/min & ms & max/min & ms & max/min & ms & max/min \\\midrule
+\tableinput{tables/lock}
+\bottomrule\end{tabular}\end{table}
+
+\paragraph{The variation disappears at fixed clocks.} Unlocked, the light kernel's device time varied by $2.84\times$, $2.11\times$ and $1.51\times$ across blocks at $E=1{,}000$, $3{,}000$ and $10{,}000$. Locked at boost, it varied by $1.00\times$ in all three cells (prediction K1, $\le 1.15$). The heater had cut unlocked light time to $0.57$, $0.37$ and $0.40$ of its heater-off value; with the clock locked it changed nothing (ratio $1.00$ in every cell; K4). The heavy kernel was already stable and unchanged by the lock (Lhi/U $=1.000$, $1.000$, $1.002$; K5).
+
+\paragraph{The low state alone reproduces the slow mode.} Locked at 585/810\,MHz, the light kernel at $E=10{,}000$ took 0.444\,ms, within 4\% of the 0.461\,ms that D1 measured on the same laptop without locking (K3). The same lock slowed the heavy kernel by $3.8\times$ (0.95 to 3.6\,ms), so the slow state is costly for both paths. What differs is that the driver put the light path there and kept the heavy path out of it.
+
+\paragraph{One prediction failed as written.} K2 predicted that locking high would match the best unlocked speed to within 15\%. Locked-high light time was instead 0.50--0.68 of the best unlocked median (0.63--0.81 of the best single unlocked run), so the lock beat every unlocked configuration, including unlocked with the heater. The direction of the prediction held and its tolerance was wrong: the driver's best state for light work is below boost.
+
+\paragraph{What this does and does not show.} On this laptop, fixing the clocks removes the light kernel's process-to-process variation and sets its level, so the clock the driver chooses accounts for the variation we measured. Locking fixes the SM and memory clocks together, and we did not vary them separately. We could not repeat the test on the cloud hosts, so the cross-host spread there is attributed to power state by the heater and telemetry evidence only.
+
 \section{Consequences}\label{sec:consequences}
-\paragraph{Unlocked-clock benchmarks can understate the efficient implementation.} A benchmark that compares a work-efficient GPU kernel with a less efficient one at low load runs the efficient one at a lower clock. Here the light path won every cell regardless. But its measured device-time advantage over the heavy path at $E=3{,}000$ is $3.4\times$ on 4090 host A, $9.0\times$ on the laptop, $10.5\times$ on the H100 and $12.6\times$ on the 4090 pods, for identical code. Optimizations that remove GPU work (tighter filtering, smaller kernels, early exit) can be measured at a discount the benchmark does not show, and the discount differs between machines.
+\paragraph{Unlocked-clock benchmarks can understate the efficient implementation.} On the laptop, the light kernel at fixed boost ran 2.9--5.0$\times$ faster than with default clocks, so the unlocked number understates it. A benchmark that compares a work-efficient GPU kernel with a less efficient one at low load runs the efficient one at a lower clock. Here the light path won every cell regardless. But its measured device-time advantage over the heavy path at $E=3{,}000$ is $3.4\times$ on 4090 host A, $9.0\times$ on the laptop, $10.5\times$ on the H100 and $12.6\times$ on the 4090 pods, for identical code. Optimizations that remove GPU work (tighter filtering, smaller kernels, early exit) can be measured at a discount the benchmark does not show, and the discount differs between machines.
 
 \paragraph{Kernel-level results did not transfer between machines with the same GPU.} Six RTX 4090 hosts gave light-kernel medians spanning $3.8\times$ for the same cell. Any threshold or cost model calibrated on one of them, for example a CPU/GPU router, partly encodes that host's power behavior. The study that preceded this one fitted a scalar CPU/GPU routing threshold with zero errors on 31 development pairs. On a preregistered held-out suite it chose the slower route in 8 of 16 workloads, several of them within the process-to-process variation measured here (Appendix~\ref{app:router}). In our data the heater never changed a CPU/GPU winner (Appendix Table~\ref{tab:crossover}). We therefore do not claim that power state moves this system's crossover, only that it moves the margins a router is calibrated on.
 
@@ -60,6 +81,6 @@ The device-level predictions, which isolate the GPU, held; the end-to-end predic
 \item[(i)] Replicate across fresh processes and report the spread between them; repetitions inside one process share its power state.
 \item[(ii)] Log clocks and performance state continuously, not just before and after a run.
 \item[(iii)] Report device-timestamp kernel time alongside end-to-end latency, to separate power-state effects from host effects.
-\item[(iv)] Where clocks cannot be locked, add a load-raising control such as the heater, together with a heavy negative control.
+\item[(iv)] Lock clocks where possible, and report results at the locked clock alongside the default. Where clocks cannot be locked, add a load-raising control such as the heater, together with a heavy negative control.
 \item[(v)] When comparing implementations, state whether they ran in the same power state.
 \end{enumerate}
