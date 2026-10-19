@@ -1,5 +1,7 @@
-\documentclass{article}
-\usepackage{iclr2027_conference,times}
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.75in,columnsep=0.25in]{geometry}
+\usepackage{times}
+\usepackage[authoryear,round]{natbib}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -11,27 +13,26 @@
 
 \title{The Efficient Kernel Runs Slow:\\GPU Power States and the Reproducibility of Light Vector-Search Kernels}
 \author{Akshat Singh Kushwaha \\ \texttt{akshatsingh14372@outlook.com}}
-\iclrfinalcopy
 
+\date{}
 \begin{document}
-\maketitle
-\lhead{Preprint}
-
-\begin{abstract}
-GPU latency comparisons usually treat a kernel's speed as a property of its code and its hardware. For latency-bound work, the speed also depends on the performance state the driver selects, and the driver may select it partly from the load the work itself imposes. We study two GPU paths of an exact filtered vector-search engine that return identical top-$k$ results. The \emph{light} path does work proportional to the $E$ eligible rows; the \emph{heavy} path scans all $N$ rows. We ran fresh processes on three GPU models: an RTX 4050 Laptop, RTX 4090s on six cloud hosts, and an H100. The heavy top-$k$ kernel's device time reproduced within 1\% across processes on one machine and within 7\% across hosts. The light kernel's device time varied by up to $4.2\times$ on one machine and $4.6\times$ across hosts with the same GPU model. In 50\,ms telemetry, the driver ran the light path at lower clocks (on the laptop, 585\,MHz SM and 810\,MHz memory; on the H100, 645\,MHz SM) while the heavy path stayed at boost. In preregistered experiments, a separate process that kept the GPU lightly busy reduced the share of light-kernel runs more than $1.5\times$ slower than their best from 52\% to 0\% on the laptop, from 28\% to 16\% on the RTX 4090s and from 11\% to 0\% on the H100, while the heavy kernel stayed the same or slowed down. Contention alone would slow both paths, so this pattern fits a power-state account better. The preregistered end-to-end speed-up did not appear: the added load also competes for the GPU and the host, and full query latency changed little or got worse. On the laptop, where we could lock clocks, a second preregistered experiment (150 fresh processes) tested the account directly. With clocks locked at boost, the light kernel's spread across blocks fell from up to $2.8\times$ to $1.00\times$ and it ran 2.9--5.0$\times$ faster than unlocked with default clocks (1.5--2.0$\times$ faster than the best unlocked configuration, which used the heater); locked at the low state the driver chose, it reproduced the slow mode, and the heater no longer changed the light kernel's time. We could not lock clocks on the cloud hosts, so the cross-host differences rest on the heater and telemetry evidence. GPU power state can therefore shape kernel-level benchmarks of light work, and device time should be reported separately from end-to-end latency. Protocols, raw per-call data and telemetry are released.
-\end{abstract}
+\makeatletter
+\twocolumn[\@maketitle
+\begin{center}\begin{minipage}{0.88\textwidth}\small\noindent\textbf{Abstract.} GPU latency comparisons usually treat a kernel's speed as a property of its code and hardware. For latency-bound work it also depends on the performance state the driver selects, which may depend on the load the work itself imposes. We study two GPU paths of an exact filtered vector-search engine that return identical top-$k$ results: a \emph{light} path whose work scales with the $E$ eligible rows, and a \emph{heavy} path that scans all $N$ rows. Across fresh processes on an RTX 4050 Laptop, RTX 4090s on six cloud hosts and an H100, the heavy kernel's device time reproduced within 1\% on one machine and within 7\% across hosts, while the light kernel's varied up to $4.2\times$ on one machine and $4.6\times$ across hosts with the same GPU model. Telemetry shows the driver running the light path at low clocks while the heavy path stayed at boost. In preregistered experiments, a separate light GPU load reduced the share of light-kernel runs more than $1.5\times$ slower than their best on all three GPU types, but did not produce the predicted end-to-end speed-up. On the laptop, locking the clocks removed the light kernel's variation (spread from $2.8\times$ to $1.00\times$), and a low lock reproduced the slow mode. Clocks could not be locked on the cloud hosts, so the cross-host differences rest on indirect evidence. GPU power state can shape kernel benchmarks of light work, and device time should be reported separately from end-to-end latency. Protocols, raw data and telemetry are released.\end{minipage}\end{center}\vspace{1.2em}]
+\makeatother
+\thispagestyle{plain}
 
 \section{Introduction}\label{sec:intro}
 A retrieval call in an agent or RAG pipeline is often small: one query, a metadata filter that leaves a few thousand candidates, $k=10$. Whether such a call should run on a GPU, and in which form, is usually decided by measuring it. We find that for light calls the measurement depends on more than the implementation and the hardware. It also depends on the GPU's performance state, which the driver sets in response to load, including the load of the call being measured.
 
 This study began with a reproducibility asymmetry. Our system has two GPU execution paths for exact filtered top-$k$ search that return identical results. A \emph{light} path uploads the list of $E$ eligible rows and does device work proportional to $E$. A \emph{heavy} path evaluates the filter inside the kernel and does device work proportional to all $N$ rows, up to $1{,}000\times$ more at our most selective filter. When we re-ran one query cell in fresh processes, the heavy path's top-$k$ kernel time reproduced to three decimal places. The light path's moved between modes $2.4\times$ apart (Section~\ref{sec:repro}), and its fast mode coincided with higher GPU clocks. On other hosts with the same GPU model, the light kernel's median was up to $3.8\times$ faster while the heavy kernel's differed by at most 4\%.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
 \includegraphics[width=\linewidth]{fig1_central.pdf}
 \caption{\textbf{The light kernel's speed tracks the GPU clock.} (a) Device time of the top-$k$ kernel for one query cell ($N=100$K, $E=3{,}000$, $D=384$, $k=10$, batch~1), one point per fresh process. The heavy path does $33\times$ more work and reproduces within 1\% on a machine and 7\% across hosts; the light path varies up to $4.2\times$ on a machine and $4.3\times$ across the five RTX 4090 pod hosts. (b) SM clock sampled every 50\,ms during one laptop process per condition ($E=10{,}000$), including data loading. The heavy path stays at boost and the light path drops to about 500\,MHz; a separate light GPU load (the \emph{heater}) raises it. (c) Light (squares) and heavy (triangles) device time relative to the best value observed for that GPU and $E$, heater off (hollow) and on (filled), one point per block and $E$. With the heater, the light kernel's slow runs become rarer on every GPU and the heavy kernel never gets faster.}
 \label{fig:central}
-\end{figure}
+\end{figure*}
 
 The direct test is to lock the clock. That needs administrator rights, which we had on the laptop but not inside the cloud containers, so on the cloud hosts we raise the clock instead. A separate process, the \emph{heater}, keeps the GPU lightly busy. If the variation came only from contention, the heater could only slow every path down. If it came from power state, the heater should speed up work that was running below its attainable clock and slow down only work that was already at boost. In preregistered experiments on three GPU types (Figure~\ref{fig:central}c, Section~\ref{sec:intervention}), every GPU showed the second pattern at the device level. With the heater, the share of light-kernel runs more than $1.5\times$ slower than their best fell from 52\% to 0\% on the laptop, from 28\% to 16\% on the RTX 4090s and from 11\% to 0\% on the H100. The heavy kernel never got faster. End-to-end latency did not show the predicted speed-up, because the heater also competes for the GPU and, on some hosts, for the CPU. We report both.
 
@@ -58,7 +59,7 @@ On the GPUs we tested, the faster implementation of a light query was also the o
 Protocols with predictions were written and hashed before data collection (Appendix~\ref{app:protocols}). Raw per-call samples, 50\,ms telemetry, analysis scripts and the heater are in the repository: \path{research/data/raw/2026-09-25-dvfs-*}, \path{research/scripts/analyze_dvfs_d1.py}, \path{research/scripts/cross_host.py}, \path{research/scripts/pool_hosts.py} and \path{crates/qenlo/examples/gpu_heater.rs}. The scripts in \path{paper/v2/scripts/} regenerate all tables and figures. Cloud compute for the new runs cost about US\$6.
 
 \bibliography{references}
-\bibliographystyle{iclr2027_conference}
+\bibliographystyle{plainnat}
 
 \appendix
 \input{appendix}

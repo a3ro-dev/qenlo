@@ -1,12 +1,12 @@
 \section{Heavy kernels reproduce; light kernels do not}\label{sec:repro}
 Table~\ref{tab:crosshost} reports the median device time of the top-$k$ selection kernel per fresh process, for both paths at three selectivities on four GPUs. We use device timestamps rather than end-to-end latency because they isolate the GPU from host-side effects; Section~\ref{sec:intervention} returns to end-to-end latency.
 
-\begin{table}[t]\centering\small
+\begin{table*}[t]\centering\small
 \caption{Top-$k$ kernel device time per query (ms): median over fresh heater-off processes (min--max), and max/min across processes. Heavy = shader predicate over all $N=100$K rows; light = compact eligible rows. RTX 4090 host A is the retained September~24 archive (one host, 5 blocks); pods B are five September~25 pods on five different hosts, one block each. Identical binary source, dataset bytes and queries.}\label{tab:crosshost}
 \begin{tabular}{rlrlrlr}\toprule
 $E$ & GPU & $n$ & Heavy (ms) & max/min & Light (ms) & max/min \\\midrule
 \tableinput{tables/cross_host}
-\bottomrule\end{tabular}\end{table}
+\bottomrule\end{tabular}\end{table*}
 
 The heavy kernel reproduces within 1\% between processes on each single machine (the laptop, 4090 host A and the H100), and within 7\% across the five pod hosts, which span two driver branches (570 and 580). The light kernel does not. Its spread between processes reaches $2.6\times$ on 4090 host A, $4.2\times$ on the laptop and $4.3$--$4.6\times$ across the five 4090 pod hosts. At $E=3{,}000$ its median differs $3.8\times$ between host A and the pods (0.210 versus 0.055\,ms). The light path is still faster than the heavy path in every cell; what differs is how reproducible each path is.
 
@@ -15,25 +15,25 @@ The retained archive shows the same asymmetry within one host over time. Across 
 \section{Which power state each path gets}\label{sec:states}
 Table~\ref{tab:states} reports the median SM and memory clocks while the GPU was active (samples with non-zero utilization) for each path. On every GPU the heavy path holds boost SM clocks: 2,670--2,820\,MHz on the consumer GPUs and 1,980\,MHz on the H100. The light path runs lower. At $E=10{,}000$ the driver also cuts the memory clock to 810\,MHz on the laptop (from 8,201\,MHz; performance state P5) and on the 4090 pods (from 10,501\,MHz). The scoring kernel reads every eligible vector, so a memory clock about $10\times$ lower can slow it substantially. On the H100 the light path's SM clock falls from 1,605 to 645\,MHz between $E=1{,}000$ and $10{,}000$.
 
-\begin{table}[t]\centering\small
+\begin{table*}[t]\centering\small
 \caption{Median SM / memory clock (MHz) while the GPU is active, pooled over blocks. Clocks are sampled by \texttt{nvidia-smi} every 50\,ms, which is itself a partial sampler \citep{yang2023parttime}.}\label{tab:states}
 \begin{tabular}{lrccc}\toprule
 GPU & $E$ & Heavy path & Light path & Light path + heater \\\midrule
 \tableinput{tables/power_states}
-\bottomrule\end{tabular}\end{table}
+\bottomrule\end{tabular}\end{table*}
 
 We do not know what the governor responds to, so we state only what we observe. The heavy path spends 52--84\% of each call inside its two kernels and always holds boost. The light path spends 13--43\% and does not. Within the light path, however, the clock \emph{falls} as $E$ grows on the laptop and the H100, even though per-call device work grows. A simple busy-fraction account does not explain this. The busy fraction is also endogenous, because a lower clock lengthens the kernels that define it. The NVIDIA policy is undocumented \citep{spaan2026kerneldvfs}, and our claims concern its observable consequences.
 
 \section{Intervention: making the GPU busier}\label{sec:intervention}
 Each experiment ran every condition (engine $\times$ $E$ $\times$ heater on/off) once per block, in shuffled order and fresh processes (Section~\ref{sec:setup}). Table~\ref{tab:tail} gives the most direct test. For every block and $E$, it divides each path's device time by the best value observed for that GPU and $E$ in either arm. Both arms share the same reference, so a heater-off run that happened to be slow cannot flatter the heater through regression to the mean.
 
-\begin{table}[t]\centering\small
+\begin{table*}[t]\centering\small
 \caption{Device time relative to the best observed for that GPU and $E$: median, 90th percentile, and share of runs more than $1.5\times$ slower than best, heater off versus on. One observation per block and $E$.}\label{tab:tail}
 \begin{tabular}{llrcccccc}\toprule
 & & & \multicolumn{3}{c}{Heater off} & \multicolumn{3}{c}{Heater on} \\\cmidrule(lr){4-6}\cmidrule(lr){7-9}
 Path & GPU & $n$ & median & p90 & $>1.5\times$ & median & p90 & $>1.5\times$ \\\midrule
 \tableinput{tables/tail}
-\bottomrule\end{tabular}\end{table}
+\bottomrule\end{tabular}\end{table*}
 
 \paragraph{Device time: the predicted interaction appears on every GPU.} Without the heater, the light kernel runs a median 1.15--1.59$\times$ slower than its best, with a tail reaching $3.3\times$. With the heater, its median is 1.00--1.07; runs more than $1.5\times$ slow disappear on the laptop and the H100 and fall from 28\% to 16\% on the 4090 pods. The heavy kernel has no tail to remove. With the heater it becomes uniformly slower on the laptop ($1.19\times$) and the H100 ($1.36\times$), the cost of sharing the GPU, and stays unchanged on the 4090 pods. The heater's effect on the light kernel also grows with how slow that kernel was: across 59 block-level pairs, the heater-on/off ratio correlates with the heater-off slowdown (Spearman $\rho=-0.66$), and pairs that were at least $1.5\times$ slow were cut to a median 0.47. Unlike Table~\ref{tab:tail}, this correlation is exposed to regression to the mean, so we report it only as consistent with the account. Paired ratios with block-bootstrap intervals are in Appendix Table~\ref{tab:heater}.
 
@@ -51,7 +51,7 @@ The device-level predictions, which isolate the GPU, held; the end-to-end predic
 \section{Locking the clock}\label{sec:lock}
 On the laptop we ran the direct test. Each condition ran in a fresh process with the driver's default clocks (U), with SM and memory locked at the heavy path's boost (2,670 and 8,001\,MHz; Lhi), or locked at the light path's low state (585 and 810\,MHz; Llo). The heater was crossed with U and Lhi. The design was 6 cells $\times$ 5 conditions $\times$ 5 blocks $=150$ processes, preregistered and hashed before any data (Appendix~\ref{app:protocols}). No run was excluded, the observed SM clock matched the lock in every locked run, and the GPU never exceeded 50\,\textdegree C.
 
-\begin{table}[t]\centering\footnotesize
+\begin{table*}[t]\centering\footnotesize
 \caption{Locked-clock experiment on the laptop: median top-$k$ device time per query (ms) over five blocks, and max/min across blocks. Light = compact rows, heavy = shader predicate; heater off. U = unlocked, Lhi = locked at 2,670/8,001\,MHz, Llo = locked at 585/810\,MHz.}\label{tab:lock}
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{rcccccccc}\toprule
@@ -59,7 +59,7 @@ On the laptop we ran the direct test. Each condition ran in a fresh process with
 & \multicolumn{2}{c}{U} & \multicolumn{2}{c}{Lhi} & \multicolumn{2}{c}{Llo} & & \\
 $E$ & ms & max/min & ms & max/min & ms & max/min & ms & max/min \\\midrule
 \tableinput{tables/lock}
-\bottomrule\end{tabular}\end{table}
+\bottomrule\end{tabular}\end{table*}
 
 \paragraph{The variation disappears at fixed clocks.} Unlocked, the light kernel's device time varied by $2.84\times$, $2.11\times$ and $1.51\times$ across blocks at $E=1{,}000$, $3{,}000$ and $10{,}000$. Locked at boost, it varied by $1.00\times$ in all three cells (prediction K1, $\le 1.15$). The heater had cut unlocked light time to $0.57$, $0.37$ and $0.40$ of its heater-off value; with the clock locked it changed nothing (ratio $1.00$ in every cell; K4). The heavy kernel was already stable and unchanged by the lock (Lhi/U $=1.000$, $1.000$, $1.002$; K5).
 

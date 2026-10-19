@@ -6,34 +6,34 @@ P3, the light path's ratio is below the heavy path's;
 P4, the heater lowers light-path device time while host row materialization stays within $\pm10\%$.
 The same rules were applied unchanged to every host.
 
-\begin{table}[h]\centering\footnotesize
+\begin{table*}[t]\centering\footnotesize
 \caption{Preregistered predictions by GPU and $E$. P3 is shown for end-to-end P50 / device time. ``n/a'': P1 was registered only for $E\le 3{,}000$.}\label{tab:scorecard}
 \setlength{\tabcolsep}{4pt}\begin{tabular}{lrcccc}\toprule
 GPU & $E$ & P1 call $<0.9$ & P2 heavy $\ge 0.95$ & P3 light $<$ heavy & P4 device $\downarrow$, host flat \\\midrule
 \tableinput{tables/scorecard}
-\bottomrule\end{tabular}\end{table}
+\bottomrule\end{tabular}\end{table*}
 
 P1 fails everywhere at the block level; the pilot's $1.9\times$ end-to-end speed-up on the laptop did not replicate reliably across blocks. P2 and the device-time half of P3 hold in every cell. P4 fails where the heater also slowed host-side work. On the H100 pod, host row materialization became 40--48\% slower with the heater running, which shows that the heater process took host CPU time as well as GPU time. The end-to-end slowdowns on that host therefore say little about the power-state account; they show that our heater is not a clean GPU-only perturbation.
 
 
-\begin{table}[h]\centering\scriptsize
+\begin{table*}[t]\centering\scriptsize
 \caption{Paired heater-on / heater-off ratios (median over blocks of per-block ratios, 95\% block-bootstrap interval). Below 1 = faster with the heater. Device = top-$k$ kernel time; call = end-to-end P50. $n$ = blocks.}\label{tab:heater}
 \begin{tabular}{lrrllll}\toprule
 GPU & $E$ & $n$ & Light device & Heavy device & Light call & Heavy call \\\midrule
 \tableinput{tables/heater_effects}
-\bottomrule\end{tabular}\end{table}
+\bottomrule\end{tabular}\end{table*}
 
 \paragraph{Deviations.} (i) The clock summary in the preregistered analysis script took the median over the whole process, including data loading; we added a GPU-active median (utilization $>0$) before inspecting any cross-host comparison and report both in the released CSVs. (ii) Two pod setup attempts failed because of script bugs (a missing dataset copy, a mis-specified pod) and were re-run before any cell completed; no completed cell was discarded. (iii) The pod first assigned to block~3 ran host-side benchmark work roughly $10\times$ slower than the others (about $14\times$ on a single-threaded Python test). Before any of its results were inspected, we re-ran block~3 from scratch on a new pod (Ryzen~9 7950X). The 14 cells the slow pod completed are retained (\path{d1r-b3-partial.tar.gz}) and excluded from the tables. A stray setup process ran for about 30\,s on the block~4 pod during three cells; dropping those cells changes the affected light-path ratio from 0.967 to 0.966. (iv) The cross-host table (Table~\ref{tab:crosshost}) and the device-time framing were not preregistered; they were suggested by the retained September~24 archive and are therefore partly exploratory, although the pods and H100 supplied new data for them.
 
 \paragraph{E-LOCK predictions.} K1 (light max/min $\le 1.15$ locked high), K3 (locked-low light time within 25\% of D1's slow mode at $E=10{,}000$), K4 (no heater effect locked high) and K5 (heavy within 3\% of unlocked) held in every tested cell. K2 (locked-high light time within 15\% of the best unlocked) failed as written, because locked-high was 32--50\% \emph{faster} than the best unlocked median. No run was excluded and the run followed the protocol, with memory clocks locked as planned. Analysis: \path{research/scripts/analyze_dvfs_lock.py}.
 
 \section{CPU/GPU crossover}\label{app:crossover}
-\begin{table}[h]\centering\small
+\begin{table*}[t]\centering\small
 \caption{Median-block end-to-end P50 (ms) for the single-threaded CPU scan, the light GPU path with the heater off and on (winner against CPU in parentheses), and the heavy GPU path. The heater never changed a winner.}\label{tab:crossover}
 \begin{tabular}{lrrllr}\toprule
 GPU & $E$ & CPU & Light, heater off & Light, heater on & Heavy \\\midrule
 \tableinput{tables/crossover}
-\bottomrule\end{tabular}\end{table}
+\bottomrule\end{tabular}\end{table*}
 
 \section{The held-out router failure that motivated this study}\label{app:router}
 The system's earlier research campaign (preserved unchanged in \path{paper/paper.tex}) selected a scalar routing rule, GPU if $E\cdot D\cdot B\ge 10^6$, with zero errors on 31 development CPU/GPU pairs. On a preregistered held-out suite of 16 workloads on an RTX 4050 laptop it chose the slower route in 8, with median regret 0.4\% and maximum regret 235.7\%. Each route was measured in a single process with five in-process runs. An audit of that archive found that the automatic arm differed from the forced arm of the same backend by more than 25\% in 9 of 16 cells, and that two of the eight ``wrong'' labels were within 3.2\% regret. In light of Section~\ref{sec:repro}, labels near parity in such a suite partly measure the GPU's power state during each process, and the per-workload count is not a stable statistic. The maximum-regret rejection survives: a $3.36\times$ ratio exceeds every within-host spread we measured except the laptop light path's $4.2\times$. The earlier manuscript also documents representation, preparation and harness findings that are not repeated here.
