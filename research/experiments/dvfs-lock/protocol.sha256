@@ -1,0 +1,3 @@
+8742ea534f8eadf08f073c9292479875f0454ca0f3430be39aa72f59fe0f83f4 *experiments/dvfs-lock/protocol.md
+4e7081d640e1721dcf6b5ddee1f93324975c61e99607becc2b33fc9ae016828b *scripts/run_dvfs_lock.py
+dae2d81ea185bc7fd4e013c74396451cc5041fe43baae448fdea02bce718ad46 *scripts/run_dvfs_cell.py
