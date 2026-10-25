@@ -1041,8 +1041,10 @@ pub enum ExactScan {
 
 // The v2 paper's route switched to FP64 accumulation above this many eligible rows.
 const LEGACY_CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
-// Eligible rows times dimension each scan thread must have before `Auto` adds it.
-const PARALLEL_MIN_WORK_PER_THREAD: usize = usize::MAX;
+// Eligible rows times dimension each scan thread must have before `Auto` adds it. On a 12-thread
+// i5-13420H, waking the whole pool costs about 25 us, and one thread per 2^18 (about 680 rows at
+// D=384) broke even near E=700 and won from E=1,500 (examples/cpu_cliff_bench.rs).
+const PARALLEL_MIN_WORK_PER_THREAD: usize = 1 << 18;
 /// A timestamp range yielding more than `rows / divisor` slots switches to a sequential scan.
 const RANGE_SCAN_PROBE_DIVISOR: usize = 16;
 
