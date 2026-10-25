@@ -15,7 +15,7 @@ pub struct FunctionDoc {
     pub example: &'static str,
 }
 
-pub const FUNCTION_CATALOG: [FunctionDoc; 33] = [
+pub const FUNCTION_CATALOG: [FunctionDoc; 34] = [
     // --- Open & create ---
     FunctionDoc {
         name: "new",
@@ -195,6 +195,13 @@ pub const FUNCTION_CATALOG: [FunctionDoc; 33] = [
         signature: "fn set_gpu_row_preparation(&self, mode: GpuRowPreparation)",
         summary: "Select eligible-row preparation for exact WGPU row and mask filters. Requires the `gpu-wgpu` feature.",
         example: "db.set_gpu_row_preparation(GpuRowPreparation::Cached);",
+    },
+    FunctionDoc {
+        name: "set_gpu_select_kernel",
+        group: "Tuning & diagnostics",
+        signature: "fn set_gpu_select_kernel(&self, kernel: GpuSelectKernel) -> Result<(), Error>",
+        summary: "Select the top-k kernel for exact WGPU mask and row filters: tiled (default) or the older k-pass kernel. Requires the `gpu-wgpu` feature.",
+        example: "db.set_gpu_select_kernel(GpuSelectKernel::KPass)?;",
     },
     FunctionDoc {
         name: "set_router_profile",

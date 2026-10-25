@@ -33,7 +33,7 @@ async fn functions_tab_is_readable_at_80x24_and_filters() {
     app.current_tab = Tab::Help;
 
     let full = screen(&app);
-    assert!(full.contains("(33/33)"), "{full}");
+    assert!(full.contains("(34/34)"), "{full}");
     assert!(
         full.contains("new_with_options"),
         "names must not be truncated:\n{full}"
@@ -49,7 +49,7 @@ async fn functions_tab_is_readable_at_80x24_and_filters() {
     }
     press(&mut app, KeyCode::Down).await;
     let filtered = screen(&app);
-    assert!(filtered.contains("(3/33)"), "{filtered}");
+    assert!(filtered.contains("(3/34)"), "{filtered}");
     assert!(filtered.contains("Collection::delete_batch"), "{filtered}");
     // `q` typed into the filter must not quit the browser.
     press(&mut app, KeyCode::Char('q')).await;
@@ -57,5 +57,5 @@ async fn functions_tab_is_readable_at_80x24_and_filters() {
     assert!(screen(&app).contains("no functions match"));
 
     press(&mut app, KeyCode::Esc).await;
-    assert!(screen(&app).contains("(33/33)"));
+    assert!(screen(&app).contains("(34/34)"));
 }
