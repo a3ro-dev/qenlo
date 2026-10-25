@@ -17,7 +17,7 @@ plt.rcParams.update({"font.size": 7.5, "axes.edgecolor": MUTED, "axes.labelcolor
                      "grid.color": "#e6e5e1", "grid.linewidth": 0.6, "legend.frameon": False, "pdf.fonttype": 42})
 HOSTS = ["RTX 4050 Laptop (Windows)", "RTX 4090 host A (Linux, Sep 24)", "RTX 4090 host B (Linux pods, Sep 25)", "H100 SXM (Linux pod)"]
 SHORT = {HOSTS[0]: "4050\nlaptop", HOSTS[1]: "4090\nhost A", HOSTS[2]: "4090\npods B", HOSTS[3]: "H100"}
-E_SHOW = 3000
+E_SHOW = 10000
 
 
 def clock(d):
