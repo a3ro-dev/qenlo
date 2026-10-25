@@ -14,7 +14,7 @@ from run_dvfs_cell import run, ROOT, EXE
 from run_dvfs_lock import smi, temp, on_ac, reset, lock, Poller, START_MAX_C, ABORT_C
 
 OUT = ROOT / "research/data/raw/2026-10-25-dvfs-split"
-EXE_SHA = "602a61c1f8d66518ce45f6bcf2239000eabb811e35716632e1693e7a10ff7f7a"
+EXE_SHA = "1d0c143e702e771d152b5ab0691ce7f264b5e5465f89fc37b0e66b16889b461b"
 CLOCKS = {"HH": (2670, 8001), "HL": (2670, 810), "LH": (585, 8001), "LL": (585, 810)}  # (SM, memory) MHz
 
 
