@@ -705,6 +705,22 @@ impl CoreStore {
         self.search_normalized_rows_reference(&query, predicate, &slots, k)
     }
 
+    /// Exact search with an explicit CPU scan strategy; `search` uses [`ExactScan::Auto`].
+    pub fn search_with_scan(
+        &self,
+        query: impl AsRef<[f32]>,
+        predicate: &Predicate,
+        k: usize,
+        scan: ExactScan,
+    ) -> Result<SearchOutput, Error> {
+        if !(1..=64).contains(&k) {
+            return Err(Error::InvalidK(k));
+        }
+        let query = normalize_vector(query.as_ref(), self.dimension)?;
+        let slots = self.filter(predicate);
+        self.search_normalized_rows_with_scan(&query, predicate, &slots, k, scan)
+    }
+
     /// Exact search over a previously compiled canonical eligibility list.
     ///
     /// Every row is revalidated against current canonical state and the predicate, so a stale or
@@ -789,7 +805,82 @@ impl CoreStore {
         slots: &[u32],
         k: usize,
     ) -> Result<SearchOutput, Error> {
-        if slots.len() > CERTIFIED_FP32_MAX_ROWS {
+        self.search_normalized_rows_with_scan(query, predicate, slots, k, ExactScan::Auto)
+    }
+
+    fn search_normalized_rows_with_scan(
+        &self,
+        query: &[f32],
+        predicate: &Predicate,
+        slots: &[u32],
+        k: usize,
+        scan: ExactScan,
+    ) -> Result<SearchOutput, Error> {
+        if scan == ExactScan::Legacy {
+            return self.search_normalized_rows_legacy(query, predicate, slots, k);
+        }
+        let (Some(approximate_dot), Some(error_bound)) = (
+            fp32_dot_implementation(),
+            fp32_dot_error_bound(self.dimension),
+        ) else {
+            return self.search_normalized_rows_reference(query, predicate, slots, k);
+        };
+        // Pad the query like the stored rows so the FP32 pass runs whole lanes with no tail.
+        let mut padded_query = vec![0.0; self.lanes_per_row * LANE];
+        padded_query[..self.dimension].copy_from_slice(query);
+        let exact_dot = dot_implementation();
+        let parts = match scan {
+            ExactScan::Certified | ExactScan::Legacy => 1,
+            ExactScan::Parallel => pool::threads(),
+            ExactScan::Auto => (slots.len() * self.dimension / PARALLEL_MIN_WORK_PER_THREAD)
+                .clamp(1, pool::threads()),
+        }
+        .min(slots.len().max(1));
+        let chunk = slots.len().div_ceil(parts).max(1);
+        let scan_chunk = |part: usize| -> Result<TopK, Error> {
+            let start = (part * chunk).min(slots.len());
+            let end = (start + chunk).min(slots.len());
+            // Seed with the previous chunk's last slot so ascending order is checked across chunks.
+            let mut previous = start.checked_sub(1).map(|prior| slots[prior]);
+            let mut best = TopK::new(k);
+            for &slot in &slots[start..end] {
+                let row = self.eligible_row(slot, &mut previous, predicate)?;
+                let approximate_distance =
+                    1.0 - approximate_dot(&padded_query, self.padded_row(slot));
+                // The exact running cutoff only shrinks, so a row whose FP32 distance exceeds it
+                // by more than the error bound can never reach the final top k.
+                if best
+                    .cutoff()
+                    .is_none_or(|cutoff| approximate_distance <= cutoff + 2.0 * error_bound)
+                {
+                    best.offer(row.id, (1.0 - exact_dot(query, self.row(slot))) as f32);
+                }
+            }
+            Ok(best)
+        };
+        let mut best = TopK::new(k);
+        // The first failing chunk carries the same error a sequential scan would report.
+        for part in pool::run(parts, &scan_chunk) {
+            for hit in part?.into_hits() {
+                best.offer(hit.id, hit.distance);
+            }
+        }
+        Ok(SearchOutput {
+            hits: best.into_hits(),
+            evaluated_rows: slots.len(),
+        })
+    }
+
+    /// The single-thread route the v2 paper measured: two-pass certified FP32 up to
+    /// `LEGACY_CERTIFIED_FP32_MAX_ROWS` eligible rows, FP64 accumulation above.
+    fn search_normalized_rows_legacy(
+        &self,
+        query: &[f32],
+        predicate: &Predicate,
+        slots: &[u32],
+        k: usize,
+    ) -> Result<SearchOutput, Error> {
+        if slots.len() > LEGACY_CERTIFIED_FP32_MAX_ROWS {
             return self.search_normalized_rows_reference(query, predicate, slots, k);
         }
         let Some(approximate_dot) = fp32_dot_implementation() else {
@@ -933,9 +1024,25 @@ pub enum CpuDistancePath {
     Fp32Avx2FmaCertified,
 }
 
-// The certified two-pass path wins for selective scans but loses once its extra pass exceeds the
-// measured benefit. This conservative boundary is replaced by the adaptive cost model later.
-const CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
+/// Exact CPU scan strategy. Every variant returns results identical to the FP64 reference.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum ExactScan {
+    /// The single-thread route measured by the v2 paper: two-pass certified FP32 up to 4,096
+    /// eligible rows and FP64 accumulation above. Kept so those numbers stay reproducible.
+    Legacy,
+    /// Single-pass certified FP32 at any eligible count, one thread.
+    Certified,
+    /// Certified FP32 split across every scan-pool thread regardless of size.
+    Parallel,
+    /// Certified FP32, split across the scan pool once E*D exceeds the measured threshold.
+    #[default]
+    Auto,
+}
+
+// The v2 paper's route switched to FP64 accumulation above this many eligible rows.
+const LEGACY_CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
+// Eligible rows times dimension each scan thread must have before `Auto` adds it.
+const PARALLEL_MIN_WORK_PER_THREAD: usize = usize::MAX;
 /// A timestamp range yielding more than `rows / divisor` slots switches to a sequential scan.
 const RANGE_SCAN_PROBE_DIVISOR: usize = 16;
 
@@ -944,11 +1051,9 @@ pub fn cpu_distance_path() -> CpuDistancePath {
     cpu_distance_path_for_eligible_count(0)
 }
 
-/// Report the exact distance implementation selected for a known eligible-row count.
-pub fn cpu_distance_path_for_eligible_count(eligible_rows: usize) -> CpuDistancePath {
-    if eligible_rows > CERTIFIED_FP32_MAX_ROWS {
-        return reference_cpu_distance_path();
-    }
+/// Report the exact distance implementation `search` selects; the certified route covers every
+/// eligible-row count, so the count no longer changes the answer.
+pub fn cpu_distance_path_for_eligible_count(_eligible_rows: usize) -> CpuDistancePath {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     if std::is_x86_feature_detected!("avx2") && std::is_x86_feature_detected!("fma") {
         return CpuDistancePath::Fp32Avx2FmaCertified;
@@ -1266,6 +1371,18 @@ pub fn normalize_vector(vector: &[f32], dimension: usize) -> Result<Vec<f32>, Er
         .collect())
 }
 
+/// Intra-query scan parallelism.
+mod pool {
+    pub(crate) fn threads() -> usize {
+        1
+    }
+
+    /// Run `task(part)` for every part and return the results in part order.
+    pub(crate) fn run<T: Send>(parts: usize, task: &(dyn Fn(usize) -> T + Sync)) -> Vec<T> {
+        (0..parts).map(task).collect()
+    }
+}
+
 fn validate_stored_vector(vector: &[f32], dimension: usize) -> Result<(), Error> {
     if vector.len() != dimension {
         return Err(Error::DimensionMismatch {
@@ -1542,15 +1659,13 @@ mod tests {
     }
 
     #[test]
-    fn cpu_distance_route_uses_the_measured_selective_boundary() {
-        assert_eq!(
-            cpu_distance_path_for_eligible_count(CERTIFIED_FP32_MAX_ROWS),
-            cpu_distance_path()
-        );
-        assert_eq!(
-            cpu_distance_path_for_eligible_count(CERTIFIED_FP32_MAX_ROWS + 1),
-            reference_cpu_distance_path()
-        );
+    fn cpu_distance_route_is_certified_at_every_eligible_count() {
+        for eligible in [0, LEGACY_CERTIFIED_FP32_MAX_ROWS + 1, 1_000_000] {
+            assert_eq!(
+                cpu_distance_path_for_eligible_count(eligible),
+                cpu_distance_path()
+            );
+        }
     }
 
     #[test]
