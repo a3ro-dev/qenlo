@@ -1,0 +1,43 @@
+{
+ "condition": "LH",
+ "requested": [
+  585,
+  8001
+ ],
+ "temperature_start_c": 43,
+ "cooldown_wait_s": 0,
+ "reset_before": {
+  "rgc": [
+   0,
+   "All done."
+  ],
+  "rmc": [
+   0,
+   "All done."
+  ]
+ },
+ "lock": {
+  "lgc": [
+   0,
+   "GPU clocks set to \"(gpuClkMin 585, gpuClkMax 585)\" for GPU 00000000:01:00.0\nAll done."
+  ],
+  "lmc": [
+   0,
+   "Memory clocks set to \"(memClkMin 8001, memClkMax 8001)\" for GPU 00000000:01:00.0\nAll done."
+  ]
+ },
+ "query_before": "==============NVSMI LOG==============\n\nTimestamp                                              : Sun Oct 25 14:12:24 2026\nDriver Version                                         : 616.56 [Deprecated; will be removed in CUDA 14.0. Use KMD Version instead]\nCUDA Version                                           : 13.4 [Deprecated; will be removed in CUDA 14.0. Use CUDA UMD Version instead]\nKMD Version                                            : 616.56\nCUDA UMD Version                                       : 13.4\n\nAttached GPUs                                          : 1\nGPU 00000000:01:00.0\n    Performance State                                  : P8\n    Clocks Event Reasons\n        Idle                                           : Active\n        Applications Clocks Setting                    : Not Active\n        SW Power Cap                                   : Not Active\n        HW Slowdown                                    : Not Active\n            HW Thermal Slowdown                        : Not Active\n            HW Power Brake Slowdown                    : Not Active\n        Sync Boost                                     : Not Active\n        SW Thermal Slowdown                            : Not Active\n        Display Clock Setting                          : Not Active\n        Board Limit                                    : Not Active\n        Reliability                                    : Not Active\n    Clocks Event Reasons Counters\n        SW Power Capping                               : 3127836710 us\n        Sync Boost                                     : 0 us\n        SW Thermal Slowdown                            : 3127836710 us\n        HW Thermal Slowdown                            : 0 us\n        HW Power Braking                               : 0 us\n    Sparse Operation Mode                              : N/A\n    Clocks\n        Graphics                                       : 210 MHz\n        SM                                             : 210 MHz\n        Memory                                         : 405 MHz\n        Video                                          : 765 MHz\n    Applications Clocks\n        Graphics                                       : Requested functionality has been deprecated\n        Memory                                         : Requested functionality has been deprecated\n    Default Applications Clocks\n        Graphics                                       : Requested functionality has been deprecated\n        Memory                                         : Requested functionality has been deprecated\n    Deferred Clocks\n        Memory                                         : N/A\n    Max Clocks\n        Graphics                                       : 3105 MHz\n        SM                                             : 3105 MHz\n        Memory                                         : 8001 MHz\n        Video                                          : 2415 MHz\n    Max Customer Boost Clocks\n        Graphics                                       : N/A\n    SM Clock Samples\n        Duration                                       : Not Found\n        Number of Samples                              : Not Found\n        Max                                            : Not Found\n        Min                                            : Not Found\n        Avg                                            : Not Found\n    Memory Clock Samples\n        Duration                                       : Not Found\n        Number of Samples                              : Not Found\n        Max                                            : Not Found\n        Min                                            : Not Found\n        Avg                                            : Not Found\n    Clock Policy\n        Auto Boost                                     : N/A\n        Auto Boost Default                             : N/A\n    DLA Clocks\n        Engine                                         : N/A\n        Max Engine                                     : N/A",
+ "reset_after": {
+  "rgc": [
+   0,
+   "All done."
+  ],
+  "rmc": [
+   0,
+   "All done."
+  ]
+ },
+ "returncode": 0,
+ "thermal_abort": false,
+ "temperature_max_c": 44
+}

@@ -118,8 +118,8 @@ print("S3", "NOT TESTABLE" if not tested["score"] else "HOLDS" if s3 else "FAILS
 rows = []
 for eng in EP:
     for E in ES:
-        cells = [f"{med(eng, E, c, 'sel'):.3f}" for c in REQ] + [f"{share(eng, E, 'sel', 'HL'):.2f}"]
-        cells += [f"{med(eng, E, c, 'score'):.3f}" for c in REQ] + [f"{share(eng, E, 'score', 'HL'):.2f}"]
+        cells = [f"{med(eng, E, c, 'sel'):.3f}" for c in REQ] + [f"{round(share(eng, E, 'sel', 'HL'), 2) + 0.0:.2f}"]
+        cells += [f"{med(eng, E, c, 'score'):.3f}" for c in REQ] + [f"{round(share(eng, E, 'score', 'HL'), 2) + 0.0:.2f}"]
         rows.append(f"{NAME[eng].capitalize()} & {E:,} & " + " & ".join(cells) + r" \\")
     rows.append(r"\midrule")
 out = ROOT / "paper/v2/tables/split.tex"

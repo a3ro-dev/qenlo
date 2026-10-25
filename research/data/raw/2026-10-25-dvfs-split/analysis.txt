@@ -1,0 +1,55 @@
+runs loaded: 120, excluded: 5
+  EXCLUDED {'block': 0, 'engine': 'gpu-rows', 'E': 1000, 'cond': 'LH', 'tmax': 40, 'sel': 0.095888, 'score': 0.022752, 'call': 0.3288, 'sm': 585.0, 'mem': 7001.0}
+  EXCLUDED {'block': 1, 'engine': 'gpu-rows', 'E': 1000, 'cond': 'LH', 'tmax': 43, 'sel': 0.095904, 'score': 0.022752, 'call': 0.3497, 'sm': 585, 'mem': 7001}
+  EXCLUDED {'block': 2, 'engine': 'gpu-rows', 'E': 1000, 'cond': 'LH', 'tmax': 42, 'sel': 0.09592, 'score': 0.022752, 'call': 0.3393, 'sm': 585.0, 'mem': 7001.0}
+  EXCLUDED {'block': 3, 'engine': 'gpu-rows', 'E': 1000, 'cond': 'LH', 'tmax': 40, 'sel': 0.095904, 'score': 0.022752, 'call': 0.3344, 'sm': 585, 'mem': 7001}
+  EXCLUDED {'block': 3, 'engine': 'gpu-rows', 'E': 3000, 'cond': 'LH', 'tmax': 41, 'sel': 0.176736, 'score': 0.043696, 'call': 0.5353, 'sm': 585, 'mem': 7001}
+max temperature: 48
+
+S0 rebuild check (selection median, E-SPLIT / E-LOCK, within 10%):
+  light E= 1000 HH/Lhi = 0.999 ok
+  light E= 1000 LL/Llo = 1.000 ok
+  light E= 3000 HH/Lhi = 0.999 ok
+  light E= 3000 LL/Llo = 1.000 ok
+  light E=10000 HH/Lhi = 0.999 ok
+  light E=10000 LL/Llo = 1.000 ok
+  heavy E= 1000 HH/Lhi = 1.000 ok
+  heavy E= 1000 LL/Llo = 1.000 ok
+  heavy E= 3000 HH/Lhi = 1.000 ok
+  heavy E= 3000 LL/Llo = 1.000 ok
+  heavy E=10000 HH/Lhi = 0.998 ok
+  heavy E=10000 LL/Llo = 1.000 ok
+S0 HOLDS
+
+S1 light selection max/min across blocks (<= 1.15):
+  E= 1000 HH: 1.00 (n=5)
+  E= 1000 HL: 1.00 (n=5)
+  E= 1000 LH: 1.00 (n=1)
+  E= 1000 LL: 1.00 (n=5)
+  E= 3000 HH: 1.00 (n=5)
+  E= 3000 HL: 1.00 (n=5)
+  E= 3000 LH: 1.00 (n=4)
+  E= 3000 LL: 1.00 (n=5)
+  E=10000 HH: 1.00 (n=5)
+  E=10000 HL: 1.00 (n=5)
+  E=10000 LH: 1.00 (n=5)
+  E=10000 LL: 1.00 (n=5)
+S1 HOLDS
+
+memory share m and SM share s (S2: selection m < 0.3; S3: scoring m < 0.5; S4: m + s):
+  sel   light E= 1000: m=0.00 s=1.00 m+s=1.00 ok
+  sel   light E= 3000: m=0.00 s=1.00 m+s=1.00 ok
+  sel   light E=10000: m=0.07 s=0.98 m+s=1.05 ok
+  sel   heavy E= 1000: m=-0.00 s=1.00 m+s=1.00 ok
+  sel   heavy E= 3000: m=-0.00 s=1.00 m+s=1.00 ok
+  sel   heavy E=10000: m=0.02 s=0.99 m+s=1.01 ok
+  score light E= 1000: m=0.00 s=1.00 m+s=1.00 ok
+  score light E= 3000: m=0.00 s=1.00 m+s=1.00 ok
+  score light E=10000: m=0.48 s=0.87 m+s=1.35 ok
+  score heavy E= 1000: m=0.00 s=1.00 m+s=1.00 ok
+  score heavy E= 3000: m=0.00 s=1.00 m+s=1.00 ok
+  score heavy E=10000: m=0.24 s=0.91 m+s=1.15 ok
+S2 HOLDS
+S3 HOLDS
+
+wrote paper\v2\tables\split.tex

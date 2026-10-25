@@ -18,7 +18,7 @@ grouped by cost. ✅ = done, ☐ = open. "push back" = the point is partly wrong
 - [x] **fix 1% / 7% / 4%.** 1% = within one machine, 7% = max/min across pods, 4% = host A median vs pod median (0.711 vs 0.685). say which is which everywhere (abstract, main.tex:28, :41, sec_results.tex:38).
 - [x] **ρ = −0.66:** move it to the appendix or drop it. it's exposed to regression to the mean and adds nothing table 3 doesn't show.
 - [x] **heater: own the failure.** say up front that the heater is a CPU+GPU perturbation and that P1 failed on every GPU. stop calling it "the intervention" as if it were clean; the clean test is E-LOCK.
-- [ ] **mechanism: concede or test.** "we do not know what the governor responds to" stays, but the claim scope shrinks to "observed clock states correlate with and (on one laptop) cause the variance". see B1 for the test.
+- [x] **mechanism: concede or test.** (tested: E-SPLIT, SM clock) "we do not know what the governor responds to" stays, but the claim scope shrinks to "observed clock states correlate with and (on one laptop) cause the variance". see B1 for the test.
 - [x] **laptop environment:** state Optimus/hybrid graphics (iGPU + dGPU), Windows power plan, AC, driver 616.56. one line in setup.
 - [x] **telemetry caveat in body:** 50 ms nvidia-smi is part-time sampling; say so where table 2 is introduced, not only in the caption.
 - [x] **D2 "not yet run":** remove it from the protocol list or move it to future work.
@@ -27,7 +27,7 @@ grouped by cost. ✅ = done, ☐ = open. "push back" = the point is partly wrong
 
 ## B. laptop experiments (free, you run from an admin shell)
 
-- [ ] **B1. SM vs memory 2×2 lock (E-SPLIT, registered 28dd669, awaiting run).** extend `research/scripts/run_dvfs_lock.py` with two more conditions: SM hi + mem lo (2670/810) and SM lo + mem hi (585/8001). light + heavy, E ∈ {1k, 3k, 10k}, 5 blocks → +60 processes (~same wall time as E-LOCK's 150 × 0.4). **commit + hash the protocol before running** (repeat what E-LOCK did). this answers the "biggest hole".
+- [x] **B1. SM vs memory 2×2 lock (E-SPLIT, done: slow mode is the SM clock).** extend `research/scripts/run_dvfs_lock.py` with two more conditions: SM hi + mem lo (2670/810) and SM lo + mem hi (585/8001). light + heavy, E ∈ {1k, 3k, 10k}, 5 blocks → +60 processes (~same wall time as E-LOCK's 150 × 0.4). **commit + hash the protocol before running** (repeat what E-LOCK did). this answers the "biggest hole".
 - [ ] **B2. more laptop blocks.** rerun D1 unlocked with 15+ blocks (shuffled, fresh processes) so the bimodality is visible as a distribution, not 5 points. pre-commit protocol first.
 - [ ] **B3. 1 ms or CUPTI-free clock sampling** (optional): log `nvidia-smi --query-gpu ... -lms 10` or NVML via pynvml at 10 ms during a few processes to show the 50 ms sampling isn't hiding anything.
 - [ ] **B4. dGPU-only check** (optional): if the BIOS/NVIDIA panel allows "dGPU only" / MUX mode, rerun one block to rule out Optimus.
