@@ -28,7 +28,8 @@ for E in (1000, 3000, 10000):
         h = [float(r["sel_ms"]) for r in proc if r["host"] == key and r["engine"] == "gpu-predicate" and int(r["E"]) == E]
         l = [float(r["sel_ms"]) for r in proc if r["host"] == key and r["engine"] == "gpu-rows" and int(r["E"]) == E]
         if h and l:
-            lines.append(f"{E:,} & {lab} & {len(h)} & {rng(h)} & {max(h)/min(h):.2f} & {rng(l)} & {max(l)/min(l):.2f} \\\\")
+            n = f"{len(h)}" if len(h) == len(l) else f"{len(h)}/{len(l)}"
+            lines.append(f"{E:,} & {lab} & {n} & {rng(h)} & {max(h)/min(h):.2f} & {rng(l)} & {max(l)/min(l):.2f} \\\\")
     lines.append(r"\midrule")
 (T / "cross_host.tex").write_text("\n".join(lines[:-1]) + "\n")
 
