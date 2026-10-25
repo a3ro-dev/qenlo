@@ -705,6 +705,22 @@ impl CoreStore {
         self.search_normalized_rows_reference(&query, predicate, &slots, k)
     }
 
+    /// Exact search with an explicit CPU scan strategy; `search` uses [`ExactScan::Auto`].
+    pub fn search_with_scan(
+        &self,
+        query: impl AsRef<[f32]>,
+        predicate: &Predicate,
+        k: usize,
+        scan: ExactScan,
+    ) -> Result<SearchOutput, Error> {
+        if !(1..=64).contains(&k) {
+            return Err(Error::InvalidK(k));
+        }
+        let query = normalize_vector(query.as_ref(), self.dimension)?;
+        let slots = self.filter(predicate);
+        self.search_normalized_rows_with_scan(&query, predicate, &slots, k, scan)
+    }
+
     /// Exact search over a previously compiled canonical eligibility list.
     ///
     /// Every row is revalidated against current canonical state and the predicate, so a stale or
@@ -789,7 +805,82 @@ impl CoreStore {
         slots: &[u32],
         k: usize,
     ) -> Result<SearchOutput, Error> {
-        if slots.len() > CERTIFIED_FP32_MAX_ROWS {
+        self.search_normalized_rows_with_scan(query, predicate, slots, k, ExactScan::Auto)
+    }
+
+    fn search_normalized_rows_with_scan(
+        &self,
+        query: &[f32],
+        predicate: &Predicate,
+        slots: &[u32],
+        k: usize,
+        scan: ExactScan,
+    ) -> Result<SearchOutput, Error> {
+        if scan == ExactScan::Legacy {
+            return self.search_normalized_rows_legacy(query, predicate, slots, k);
+        }
+        let (Some(approximate_dot), Some(error_bound)) = (
+            fp32_dot_implementation(),
+            fp32_dot_error_bound(self.dimension),
+        ) else {
+            return self.search_normalized_rows_reference(query, predicate, slots, k);
+        };
+        // Pad the query like the stored rows so the FP32 pass runs whole lanes with no tail.
+        let mut padded_query = vec![0.0; self.lanes_per_row * LANE];
+        padded_query[..self.dimension].copy_from_slice(query);
+        let exact_dot = dot_implementation();
+        let parts = match scan {
+            ExactScan::Certified | ExactScan::Legacy => 1,
+            ExactScan::Parallel => pool::threads(),
+            ExactScan::Auto => (slots.len() * self.dimension / PARALLEL_MIN_WORK_PER_THREAD)
+                .clamp(1, pool::threads()),
+        }
+        .min(slots.len().max(1));
+        let chunk = slots.len().div_ceil(parts).max(1);
+        let scan_chunk = |part: usize| -> Result<TopK, Error> {
+            let start = (part * chunk).min(slots.len());
+            let end = (start + chunk).min(slots.len());
+            // Seed with the previous chunk's last slot so ascending order is checked across chunks.
+            let mut previous = start.checked_sub(1).map(|prior| slots[prior]);
+            let mut best = TopK::new(k);
+            for &slot in &slots[start..end] {
+                let row = self.eligible_row(slot, &mut previous, predicate)?;
+                let approximate_distance =
+                    1.0 - approximate_dot(&padded_query, self.padded_row(slot));
+                // The exact running cutoff only shrinks, so a row whose FP32 distance exceeds it
+                // by more than the error bound can never reach the final top k.
+                if best
+                    .cutoff()
+                    .is_none_or(|cutoff| approximate_distance <= cutoff + 2.0 * error_bound)
+                {
+                    best.offer(row.id, (1.0 - exact_dot(query, self.row(slot))) as f32);
+                }
+            }
+            Ok(best)
+        };
+        let mut best = TopK::new(k);
+        // The first failing chunk carries the same error a sequential scan would report.
+        for part in pool::run(parts, &scan_chunk) {
+            for hit in part?.into_hits() {
+                best.offer(hit.id, hit.distance);
+            }
+        }
+        Ok(SearchOutput {
+            hits: best.into_hits(),
+            evaluated_rows: slots.len(),
+        })
+    }
+
+    /// The single-thread route the v2 paper measured: two-pass certified FP32 up to
+    /// `LEGACY_CERTIFIED_FP32_MAX_ROWS` eligible rows, FP64 accumulation above.
+    fn search_normalized_rows_legacy(
+        &self,
+        query: &[f32],
+        predicate: &Predicate,
+        slots: &[u32],
+        k: usize,
+    ) -> Result<SearchOutput, Error> {
+        if slots.len() > LEGACY_CERTIFIED_FP32_MAX_ROWS {
             return self.search_normalized_rows_reference(query, predicate, slots, k);
         }
         let Some(approximate_dot) = fp32_dot_implementation() else {
@@ -933,9 +1024,27 @@ pub enum CpuDistancePath {
     Fp32Avx2FmaCertified,
 }
 
-// The certified two-pass path wins for selective scans but loses once its extra pass exceeds the
-// measured benefit. This conservative boundary is replaced by the adaptive cost model later.
-const CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
+/// Exact CPU scan strategy. Every variant returns results identical to the FP64 reference.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum ExactScan {
+    /// The single-thread route measured by the v2 paper: two-pass certified FP32 up to 4,096
+    /// eligible rows and FP64 accumulation above. Kept so those numbers stay reproducible.
+    Legacy,
+    /// Single-pass certified FP32 at any eligible count, one thread.
+    Certified,
+    /// Certified FP32 split across every scan-pool thread regardless of size.
+    Parallel,
+    /// Certified FP32, split across the scan pool once E*D exceeds the measured threshold.
+    #[default]
+    Auto,
+}
+
+// The v2 paper's route switched to FP64 accumulation above this many eligible rows.
+const LEGACY_CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
+// Eligible rows times dimension each scan thread must have before `Auto` adds it. On a 12-thread
+// i5-13420H, waking the whole pool costs about 25 us, and one thread per 2^18 (about 680 rows at
+// D=384) broke even near E=700 and won from E=1,500 (examples/cpu_cliff_bench.rs).
+const PARALLEL_MIN_WORK_PER_THREAD: usize = 1 << 18;
 /// A timestamp range yielding more than `rows / divisor` slots switches to a sequential scan.
 const RANGE_SCAN_PROBE_DIVISOR: usize = 16;
 
@@ -944,11 +1053,9 @@ pub fn cpu_distance_path() -> CpuDistancePath {
     cpu_distance_path_for_eligible_count(0)
 }
 
-/// Report the exact distance implementation selected for a known eligible-row count.
-pub fn cpu_distance_path_for_eligible_count(eligible_rows: usize) -> CpuDistancePath {
-    if eligible_rows > CERTIFIED_FP32_MAX_ROWS {
-        return reference_cpu_distance_path();
-    }
+/// Report the exact distance implementation `search` selects; the certified route covers every
+/// eligible-row count, so the count no longer changes the answer.
+pub fn cpu_distance_path_for_eligible_count(_eligible_rows: usize) -> CpuDistancePath {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     if std::is_x86_feature_detected!("avx2") && std::is_x86_feature_detected!("fma") {
         return CpuDistancePath::Fp32Avx2FmaCertified;
@@ -1266,6 +1373,88 @@ pub fn normalize_vector(vector: &[f32], dimension: usize) -> Result<Vec<f32>, Er
         .collect())
 }
 
+/// Intra-query scan parallelism on a persistent std-only thread pool.
+///
+/// Workers are spawned once, on first use, and live for the process. Targets that cannot spawn
+/// threads (such as wasm32) get zero workers and run every part on the caller.
+mod pool {
+    use std::panic::{AssertUnwindSafe, catch_unwind, resume_unwind};
+    use std::sync::{Arc, Mutex, OnceLock, mpsc};
+
+    type Job = Box<dyn FnOnce() + Send + 'static>;
+
+    struct Pool {
+        queue: mpsc::Sender<Job>,
+        workers: usize,
+    }
+
+    fn pool() -> &'static Pool {
+        static POOL: OnceLock<Pool> = OnceLock::new();
+        POOL.get_or_init(|| {
+            let wanted = std::thread::available_parallelism()
+                .map_or(1, |threads| threads.get())
+                .saturating_sub(1);
+            let (queue, jobs) = mpsc::channel::<Job>();
+            let jobs = Arc::new(Mutex::new(jobs));
+            let workers = (0..wanted)
+                .filter(|index| {
+                    let jobs = Arc::clone(&jobs);
+                    std::thread::Builder::new()
+                        .name(format!("qenlo-scan-{index}"))
+                        .spawn(move || {
+                            loop {
+                                let job = jobs.lock().unwrap_or_else(|e| e.into_inner()).recv();
+                                let Ok(job) = job else { return };
+                                // A panicking part is reported by the caller; the worker survives.
+                                let _ = catch_unwind(AssertUnwindSafe(job));
+                            }
+                        })
+                        .is_ok()
+                })
+                .count();
+            Pool { queue, workers }
+        })
+    }
+
+    /// Threads available to one query: the caller plus every pool worker.
+    pub(crate) fn threads() -> usize {
+        pool().workers + 1
+    }
+
+    /// Run `task(part)` for every part and return the results in part order.
+    ///
+    /// Part 0 runs on the caller; the rest run on pool workers.
+    pub(crate) fn run<T: Send>(parts: usize, task: &(dyn Fn(usize) -> T + Sync)) -> Vec<T> {
+        if parts <= 1 {
+            return (0..parts).map(task).collect();
+        }
+        let (sender, results) = mpsc::channel::<(usize, T)>();
+        for part in 1..parts {
+            let sender = sender.clone();
+            let job: Box<dyn FnOnce() + Send + '_> = Box::new(move || {
+                let _ = sender.send((part, task(part)));
+            });
+            // SAFETY: only the lifetime is erased. This function does not return or unwind until
+            // `results` disconnects, which happens only once every job has dropped its sender by
+            // finishing or unwinding, so no job outlives the borrows it captures. A job the queue
+            // rejects is dropped here, before that wait.
+            let job: Job = unsafe { std::mem::transmute(job) };
+            let _ = pool().queue.send(job);
+        }
+        drop(sender);
+        let first = catch_unwind(AssertUnwindSafe(|| task(0)));
+        let mut slots: Vec<Option<T>> = (0..parts).map(|_| None).collect();
+        for (part, result) in results {
+            slots[part] = Some(result);
+        }
+        slots[0] = Some(first.unwrap_or_else(|panic| resume_unwind(panic)));
+        slots
+            .into_iter()
+            .map(|slot| slot.expect("a qenlo scan worker panicked"))
+            .collect()
+    }
+}
+
 fn validate_stored_vector(vector: &[f32], dimension: usize) -> Result<(), Error> {
     if vector.len() != dimension {
         return Err(Error::DimensionMismatch {
@@ -1542,15 +1731,13 @@ mod tests {
     }
 
     #[test]
-    fn cpu_distance_route_uses_the_measured_selective_boundary() {
-        assert_eq!(
-            cpu_distance_path_for_eligible_count(CERTIFIED_FP32_MAX_ROWS),
-            cpu_distance_path()
-        );
-        assert_eq!(
-            cpu_distance_path_for_eligible_count(CERTIFIED_FP32_MAX_ROWS + 1),
-            reference_cpu_distance_path()
-        );
+    fn cpu_distance_route_is_certified_at_every_eligible_count() {
+        for eligible in [0, LEGACY_CERTIFIED_FP32_MAX_ROWS + 1, 1_000_000] {
+            assert_eq!(
+                cpu_distance_path_for_eligible_count(eligible),
+                cpu_distance_path()
+            );
+        }
     }
 
     #[test]
@@ -1721,6 +1908,94 @@ mod tests {
                         );
                     }
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn every_scan_mode_matches_fp64_oracle_on_near_ties() {
+        fn next(state: &mut u64) -> u64 {
+            *state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            *state >> 33
+        }
+        fn unit(state: &mut u64) -> f32 {
+            next(state) as f32 / (1u64 << 31) as f32 * 2.0 - 1.0
+        }
+
+        for (seed, dimension) in [(1u64, 3usize), (2, 17), (3, 64), (4, 384)] {
+            let mut state = seed;
+            let bases = (0..8)
+                .map(|_| (0..dimension).map(|_| unit(&mut state)).collect::<Vec<_>>())
+                .collect::<Vec<_>>();
+            let mut store = CoreStore::new(dimension).unwrap();
+            // Rows cluster around a few bases: exact duplicates, one-ulp nudges, and a sprinkle
+            // of unrelated rows, so FP32 scores land inside the error bound of the cutoff.
+            for id in 0..6_000u64 {
+                let mut vector = bases[next(&mut state) as usize % bases.len()].clone();
+                match next(&mut state) % 4 {
+                    0 => {}
+                    1 => {
+                        let lane = next(&mut state) as usize % dimension;
+                        vector[lane] = f32::from_bits(vector[lane].to_bits() ^ 1);
+                    }
+                    2 => vector
+                        .iter_mut()
+                        .for_each(|v| *v += unit(&mut state) * 1e-5),
+                    _ => vector.iter_mut().for_each(|v| *v = unit(&mut state)),
+                }
+                store.add(id, id % 3, id as i64, vector).unwrap();
+            }
+            for id in (0..6_000u64).step_by(7) {
+                store.delete(id).unwrap();
+            }
+            let predicates = [
+                Predicate::ALL,
+                Predicate::new(Some(1), TimestampRange::ALL),
+                Predicate::new(None, TimestampRange::new(Some(100), Some(4_500))),
+            ];
+            for query_index in 0..6 {
+                let mut query = bases[query_index % bases.len()].clone();
+                if query_index >= bases.len() / 2 {
+                    query.iter_mut().for_each(|v| *v += unit(&mut state) * 1e-6);
+                }
+                for predicate in predicates {
+                    for k in [1, 10, 64] {
+                        let reference = store.search_reference(&query, &predicate, k).unwrap();
+                        for scan in [
+                            ExactScan::Legacy,
+                            ExactScan::Certified,
+                            ExactScan::Parallel,
+                            ExactScan::Auto,
+                        ] {
+                            assert_eq!(
+                                store.search_with_scan(&query, &predicate, k, scan).unwrap(),
+                                reference,
+                                "dimension={dimension} query={query_index} {predicate:?} k={k} {scan:?}"
+                            );
+                        }
+                    }
+                }
+            }
+
+            // A stale plan fails closed with the same row whichever chunk holds the bad pair.
+            let query = normalize_vector(&bases[0], dimension).unwrap();
+            let mut slots = store.filter(&Predicate::ALL);
+            for at in [1, slots.len() / 2, slots.len() - 1] {
+                slots.swap(at - 1, at);
+                let reference =
+                    store.search_normalized_rows_reference(&query, &Predicate::ALL, &slots, 10);
+                let parallel = store.search_normalized_rows_with_scan(
+                    &query,
+                    &Predicate::ALL,
+                    &slots,
+                    10,
+                    ExactScan::Parallel,
+                );
+                assert!(reference.is_err());
+                assert_eq!(parallel, reference, "swapped at {at}");
+                slots.swap(at - 1, at);
             }
         }
     }
