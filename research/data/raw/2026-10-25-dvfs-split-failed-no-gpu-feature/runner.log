@@ -1,0 +1,12 @@
+13:04:56 E-SPLIT start, 0/120 already done, settable={'HH': True, 'HL': True, 'LH': True, 'LL': True}
+13:04:57 0 gpu-rows 3000 HL rc 1 tmax NoneC 
+13:05:03 0 gpu-predicate 3000 LL rc 1 tmax NoneC 
+13:05:10 0 gpu-rows 1000 LH rc 1 tmax NoneC 
+13:05:16 0 gpu-predicate 10000 LH rc 1 tmax NoneC 
+13:05:22 0 gpu-predicate 1000 HL rc 1 tmax NoneC 
+13:05:29 0 gpu-rows 1000 HH rc 1 tmax NoneC 
+13:05:35 0 gpu-predicate 3000 HL rc 1 tmax NoneC 
+13:05:41 0 gpu-predicate 10000 HH rc 1 tmax NoneC 
+13:05:48 0 gpu-predicate 10000 LL rc 1 tmax NoneC 
+13:05:54 0 gpu-predicate 1000 LL rc 1 tmax NoneC 
+clocks reset: 0 0

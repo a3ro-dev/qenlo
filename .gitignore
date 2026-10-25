@@ -32,6 +32,8 @@ sdk/typescript/dist/
 *.bbl
 *.blg
 *.log
+# experiment runner logs are evidence; protocols list them as outputs
+!research/data/raw/**/runner.log
 *.out
 *.synctex.gz
 *.fdb_latexmk
