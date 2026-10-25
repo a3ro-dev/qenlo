@@ -1371,15 +1371,85 @@ pub fn normalize_vector(vector: &[f32], dimension: usize) -> Result<Vec<f32>, Er
         .collect())
 }
 
-/// Intra-query scan parallelism.
+/// Intra-query scan parallelism on a persistent std-only thread pool.
+///
+/// Workers are spawned once, on first use, and live for the process. Targets that cannot spawn
+/// threads (such as wasm32) get zero workers and run every part on the caller.
 mod pool {
+    use std::panic::{AssertUnwindSafe, catch_unwind, resume_unwind};
+    use std::sync::{Arc, Mutex, OnceLock, mpsc};
+
+    type Job = Box<dyn FnOnce() + Send + 'static>;
+
+    struct Pool {
+        queue: mpsc::Sender<Job>,
+        workers: usize,
+    }
+
+    fn pool() -> &'static Pool {
+        static POOL: OnceLock<Pool> = OnceLock::new();
+        POOL.get_or_init(|| {
+            let wanted = std::thread::available_parallelism()
+                .map_or(1, |threads| threads.get())
+                .saturating_sub(1);
+            let (queue, jobs) = mpsc::channel::<Job>();
+            let jobs = Arc::new(Mutex::new(jobs));
+            let workers = (0..wanted)
+                .filter(|index| {
+                    let jobs = Arc::clone(&jobs);
+                    std::thread::Builder::new()
+                        .name(format!("qenlo-scan-{index}"))
+                        .spawn(move || {
+                            loop {
+                                let job = jobs.lock().unwrap_or_else(|e| e.into_inner()).recv();
+                                let Ok(job) = job else { return };
+                                // A panicking part is reported by the caller; the worker survives.
+                                let _ = catch_unwind(AssertUnwindSafe(job));
+                            }
+                        })
+                        .is_ok()
+                })
+                .count();
+            Pool { queue, workers }
+        })
+    }
+
+    /// Threads available to one query: the caller plus every pool worker.
     pub(crate) fn threads() -> usize {
-        1
+        pool().workers + 1
     }
 
     /// Run `task(part)` for every part and return the results in part order.
+    ///
+    /// Part 0 runs on the caller; the rest run on pool workers.
     pub(crate) fn run<T: Send>(parts: usize, task: &(dyn Fn(usize) -> T + Sync)) -> Vec<T> {
-        (0..parts).map(task).collect()
+        if parts <= 1 {
+            return (0..parts).map(task).collect();
+        }
+        let (sender, results) = mpsc::channel::<(usize, T)>();
+        for part in 1..parts {
+            let sender = sender.clone();
+            let job: Box<dyn FnOnce() + Send + '_> = Box::new(move || {
+                let _ = sender.send((part, task(part)));
+            });
+            // SAFETY: only the lifetime is erased. This function does not return or unwind until
+            // `results` disconnects, which happens only once every job has dropped its sender by
+            // finishing or unwinding, so no job outlives the borrows it captures. A job the queue
+            // rejects is dropped here, before that wait.
+            let job: Job = unsafe { std::mem::transmute(job) };
+            let _ = pool().queue.send(job);
+        }
+        drop(sender);
+        let first = catch_unwind(AssertUnwindSafe(|| task(0)));
+        let mut slots: Vec<Option<T>> = (0..parts).map(|_| None).collect();
+        for (part, result) in results {
+            slots[part] = Some(result);
+        }
+        slots[0] = Some(first.unwrap_or_else(|panic| resume_unwind(panic)));
+        slots
+            .into_iter()
+            .map(|slot| slot.expect("a qenlo scan worker panicked"))
+            .collect()
     }
 }
 
@@ -1836,6 +1906,94 @@ mod tests {
                         );
                     }
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn every_scan_mode_matches_fp64_oracle_on_near_ties() {
+        fn next(state: &mut u64) -> u64 {
+            *state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            *state >> 33
+        }
+        fn unit(state: &mut u64) -> f32 {
+            next(state) as f32 / (1u64 << 31) as f32 * 2.0 - 1.0
+        }
+
+        for (seed, dimension) in [(1u64, 3usize), (2, 17), (3, 64), (4, 384)] {
+            let mut state = seed;
+            let bases = (0..8)
+                .map(|_| (0..dimension).map(|_| unit(&mut state)).collect::<Vec<_>>())
+                .collect::<Vec<_>>();
+            let mut store = CoreStore::new(dimension).unwrap();
+            // Rows cluster around a few bases: exact duplicates, one-ulp nudges, and a sprinkle
+            // of unrelated rows, so FP32 scores land inside the error bound of the cutoff.
+            for id in 0..6_000u64 {
+                let mut vector = bases[next(&mut state) as usize % bases.len()].clone();
+                match next(&mut state) % 4 {
+                    0 => {}
+                    1 => {
+                        let lane = next(&mut state) as usize % dimension;
+                        vector[lane] = f32::from_bits(vector[lane].to_bits() ^ 1);
+                    }
+                    2 => vector
+                        .iter_mut()
+                        .for_each(|v| *v += unit(&mut state) * 1e-5),
+                    _ => vector.iter_mut().for_each(|v| *v = unit(&mut state)),
+                }
+                store.add(id, id % 3, id as i64, vector).unwrap();
+            }
+            for id in (0..6_000u64).step_by(7) {
+                store.delete(id).unwrap();
+            }
+            let predicates = [
+                Predicate::ALL,
+                Predicate::new(Some(1), TimestampRange::ALL),
+                Predicate::new(None, TimestampRange::new(Some(100), Some(4_500))),
+            ];
+            for query_index in 0..6 {
+                let mut query = bases[query_index % bases.len()].clone();
+                if query_index >= bases.len() / 2 {
+                    query.iter_mut().for_each(|v| *v += unit(&mut state) * 1e-6);
+                }
+                for predicate in predicates {
+                    for k in [1, 10, 64] {
+                        let reference = store.search_reference(&query, &predicate, k).unwrap();
+                        for scan in [
+                            ExactScan::Legacy,
+                            ExactScan::Certified,
+                            ExactScan::Parallel,
+                            ExactScan::Auto,
+                        ] {
+                            assert_eq!(
+                                store.search_with_scan(&query, &predicate, k, scan).unwrap(),
+                                reference,
+                                "dimension={dimension} query={query_index} {predicate:?} k={k} {scan:?}"
+                            );
+                        }
+                    }
+                }
+            }
+
+            // A stale plan fails closed with the same row whichever chunk holds the bad pair.
+            let query = normalize_vector(&bases[0], dimension).unwrap();
+            let mut slots = store.filter(&Predicate::ALL);
+            for at in [1, slots.len() / 2, slots.len() - 1] {
+                slots.swap(at - 1, at);
+                let reference =
+                    store.search_normalized_rows_reference(&query, &Predicate::ALL, &slots, 10);
+                let parallel = store.search_normalized_rows_with_scan(
+                    &query,
+                    &Predicate::ALL,
+                    &slots,
+                    10,
+                    ExactScan::Parallel,
+                );
+                assert!(reference.is_err());
+                assert_eq!(parallel, reference, "swapped at {at}");
+                slots.swap(at - 1, at);
             }
         }
     }
