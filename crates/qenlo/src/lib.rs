@@ -106,6 +106,17 @@ pub enum GpuRowPreparation {
     Cached,
 }
 
+/// Top-k selection kernel for exact WGPU mask and row filters. Both return identical
+/// results; the shader-predicate filter always uses `KPass`.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum GpuSelectKernel {
+    /// Control arm: k sequential passes over all scores in one workgroup per query.
+    KPass,
+    /// Many workgroups each keep the top-k of a 512-score tile, then one merges them.
+    #[default]
+    Tiled,
+}
+
 /// One conservative, hardware-bound automatic-routing decision boundary.
 ///
 /// Profiles are produced from tuning data, never from held-out evaluation data.
@@ -1099,6 +1110,18 @@ impl Collection {
         self.gpu_row_preparation
             .store(mode as u8, Ordering::Relaxed);
         *self.gpu_row_cache.lock().expect("GPU row cache poisoned") = None;
+    }
+
+    /// Select the top-k kernel for exact WGPU mask and row filters.
+    #[cfg(feature = "gpu-wgpu")]
+    pub fn set_gpu_select_kernel(&self, kernel: GpuSelectKernel) -> Result<(), Error> {
+        let mut state = self.inner.write_blocking();
+        state.ensure_open()?;
+        let Backend::Wgpu(gpu) = &mut state.backend else {
+            return Err(Error::BackendNotEnabled("gpu-wgpu"));
+        };
+        gpu.set_select_kernel(kernel);
+        Ok(())
     }
 
     /// Install a tuning-only automatic router profile. It is ignored on mismatch.

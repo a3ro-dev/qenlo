@@ -150,3 +150,95 @@ fn select_topk(@builtin(workgroup_id) group: vec3<u32>,
         workgroupBarrier();
     }
 }
+
+// Tiled selection for mask and row filters; `select_topk` above stays as the k-pass
+// control arm and the shader-predicate path. Each workgroup sorts one tile of scores and
+// keeps its k best, then one workgroup per query merges the tiles' lists. The per-tile
+// lists live in `selected` after the batch's final results, so no binding is added.
+const TILE: u32 = 512u;
+
+var<workgroup> tile: array<Candidate, 512>;
+
+fn worst() -> Candidate {
+    return Candidate(3.402823466e+38, 0xffffffffu, 0xffffffffu, 0xffffffffu);
+}
+
+// Bitonic sort of `tile` by distance, then id: data-oblivious, so equal inputs give equal outputs.
+fn sort_tile(tid: u32) {
+    for (var size = 2u; size <= TILE; size *= 2u) {
+        for (var stride = size / 2u; stride > 0u; stride /= 2u) {
+            let i = 2u * tid - (tid & (stride - 1u));
+            let j = i + stride;
+            let a = tile[i];
+            let b = tile[j];
+            let ascending = (i & size) == 0u;
+            if ((ascending && better(b, a)) || (!ascending && better(a, b))) {
+                tile[i] = b;
+                tile[j] = a;
+            }
+            workgroupBarrier();
+        }
+    }
+}
+
+fn partials_base() -> u32 {
+    return params.batch_size * params.k;
+}
+
+fn tile_count() -> u32 {
+    let count = select(params.rows, params.eligible_count, params.mode == 1u);
+    return (count + TILE - 1u) / TILE;
+}
+
+@compute @workgroup_size(256)
+fn select_tiles(@builtin(workgroup_id) group: vec3<u32>,
+                @builtin(local_invocation_index) tid: u32) {
+    let query_index = group.y;
+    let score_base = query_index * params.rows;
+    let count = select(params.rows, params.eligible_count, params.mode == 1u);
+    for (var i = tid; i < TILE; i += 256u) {
+        let item = group.x * TILE + i;
+        var candidate = worst();
+        if (item < count) {
+            var row = item;
+            if (params.mode == 1u) { row = eligibility[item]; }
+            let id = ids[row];
+            candidate = Candidate(scores[score_base + item], item, id.x, id.y);
+        }
+        tile[i] = candidate;
+    }
+    workgroupBarrier();
+    sort_tile(tid);
+    if (tid < params.k) {
+        selected[partials_base() + (query_index * tile_count() + group.x) * params.k + tid] = tile[tid];
+    }
+}
+
+// Streams the tiles' candidates through `tile`, keeping the k best in its first k slots.
+@compute @workgroup_size(256)
+fn merge_tiles(@builtin(workgroup_id) group: vec3<u32>,
+               @builtin(local_invocation_index) tid: u32) {
+    let query_index = group.x;
+    let total = tile_count() * params.k;
+    let base = partials_base() + query_index * total;
+    var next = 0u;
+    var keep = 0u;
+    loop {
+        for (var i = keep + tid; i < TILE; i += 256u) {
+            let source = next + i - keep;
+            var candidate = worst();
+            if (source < total) { candidate = selected[base + source]; }
+            tile[i] = candidate;
+        }
+        workgroupBarrier();
+        sort_tile(tid);
+        next += TILE - keep;
+        keep = params.k;
+        if (next >= total) { break; }
+    }
+    if (tid < params.k) {
+        var winner = tile[tid];
+        if (winner.distance == 3.402823466e+38) { winner.row = 0xffffffffu; }
+        selected[query_index * params.k + tid] = winner;
+    }
+}
