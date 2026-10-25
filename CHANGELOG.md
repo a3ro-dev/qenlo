@@ -1,9 +1,23 @@
 # changelog
 
-## unreleased
+## 0.1.0-beta.2 - 2026-10-25
+
+faster exact search on both sides of the CPU/GPU split. results are unchanged:
+every mode is checked against an FP64 reference, including a near-tie test.
 
 ### changed
 
+- the CPU scan used certified FP32 (score in FP32, rescore borderline rows in
+  FP64) only up to 4,096 eligible rows and fell back to FP64 accumulation above
+  that, on one thread. it now runs certified FP32 in one pass at any E, and
+  `search` splits large queries across a persistent std-only thread pool (one
+  thread per 2^18 eligible-row dimensions; small queries stay on one thread).
+  the old route stays as `ExactScan::Legacy`. on a 12-thread laptop (N=100k,
+  D=384, k=10, scattered rows, background load, so treat <20% as noise):
+  E=4,097 0.74 -> 0.26 ms, E=6,000 1.15 -> 0.34 ms, E=30,000 6.6 -> 3.3 ms,
+  E=100,000 15.2 -> 6.6 ms. the 4,096-row cliff is gone.
+- the automatic router still sends E >= 4,096 to the GPU. with the faster CPU
+  that threshold is probably low; it moves once it is re-measured.
 - exact WGPU mask and row filters select top-k with a tiled kernel: each
   workgroup sorts 512 scores and keeps its k best, then one workgroup per query
   merges the lists. the old kernel made k passes over every score in one
@@ -13,6 +27,15 @@
   still uses it. on an RTX 4050 laptop (unlocked clocks, N=100k, D=384, batch
   1, median of 3 processes), device selection at E=30k went from 1.86 ms to
   0.41 ms at k=64 and from 0.60 ms to 0.20 ms at k=10.
+  end to end, calls were 0.60-0.97x of the old kernel's in 7 of 8 cells
+  (E=1k-30k, k=10/64); E=3,000 at k=10 was 1.16x with a 0.83-1.65 block range.
+
+### fixed
+
+- the eligibility planner reported 0 upload bytes for shader-predicate plans;
+  they upload one u32 of per-row liveness per query, so it now reports 4N.
+- the `gpu_heater` example logs its duty cycle every 1,000 cycles, since the
+  benchmark runner kills it before its final summary prints.
 
 ## 0.1.0-beta.1 - 2026-10-14
 

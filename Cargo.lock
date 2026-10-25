@@ -2238,7 +2238,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "async-lock",
  "crc32fast",
@@ -2253,7 +2253,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-bench"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "crc32fast",
  "opentelemetry",
@@ -2268,7 +2268,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-browser"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "axum",
  "clap",
@@ -2289,7 +2289,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-browser-desktop"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "qenlo",
  "qenlo-browser",
@@ -2301,11 +2301,11 @@ dependencies = [
 
 [[package]]
 name = "qenlo-core"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 
 [[package]]
 name = "qenlo-ffi"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "pollster",
  "qenlo",
@@ -2316,7 +2316,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-mobile"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "jni",
  "qenlo-testkit",
@@ -2325,7 +2325,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-telemetry"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "axum",
  "qenlo-testkit",
@@ -2337,7 +2337,7 @@ dependencies = [
 
 [[package]]
 name = "qenlo-testkit"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "qenlo",
  "reqwest 0.12.28",
