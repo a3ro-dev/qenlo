@@ -106,10 +106,9 @@
 
 @misc{nielsen2022agnews,
   author={Nielsen, Beatrix Miranda Ginn},
-  title={{DTU} pretrained sentence {BERT} {AG News} embeddings},
-  publisher={Technical University of Denmark},
+  title={Pretrained sentence {BERT} models {AG News} embeddings},
+  howpublished={Dataset, Technical University of Denmark, version 1, CC BY 4.0},
   year={2023},
-  version={1},
   doi={10.11583/DTU.21286923.v1},
   url={https://doi.org/10.11583/DTU.21286923.v1}
 }
@@ -137,11 +136,13 @@
   url={https://doi.org/10.1145/3769763}
 }
 
-@article{shi2025unified,
-  title={Filtered Approximate Nearest Neighbor Search: A Unified Benchmark and Systematic Experimental Study},
+@misc{shi2025unified,
+  title={Filtered Approximate Nearest Neighbor Search: A Unified Benchmark and Systematic Experimental Study [Experiment, Analysis \& Benchmark]},
   author={Shi, Jiayang and Cai, Yuzheng and Zheng, Weiguo},
-  journal={arXiv preprint arXiv:2509.07789},
   year={2025},
+  eprint={2509.07789},
+  archivePrefix={arXiv},
+  note={Preprint},
   url={https://arxiv.org/abs/2509.07789}
 }
 
@@ -183,28 +184,23 @@
 
 @inproceedings{sinha2022notallgpus,
   title={Not All {GPUs} Are Created Equal: Characterizing Variability in Large-Scale, Accelerator-Rich Systems},
-  url={http://dx.doi.org/10.1109/SC41404.2022.00070},
-  DOI={10.1109/sc41404.2022.00070},
-  booktitle={SC22: International Conference for High Performance Computing, Networking, Storage and Analysis},
-  publisher={IEEE},
   author={Sinha, Prasoon and Guliani, Akhil and Jain, Rutwik and Tran, Brandon and Sinclair, Matthew D. and Venkataraman, Shivaram},
+  booktitle={SC22: International Conference for High Performance Computing, Networking, Storage and Analysis},
+  pages={1--15},
   year={2022},
-  month=Nov,
-  pages={01--15}
+  doi={10.1109/SC41404.2022.00070},
+  note={arXiv:2208.11035}
 }
 
 @inproceedings{ngom2021filter,
-  series={SIGMOD/PODS '21},
   title={Filter Representation in Vectorized Query Execution},
-  url={http://dx.doi.org/10.1145/3465998.3466009},
-  DOI={10.1145/3465998.3466009},
-  booktitle={Proceedings of the 17th International Workshop on Data Management on New Hardware (DaMoN 2021)},
-  publisher={ACM},
   author={Ngom, Amadou and Menon, Prashanth and Butrovich, Matthew and Ma, Lin and Lim, Wan Shen and Mowry, Todd C. and Pavlo, Andrew},
-  year={2021},
-  month=jun,
+  booktitle={Proceedings of the 17th International Workshop on Data Management on New Hardware (DaMoN '21)},
+  articleno={6},
   pages={1--7},
-  collection={SIGMOD/PODS '21}
+  note={Article 6},
+  year={2021},
+  doi={10.1145/3465998.3466009}
 }
 
 @inproceedings{bress2016robust,
@@ -479,7 +475,8 @@
   year={2026},
   eprint={2601.08539},
   archivePrefix={arXiv},
-  url={https://arxiv.org/abs/2601.08539}
+  url={https://arxiv.org/abs/2601.08539},
+  note={Preprint}
 }
 
 @misc{mageirakos2026togpu,
@@ -488,7 +485,8 @@
   year={2026},
   eprint={2605.15957},
   archivePrefix={arXiv},
-  url={https://arxiv.org/abs/2605.15957}
+  url={https://arxiv.org/abs/2605.15957},
+  note={Preprint}
 }
 
 @misc{golden2025prism,
@@ -497,7 +495,8 @@
   year={2025},
   eprint={2510.15596},
   archivePrefix={arXiv},
-  url={https://arxiv.org/abs/2510.15596}
+  url={https://arxiv.org/abs/2510.15596},
+  note={Preprint, v3}
 }
 
 @misc{chu2026operatorprofiler,
@@ -506,16 +505,18 @@
   year={2026},
   eprint={2609.11938},
   archivePrefix={arXiv},
-  url={https://arxiv.org/abs/2609.11938}
+  url={https://arxiv.org/abs/2609.11938},
+  note={Preprint, v2}
 }
 
-@misc{yang2023parttime,
-  title={Part-time Power Measurements: nvidia-smi's Lack of Attention},
-  author={Zeyu Yang and Karel Adamek and Wesley Armour},
-  year={2023},
-  eprint={2312.02741},
-  archivePrefix={arXiv},
-  url={https://arxiv.org/abs/2312.02741}
+@inproceedings{yang2023parttime,
+  title={Accurate and Convenient Energy Measurements for {GPUs}: A Detailed Study of {NVIDIA} {GPU}'s Built-In Power Sensor},
+  author={Yang, Zeyu and Adamek, Karel and Armour, Wesley},
+  booktitle={SC24: International Conference for High Performance Computing, Networking, Storage and Analysis},
+  pages={1--17},
+  year={2024},
+  doi={10.1109/SC41406.2024.00028},
+  note={Preprint: arXiv:2312.02741, ``Part-time Power Measurements: nvidia-smi's Lack of Attention''}
 }
 
 @misc{velicka2025freqswitch,
@@ -527,13 +528,15 @@
   url={https://arxiv.org/abs/2502.20075}
 }
 
-@misc{xi2025vecflow,
+@article{xi2025vecflow,
   title={{VecFlow}: A High-Performance Vector Data Management System for Filtered-Search on {GPUs}},
-  author={Jingyi Xi and Chenghao Mo and Benjamin Karsin and Artem Chirkin and Mingqin Li and Minjia Zhang},
+  author={Xi, Jingyi and Mo, Chenghao and Karsin, Ben and Chirkin, Artem and Li, Mingqin and Zhang, Minjia},
+  journal={Proceedings of the ACM on Management of Data},
+  volume={3},
+  number={4},
+  pages={271:1--271:27},
   year={2025},
-  eprint={2506.00812},
-  archivePrefix={arXiv},
-  url={https://arxiv.org/abs/2506.00812}
+  doi={10.1145/3749189}
 }
 
 @misc{zhang2025mobiledvfs,
@@ -542,16 +545,18 @@
   year={2025},
   eprint={2507.02135},
   archivePrefix={arXiv},
-  url={https://arxiv.org/abs/2507.02135}
+  url={https://arxiv.org/abs/2507.02135},
+  note={Preprint}
 }
 
-@misc{maliakel2025llmdvfs,
-  title={Characterizing {LLM} Inference Energy-Performance Tradeoffs across Workloads and {GPU} Scaling},
-  author={Paul Joe Maliakel and Shashikant Ilager and Ivona Brandic},
-  year={2025},
-  eprint={2501.08219},
-  archivePrefix={arXiv},
-  url={https://arxiv.org/abs/2501.08219}
+@inproceedings{maliakel2025llmdvfs,
+  title={Characterizing {LLM} Inference Energy-Performance Tradeoffs Across Workloads and {GPU} Scaling},
+  author={Maliakel, Paul Joe and Ilager, Shashikant and Brandic, Ivona},
+  booktitle={2026 IEEE/ACM International Symposium on Cluster, Cloud and Internet Computing (CCGrid)},
+  pages={33--43},
+  year={2026},
+  doi={10.1109/CCGrid68966.2026.00013},
+  note={Preprint: arXiv:2501.08219}
 }
 
 @misc{oliaro2026fastkernels,
@@ -560,5 +565,141 @@
   year={2026},
   eprint={2605.23215},
   archivePrefix={arXiv},
-  url={https://arxiv.org/abs/2605.23215}
+  url={https://arxiv.org/abs/2605.23215},
+  note={Preprint, v1}
+}
+
+% Added 2026-10-25 after the red-team citation audit.
+@misc{nvidia_ncu,
+  author={{NVIDIA}},
+  title={Nsight Compute Profiling Guide: Clock Control},
+  year={2026},
+  howpublished={\url{https://docs.nvidia.com/nsight-compute/ProfilingGuide/}},
+  note={Accessed 2026-10-25}
+}
+
+@misc{nvidia_nvbench,
+  author={{NVIDIA}},
+  title={{NVBench}: {CUDA} Kernel Benchmarking Library (command-line options: clock locking, throttle detection)},
+  year={2026},
+  howpublished={\url{https://github.com/NVIDIA/nvbench}},
+  note={Accessed 2026-10-25}
+}
+
+@misc{nvidia_tensorrt_env,
+  author={{NVIDIA}},
+  title={{TensorRT} Documentation: Hardware/Software Environment for Performance Measurements},
+  year={2026},
+  howpublished={\url{https://docs.nvidia.com/deeplearning/tensorrt/10.x.x/performance/hw-sw-environment.html}},
+  note={Accessed 2026-10-25}
+}
+
+@misc{nvidia_forum_idle,
+  author={{NVIDIA Developer Forums}},
+  title={Why kernel calculate speed got slower after waiting for a while? (thread 221059, 2022); Avoiding performance mode slowdown (thread 54181, 2017)},
+  howpublished={\url{https://forums.developer.nvidia.com/t/221059}},
+  note={Practitioner reports; not peer reviewed},
+  year={2022}
+}
+
+@techreport{volkov2016latency,
+  author={Volkov, Vasily},
+  title={Understanding Latency Hiding on {GPUs}},
+  institution={EECS Department, University of California, Berkeley},
+  number={UCB/EECS-2016-143},
+  year={2016}
+}
+
+@article{patel2023cloudgpu,
+  author={Patel, Pratyush and Gong, Zibo and Rizvi, Syeda and Choukse, Esha and Misra, Pulkit and Anderson, Thomas and Sriraman, Akshitha},
+  title={Towards Improved Power Management in Cloud {GPUs}},
+  journal={IEEE Computer Architecture Letters},
+  volume={22},
+  number={2},
+  pages={141--144},
+  year={2023},
+  doi={10.1109/LCA.2023.3278652}
+}
+
+@misc{agarwal2026kernels,
+  author={Agarwal, Gaurav and Garg, Ashish and Singhal, Isha},
+  title={How Much of a Real Workload Can {LLM}-Generated {GPU} Kernels Actually Reach?},
+  year={2026},
+  eprint={2609.21058},
+  archivePrefix={arXiv},
+  note={Preprint},
+  url={https://arxiv.org/abs/2609.21058}
+}
+
+@misc{maczan2026webgpu,
+  author={Maczan, J{\k{e}}drzej},
+  title={Characterizing {WebGPU} Dispatch Overhead for {LLM} Inference Across Four {GPU} Vendors, Three Backends, and Three Browsers},
+  year={2026},
+  eprint={2604.02344},
+  archivePrefix={arXiv},
+  note={Preprint},
+  url={https://arxiv.org/abs/2604.02344}
+}
+
+@article{karnagel2017adaptive,
+  author={Karnagel, Tomas and Habich, Dirk and Lehner, Wolfgang},
+  title={Adaptive Work Placement for Query Processing on Heterogeneous Computing Resources},
+  journal={Proceedings of the VLDB Endowment},
+  volume={10},
+  number={7},
+  pages={733--744},
+  year={2017},
+  doi={10.14778/3067421.3067423}
+}
+
+@article{rosenfeld2022survey,
+  author={Rosenfeld, Viktor and Bre{\ss}, Sebastian and Markl, Volker},
+  title={Query Processing on Heterogeneous {CPU/GPU} Systems},
+  journal={ACM Computing Surveys},
+  volume={55},
+  number={1},
+  pages={11:1--11:38},
+  year={2022},
+  doi={10.1145/3485126}
+}
+
+@inproceedings{han2022reef,
+  author={Han, Mingcong and Zhang, Hanze and Chen, Rong and Chen, Haibo},
+  title={Microsecond-scale Preemption for Concurrent {GPU}-accelerated {DNN} Inferences},
+  booktitle={16th USENIX Symposium on Operating Systems Design and Implementation (OSDI 22)},
+  year={2022}
+}
+
+@inproceedings{strati2024orion,
+  author={Strati, Foteini and Ma, Xianzhe and Klimovic, Ana},
+  title={Orion: Interference-aware, Fine-grained {GPU} Sharing for {ML} Applications},
+  booktitle={Proceedings of the Nineteenth European Conference on Computer Systems (EuroSys '24)},
+  pages={1075--1092},
+  year={2024},
+  doi={10.1145/3627703.3629578}
+}
+
+@inproceedings{hoefler2015scientific,
+  author={Hoefler, Torsten and Belli, Roberto},
+  title={Scientific Benchmarking of Parallel Computing Systems: Twelve Ways to Tell the Masses when Reporting Performance Results},
+  booktitle={Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis (SC '15)},
+  articleno={73},
+  year={2015},
+  doi={10.1145/2807591.2807644}
+}
+
+@inproceedings{zhang2023airtopk,
+  author={Zhang, Jingrong and Naruse, Akira and Li, Xipeng and Wang, Yong},
+  title={Parallel Top-{K} Algorithms on {GPU}: A Comprehensive Study and New Methods},
+  booktitle={Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis (SC '23)},
+  year={2023},
+  doi={10.1145/3581784.3607062}
+}
+
+@misc{nvidia_cuvs_bf,
+  author={{NVIDIA}},
+  title={{cuVS} Brute-Force Index: filtered search with bitset and bitmap prefilters},
+  year={2026},
+  howpublished={\url{https://docs.nvidia.com/cuvs/user-guide/api-guides/indexing-guide/brute-force}},
+  note={Accessed 2026-10-25}
 }
