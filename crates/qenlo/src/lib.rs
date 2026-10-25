@@ -555,8 +555,11 @@ impl EligibilityPlan {
             EligibilityRepresentation::TinyRows | EligibilityRepresentation::SortedRows => {
                 eligible_count as u64 * 4
             }
-            EligibilityRepresentation::DenseMask => corpus_size as u64 * 4,
-            EligibilityRepresentation::ShaderPredicate => 0,
+            // Mask and shader-predicate modes both upload one u32 per row per query
+            // (gpu.rs chunk_eligibility: mask bits or per-row liveness).
+            EligibilityRepresentation::DenseMask | EligibilityRepresentation::ShaderPredicate => {
+                corpus_size as u64 * 4
+            }
         };
         Self {
             generation,

@@ -114,6 +114,15 @@ fn main() {
             .expect("poll");
         busy += t.elapsed();
         cycles += 1;
+        // The runner terminates this process, so the final summary is never printed;
+        // emit a cumulative line every 1,000 cycles so duty cycle is recorded.
+        if cycles % 1_000 == 0 {
+            eprintln!(
+                "heater progress cycles={cycles} mean_busy_ms={:.3} duty={:.3}",
+                busy.as_secs_f64() * 1e3 / cycles as f64,
+                busy.as_secs_f64() / start.elapsed().as_secs_f64()
+            );
+        }
         std::thread::sleep(Duration::from_millis(sleep_ms));
     }
     eprintln!(
