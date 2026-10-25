@@ -41,7 +41,7 @@ for i, h in enumerate(HOSTS):
                           label=None if i else ("heavy path (scans all N)" if eng == "gpu-predicate" else "light path (scans E rows)"))
 ax[0].set_yscale("log"); ax[0].set_xticks(range(len(HOSTS)), [SHORT[h] for h in HOSTS])
 ax[0].set_ylabel("device top-k time per query (ms)")
-ax[0].set_title("(a) one query cell, $E$ = 3,000", loc="left")
+ax[0].set_title(f"(a) one query cell, $E$ = {E_SHOW:,}", loc="left")
 ax[0].legend(loc="upper center", bbox_to_anchor=(0.5, -0.28), fontsize=6.5, ncol=1)
 # (b)
 base = ROOT / "research/data/raw/2026-09-25-dvfs-d1"
