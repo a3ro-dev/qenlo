@@ -22,7 +22,7 @@ use qenlo::{
     BackendSelection, Collection, CollectionConfig, Filter, Measurement, NewRecord, TimestampRange,
 };
 #[cfg(feature = "gpu-wgpu")]
-use qenlo::{GpuFilterMode, GpuRowPreparation, RouterProfile};
+use qenlo::{GpuFilterMode, GpuRowPreparation, GpuSelectKernel, RouterProfile};
 use qenlo_bench::{
     MetadataDistribution, OracleFilter, OracleRecord, PreparedOracle,
     dataset::{self, DatasetSpec},
@@ -135,6 +135,7 @@ run     --dataset PATH --output NEW_DIRECTORY [--dimensions 16|384|768]
         [--fraction 1|0.1|0.01|0.001|0.0001|empty|fewer]
         [--eligible-count ROWS]
         [--gpu-row-preparation legacy-two-pass|one-pass|cached]
+        [--gpu-select-kernel tiled|k-pass]
         [--order-seed U64]
         [--router-profile KEY_VALUE_FILE]
         [--user-id U64]
@@ -792,6 +793,17 @@ async fn run_cell(
     if row_preparation_name != "one-pass" {
         return Err("--gpu-row-preparation requires the gpu-wgpu feature".into());
     }
+    let select_kernel_name = take(&mut options, "--gpu-select-kernel", "tiled");
+    #[cfg(feature = "gpu-wgpu")]
+    let select_kernel = match select_kernel_name.as_str() {
+        "tiled" => GpuSelectKernel::Tiled,
+        "k-pass" => GpuSelectKernel::KPass,
+        _ => return Err("--gpu-select-kernel must be tiled or k-pass".into()),
+    };
+    #[cfg(not(feature = "gpu-wgpu"))]
+    if select_kernel_name != "tiled" {
+        return Err("--gpu-select-kernel requires the gpu-wgpu feature".into());
+    }
     #[cfg(not(feature = "gpu-wgpu"))]
     if router_profile_path.is_some() {
         return Err("--router-profile requires the gpu-wgpu feature".into());
@@ -937,6 +949,12 @@ async fn run_cell(
     collection.set_diagnostics(diagnostics);
     #[cfg(feature = "gpu-wgpu")]
     collection.set_gpu_row_preparation(row_preparation);
+    // Tiled is the library default, so only the k-pass control arm needs a GPU backend.
+    #[cfg(feature = "gpu-wgpu")]
+    if select_kernel != GpuSelectKernel::Tiled {
+        collection.set_gpu_select_kernel(select_kernel)?;
+    }
+    writeln!(manifest, "gpu_select_kernel={select_kernel_name}")?;
     #[cfg(feature = "gpu-wgpu")]
     if let Some(path) = &router_profile_path {
         collection.set_router_profile(Some(router_profile(path)?));

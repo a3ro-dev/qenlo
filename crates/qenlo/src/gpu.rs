@@ -16,7 +16,8 @@ const PARAM_BYTES: u64 = 64;
 const MAX_BATCH: usize = 128;
 const WORKGROUP_SIZE: u64 = 256;
 const SCORE_ROWS_PER_WORKGROUP: u64 = 8;
-// ponytail: one workgroup selects each chunk's top-k; hierarchical selection if this dominates.
+/// Scores per workgroup in tiled selection; must equal `TILE` in `gpu_exact.wgsl`.
+const SELECT_TILE: u64 = 512;
 const MAX_CHUNK_ROWS: u64 = 131_072;
 pub(crate) const MAX_INCREMENTAL_CHUNKS: u32 = 8;
 const DEVICE_TIMEOUT: Duration = Duration::from_secs(30);
@@ -178,6 +179,9 @@ pub(crate) struct GpuExact {
     queue: wgpu::Queue,
     score_pipeline: wgpu::ComputePipeline,
     select_pipeline: wgpu::ComputePipeline,
+    tiles_pipeline: wgpu::ComputePipeline,
+    merge_pipeline: wgpu::ComputePipeline,
+    select_kernel: super::GpuSelectKernel,
     group0_layout: wgpu::BindGroupLayout,
     group1_layout: wgpu::BindGroupLayout,
     chunks: Vec<Chunk>,
@@ -305,6 +309,8 @@ impl GpuExact {
         };
         let score_pipeline = make_pipeline("score");
         let select_pipeline = make_pipeline("select_topk");
+        let tiles_pipeline = make_pipeline("select_tiles");
+        let merge_pipeline = make_pipeline("merge_tiles");
         health.check()?;
 
         let vector_row_bytes = dimension as u64 * 4;
@@ -318,8 +324,12 @@ impl GpuExact {
             .min(max_dispatch_rows)
             .min(MAX_CHUNK_ROWS)
             .min(u32::MAX as u64 / dimension as u64)
-            // Reserve upload staging during rebuild and worst-case k=64 query scratch.
-            .min((budget - resident_bytes - fixed_search_peak) / 12)
+            // Reserve upload staging during rebuild and worst-case k=64 query scratch,
+            // including tiled selection's 64 candidates per 512 rows (rounded up by one tile).
+            .min(
+                (budget - resident_bytes - fixed_search_peak).saturating_sub(64 * CANDIDATE_BYTES)
+                    / 14,
+            )
             .min((budget - resident_bytes) / row_bytes)
             .min(u32::MAX as u64) as usize;
         if rows_per_chunk == 0 {
@@ -392,6 +402,9 @@ impl GpuExact {
             queue,
             score_pipeline,
             select_pipeline,
+            tiles_pipeline,
+            merge_pipeline,
+            select_kernel: Default::default(),
             group0_layout,
             group1_layout,
             chunks,
@@ -761,7 +774,17 @@ impl GpuExact {
                 });
                 pass.set_bind_group(0, &scratch.resource_groups[chunk_index], &[]);
                 pass.set_bind_group(1, &scratch.candidates_group, &[]);
-                pass.set_pipeline(&self.select_pipeline);
+                if mode == 2 || self.select_kernel == super::GpuSelectKernel::KPass {
+                    pass.set_pipeline(&self.select_pipeline);
+                } else {
+                    let tiles = dispatch_items.div_ceil(SELECT_TILE as u32);
+                    if tiles != 0 {
+                        pass.set_pipeline(&self.tiles_pipeline);
+                        pass.dispatch_workgroups(tiles, queries.len() as u32, 1);
+                        execution.dispatch_count += 1;
+                    }
+                    pass.set_pipeline(&self.merge_pipeline);
+                }
                 pass.dispatch_workgroups(queries.len() as u32, 1, 1);
             }
             if let Some(timestamps) = &scratch.timestamps {
@@ -863,6 +886,7 @@ pub(crate) struct GpuBackend {
     capabilities: GpuCapabilities,
     ivf_config: Option<(usize, usize, bool)>,
     ivf: Option<IvfIndex>,
+    select_kernel: super::GpuSelectKernel,
 }
 
 struct IvfIndex {
@@ -1052,7 +1076,15 @@ impl GpuBackend {
             capabilities,
             ivf_config: None,
             ivf: None,
+            select_kernel: Default::default(),
         })
+    }
+
+    pub(crate) fn set_select_kernel(&mut self, kernel: super::GpuSelectKernel) {
+        self.select_kernel = kernel;
+        if let Some(exact) = &mut self.exact {
+            exact.select_kernel = kernel;
+        }
     }
 
     pub(crate) fn configure_ivf(&mut self, lists: usize, nprobe: usize) {
@@ -1112,18 +1144,18 @@ impl GpuBackend {
             timestamps.push(record.timestamp());
             live.push(record.is_live());
         }
-        self.exact = Some(Box::new(
-            GpuExact::new(
-                self.dimension,
-                &vectors,
-                &ids,
-                &users,
-                &timestamps,
-                &live,
-                Some(self.budget),
-            )
-            .await?,
-        ));
+        let mut exact = GpuExact::new(
+            self.dimension,
+            &vectors,
+            &ids,
+            &users,
+            &timestamps,
+            &live,
+            Some(self.budget),
+        )
+        .await?;
+        exact.select_kernel = self.select_kernel;
+        self.exact = Some(Box::new(exact));
         if let Some((lists, nprobe, sq8)) = self.ivf_config {
             self.ivf = Some(IvfIndex::build(
                 &vectors,
@@ -1510,7 +1542,7 @@ fn scratch_buffer_bytes(
     let query = dimension as u64 * 4 * batch;
     let eligibility = rows_per_chunk as u64 * 4;
     let scores = rows_per_chunk as u64 * 4 * batch;
-    let candidates = 64 * CANDIDATE_BYTES * 2 * batch;
+    let candidates = 64 * CANDIDATE_BYTES * 2 * batch + partial_bytes(rows_per_chunk, batch);
     query
         .checked_add(eligibility)
         .and_then(|bytes| bytes.checked_add(scores))
@@ -1524,6 +1556,11 @@ fn scratch_buffer_bytes(
             })
         })
         .ok_or_else(|| GpuError::InvalidInput("scratch allocation size overflow".into()))
+}
+
+/// Tiled selection's per-tile candidate lists, stored in `selected` after the final results.
+fn partial_bytes(rows_per_chunk: usize, batch: u64) -> u64 {
+    (rows_per_chunk as u64).div_ceil(SELECT_TILE) * 64 * CANDIDATE_BYTES * batch
 }
 
 fn search_peak_bytes(
@@ -1590,7 +1627,7 @@ fn create_scratch(
     let selected = buffer(
         device,
         "qenlo candidates arena",
-        64 * CANDIDATE_BYTES * batch,
+        64 * CANDIDATE_BYTES * batch + partial_bytes(shape.rows_per_chunk, batch),
         wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
         health,
     )?;
@@ -1846,7 +1883,7 @@ fn validate_limits(limits: &wgpu::Limits, dimension: usize) -> Result<(), GpuErr
         || limits.max_bindings_per_bind_group < 8
         || limits.max_compute_workgroup_size_x < WORKGROUP_SIZE as u32
         || limits.max_compute_invocations_per_workgroup < WORKGROUP_SIZE as u32
-        || limits.max_compute_workgroup_storage_size < (WORKGROUP_SIZE * CANDIDATE_BYTES) as u32
+        || limits.max_compute_workgroup_storage_size < (SELECT_TILE * CANDIDATE_BYTES) as u32
         || limits.max_compute_workgroups_per_dimension == 0
         || limits.max_storage_buffer_binding_size < 64 * CANDIDATE_BYTES
         || limits.max_buffer_size < 64 * CANDIDATE_BYTES
@@ -2312,7 +2349,7 @@ mod tests {
             };
             let vectors: Vec<_> = (0..rows).flat_map(|_| next_vector()).collect();
             let query = next_vector();
-            let Some(exact) = available(block_on(GpuExact::new(
+            let Some(mut exact) = available(block_on(GpuExact::new(
                 dimension,
                 &vectors,
                 &ids,
@@ -2323,22 +2360,31 @@ mod tests {
             ))) else {
                 return;
             };
-            for filter in [
-                FilterMode::Mask(&mask),
-                FilterMode::EligibleRows(&eligible),
-                FilterMode::EligibleRows(&[]),
-                FilterMode::EligibleRows(&[1, 2]),
-                FilterMode::Predicate {
-                    user: None,
-                    lower: None,
-                    upper: None,
-                },
-                FilterMode::Predicate {
-                    user: Some((1u64 << 40) + 1),
-                    lower: Some(-190),
-                    upper: Some(190),
-                },
-            ] {
+            for (kernel, filter) in [
+                super::super::GpuSelectKernel::KPass,
+                super::super::GpuSelectKernel::Tiled,
+            ]
+            .into_iter()
+            .flat_map(|kernel| {
+                [
+                    FilterMode::Mask(&mask),
+                    FilterMode::EligibleRows(&eligible),
+                    FilterMode::EligibleRows(&[]),
+                    FilterMode::EligibleRows(&[1, 2]),
+                    FilterMode::Predicate {
+                        user: None,
+                        lower: None,
+                        upper: None,
+                    },
+                    FilterMode::Predicate {
+                        user: Some((1u64 << 40) + 1),
+                        lower: Some(-190),
+                        upper: Some(190),
+                    },
+                ]
+                .map(|filter| (kernel, filter))
+            }) {
+                exact.select_kernel = kernel;
                 let mut expected: Vec<_> = (0..rows)
                     .filter(|&row| {
                         live[row]
@@ -2371,7 +2417,7 @@ mod tests {
                     for (hit, &(id, distance)) in hits.iter().zip(expected) {
                         assert_eq!(
                             hit.id, id,
-                            "dimension={dimension}, k={k}, filter={filter:?}"
+                            "dimension={dimension}, k={k}, {kernel:?}, filter={filter:?}"
                         );
                         assert!((hit.distance as f64 - distance).abs() < 2e-6);
                     }
@@ -2381,6 +2427,67 @@ mod tests {
                     );
                     assert_timestamp_phases(&exact, &report);
                     assert!(report.allocation_bytes <= exact.budget);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn tiled_selection_breaks_exact_and_near_ties_by_id_across_tiles() {
+        // 40 distinct distances over 5,000 rows: each top-k is decided by the id
+        // tie-break among rows spread over ten tiles, and k=64 needs two merge rounds.
+        // Distances 0.5 - m * 2^-24 are exact in f32, so the oracle needs no tolerance.
+        let rows = 5_000;
+        let step = (2.0f32).powi(-24);
+        let vectors: Vec<_> = (0..rows)
+            .flat_map(|row| [0.5 + ((row * 7_919) % 40) as f32 * step, 0.0])
+            .collect();
+        let ids: Vec<_> = (0..rows)
+            .map(|row| (row as u64 * 2_654_435_761) % (1 << 32) + ((row as u64 % 3) << 40))
+            .collect();
+        let live: Vec<_> = (0..rows).map(|row| row % 17 != 0).collect();
+        let Some(mut exact) = available(block_on(GpuExact::new(
+            2,
+            &vectors,
+            &ids,
+            &vec![0; rows],
+            &vec![0; rows],
+            &live,
+            None,
+        ))) else {
+            return;
+        };
+        let mask: Vec<_> = (0..rows).map(|row| row % 4 != 1).collect();
+        let eligible: Vec<_> = (0..rows as u32).filter(|row| row % 3 != 0).collect();
+        for filter in [FilterMode::Mask(&mask), FilterMode::EligibleRows(&eligible)] {
+            let mut expected: Vec<_> = (0..rows)
+                .filter(|&row| {
+                    live[row]
+                        && match filter {
+                            FilterMode::Mask(mask) => mask[row],
+                            FilterMode::EligibleRows(eligible) => eligible.contains(&(row as u32)),
+                            FilterMode::Predicate { .. } => unreachable!(),
+                        }
+                })
+                .map(|row| (1.0 - vectors[row * 2], ids[row]))
+                .collect();
+            expected.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+            for k in [1, 10, 64] {
+                let expected: Vec<_> = expected[..k]
+                    .iter()
+                    .map(|&(distance, id)| (id, distance.to_bits()))
+                    .collect();
+                for kernel in [
+                    super::super::GpuSelectKernel::KPass,
+                    super::super::GpuSelectKernel::Tiled,
+                ] {
+                    exact.select_kernel = kernel;
+                    let (hits, _) = block_on(exact.search(&[1.0, 0.0], k, filter)).unwrap();
+                    let hits: Vec<_> = hits
+                        .iter()
+                        .map(|hit| (hit.id, hit.distance.to_bits()))
+                        .collect();
+                    assert_eq!(hits, expected, "k={k}, {kernel:?}, filter={filter:?}");
                 }
             }
         }
@@ -2465,6 +2572,7 @@ mod tests {
             exact: Some(Box::new(exact)),
             ivf_config: None,
             ivf: None,
+            select_kernel: Default::default(),
         };
         let mut store = qenlo_core::CoreStore::new(2).unwrap();
         store.add(2, 1, 0, [1.0, 0.0]).unwrap();

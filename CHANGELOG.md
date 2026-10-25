@@ -1,5 +1,19 @@
 # changelog
 
+## unreleased
+
+### changed
+
+- exact WGPU mask and row filters select top-k with a tiled kernel: each
+  workgroup sorts 512 scores and keeps its k best, then one workgroup per query
+  merges the lists. the old kernel made k passes over every score in one
+  workgroup. results are unchanged (distance, then id). the old kernel stays as
+  `GpuSelectKernel::KPass` (`Collection::set_gpu_select_kernel`,
+  `qenlo-bench --gpu-select-kernel k-pass`), and the shader-predicate path
+  still uses it. on an RTX 4050 laptop (unlocked clocks, N=100k, D=384, batch
+  1, median of 3 processes), device selection at E=30k went from 1.86 ms to
+  0.41 ms at k=64 and from 0.60 ms to 0.20 ms at k=10.
+
 ## 0.1.0-beta.1 - 2026-10-14
 
 first beta. the storage format, the `qenlo` API, and the SDKs are unchanged from
