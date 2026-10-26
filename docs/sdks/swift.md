@@ -3,7 +3,7 @@
 Swift bindings over the shared C ABI for macOS 13+ and iOS 16+.
 
 The source package lives in `sdk/apple`. The repository root is not currently a
-SwiftPM package, so alpha.5 does not claim remote `Package.swift` installation.
+SwiftPM package, so this release does not claim remote `Package.swift` installation.
 Build the wrapper from source or use the `QenloFFI.xcframework.zip` attached to
 the matching GitHub release.
 

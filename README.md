@@ -39,7 +39,7 @@ Qenlo is a local, embedded vector store: one process owns a canonical durable re
 | Python | `pip install qenlo==0.1.0b2` |
 | TypeScript | `npm install @a3ro.dev/qenlo@beta` |
 
-Go, Kotlin, and Swift are preview SDKs — see [docs/sdks/go.md](docs/sdks/go.md), [docs/sdks/kotlin.md](docs/sdks/kotlin.md), and [docs/sdks/swift.md](docs/sdks/swift.md). Maven Central is not published; releases are tagged `sdk-v0.1.0-alpha.N` on [GitHub Releases](https://github.com/a3ro-dev/qenlo/releases).
+Go, Kotlin, and Swift are preview SDKs — see [docs/sdks/go.md](docs/sdks/go.md), [docs/sdks/kotlin.md](docs/sdks/kotlin.md), and [docs/sdks/swift.md](docs/sdks/swift.md). Maven Central is not published; releases are tagged `sdk-v*` on [GitHub Releases](https://github.com/a3ro-dev/qenlo/releases).
 
 ## Quick example
 

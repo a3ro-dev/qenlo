@@ -1,45 +1,87 @@
 # Quickstart
 
-Qenlo betas are published to crates.io (`qenlo`), PyPI (`qenlo`), and npm
-(`@a3ro.dev/qenlo`, dist-tag `beta`). Install commands with the current version
-are in the [Rust](sdks/rust.md), [Python](sdks/python.md), and
-[TypeScript](sdks/typescript.md) guides. The full Rust API reference is on
-[docs.rs](https://docs.rs/qenlo/latest/qenlo/struct.Collection.html), and the
-terminal browser's `?` tab lists every `Collection` method with an example.
+Create a collection, add records, search with a filter, and reopen it. Every example uses 3-dimensional vectors so you can read them; use your embedding model's dimension in practice.
 
-## Rust from this checkout
+A record is `(id, user_id, timestamp, vector)`. A filter selects live records by optional `user_id` and a timestamp range (start inclusive, end exclusive), and search ranks only those records.
 
-```powershell
-cargo run -p qenlo --example quickstart -- ./demo.qenlo cpu
-$env:WGPU_BACKEND = 'dx12'
-cargo run -p qenlo --features gpu-wgpu --example quickstart -- ./gpu-demo.qenlo gpu
+## Rust
+
+```bash
+cargo add qenlo
+cargo add tokio --features full
 ```
 
-Use a new directory. The example adds records, runs a filtered cosine search, deletes a row, closes the collection, and verifies state after reopen. Required GPU mode fails if the requested adapter cannot execute it.
-
-## Minimal Rust API
-
 ```rust
-use qenlo::{Collection, CollectionConfig, Filter};
+use qenlo::{Collection, CollectionConfig, Filter, NewRecord, TimestampRange};
 
-async fn search() -> Result<(), qenlo::Error> {
-    let db = Collection::new(CollectionConfig::cpu_exact(3)).await?;
-    db.add(1, 42, 1_700_000_000, &[0.1, 0.8, 0.5])?;
-    let response = db.search(&[0.1, 0.7, 0.5], &Filter::ALL, 5).await?;
-    println!("{:?}", response.results);
+#[tokio::main]
+async fn main() -> Result<(), qenlo::Error> {
+    let config = CollectionConfig::cpu_exact(3);
+    let db = Collection::create("./notes.qenlo", config.clone()).await?;
+
+    db.add_batch(&[
+        NewRecord { id: 1, user_id: 7, timestamp: 10, vector: vec![1.0, 0.0, 0.0] },
+        NewRecord { id: 2, user_id: 7, timestamp: 20, vector: vec![0.0, 1.0, 0.0] },
+    ])?;
+
+    let filter = Filter::new(Some(7), TimestampRange::new(Some(0), Some(30)));
+    let response = db.search(&[1.0, 0.0, 0.0], &filter, 10).await?;
+    assert_eq!(response.results[0].id, 1);
+
+    db.delete(1)?;
+    db.close()?;
+
+    let reopened = Collection::open("./notes.qenlo", config).await?;
+    assert_eq!(reopened.filter(&Filter::ALL), vec![2]);
     Ok(())
 }
 ```
 
-Collections above the default admission limit need an explicit budget, including in-memory benchmark collections:
+Use a new path for `create`. Collections larger than the default admission limit need an explicit budget through `Collection::new_with_options` and `StorageOptions { max_load_bytes }`.
 
-```rust
-use qenlo::{Collection, CollectionConfig, StorageOptions};
+## Python
 
-let db = Collection::new_with_options(
-    CollectionConfig::cpu_exact(768),
-    StorageOptions { max_load_bytes: 2 * 1024 * 1024 * 1024 },
-).await?;
+```bash
+pip install "qenlo==0.1.0b2"
 ```
 
-See the language-specific pages under `docs/sdks/` for source-checkout examples. Do not advertise an SDK backend unless its packaged native artifact contains that feature.
+```python
+from qenlo import Collection, Filter, Record
+
+with Collection.memory(dimension=3) as db:
+    db.add(Record(id=1, user_id=7, timestamp=10, vector=(1.0, 0.0, 0.0)))
+    db.add(Record(id=2, user_id=7, timestamp=20, vector=(0.0, 1.0, 0.0)))
+    response = db.search(query=(1.0, 0.0, 0.0), filter=Filter(user_id=7), k=5)
+    print(response.results[0].id)
+```
+
+## TypeScript
+
+```bash
+npm install @a3ro.dev/qenlo@beta
+```
+
+```typescript
+import { Collection } from "@a3ro.dev/qenlo";
+
+using db = Collection.memory(3);
+db.add({ id: 1n, userId: 7n, timestamp: 10n, vector: [1, 0, 0] });
+const response = db.search([1, 0, 0], { userId: 7n }, 5);
+console.log(response.results[0]?.id);
+```
+
+## Run the bundled example
+
+From a checkout of the repository:
+
+```bash
+cargo run -p qenlo --example quickstart -- ./demo.qenlo cpu
+```
+
+It adds records, runs a filtered cosine search, deletes a row, closes the collection and verifies state after reopen. Add `--features gpu-wgpu` and pass `gpu` instead of `cpu` to require the GPU path; it fails rather than silently falling back if the adapter cannot run it.
+
+## Next
+
+- [Core concepts](concepts.md) for filters, exactness and the execution report.
+- [Collection browser](browser.md) to look inside a collection.
+- Per-language details: [Rust](sdks/rust.md), [Python](sdks/python.md), [TypeScript](sdks/typescript.md). Full Rust API reference on [docs.rs](https://docs.rs/qenlo).

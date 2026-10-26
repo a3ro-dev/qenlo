@@ -1,43 +1,45 @@
-* **Getting started**
+* **Start**
   * [Overview](README.md)
   * [Quickstart](quickstart.md)
-  * [Collection browser](browser.md)
   * [Core concepts](concepts.md)
+  * [Collection browser](browser.md)
+
+* **Guides**
   * [Use cases](use-cases.md)
   * [Trade-offs](trade-offs.md)
   * [Feature matrix](feature-matrix.md)
 
-* **SDKs and bindings**
-  * [Rust API](sdks/rust.md)
-  * [Python SDK](sdks/python.md)
-  * [TypeScript SDK](sdks/typescript.md)
-  * [Go driver](sdks/go.md)
+* **SDKs**
+  * [Rust](sdks/rust.md)
+  * [Python](sdks/python.md)
+  * [TypeScript](sdks/typescript.md)
+  * [Go](sdks/go.md)
   * [Kotlin and Android](sdks/kotlin.md)
   * [Swift and Apple](sdks/swift.md)
 
-* **Architecture and storage**
-  * [Architecture specification](architecture.md)
-  * [Storage and .qn format](qn-format-v1.md)
+* **Internals**
+  * [Architecture](architecture.md)
+  * [Storage format (.qn)](qn-format-v1.md)
   * [Recovery policy](recovery-policy.md)
   * [Compatibility policy](compatibility.md)
   * [GPU design](gpu-design.md)
-  * [CUDA backend todo](cuda-backend-todo.md)
 
-* **Research and benchmarks**
+* **Research**
   * [Benchmark protocol](benchmark-protocol.md)
-  * [Device lab](device-lab.md)
   * [Measured results](results-2026-08-28.md)
   * [Verification record](verification.md)
+  * [Device lab](device-lab.md)
 
-* **Release and operations**
-  * [Prioritized roadmap](prioritized-roadmap.md)
+* **Project**
   * [Implementation status](implementation-status.md)
-  * [Package publishing](publishing.md)
-  * [CI and release map](ci.md)
+  * [Roadmap](prioritized-roadmap.md)
+  * [Releasing and publishing](publishing.md)
+  * [CI map](ci.md)
+  * [Changelog](https://github.com/a3ro-dev/qenlo/blob/main/CHANGELOG.md)
 
-* **Legal and policies**
-  * [Privacy Policy](../privacy.html ':ignore')
-  * [Terms and Conditions](../terms.html ':ignore')
-  * [Cookie Policy](../cookies.html ':ignore')
-  * [Refund Policy](../refund.html ':ignore')
-  * [Security Policy](https://github.com/a3ro-dev/qenlo/blob/main/SECURITY.md)
+* **Legal**
+  * [Privacy](../privacy.html ':ignore')
+  * [Terms](../terms.html ':ignore')
+  * [Cookies](../cookies.html ':ignore')
+  * [Refunds](../refund.html ':ignore')
+  * [Security policy](https://github.com/a3ro-dev/qenlo/blob/main/SECURITY.md)

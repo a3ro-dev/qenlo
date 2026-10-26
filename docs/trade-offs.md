@@ -19,7 +19,7 @@ Canonical vectors, metadata indexes, and prepared scan layouts consume host memo
 
 ### CPU performance
 
-CPU is the conservative default and often wins when filtering leaves very few candidates. Qenlo's measured CPU implementation is not a bound on optimized libraries: in one corrected filtered batch cell, FAISS Flat and Torch CPU were roughly nine times faster than Qenlo CPU. General CPU/GPU crossover claims therefore require a stronger CPU baseline.
+CPU is the default and wins when filtering leaves few candidates. Since beta.2 the exact scan runs certified FP32 at any size and splits large queries across threads. On a 12-thread laptop (100k rows, 384 dimensions, k=10) 30,000 eligible rows went from 6.6 to 3.3 ms and 100,000 from 15.2 to 6.6 ms. That is still not a bound on optimized libraries: earlier retained runs had FAISS Flat and Torch CPU roughly nine times faster on one filtered batch cell, and that gap has not been re-measured against the new scan.
 
 ### GPU portability
 
@@ -35,7 +35,7 @@ Canonical mutations can invalidate prepared eligibility and accelerator state. R
 
 ## Routing guidance
 
-Start with exact CPU execution. Add WGPU or tensor execution only after measuring completed calls on the target device and realistic filters. Treat the built-in automatic threshold as a fallback, not a learned or transferable router.
+Start with exact CPU execution. Add WGPU or tensor execution only after measuring completed calls on the target device and realistic filters. The automatic router still sends 4,096 or more eligible rows to the GPU; with the faster CPU scan that threshold is probably too low, so measure before relying on it.
 
 The September 2026 paper found route reversals, but its cohorts differ in hardware, data, and source revision. Its headline corrected WGPU cells used a selector candidate that was later rejected. Those results motivate profiling; they do not select a production default.
 

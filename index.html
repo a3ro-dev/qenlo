@@ -494,6 +494,14 @@
       color: #1D2320;
     }
 
+    .install-strip { max-width: var(--content-max); margin: 40px auto 0; padding: 0 var(--gutter); color: var(--ink); }
+    .install-strip h2 { margin: 0 0 14px; font-size: 1.4rem; letter-spacing: -.02em; }
+    .install-strip__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .install-strip__grid div { padding: 14px 16px; background: var(--surface-dark); border-radius: 8px; color: #E8EBE9; }
+    .install-strip__grid span { display: block; margin-bottom: 6px; color: #F3A59A; font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .install-strip__grid code { font-family: var(--qenlo-font-family-mono, monospace); font-size: .9rem; word-break: break-all; }
+    .install-strip p { margin: 12px 0 0; color: var(--copy); }
+    .install-strip a { color: var(--accent); font-weight: 600; }
     .research-feature {
       max-width: var(--content-max);
       margin: 56px auto 0;
@@ -946,10 +954,10 @@
         <span class="headline__line">Retrieval</span>
       </h1>
       <p class="intro">
-        An embedded vector store with one canonical record store: metadata filters run before ranking, and search is exact on CPU by default. Every research number below links to its source and its boundary.<br>
+        An embedded vector store for Rust, Python and TypeScript. One durable file, metadata filters applied before ranking, exact results on CPU by default, optional GPU. Every number below links to its source and its boundary.<br>
         <a href="docs/#/quickstart">Start with the quickstart</a><br>
-        <a href="docs/#/browser">Explore the collection browser</a><br>
-        <a href="https://github.com/a3ro-dev/qenlo#install">Install from crates.io, PyPI, or npm</a>
+        <a href="docs/#/concepts">Read how it works</a><br>
+        <a href="#install">Install 0.1.0-beta.2</a>
       </p>
     </header>
 
@@ -977,14 +985,14 @@
       <article class="card card--context">
         <video class="card__media" autoplay muted loop playsinline preload="metadata" aria-hidden="true" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/0446d1d5-e65e-4db5-8090-3e30d09afc43.png" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260826_130054_dd005674-d693-4d81-80a5-357f7f10b3a3.mp4"></video>
         <svg class="card__grain" viewBox="0 0 429 554" aria-hidden="true"><rect width="429" height="554" filter="url(#cardNoise)"/></svg>
-        <h2 class="card__title">Failed Bets Stay Visible<br>Held-Out Router Gate</h2>
+        <h2 class="card__title">New in beta.2<br>Tiled GPU Top-k</h2>
         <div class="context-window" aria-hidden="true"><div class="window-lines"><span></span><span></span><span></span></div></div>
         <div class="metric metric--context">
-          <span class="dot-number" data-dots="235.7" aria-label="235.7"><span class="sr-only">235.7</span></span>
-          <span class="metric__unit">%</span>
+          <span class="dot-number" data-dots="4.5" aria-label="4.5"><span class="sr-only">4.5</span></span>
+          <span class="metric__unit">&times;</span>
         </div>
-        <p class="caption">Max regret vs a 25% preregistered limit<br>Rule reverted</p>
-        <a class="learn-more" href="https://github.com/a3ro-dev/qenlo/blob/main/research/data/processed/alpha5-router-heldout/report.md" aria-label="Read the held-out router gate report showing 235.7 percent maximum regret">Report</a>
+        <p class="caption">Faster device top-k selection, RTX 4050 laptop<br>Results unchanged, checked against FP64</p>
+        <a class="learn-more" href="https://github.com/a3ro-dev/qenlo/blob/main/CHANGELOG.md" aria-label="Read the beta.2 release notes">Changelog</a>
       </article>
 
       <!-- Card 3 (Corrected truth-in-advertising claim: Rigorous Oracle Verification) -->
@@ -1007,6 +1015,16 @@
         <p class="caption">1,833 retained evidence files<br>SHA-256 inventory, checked in CI</p>
         <a class="learn-more" href="https://github.com/a3ro-dev/qenlo/blob/main/research/README.md" aria-label="Read the research evidence index behind the 1,833-file hashed inventory">Evidence</a>
       </article>
+    </section>
+
+    <section id="install" class="install-strip" aria-labelledby="install-title">
+      <h2 id="install-title">Install</h2>
+      <div class="install-strip__grid">
+        <div><span>Rust</span><code>cargo add qenlo</code></div>
+        <div><span>Python</span><code>pip install qenlo==0.1.0b2</code></div>
+        <div><span>TypeScript</span><code>npm install @a3ro.dev/qenlo@beta</code></div>
+      </div>
+      <p>Go, Kotlin and Swift are previews. <a href="docs/#/quickstart">Quickstart</a> &middot; <a href="docs/#/sdks/rust">SDK guides</a> &middot; <a href="https://github.com/a3ro-dev/qenlo/releases">Releases</a></p>
     </section>
 
     <section class="research-feature" aria-labelledby="research-feature-title">
