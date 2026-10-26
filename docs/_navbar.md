@@ -1,7 +1,3 @@
-* v0.1.0-beta.2
+* [Home](../index.html ':ignore')
+* [Paper](../QENLO-RESEARCH-PAPER.pdf ':ignore')
 * [GitHub](https://github.com/a3ro-dev/qenlo)
-* [Architecture](architecture.md)
-* [Privacy](../privacy.html ':ignore')
-* [Terms](../terms.html ':ignore')
-* [Cookies](../cookies.html ':ignore')
-* [Refund](../refund.html ':ignore')
