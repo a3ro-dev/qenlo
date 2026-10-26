@@ -2,7 +2,7 @@
 
 JNA bindings for JVM applications. Android packaging and bridge validation are tracked separately, so this JVM artifact does not provide Android support on its own.
 
-Alpha.5 ships a preview JAR in the GitHub release. Maven Central publication is
+Each release ships a preview JAR in the GitHub release. Maven Central publication is
 not guaranteed; build from `sdk/kotlin` with `gradle build` when no registry
 artifact is available.
 

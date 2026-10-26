@@ -29,7 +29,7 @@ failed, and two invalid-harness rows. The invalid rows remain visible and are
 excluded from conclusions. Corrected 100K × 768 RTX 4090 cells reached oracle
 recall 1.0. WGPU P95 was 0.897 ms for batch one, k=1, and 0.896 ms for batch
 eight, k=64, with 10% eligibility. PyTorch CUDA reached 0.671 ms and 0.384 ms
-respectively. See the [performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) for timing scopes and all losses.
+respectively. See the [performance report](https://github.com/a3ro-dev/qenlo/blob/main/research/artifacts/runpod-small-2026-09-05/report/performance-report.md) for timing scopes and all losses.
 
 The selector candidate won five and lost seven of 12 qualified frozen-revision
 pairs and was therefore reverted. Mutation cells reported zero resident rebuilds;

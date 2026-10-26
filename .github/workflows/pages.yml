@@ -12,6 +12,7 @@ on:
       - 'refund.html'
       - 'docs/**'
       - 'assets/**'
+      - 'QENLO-RESEARCH-PAPER.pdf'
       - 'llms.txt'
       - 'llms-full.txt'
       - '.well-known/**'
@@ -46,7 +47,7 @@ jobs:
       - name: Assemble site directory
         run: |
           mkdir -p _site
-          cp index.html privacy.html terms.html cookies.html refund.html .nojekyll _site/
+          cp index.html QENLO-RESEARCH-PAPER.pdf privacy.html terms.html cookies.html refund.html .nojekyll _site/
           cp -r docs assets _site/
           [ -f llms.txt ] && cp llms.txt _site/ || true
           [ -f llms-full.txt ] && cp llms-full.txt _site/ || true

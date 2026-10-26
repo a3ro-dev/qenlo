@@ -218,7 +218,7 @@ The preregistered gate is 1m x 768, 1% eligible, batch 1, k=10: at least 2x lowe
 P95 than the best validated CPU path at the recall target, no invalid results,
 five shuffled runs with uncertainty reported, and complete transfer/selection
 costs with basic diagnostics. This runner enables measurements; it does not
-establish that gate. [Native Chroma replay](../scripts/chroma-replay.md) now
+establish that gate. [Native Chroma replay](https://github.com/a3ro-dev/qenlo/blob/main/scripts/chroma-replay.md) now
 validates the same vectors, canonical synthetic metadata, compound filter,
 independent truth, and shuffled query order. `scripts/compare_runs.py` checks
 workload compatibility and recall gates before reporting latency ratios and

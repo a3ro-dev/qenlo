@@ -338,6 +338,8 @@
       repo: 'https://github.com/a3ro-dev/qenlo',
       loadSidebar: true,
       loadNavbar: true,
+      alias: { '/.*/_sidebar.md': '/_sidebar.md', '/.*/_navbar.md': '/_navbar.md' },
+      notFoundPage: { '/.*': '/README.md' },
       subMaxLevel: 3,
       auto2top: true,
       search: {
@@ -389,9 +391,9 @@
                   <main>
                     <section class="docs-hero" aria-labelledby="docs-title">
                       <div>
-                        <p class="docs-kicker"><span aria-hidden="true"></span> EMBEDDED VECTOR SEARCH · RESEARCH ALPHA</p>
+                        <p class="docs-kicker"><span aria-hidden="true"></span> EMBEDDED VECTOR SEARCH · RESEARCH BETA</p>
                         <h1 id="docs-title">One record store.<br><strong>Exact retrieval.</strong></h1>
-                        <p class="docs-hero__lede">Qenlo is a local-first embedded vector store for durable, metadata-filtered search. A canonical record store anchors the results; optional execution paths are observable and remain subject to the limits documented in this research alpha.</p>
+                        <p class="docs-hero__lede">Qenlo is a local-first embedded vector store for durable, metadata-filtered search. A canonical record store anchors the results; optional execution paths are observable and remain subject to the limits documented in this research beta.</p>
                         <div class="docs-hero__actions">
                           <a class="docs-button docs-button--primary" href="#/quickstart">Build from source <span aria-hidden="true">→</span></a>
                           <a class="docs-button docs-button--secondary" href="#/browser">Open the collection browser <span aria-hidden="true">↗</span></a>
@@ -440,12 +442,12 @@
 
                     <aside class="docs-boundary" aria-labelledby="evidence-title">
                       <p>RESEARCH STATUS</p>
-                      <div><h2 id="evidence-title">Read the evidence with its boundaries.</h2><p>Qenlo is research-grade alpha software. GPU and ANN execution are optional and their availability depends on the build. Performance results apply only to the named hardware, source revision, workload, and timing boundary; they are not universal production guarantees.</p></div>
+                      <div><h2 id="evidence-title">Read the evidence with its boundaries.</h2><p>Qenlo is research-grade beta software. GPU and ANN execution are optional and their availability depends on the build. Performance results apply only to the named hardware, source revision, workload, and timing boundary; they are not universal production guarantees.</p></div>
                       <a href="#/reports/2026-09-02-strict-topk-research-gate">Research reports <span aria-hidden="true">↗</span></a>
                     </aside>
                   </main>
 
-                  <footer class="docs-landing__footer"><span>QENLO · APACHE 2.0 · RESEARCH ALPHA</span><nav aria-label="Project links"><a href="#/verification">Verification</a><a href="#/benchmark-protocol">Benchmark protocol</a><a href="https://github.com/a3ro-dev/qenlo">Source on GitHub</a><a href="../index.html">Project site</a></nav></footer>
+                  <footer class="docs-landing__footer"><span>QENLO · APACHE 2.0 · RESEARCH BETA</span><nav aria-label="Project links"><a href="#/verification">Verification</a><a href="#/benchmark-protocol">Benchmark protocol</a><a href="https://github.com/a3ro-dev/qenlo">Source on GitHub</a><a href="../index.html">Project site</a></nav></footer>
                 </div>`;
             }
 

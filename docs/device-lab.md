@@ -47,7 +47,7 @@ The suite covers invalid inputs, filter semantics, durable reopen, exact CPU sea
 
 ## Retained device submissions
 
-The [Intel Arc submission](../benchmarks/2026-08-31/device-lab/intel-arc/README.md)
+The [Intel Arc submission](https://github.com/a3ro-dev/qenlo/blob/main/benchmarks/2026-08-31/device-lab/intel-arc/README.md)
 retains two embedded `quick` reports and one `soak` report from an Intel Arc
 Vulkan adapter. All 21 cells passed with Recall@10 = 1.0 and no fallback. The
 soak result recorded exact GPU P95 of 4,444 µs versus exact CPU P95 of 16,486 µs.

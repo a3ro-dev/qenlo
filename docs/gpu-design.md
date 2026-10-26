@@ -1,8 +1,8 @@
 # How Qenlo's GPU search works
 
 The GPU implementation is a custom exact cosine-search kernel in
-[`gpu_exact.wgsl`](../crates/qenlo/src/gpu_exact.wgsl), driven by
-[`gpu.rs`](../crates/qenlo/src/gpu.rs). The wgpu backend provides device access, buffer
+[`gpu_exact.wgsl`](https://github.com/a3ro-dev/qenlo/blob/main/crates/qenlo/src/gpu_exact.wgsl), driven by
+[`gpu.rs`](https://github.com/a3ro-dev/qenlo/blob/main/crates/qenlo/src/gpu.rs). The wgpu backend provides device access, buffer
 management, shader compilation, and synchronization. It does not supply a vector
 index or nearest-neighbor algorithm. USearch is a separate, externally supplied
 CPU HNSW implementation; its graph does not run on the GPU.
@@ -107,7 +107,7 @@ fallback, not a claimed universal crossover or a completed adaptive phase engine
 
 The original implementation scored one vector per thread and selected top-k
 serially. Cooperative loads, parallel reduction, and larger bounded chunks removed
-measured bottlenecks. [The retained tuning runs](../benchmarks/2026-08-28/gpu-tuning/)
+measured bottlenecks. [The retained tuning runs](https://github.com/a3ro-dev/qenlo/tree/main/benchmarks/2026-08-28/gpu-tuning)
 show broad-scan gains and selective-filter losses on this laptop. Their small
 query sets are exploratory, not the preregistered scale gate.
 
