@@ -42,7 +42,7 @@ crossover, static-policy counterfactual, or eligibility-materialization ablation
 
 Applies to the current `paper/paper.tex` (Section "Noise floor and representation
 ablation"). Direction and claim classes are argued in
-`research/direction-memo-2026-09-24.md`. The machine-readable counterpart is the
+`research/notes/direction-memo-2026-09-24.md`. The machine-readable counterpart is the
 `e0_e2_partial` component of `paper/tables/claim-to-artifact.json`.
 
 | Manuscript claim or object | Retained evidence | Regeneration path | Audit status |

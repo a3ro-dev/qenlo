@@ -84,7 +84,7 @@
         {"path": "crates/qenlo/src/lib.rs", "lines": "60-68, 1376-1404", "role": "backend selection and construction"},
         {"path": "crates/qenlo/src/lib.rs", "lines": "1580-1634", "role": "prepare and fallback"},
         {"path": "crates/qenlo/src/lib.rs", "lines": "1637-1732", "role": "search routing and error behavior"},
-        {"path": "research/implementation-notes.md", "lines": "11-13", "role": "implementation summary"}
+        {"path": "research/notes/implementation-notes.md", "lines": "11-13", "role": "implementation summary"}
       ],
       "evidence": "WgpuRequired maps backend construction and preparation failures to errors. Automatic maps construction/preparation/search failures to CPU fallback with a reason.",
       "scope": "Implemented backend policy, including reported failure paths.",
@@ -97,7 +97,7 @@
       "source_artifacts": [
         {"path": "crates/qenlo/src/lib.rs", "lines": "1407-1439, 1442-1511", "role": "in-memory and file-backed mutation paths"},
         {"path": "crates/qenlo/src/storage.rs", "lines": "260-333", "role": "checksummed WAL, sync, rename, manifest"},
-        {"path": "research/implementation-notes.md", "lines": "13", "role": "durability limitation"},
+        {"path": "research/notes/implementation-notes.md", "lines": "13", "role": "durability limitation"},
         {"path": "paper/paper.tex", "lines": "37", "role": "wording requiring scope"}
       ],
       "evidence": "commit validates and admits the batch, then appends/syncs file-backed WAL before applying the canonical batch. In-memory add/delete bypass file persistence; documentation states process-crash recovery is tested but universal power-loss durability is not claimed.",
@@ -163,7 +163,7 @@
       "source_artifacts": [
         {"path": "paper/paper.tex", "lines": "37", "role": "current manuscript phrase"},
         {"path": "crates/qenlo/src/lib.rs", "lines": "1415-1426, 1442-1511", "role": "in-memory versus file-backed paths"},
-        {"path": "research/implementation-notes.md", "lines": "13", "role": "power-loss limitation"}
+        {"path": "research/notes/implementation-notes.md", "lines": "13", "role": "power-loss limitation"}
       ],
       "evidence": "In-memory mutation calls update the canonical store directly and has no durable generation; file-backed commit performs WAL staging. Source documentation limits durability evidence to process-crash recovery and declines universal power-loss durability.",
       "scope": "Current manuscript wording.",

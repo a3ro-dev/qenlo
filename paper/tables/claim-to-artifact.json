@@ -1352,7 +1352,7 @@
               "role": "search routing and error behavior"
             },
             {
-              "path": "research/implementation-notes.md",
+              "path": "research/notes/implementation-notes.md",
               "lines": "11-13",
               "role": "implementation summary"
             }
@@ -1380,7 +1380,7 @@
               "role": "checksummed WAL, sync, rename, manifest"
             },
             {
-              "path": "research/implementation-notes.md",
+              "path": "research/notes/implementation-notes.md",
               "lines": "13",
               "role": "durability limitation"
             },
@@ -1524,7 +1524,7 @@
               "role": "in-memory versus file-backed paths"
             },
             {
-              "path": "research/implementation-notes.md",
+              "path": "research/notes/implementation-notes.md",
               "lines": "13",
               "role": "power-loss limitation"
             }
@@ -3086,7 +3086,7 @@
           "role": "search routing and error behavior"
         },
         {
-          "path": "research/implementation-notes.md",
+          "path": "research/notes/implementation-notes.md",
           "lines": "11-13",
           "role": "implementation summary"
         }
@@ -3115,7 +3115,7 @@
           "role": "checksummed WAL, sync, rename, manifest"
         },
         {
-          "path": "research/implementation-notes.md",
+          "path": "research/notes/implementation-notes.md",
           "lines": "13",
           "role": "durability limitation"
         },
@@ -3264,7 +3264,7 @@
           "role": "in-memory versus file-backed paths"
         },
         {
-          "path": "research/implementation-notes.md",
+          "path": "research/notes/implementation-notes.md",
           "lines": "13",
           "role": "power-loss limitation"
         }

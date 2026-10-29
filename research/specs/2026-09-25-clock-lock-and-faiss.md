@@ -184,7 +184,7 @@ one that matters most, since the claim is about light-kernel sensitivity.
 - `research/data/raw/<date>-faiss/` (tarball per pod, same meta layout as D1R).
 - A new FAISS row in `paper/v2/tables/cross_host.tex` and `tail.tex`; a panel
   (d) in Figure 1 if F1–F3 hold.
-- An update to `research/decision-memo-2026-09-25.md` §5.
+- An update to `research/notes/decision-memo-2026-09-25.md` §5.
 
 ---
 
