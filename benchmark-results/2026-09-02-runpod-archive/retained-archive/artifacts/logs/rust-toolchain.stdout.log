@@ -1,0 +1,15 @@
+rustc 1.98.0 (88d9e12ae 2026-08-18)
+binary: rustc
+commit-hash: 88d9e12ae178fab0fb5cc050a94da85685d449ea
+commit-date: 2026-08-18
+host: x86_64-unknown-linux-gnu
+release: 1.98.0
+LLVM version: 22.1.8
+cargo 1.98.0 (797e8a9bc 2026-08-05)
+Ubuntu clang version 18.1.3 (1ubuntu1)
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+cmake version 3.28.3
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).

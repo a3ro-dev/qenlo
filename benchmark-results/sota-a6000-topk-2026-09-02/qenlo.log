@@ -1,0 +1,10 @@
+threshold=10000 candidates=1000000
+threshold=1000 candidates=100930
+threshold=100 candidates=10026
+04f3aab1e72805cb9959f96739dffcaef52f8a0379f76f52cfc4c5f15542b92b environment.json
+459d294a715f08c14e6bccc63be72cc38090a7cca5d7573810de4d1b18aae1ba raw_samples.csv
+4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 failures.json
+{
+  "samples": 30000,
+  "failures": 0
+}

@@ -34,6 +34,11 @@ sdk/typescript/dist/
 *.log
 # experiment runner logs are evidence; protocols list them as outputs
 !research/data/raw/**/runner.log
+# benchmark and research logs are evidence too (stdout/stderr, import failures, remote runs)
+!benchmark-results/**/*.log
+!benchmarks/**/*.log
+!research/artifacts/**/*.log
+!research/data/**/*.log
 *.out
 *.synctex.gz
 *.fdb_latexmk

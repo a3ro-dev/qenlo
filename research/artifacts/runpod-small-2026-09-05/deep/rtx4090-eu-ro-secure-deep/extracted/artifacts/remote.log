@@ -1,0 +1,917 @@
+Get:1 http://archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+Get:2 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble InRelease [17.8 kB]
+Get:3 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+Get:4 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble/main amd64 Packages [46.2 kB]
+Get:5 http://archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+Get:6 http://archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+Get:7 http://archive.ubuntu.com/ubuntu noble/universe amd64 Packages [19.3 MB]
+Get:8 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages [1237 kB]
+Get:9 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [50.0 kB]
+Get:10 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1530 kB]
+Get:11 http://security.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1786 kB]
+Get:12 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+Get:13 http://archive.ubuntu.com/ubuntu noble/restricted amd64 Packages [117 kB]
+Get:14 http://archive.ubuntu.com/ubuntu noble/multiverse amd64 Packages [331 kB]
+Get:15 http://archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [55.8 kB]
+Get:16 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [2151 kB]
+Get:17 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1562 kB]
+Get:18 http://archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1903 kB]
+Get:19 http://archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [48.9 kB]
+Get:20 http://archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [35.9 kB]
+Get:21 http://archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Packages [671 B]
+Get:22 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64  InRelease [1578 B]
+Get:23 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64  Packages [1759 kB]
+Fetched 34.4 MB in 2s (14.0 MB/s)
+Reading package lists...
+W: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
+Reading package lists...
+Building dependency tree...
+Reading state information...
+build-essential is already the newest version (12.10ubuntu1).
+git is already the newest version (1:2.43.0-1ubuntu7.3).
+libgl1 is already the newest version (1.7.0-1build1).
+libglvnd0 is already the newest version (1.7.0-1build1).
+libglvnd0 set to manually installed.
+libglx0 is already the newest version (1.7.0-1build1).
+libglx0 set to manually installed.
+libvulkan1 is already the newest version (1.3.275.0-1build1).
+libvulkan1 set to manually installed.
+The following package was automatically installed and is no longer required:
+  libwayland-server0
+Use 'apt autoremove' to remove it.
+The following additional packages will be installed:
+  clang-18 cpp-13 cpp-13-x86-64-linux-gnu g++-13 g++-13-x86-64-linux-gnu
+  gcc-13 gcc-13-base gcc-13-x86-64-linux-gnu gcc-14-base gfortran-13
+  gfortran-13-x86-64-linux-gnu libasan8 libatomic1 libcc1-0 libclang-18-dev
+  libclang-common-18-dev libclang-cpp18 libclang1-18 libcurl3t64-gnutls
+  libcurl4-openssl-dev libcurl4t64 libdrm-amdgpu1 libdrm-common libdrm-intel1
+  libdrm2 libegl-mesa0 libgbm1 libgc1 libgcc-13-dev libgcc-s1
+  libgfortran-13-dev libgfortran5 libgl1-mesa-dri libglx-mesa0 libgomp1
+  libhwasan0 libitm1 libllvm18 liblsan0 libobjc-13-dev libobjc4 libpkgconf3
+  libquadmath0 libstdc++-13-dev libstdc++6 libtsan2 libubsan1
+  llvm-18-linker-tools mesa-libgallium pkgconf pkgconf-bin
+Suggested packages:
+  clang-18-doc wasi-libc gcc-13-locales cpp-13-doc g++-13-multilib gcc-13-doc
+  gcc-13-multilib gfortran-13-multilib gfortran-13-doc libcoarrays-dev
+  libcurl4-doc libidn-dev libkrb5-dev libldap2-dev librtmp-dev libssh2-1-dev
+  libstdc++-13-doc
+Recommended packages:
+  llvm-18-dev libclang-rt-18-dev
+The following NEW packages will be installed:
+  clang clang-18 libclang-18-dev libclang-common-18-dev libclang-cpp18
+  libclang-dev libclang1-18 libegl-mesa0 libegl1 libgc1 libllvm18
+  libobjc-13-dev libobjc4 libpkgconf3 llvm-18-linker-tools pkg-config pkgconf
+  pkgconf-bin python3-venv time vulkan-tools
+The following packages will be upgraded:
+  ca-certificates cpp-13 cpp-13-x86-64-linux-gnu curl g++-13
+  g++-13-x86-64-linux-gnu gcc-13 gcc-13-base gcc-13-x86-64-linux-gnu
+  gcc-14-base gfortran-13 gfortran-13-x86-64-linux-gnu libasan8 libatomic1
+  libcc1-0 libcurl3t64-gnutls libcurl4-openssl-dev libcurl4t64 libdrm-amdgpu1
+  libdrm-common libdrm-intel1 libdrm2 libgbm1 libgcc-13-dev libgcc-s1
+  libgfortran-13-dev libgfortran5 libgl1-mesa-dri libglx-mesa0 libgomp1
+  libhwasan0 libitm1 liblsan0 libquadmath0 libstdc++-13-dev libstdc++6
+  libtsan2 libubsan1 mesa-libgallium
+39 upgraded, 21 newly installed, 0 to remove and 213 not upgraded.
+Need to get 167 MB of archives.
+After this operation, 539 MB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libasan8 amd64 14.2.0-4ubuntu2~24.04.1 [3027 kB]
+Get:2 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libubsan1 amd64 14.2.0-4ubuntu2~24.04.1 [1184 kB]
+Get:3 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libstdc++-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [2420 kB]
+Get:4 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgfortran-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [928 kB]
+Get:5 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gfortran-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [11.4 MB]
+Get:6 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gfortran-13 amd64 13.3.0-6ubuntu2~24.04.1 [13.9 kB]
+Get:7 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13 amd64 13.3.0-6ubuntu2~24.04.1 [494 kB]
+Get:8 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1 [16.0 kB]
+Get:9 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [12.2 MB]
+Get:10 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [21.1 MB]
+Get:11 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 cpp-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [10.7 MB]
+Get:12 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 cpp-13 amd64 13.3.0-6ubuntu2~24.04.1 [1042 B]
+Get:13 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-base amd64 13.3.0-6ubuntu2~24.04.1 [51.6 kB]
+Get:14 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgcc-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [2681 kB]
+Get:15 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libtsan2 amd64 14.2.0-4ubuntu2~24.04.1 [2772 kB]
+Get:16 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-14-base amd64 14.2.0-4ubuntu2~24.04.1 [51.0 kB]
+Get:17 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libstdc++6 amd64 14.2.0-4ubuntu2~24.04.1 [792 kB]
+Get:18 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libquadmath0 amd64 14.2.0-4ubuntu2~24.04.1 [153 kB]
+Get:19 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 liblsan0 amd64 14.2.0-4ubuntu2~24.04.1 [1322 kB]
+Get:20 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libitm1 amd64 14.2.0-4ubuntu2~24.04.1 [29.7 kB]
+Get:21 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libhwasan0 amd64 14.2.0-4ubuntu2~24.04.1 [1641 kB]
+Get:22 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgomp1 amd64 14.2.0-4ubuntu2~24.04.1 [148 kB]
+Get:23 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgfortran5 amd64 14.2.0-4ubuntu2~24.04.1 [916 kB]
+Get:24 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcc1-0 amd64 14.2.0-4ubuntu2~24.04.1 [48.0 kB]
+Get:25 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libatomic1 amd64 14.2.0-4ubuntu2~24.04.1 [10.5 kB]
+Get:26 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgcc-s1 amd64 14.2.0-4ubuntu2~24.04.1 [78.4 kB]
+Get:27 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 ca-certificates all 20260601~24.04.1 [139 kB]
+Get:28 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libdrm-common all 2.4.125-1ubuntu0.1~24.04.2 [9250 B]
+Get:29 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libdrm2 amd64 2.4.125-1ubuntu0.1~24.04.2 [41.4 kB]
+Get:30 http://archive.ubuntu.com/ubuntu noble/main amd64 time amd64 1.9-0.2build1 [45.2 kB]
+Get:31 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libllvm18 amd64 1:18.1.3-1ubuntu1 [27.5 MB]
+Get:32 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libclang-cpp18 amd64 1:18.1.3-1ubuntu1 [13.5 MB]
+Get:33 http://archive.ubuntu.com/ubuntu noble/main amd64 libgc1 amd64 1:8.2.6-1build1 [90.3 kB]
+Get:34 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 libobjc4 amd64 14.2.0-4ubuntu2~24.04.1 [47.1 kB]
+Get:35 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 libobjc-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [194 kB]
+Get:36 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 libclang-common-18-dev amd64 1:18.1.3-1ubuntu1 [736 kB]
+Get:37 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 llvm-18-linker-tools amd64 1:18.1.3-1ubuntu1 [1314 kB]
+Get:38 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libclang1-18 amd64 1:18.1.3-1ubuntu1 [7803 kB]
+Get:39 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 clang-18 amd64 1:18.1.3-1ubuntu1 [80.0 kB]
+Get:40 http://archive.ubuntu.com/ubuntu noble/universe amd64 clang amd64 1:18.0-59~exp2 [5846 B]
+Get:41 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl4-openssl-dev amd64 8.5.0-2ubuntu10.13 [446 kB]
+Get:42 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 curl amd64 8.5.0-2ubuntu10.13 [226 kB]
+Get:43 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl4t64 amd64 8.5.0-2ubuntu10.13 [343 kB]
+Get:44 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 libclang-18-dev amd64 1:18.1.3-1ubuntu1 [28.8 MB]
+Get:45 http://archive.ubuntu.com/ubuntu noble/universe amd64 libclang-dev amd64 1:18.0-59~exp2 [5424 B]
+Get:46 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl3t64-gnutls amd64 8.5.0-2ubuntu10.13 [335 kB]
+Get:47 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libdrm-amdgpu1 amd64 2.4.125-1ubuntu0.1~24.04.2 [21.4 kB]
+Get:48 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libdrm-intel1 amd64 2.4.125-1ubuntu0.1~24.04.2 [63.9 kB]
+Get:49 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgl1-mesa-dri amd64 25.2.8-0ubuntu0.24.04.2 [37.9 kB]
+Get:50 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libglx-mesa0 amd64 25.2.8-0ubuntu0.24.04.2 [110 kB]
+Get:51 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgbm1 amd64 25.2.8-0ubuntu0.24.04.2 [34.2 kB]
+Get:52 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 mesa-libgallium amd64 25.2.8-0ubuntu0.24.04.2 [10.8 MB]
+Get:53 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libegl-mesa0 amd64 25.2.8-0ubuntu0.24.04.2 [117 kB]
+Get:54 http://archive.ubuntu.com/ubuntu noble/main amd64 libpkgconf3 amd64 1.8.1-2build1 [30.7 kB]
+Get:55 http://archive.ubuntu.com/ubuntu noble/main amd64 pkgconf-bin amd64 1.8.1-2build1 [20.7 kB]
+Get:56 http://archive.ubuntu.com/ubuntu noble/main amd64 pkgconf amd64 1.8.1-2build1 [16.8 kB]
+Get:57 http://archive.ubuntu.com/ubuntu noble/main amd64 pkg-config amd64 1.8.1-2build1 [7264 B]
+Get:58 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 python3-venv amd64 3.12.3-0ubuntu2.1 [1032 B]
+Get:59 http://archive.ubuntu.com/ubuntu noble/universe amd64 vulkan-tools amd64 1.3.275.0+dfsg1-1 [298 kB]
+Get:60 http://archive.ubuntu.com/ubuntu noble/main amd64 libegl1 amd64 1.7.0-1build1 [28.7 kB]
+debconf: delaying package configuration, since apt-utils is not installed
+Fetched 167 MB in 1s (113 MB/s)
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../00-libasan8_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libasan8:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../01-libubsan1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libubsan1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../02-libstdc++-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libstdc++-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../03-libgfortran-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgfortran-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../04-gfortran-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gfortran-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../05-gfortran-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gfortran-13 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../06-gcc-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../07-g++-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking g++-13 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../08-g++-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking g++-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../09-gcc-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../10-cpp-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking cpp-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../11-cpp-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking cpp-13 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../12-gcc-13-base_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13-base:amd64 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../13-libgcc-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgcc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../14-libtsan2_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libtsan2:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../15-gcc-14-base_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-14-base:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Setting up gcc-14-base:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../libstdc++6_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libstdc++6:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Setting up libstdc++6:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../0-libquadmath0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libquadmath0:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../1-liblsan0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking liblsan0:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../2-libitm1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libitm1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../3-libhwasan0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libhwasan0:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../4-libgomp1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgomp1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../5-libgfortran5_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgfortran5:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../6-libcc1-0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libcc1-0:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../7-libatomic1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libatomic1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../8-libgcc-s1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgcc-s1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Setting up libgcc-s1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../00-ca-certificates_20260601~24.04.1_all.deb ...
+Unpacking ca-certificates (20260601~24.04.1) over (20240203) ...
+Preparing to unpack .../01-libdrm-common_2.4.125-1ubuntu0.1~24.04.2_all.deb ...
+Unpacking libdrm-common (2.4.125-1ubuntu0.1~24.04.2) over (2.4.122-1~ubuntu0.24.04.2) ...
+Preparing to unpack .../02-libdrm2_2.4.125-1ubuntu0.1~24.04.2_amd64.deb ...
+Unpacking libdrm2:amd64 (2.4.125-1ubuntu0.1~24.04.2) over (2.4.122-1~ubuntu0.24.04.2) ...
+Selecting previously unselected package time.
+Preparing to unpack .../03-time_1.9-0.2build1_amd64.deb ...
+Unpacking time (1.9-0.2build1) ...
+Selecting previously unselected package libllvm18:amd64.
+Preparing to unpack .../04-libllvm18_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libllvm18:amd64 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package libclang-cpp18.
+Preparing to unpack .../05-libclang-cpp18_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libclang-cpp18 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package libgc1:amd64.
+Preparing to unpack .../06-libgc1_1%3a8.2.6-1build1_amd64.deb ...
+Unpacking libgc1:amd64 (1:8.2.6-1build1) ...
+Selecting previously unselected package libobjc4:amd64.
+Preparing to unpack .../07-libobjc4_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libobjc4:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libobjc-13-dev:amd64.
+Preparing to unpack .../08-libobjc-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libobjc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package libclang-common-18-dev:amd64.
+Preparing to unpack .../09-libclang-common-18-dev_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libclang-common-18-dev:amd64 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package llvm-18-linker-tools.
+Preparing to unpack .../10-llvm-18-linker-tools_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking llvm-18-linker-tools (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package libclang1-18.
+Preparing to unpack .../11-libclang1-18_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libclang1-18 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package clang-18.
+Preparing to unpack .../12-clang-18_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking clang-18 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package clang.
+Preparing to unpack .../13-clang_1%3a18.0-59~exp2_amd64.deb ...
+Unpacking clang (1:18.0-59~exp2) ...
+Preparing to unpack .../14-libcurl4-openssl-dev_8.5.0-2ubuntu10.13_amd64.deb ...
+Unpacking libcurl4-openssl-dev:amd64 (8.5.0-2ubuntu10.13) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../15-curl_8.5.0-2ubuntu10.13_amd64.deb ...
+Unpacking curl (8.5.0-2ubuntu10.13) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../16-libcurl4t64_8.5.0-2ubuntu10.13_amd64.deb ...
+Unpacking libcurl4t64:amd64 (8.5.0-2ubuntu10.13) over (8.5.0-2ubuntu10.6) ...
+Selecting previously unselected package libclang-18-dev.
+Preparing to unpack .../17-libclang-18-dev_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libclang-18-dev (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package libclang-dev.
+Preparing to unpack .../18-libclang-dev_1%3a18.0-59~exp2_amd64.deb ...
+Unpacking libclang-dev (1:18.0-59~exp2) ...
+Preparing to unpack .../19-libcurl3t64-gnutls_8.5.0-2ubuntu10.13_amd64.deb ...
+Unpacking libcurl3t64-gnutls:amd64 (8.5.0-2ubuntu10.13) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../20-libdrm-amdgpu1_2.4.125-1ubuntu0.1~24.04.2_amd64.deb ...
+Unpacking libdrm-amdgpu1:amd64 (2.4.125-1ubuntu0.1~24.04.2) over (2.4.122-1~ubuntu0.24.04.2) ...
+Preparing to unpack .../21-libdrm-intel1_2.4.125-1ubuntu0.1~24.04.2_amd64.deb ...
+Unpacking libdrm-intel1:amd64 (2.4.125-1ubuntu0.1~24.04.2) over (2.4.122-1~ubuntu0.24.04.2) ...
+Preparing to unpack .../22-libgl1-mesa-dri_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking libgl1-mesa-dri:amd64 (25.2.8-0ubuntu0.24.04.2) over (25.0.7-0ubuntu0.24.04.2) ...
+Preparing to unpack .../23-libglx-mesa0_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking libglx-mesa0:amd64 (25.2.8-0ubuntu0.24.04.2) over (25.0.7-0ubuntu0.24.04.2) ...
+Preparing to unpack .../24-libgbm1_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking libgbm1:amd64 (25.2.8-0ubuntu0.24.04.2) over (25.0.7-0ubuntu0.24.04.2) ...
+Preparing to unpack .../25-mesa-libgallium_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking mesa-libgallium:amd64 (25.2.8-0ubuntu0.24.04.2) over (25.0.7-0ubuntu0.24.04.2) ...
+Selecting previously unselected package libegl-mesa0:amd64.
+Preparing to unpack .../26-libegl-mesa0_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking libegl-mesa0:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Selecting previously unselected package libpkgconf3:amd64.
+Preparing to unpack .../27-libpkgconf3_1.8.1-2build1_amd64.deb ...
+Unpacking libpkgconf3:amd64 (1.8.1-2build1) ...
+Selecting previously unselected package pkgconf-bin.
+Preparing to unpack .../28-pkgconf-bin_1.8.1-2build1_amd64.deb ...
+Unpacking pkgconf-bin (1.8.1-2build1) ...
+Selecting previously unselected package pkgconf:amd64.
+Preparing to unpack .../29-pkgconf_1.8.1-2build1_amd64.deb ...
+Unpacking pkgconf:amd64 (1.8.1-2build1) ...
+Selecting previously unselected package pkg-config:amd64.
+Preparing to unpack .../30-pkg-config_1.8.1-2build1_amd64.deb ...
+Unpacking pkg-config:amd64 (1.8.1-2build1) ...
+Selecting previously unselected package python3-venv.
+Preparing to unpack .../31-python3-venv_3.12.3-0ubuntu2.1_amd64.deb ...
+Unpacking python3-venv (3.12.3-0ubuntu2.1) ...
+Selecting previously unselected package vulkan-tools.
+Preparing to unpack .../32-vulkan-tools_1.3.275.0+dfsg1-1_amd64.deb ...
+Unpacking vulkan-tools (1.3.275.0+dfsg1-1) ...
+Selecting previously unselected package libegl1:amd64.
+Preparing to unpack .../33-libegl1_1.7.0-1build1_amd64.deb ...
+Unpacking libegl1:amd64 (1.7.0-1build1) ...
+Setting up time (1.9-0.2build1) ...
+Setting up libcurl4t64:amd64 (8.5.0-2ubuntu10.13) ...
+Setting up libcurl3t64-gnutls:amd64 (8.5.0-2ubuntu10.13) ...
+Setting up vulkan-tools (1.3.275.0+dfsg1-1) ...
+Setting up libgomp1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up ca-certificates (20260601~24.04.1) ...
+Updating certificates in /etc/ssl/certs...
+rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+14 added, 39 removed; done.
+Setting up libpkgconf3:amd64 (1.8.1-2build1) ...
+Setting up gcc-13-base:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up python3-venv (3.12.3-0ubuntu2.1) ...
+Setting up libcurl4-openssl-dev:amd64 (8.5.0-2ubuntu10.13) ...
+Setting up libquadmath0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libatomic1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up pkgconf-bin (1.8.1-2build1) ...
+Setting up libclang-common-18-dev:amd64 (1:18.1.3-1ubuntu1) ...
+Setting up libgc1:amd64 (1:8.2.6-1build1) ...
+Setting up libgfortran5:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libubsan1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libhwasan0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libasan8:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up curl (8.5.0-2ubuntu10.13) ...
+Setting up libtsan2:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libdrm-common (2.4.125-1ubuntu0.1~24.04.2) ...
+Setting up libcc1-0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up liblsan0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libitm1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libllvm18:amd64 (1:18.1.3-1ubuntu1) ...
+Setting up libclang1-18 (1:18.1.3-1ubuntu1) ...
+Setting up cpp-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libobjc4:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up pkgconf:amd64 (1.8.1-2build1) ...
+Setting up pkg-config:amd64 (1.8.1-2build1) ...
+Setting up llvm-18-linker-tools (1:18.1.3-1ubuntu1) ...
+Setting up libdrm2:amd64 (2.4.125-1ubuntu0.1~24.04.2) ...
+Setting up libgcc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libgfortran-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libclang-cpp18 (1:18.1.3-1ubuntu1) ...
+Setting up libobjc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libstdc++-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libdrm-amdgpu1:amd64 (2.4.125-1ubuntu0.1~24.04.2) ...
+Setting up cpp-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up gcc-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libdrm-intel1:amd64 (2.4.125-1ubuntu0.1~24.04.2) ...
+Setting up clang-18 (1:18.1.3-1ubuntu1) ...
+Setting up gfortran-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libclang-18-dev (1:18.1.3-1ubuntu1) ...
+Setting up clang (1:18.0-59~exp2) ...
+Setting up gcc-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up mesa-libgallium:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Setting up libclang-dev (1:18.0-59~exp2) ...
+Setting up g++-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libgbm1:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Setting up libgl1-mesa-dri:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Setting up libegl-mesa0:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Setting up gfortran-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libegl1:amd64 (1.7.0-1build1) ...
+Setting up g++-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libglx-mesa0:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.6) ...
+Processing triggers for ca-certificates (20260601~24.04.1) ...
+Updating certificates in /etc/ssl/certs...
+0 added, 0 removed; done.
+Running hooks in /etc/ca-certificates/update.d...
+done.
+info: downloading installer
+info: profile set to minimal
+info: default host tuple is x86_64-unknown-linux-gnu
+info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+info: latest update on 2026-09-03 for version 1.98.1 (48a229cea 2026-09-01)
+info: downloading 3 components
+info: default toolchain set to stable-x86_64-unknown-linux-gnu
+
+  stable-x86_64-unknown-linux-gnu installed - rustc 1.98.1 (48a229cea 2026-09-01)
+
+
+Rust is installed now. Great!
+
+To get started you may need to restart your current shell.
+This would reload your PATH environment variable to include
+Cargo's bin directory ($HOME/.cargo/bin).
+
+To configure your current shell, you need to source the
+corresponding env file under $HOME/.cargo.
+
+Consider running the right command for your shell (note the leading DOT):
+. "$HOME/.cargo/env" # For sh/ash/dash/pdksh/bash
+cargo:rerun-if-env-changed=CC_x86_64-unknown-linux-gnu
+CC_x86_64-unknown-linux-gnu = None
+cargo:rerun-if-env-changed=CC_x86_64_unknown_linux_gnu
+CC_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=HOST_CC
+HOST_CC = None
+cargo:rerun-if-env-changed=CC
+CC = None
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+cargo:rerun-if-env-changed=CFLAGS
+CFLAGS = None
+cargo:rerun-if-env-changed=HOST_CFLAGS
+HOST_CFLAGS = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64_unknown_linux_gnu
+CFLAGS_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64-unknown-linux-gnu
+CFLAGS_x86_64-unknown-linux-gnu = None
+info: syncing channel updates for 1.98.0-x86_64-unknown-linux-gnu
+info: latest update on 2026-08-20 for version 1.98.0 (88d9e12ae 2026-08-18)
+info: downloading 3 components
+
+  1.98.0-x86_64-unknown-linux-gnu installed - rustc 1.98.0 (88d9e12ae 2026-08-18)
+
+info: checking for self-update (current version: 1.29.1)
+info: using existing install for 1.98.0-x86_64-unknown-linux-gnu
+info: default toolchain set to 1.98.0-x86_64-unknown-linux-gnu
+
+  1.98.0-x86_64-unknown-linux-gnu unchanged - rustc 1.98.0 (88d9e12ae 2026-08-18)
+
+Collecting numpy==2.3.3
+  Downloading numpy-2.3.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.1/62.1 kB 1.9 MB/s eta 0:00:00
+Collecting faiss-cpu==1.15.0
+  Downloading faiss_cpu-1.15.0-cp310-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (7.8 kB)
+Collecting chromadb==1.5.9
+  Downloading chromadb-1.5.9-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.0 kB)
+Collecting psutil==7.0.0
+  Downloading psutil-7.0.0-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (22 kB)
+Requirement already satisfied: packaging in /usr/local/lib/python3.12/dist-packages (from faiss-cpu==1.15.0) (25.0)
+Collecting build>=1.0.3 (from chromadb==1.5.9)
+  Downloading build-1.6.0-py3-none-any.whl.metadata (5.6 kB)
+Collecting pydantic>=2.0 (from chromadb==1.5.9)
+  Downloading pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 110.2/110.2 kB 4.3 MB/s eta 0:00:00
+Collecting pydantic-settings>=2.0 (from chromadb==1.5.9)
+  Downloading pydantic_settings-2.15.0-py3-none-any.whl.metadata (3.9 kB)
+Collecting pybase64>=1.4.1 (from chromadb==1.5.9)
+  Downloading pybase64-1.5.0-cp312-cp312-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl.metadata (11 kB)
+Collecting uvicorn>=0.18.3 (from uvicorn[standard]>=0.18.3->chromadb==1.5.9)
+  Downloading uvicorn-0.52.4-py3-none-any.whl.metadata (6.6 kB)
+Requirement already satisfied: typing-extensions>=4.5.0 in /usr/local/lib/python3.12/dist-packages (from chromadb==1.5.9) (4.15.0)
+Collecting onnxruntime>=1.14.1 (from chromadb==1.5.9)
+  Downloading onnxruntime-1.29.0-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (5.6 kB)
+Collecting opentelemetry-api>=1.2.0 (from chromadb==1.5.9)
+  Downloading opentelemetry_api-1.44.0-py3-none-any.whl.metadata (1.4 kB)
+Collecting opentelemetry-exporter-otlp-proto-grpc>=1.2.0 (from chromadb==1.5.9)
+  Downloading opentelemetry_exporter_otlp_proto_grpc-1.44.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting opentelemetry-sdk>=1.2.0 (from chromadb==1.5.9)
+  Downloading opentelemetry_sdk-1.44.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting tokenizers>=0.13.2 (from chromadb==1.5.9)
+  Downloading tokenizers-0.23.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.8 kB)
+Collecting pypika>=0.48.9 (from chromadb==1.5.9)
+  Downloading pypika-0.51.1-py2.py3-none-any.whl.metadata (51 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.0/52.0 kB 23.3 MB/s eta 0:00:00
+Collecting tqdm>=4.65.0 (from chromadb==1.5.9)
+  Downloading tqdm-4.70.0-py3-none-any.whl.metadata (57 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.3/57.3 kB 41.5 MB/s eta 0:00:00
+Collecting overrides>=7.3.1 (from chromadb==1.5.9)
+  Downloading overrides-7.7.0-py3-none-any.whl.metadata (5.8 kB)
+Collecting importlib-resources (from chromadb==1.5.9)
+  Downloading importlib_resources-7.1.0-py3-none-any.whl.metadata (4.0 kB)
+Collecting grpcio>=1.58.0 (from chromadb==1.5.9)
+  Downloading grpcio-1.83.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+Collecting bcrypt>=4.0.1 (from chromadb==1.5.9)
+  Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (10 kB)
+Collecting typer>=0.9.0 (from chromadb==1.5.9)
+  Downloading typer-0.27.2-py3-none-any.whl.metadata (16 kB)
+Collecting kubernetes>=28.1.0 (from chromadb==1.5.9)
+  Downloading kubernetes-36.0.3-py2.py3-none-any.whl.metadata (1.8 kB)
+Collecting tenacity>=8.2.3 (from chromadb==1.5.9)
+  Downloading tenacity-9.1.4-py3-none-any.whl.metadata (1.2 kB)
+Requirement already satisfied: pyyaml>=6.0.0 in /usr/local/lib/python3.12/dist-packages (from chromadb==1.5.9) (6.0.3)
+Collecting mmh3>=4.0.1 (from chromadb==1.5.9)
+  Downloading mmh3-5.3.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (14 kB)
+Collecting orjson>=3.9.12 (from chromadb==1.5.9)
+  Downloading orjson-3.12.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (41 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.0/42.0 kB 16.6 MB/s eta 0:00:00
+Requirement already satisfied: httpx>=0.27.0 in /usr/local/lib/python3.12/dist-packages (from chromadb==1.5.9) (0.28.1)
+Collecting rich>=10.11.0 (from chromadb==1.5.9)
+  Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+Requirement already satisfied: jsonschema>=4.19.0 in /usr/local/lib/python3.12/dist-packages (from chromadb==1.5.9) (4.25.1)
+Collecting pyproject_hooks (from build>=1.0.3->chromadb==1.5.9)
+  Downloading pyproject_hooks-1.2.0-py3-none-any.whl.metadata (1.3 kB)
+Requirement already satisfied: anyio in /usr/local/lib/python3.12/dist-packages (from httpx>=0.27.0->chromadb==1.5.9) (4.12.0)
+Requirement already satisfied: certifi in /usr/local/lib/python3.12/dist-packages (from httpx>=0.27.0->chromadb==1.5.9) (2025.11.12)
+Requirement already satisfied: httpcore==1.* in /usr/local/lib/python3.12/dist-packages (from httpx>=0.27.0->chromadb==1.5.9) (1.0.9)
+Requirement already satisfied: idna in /usr/local/lib/python3.12/dist-packages (from httpx>=0.27.0->chromadb==1.5.9) (3.11)
+Requirement already satisfied: h11>=0.16 in /usr/local/lib/python3.12/dist-packages (from httpcore==1.*->httpx>=0.27.0->chromadb==1.5.9) (0.16.0)
+Requirement already satisfied: attrs>=22.2.0 in /usr/local/lib/python3.12/dist-packages (from jsonschema>=4.19.0->chromadb==1.5.9) (25.4.0)
+Requirement already satisfied: jsonschema-specifications>=2023.03.6 in /usr/local/lib/python3.12/dist-packages (from jsonschema>=4.19.0->chromadb==1.5.9) (2025.9.1)
+Requirement already satisfied: referencing>=0.28.4 in /usr/local/lib/python3.12/dist-packages (from jsonschema>=4.19.0->chromadb==1.5.9) (0.37.0)
+Requirement already satisfied: rpds-py>=0.7.1 in /usr/local/lib/python3.12/dist-packages (from jsonschema>=4.19.0->chromadb==1.5.9) (0.30.0)
+Requirement already satisfied: six>=1.9.0 in /usr/lib/python3/dist-packages (from kubernetes>=28.1.0->chromadb==1.5.9) (1.16.0)
+Requirement already satisfied: python-dateutil>=2.5.3 in /usr/local/lib/python3.12/dist-packages (from kubernetes>=28.1.0->chromadb==1.5.9) (2.9.0.post0)
+Requirement already satisfied: websocket-client!=0.40.0,!=0.41.*,!=0.42.*,>=0.32.0 in /usr/local/lib/python3.12/dist-packages (from kubernetes>=28.1.0->chromadb==1.5.9) (1.9.0)
+Requirement already satisfied: requests in /usr/local/lib/python3.12/dist-packages (from kubernetes>=28.1.0->chromadb==1.5.9) (2.32.5)
+Collecting requests-oauthlib (from kubernetes>=28.1.0->chromadb==1.5.9)
+  Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl.metadata (11 kB)
+Requirement already satisfied: urllib3!=2.6.0,>=1.24.2 in /usr/local/lib/python3.12/dist-packages (from kubernetes>=28.1.0->chromadb==1.5.9) (2.6.2)
+Collecting durationpy>=0.7 (from kubernetes>=28.1.0->chromadb==1.5.9)
+  Downloading durationpy-0.11-py3-none-any.whl.metadata (474 bytes)
+Collecting aiohttp<4.0.0,>=3.13.5 (from kubernetes>=28.1.0->chromadb==1.5.9)
+  Downloading aiohttp-3.14.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+Collecting flatbuffers (from onnxruntime>=1.14.1->chromadb==1.5.9)
+  Downloading flatbuffers-25.12.19-py2.py3-none-any.whl.metadata (1.0 kB)
+Collecting protobuf>=4.25.8 (from onnxruntime>=1.14.1->chromadb==1.5.9)
+  Downloading protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+Collecting googleapis-common-protos~=1.57 (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb==1.5.9)
+  Downloading googleapis_common_protos-1.75.3-py3-none-any.whl.metadata (8.5 kB)
+Collecting opentelemetry-exporter-otlp-proto-common==1.44.0 (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb==1.5.9)
+  Downloading opentelemetry_exporter_otlp_proto_common-1.44.0-py3-none-any.whl.metadata (1.8 kB)
+Collecting opentelemetry-proto==1.44.0 (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb==1.5.9)
+  Downloading opentelemetry_proto-1.44.0-py3-none-any.whl.metadata (2.3 kB)
+Collecting opentelemetry-semantic-conventions==0.65b0 (from opentelemetry-sdk>=1.2.0->chromadb==1.5.9)
+  Downloading opentelemetry_semantic_conventions-0.65b0-py3-none-any.whl.metadata (2.4 kB)
+Collecting annotated-types>=0.6.0 (from pydantic>=2.0->chromadb==1.5.9)
+  Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.46.5 (from pydantic>=2.0->chromadb==1.5.9)
+  Downloading pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+Collecting typing-inspection>=0.4.2 (from pydantic>=2.0->chromadb==1.5.9)
+  Downloading typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+Collecting python-dotenv>=0.21.0 (from pydantic-settings>=2.0->chromadb==1.5.9)
+  Downloading python_dotenv-1.2.3-py3-none-any.whl.metadata (29 kB)
+Collecting markdown-it-py>=2.2.0 (from rich>=10.11.0->chromadb==1.5.9)
+  Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.12/dist-packages (from rich>=10.11.0->chromadb==1.5.9) (2.19.2)
+Collecting huggingface-hub<2.0,>=0.16.4 (from tokenizers>=0.13.2->chromadb==1.5.9)
+  Downloading huggingface_hub-1.30.0-py3-none-any.whl.metadata (16 kB)
+Collecting shellingham>=1.3.0 (from typer>=0.9.0->chromadb==1.5.9)
+  Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+Collecting annotated-doc>=0.0.2 (from typer>=0.9.0->chromadb==1.5.9)
+  Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+Collecting click>=7.0 (from uvicorn>=0.18.3->uvicorn[standard]>=0.18.3->chromadb==1.5.9)
+  Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting httptools>=0.8.0 (from uvicorn[standard]>=0.18.3->chromadb==1.5.9)
+  Downloading httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+Collecting uvloop>=0.15.1 (from uvicorn[standard]>=0.18.3->chromadb==1.5.9)
+  Downloading uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB)
+Collecting watchfiles>=0.20 (from uvicorn[standard]>=0.18.3->chromadb==1.5.9)
+  Downloading watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+Collecting websockets>=13.0 (from uvicorn[standard]>=0.18.3->chromadb==1.5.9)
+  Downloading websockets-17.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp<4.0.0,>=3.13.5->kubernetes>=28.1.0->chromadb==1.5.9)
+  Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiosignal>=1.4.0 (from aiohttp<4.0.0,>=3.13.5->kubernetes>=28.1.0->chromadb==1.5.9)
+  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting frozenlist>=1.1.1 (from aiohttp<4.0.0,>=3.13.5->kubernetes>=28.1.0->chromadb==1.5.9)
+  Downloading frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp<4.0.0,>=3.13.5->kubernetes>=28.1.0->chromadb==1.5.9)
+  Downloading multidict-6.7.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+Collecting propcache>=0.2.0 (from aiohttp<4.0.0,>=3.13.5->kubernetes>=28.1.0->chromadb==1.5.9)
+  Downloading propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (16 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp<4.0.0,>=3.13.5->kubernetes>=28.1.0->chromadb==1.5.9)
+  Downloading yarl-1.24.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (103 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 104.0/104.0 kB 24.4 MB/s eta 0:00:00
+Requirement already satisfied: filelock>=3.10.0 in /usr/local/lib/python3.12/dist-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.2->chromadb==1.5.9) (3.20.1)
+Requirement already satisfied: fsspec>=2023.5.0 in /usr/local/lib/python3.12/dist-packages (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.2->chromadb==1.5.9) (2025.12.0)
+Collecting hf-xet<2.0.0,>=1.5.2 (from huggingface-hub<2.0,>=0.16.4->tokenizers>=0.13.2->chromadb==1.5.9)
+  Downloading hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=10.11.0->chromadb==1.5.9)
+  Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.12/dist-packages (from requests->kubernetes>=28.1.0->chromadb==1.5.9) (3.4.4)
+Requirement already satisfied: oauthlib>=3.0.0 in /usr/lib/python3/dist-packages (from requests-oauthlib->kubernetes>=28.1.0->chromadb==1.5.9) (3.2.2)
+Downloading numpy-2.3.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.6/16.6 MB 161.8 MB/s eta 0:00:00
+Downloading faiss_cpu-1.15.0-cp310-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (18.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.8/18.8 MB 37.7 MB/s eta 0:00:00
+Downloading chromadb-1.5.9-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (23.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.3/23.3 MB 140.0 MB/s eta 0:00:00
+Downloading psutil-7.0.0-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (277 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 278.0/278.0 kB 389.6 MB/s eta 0:00:00
+Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 278.2/278.2 kB 599.6 MB/s eta 0:00:00
+Downloading build-1.6.0-py3-none-any.whl (31 kB)
+Downloading grpcio-1.83.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (7.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 344.6 MB/s eta 0:00:00
+Downloading kubernetes-36.0.3-py2.py3-none-any.whl (4.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.6/4.6 MB 118.8 MB/s eta 0:00:00
+Downloading mmh3-5.3.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (103 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 103.2/103.2 kB 391.1 MB/s eta 0:00:00
+Downloading onnxruntime-1.29.0-cp312-cp312-manylinux_2_28_x86_64.whl (23.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.1/23.1 MB 134.5 MB/s eta 0:00:00
+Downloading opentelemetry_api-1.44.0-py3-none-any.whl (60 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.0/60.0 kB 270.5 MB/s eta 0:00:00
+Downloading opentelemetry_exporter_otlp_proto_grpc-1.44.0-py3-none-any.whl (19 kB)
+Downloading opentelemetry_exporter_otlp_proto_common-1.44.0-py3-none-any.whl (17 kB)
+Downloading opentelemetry_proto-1.44.0-py3-none-any.whl (72 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 72.5/72.5 kB 285.6 MB/s eta 0:00:00
+Downloading opentelemetry_sdk-1.44.0-py3-none-any.whl (137 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 137.2/137.2 kB 326.9 MB/s eta 0:00:00
+Downloading opentelemetry_semantic_conventions-0.65b0-py3-none-any.whl (204 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 204.6/204.6 kB 545.8 MB/s eta 0:00:00
+Downloading orjson-3.12.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (131 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 131.2/131.2 kB 485.2 MB/s eta 0:00:00
+Downloading overrides-7.7.0-py3-none-any.whl (17 kB)
+Downloading pybase64-1.5.0-cp312-cp312-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl (94 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 94.7/94.7 kB 354.4 MB/s eta 0:00:00
+Downloading pydantic-2.13.5-py3-none-any.whl (472 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 472.6/472.6 kB 383.3 MB/s eta 0:00:00
+Downloading pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 331.0 MB/s eta 0:00:00
+Downloading pydantic_settings-2.15.0-py3-none-any.whl (69 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 69.4/69.4 kB 482.1 MB/s eta 0:00:00
+Downloading pypika-0.51.1-py2.py3-none-any.whl (60 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.6/60.6 kB 481.1 MB/s eta 0:00:00
+Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 310.7/310.7 kB 374.1 MB/s eta 0:00:00
+Downloading tenacity-9.1.4-py3-none-any.whl (28 kB)
+Downloading tokenizers-0.23.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.4/3.4 MB 346.1 MB/s eta 0:00:00
+Downloading tqdm-4.70.0-py3-none-any.whl (80 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80.2/80.2 kB 487.8 MB/s eta 0:00:00
+Downloading typer-0.27.2-py3-none-any.whl (123 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 123.1/123.1 kB 563.1 MB/s eta 0:00:00
+Downloading uvicorn-0.52.4-py3-none-any.whl (79 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 79.9/79.9 kB 446.8 MB/s eta 0:00:00
+Downloading importlib_resources-7.1.0-py3-none-any.whl (37 kB)
+Downloading aiohttp-3.14.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 139.0 MB/s eta 0:00:00
+Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Downloading click-8.5.0-py3-none-any.whl (125 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 125.3/125.3 kB 530.3 MB/s eta 0:00:00
+Downloading durationpy-0.11-py3-none-any.whl (4.1 kB)
+Downloading googleapis_common_protos-1.75.3-py3-none-any.whl (306 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 307.0/307.0 kB 569.3 MB/s eta 0:00:00
+Downloading httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (523 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 523.9/523.9 kB 292.3 MB/s eta 0:00:00
+Downloading huggingface_hub-1.30.0-py3-none-any.whl (796 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 796.8/796.8 kB 154.6 MB/s eta 0:00:00
+Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 91.7/91.7 kB 515.9 MB/s eta 0:00:00
+Downloading protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl (343 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 343.2/343.2 kB 392.7 MB/s eta 0:00:00
+Downloading python_dotenv-1.2.3-py3-none-any.whl (22 kB)
+Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Downloading uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 127.6 MB/s eta 0:00:00
+Downloading watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 456.4/456.4 kB 546.0 MB/s eta 0:00:00
+Downloading websockets-17.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (224 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 224.6/224.6 kB 364.3 MB/s eta 0:00:00
+Downloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)
+Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Downloading frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (242 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 242.4/242.4 kB 373.8 MB/s eta 0:00:00
+Downloading hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 391.6 MB/s eta 0:00:00
+Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Downloading multidict-6.7.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (256 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 256.3/256.3 kB 390.4 MB/s eta 0:00:00
+Downloading propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (61 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.6/61.6 kB 242.0 MB/s eta 0:00:00
+Downloading yarl-1.24.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (109 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 109.8/109.8 kB 491.1 MB/s eta 0:00:00
+Installing collected packages: pypika, flatbuffers, durationpy, websockets, uvloop, typing-inspection, tqdm, tenacity, shellingham, python-dotenv, pyproject_hooks, pydantic-core, pybase64, psutil, protobuf, propcache, overrides, orjson, opentelemetry-api, numpy, multidict, mmh3, mdurl, importlib-resources, httptools, hf-xet, grpcio, frozenlist, click, bcrypt, annotated-types, annotated-doc, aiohappyeyeballs, yarl, watchfiles, uvicorn, requests-oauthlib, pydantic, opentelemetry-semantic-conventions, opentelemetry-proto, onnxruntime, markdown-it-py, googleapis-common-protos, faiss-cpu, build, aiosignal, rich, pydantic-settings, opentelemetry-sdk, opentelemetry-exporter-otlp-proto-common, huggingface-hub, aiohttp, typer, tokenizers, opentelemetry-exporter-otlp-proto-grpc, kubernetes, chromadb
+  Attempting uninstall: psutil
+    Found existing installation: psutil 7.1.3
+    Not uninstalling psutil at /usr/local/lib/python3.12/dist-packages, outside environment /workspace/qenlo-deep/venv
+    Can't uninstall 'psutil'. No files were found to uninstall.
+Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 annotated-doc-0.0.5 annotated-types-0.8.0 bcrypt-5.0.0 build-1.6.0 chromadb-1.5.9 click-8.5.0 durationpy-0.11 faiss-cpu-1.15.0 flatbuffers-25.12.19 frozenlist-1.8.0 googleapis-common-protos-1.75.3 grpcio-1.83.1 hf-xet-1.6.0 httptools-0.8.0 huggingface-hub-1.30.0 importlib-resources-7.1.0 kubernetes-36.0.3 markdown-it-py-4.2.0 mdurl-0.1.2 mmh3-5.3.0 multidict-6.7.1 numpy-2.3.3 onnxruntime-1.29.0 opentelemetry-api-1.44.0 opentelemetry-exporter-otlp-proto-common-1.44.0 opentelemetry-exporter-otlp-proto-grpc-1.44.0 opentelemetry-proto-1.44.0 opentelemetry-sdk-1.44.0 opentelemetry-semantic-conventions-0.65b0 orjson-3.12.0 overrides-7.7.0 propcache-0.5.2 protobuf-7.36.1 psutil-7.0.0 pybase64-1.5.0 pydantic-2.13.5 pydantic-core-2.46.5 pydantic-settings-2.15.0 pypika-0.51.1 pyproject_hooks-1.2.0 python-dotenv-1.2.3 requests-oauthlib-2.0.0 rich-15.0.0 shellingham-1.5.4 tenacity-9.1.4 tokenizers-0.23.2 tqdm-4.70.0 typer-0.27.2 typing-inspection-0.4.4 uvicorn-0.52.4 uvloop-0.22.1 watchfiles-1.2.0 websockets-17.1 yarl-1.24.5
+'DISPLAY' environment variable not set... skipping surface info
+error: XDG_RUNTIME_DIR is invalid or not set in the environment.
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded cfg-if v1.0.4
+  Downloaded bit-set v0.10.0
+  Downloaded bitflags v2.13.1
+  Downloaded cfg_aliases v0.2.2
+  Downloaded cxxbridge-flags v1.0.199
+  Downloaded link-cplusplus v1.0.12
+  Downloaded naga-types v30.0.1
+  Downloaded wgpu-naga-bridge v30.0.1
+  Downloaded bit-vec v0.9.1
+  Downloaded async-lock v3.4.2
+  Downloaded dlib v0.5.3
+  Downloaded rustc-hash v1.1.0
+  Downloaded parking v2.2.1
+  Downloaded scratch v1.0.9
+  Downloaded wayland-sys v0.31.11
+  Downloaded event-listener-strategy v0.5.4
+  Downloaded autocfg v1.5.1
+  Downloaded bytemuck_derive v1.12.0
+  Downloaded raw-window-handle v0.6.2
+  Downloaded static_assertions v1.1.0
+  Downloaded crc32fast v1.5.1
+  Downloaded document-features v0.2.12
+  Downloaded foldhash v0.2.0
+  Downloaded renderdoc-sys v1.1.0
+  Downloaded wgpu-core-deps-windows-linux-android v30.0.1
+  Downloaded libloading v0.8.9
+  Downloaded khronos-egl v6.0.0
+  Downloaded equivalent v1.0.2
+  Downloaded scopeguard v1.2.0
+  Downloaded litrs v1.0.0
+  Downloaded smallvec v1.15.2
+  Downloaded termcolor v1.4.1
+  Downloaded once_cell v1.21.4
+  Downloaded lock_api v0.4.14
+  Downloaded arrayvec v0.7.8
+  Downloaded codespan-reporting v0.13.1
+  Downloaded profiling v1.0.18
+  Downloaded presser v0.3.1
+  Downloaded thiserror v2.0.20
+  Downloaded thiserror-impl v2.0.20
+  Downloaded parking_lot_core v0.9.12
+  Downloaded find-msvc-tools v0.1.11
+  Downloaded bytemuck v1.25.2
+  Downloaded serde_core v1.0.229
+  Downloaded unicode-ident v1.0.24
+  Downloaded event-listener v5.4.2
+  Downloaded ordered-float v5.5.0
+  Downloaded quote v1.0.47
+  Downloaded tracing-attributes v0.1.31
+  Downloaded pkg-config v0.3.34
+  Downloaded gpu-allocator v0.28.0
+  Downloaded memmap2 v0.9.11
+  Downloaded parking_lot v0.12.5
+  Downloaded shlex v2.0.1
+  Downloaded allocator-api2 v0.2.21
+  Downloaded half v2.7.1
+  Downloaded serde_derive v1.0.229
+  Downloaded log v0.4.34
+  Downloaded num-traits v0.2.19
+  Downloaded spirv v0.4.0+sdk-1.4.341.0
+  Downloaded web-time v1.1.0
+  Downloaded cc v1.4.4
+  Downloaded cxxbridge-macro v1.0.199
+  Downloaded serde v1.0.229
+  Downloaded cxx-build v1.0.199
+  Downloaded indexmap v2.14.0
+  Downloaded zerocopy-derive v0.8.56
+  Downloaded tracing-core v0.1.36
+  Downloaded proc-macro2 v1.0.107
+  Downloaded hashbrown v0.17.1
+  Downloaded hashbrown v0.16.1
+  Downloaded usearch v2.26.1
+  Downloaded glow v0.17.0
+  Downloaded wgpu-types v30.0.1
+  Downloaded libm v0.2.16
+  Downloaded pin-project-lite v0.2.17
+  Downloaded cxx v1.0.199
+  Downloaded wgpu v30.0.1
+  Downloaded zerocopy v0.8.56
+  Downloaded unicode-width v0.2.0
+  Downloaded syn v3.0.4
+  Downloaded syn v2.0.119
+  Downloaded wgpu-core v30.0.1
+  Downloaded ash v0.38.0+1.3.281
+  Downloaded tracing v0.1.44
+  Downloaded wgpu-hal v30.0.1
+  Downloaded naga v30.0.1
+  Downloaded numkong v7.8.1
+  Downloaded libc v0.2.189
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling syn v3.0.4
+   Compiling cfg-if v1.0.4
+   Compiling foldhash v0.2.0
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.11
+   Compiling cfg_aliases v0.2.2
+   Compiling cc v1.4.4
+   Compiling syn v2.0.119
+   Compiling equivalent v1.0.2
+   Compiling autocfg v1.5.1
+   Compiling libm v0.2.16
+   Compiling thiserror v2.0.20
+   Compiling num-traits v0.2.19
+   Compiling thiserror-impl v2.0.20
+   Compiling libc v0.2.189
+   Compiling hashbrown v0.17.1
+   Compiling libloading v0.8.9
+   Compiling once_cell v1.21.4
+   Compiling log v0.4.34
+   Compiling zerocopy v0.8.56
+   Compiling indexmap v2.14.0
+   Compiling zerocopy-derive v0.8.56
+   Compiling rustc-hash v1.1.0
+   Compiling bitflags v2.13.1
+   Compiling naga-types v30.0.1
+   Compiling naga v30.0.1
+   Compiling bytemuck_derive v1.12.0
+   Compiling bit-vec v0.9.1
+   Compiling unicode-width v0.2.0
+   Compiling parking_lot_core v0.9.12
+   Compiling pkg-config v0.3.34
+   Compiling ash v0.38.0+1.3.281
+   Compiling wayland-sys v0.31.11
+   Compiling codespan-reporting v0.13.1
+   Compiling bit-set v0.10.0
+   Compiling bytemuck v1.25.2
+   Compiling half v2.7.1
+   Compiling spirv v0.4.0+sdk-1.4.341.0
+   Compiling link-cplusplus v1.0.12
+   Compiling smallvec v1.15.2
+   Compiling arrayvec v0.7.8
+   Compiling static_assertions v1.1.0
+   Compiling khronos-egl v6.0.0
+   Compiling allocator-api2 v0.2.21
+   Compiling raw-window-handle v0.6.2
+   Compiling scratch v1.0.9
+   Compiling scopeguard v1.2.0
+   Compiling lock_api v0.4.14
+   Compiling wgpu-types v30.0.1
+   Compiling hashbrown v0.16.1
+   Compiling dlib v0.5.3
+   Compiling wgpu-hal v30.0.1
+   Compiling termcolor v1.4.1
+   Compiling presser v0.3.1
+   Compiling cxxbridge-flags v1.0.199
+   Compiling cxx v1.0.199
+   Compiling gpu-allocator v0.28.0
+   Compiling parking_lot v0.12.5
+   Compiling wgpu-naga-bridge v30.0.1
+   Compiling ordered-float v5.5.0
+   Compiling numkong v7.8.1
+   Compiling profiling v1.0.18
+   Compiling glow v0.17.0
+   Compiling renderdoc-sys v1.1.0
+   Compiling pin-project-lite v0.2.17
+   Compiling cxx-build v1.0.199
+   Compiling wgpu-core v30.0.1
+   Compiling parking v2.2.1
+   Compiling litrs v1.0.0
+   Compiling document-features v0.2.12
+   Compiling event-listener v5.4.2
+   Compiling usearch v2.26.1
+   Compiling wgpu-core-deps-windows-linux-android v30.0.1
+   Compiling cxxbridge-macro v1.0.199
+   Compiling wgpu v30.0.1
+   Compiling crc32fast v1.5.1
+   Compiling event-listener-strategy v0.5.4
+   Compiling tracing-core v0.1.36
+   Compiling tracing-attributes v0.1.31
+   Compiling tracing v0.1.44
+   Compiling async-lock v3.4.2
+   Compiling memmap2 v0.9.11
+   Compiling qenlo-core v0.1.0-alpha.1 (/workspace/qenlo-deep/current/crates/qenlo-core)
+   Compiling web-time v1.1.0
+   Compiling qenlo v0.1.0-alpha.1 (/workspace/qenlo-deep/current/crates/qenlo)
+   Compiling qenlo-bench v0.1.0-alpha.1 (/workspace/qenlo-deep/current/crates/qenlo-bench)
+    Finished `release` profile [optimized] target(s) in 3m 12s
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.24
+   Compiling cfg-if v1.0.4
+   Compiling cfg_aliases v0.2.2
+   Compiling syn v3.0.4
+   Compiling foldhash v0.2.0
+   Compiling syn v2.0.119
+   Compiling thiserror v2.0.20
+   Compiling equivalent v1.0.2
+   Compiling autocfg v1.5.1
+   Compiling libm v0.2.16
+   Compiling num-traits v0.2.19
+   Compiling thiserror-impl v2.0.20
+   Compiling libc v0.2.189
+   Compiling hashbrown v0.17.1
+   Compiling libloading v0.8.9
+   Compiling once_cell v1.21.4
+   Compiling zerocopy v0.8.56
+   Compiling log v0.4.34
+   Compiling indexmap v2.14.0
+   Compiling zerocopy-derive v0.8.56
+   Compiling rustc-hash v1.1.0
+   Compiling bitflags v2.13.1
+   Compiling naga-types v30.0.1
+   Compiling bytemuck_derive v1.12.0
+   Compiling naga v30.0.1
+   Compiling ash v0.38.0+1.3.281
+   Compiling pkg-config v0.3.34
+   Compiling bit-vec v0.9.1
+   Compiling unicode-width v0.2.0
+   Compiling parking_lot_core v0.9.12
+   Compiling codespan-reporting v0.13.1
+   Compiling bit-set v0.10.0
+   Compiling wayland-sys v0.31.11
+   Compiling bytemuck v1.25.2
+   Compiling half v2.7.1
+   Compiling spirv v0.4.0+sdk-1.4.341.0
+   Compiling allocator-api2 v0.2.21
+   Compiling static_assertions v1.1.0
+   Compiling scopeguard v1.2.0
+   Compiling khronos-egl v6.0.0
+   Compiling arrayvec v0.7.8
+   Compiling smallvec v1.15.2
+   Compiling raw-window-handle v0.6.2
+   Compiling wgpu-types v30.0.1
+   Compiling lock_api v0.4.14
+   Compiling hashbrown v0.16.1
+   Compiling dlib v0.5.3
+   Compiling wgpu-hal v30.0.1
+   Compiling presser v0.3.1
+   Compiling gpu-allocator v0.28.0
+   Compiling parking_lot v0.12.5
+   Compiling wgpu-naga-bridge v30.0.1
+   Compiling ordered-float v5.5.0
+   Compiling profiling v1.0.18
+   Compiling renderdoc-sys v1.1.0
+   Compiling glow v0.17.0
+   Compiling pin-project-lite v0.2.17
+   Compiling wgpu-core v30.0.1
+   Compiling litrs v1.0.0
+   Compiling parking v2.2.1
+   Compiling event-listener v5.4.2
+   Compiling document-features v0.2.12
+   Compiling wgpu-core-deps-windows-linux-android v30.0.1
+   Compiling wgpu v30.0.1
+   Compiling crc32fast v1.5.1
+   Compiling event-listener-strategy v0.5.4
+   Compiling tracing-core v0.1.36
+   Compiling tracing-attributes v0.1.31
+   Compiling tracing v0.1.44
+   Compiling async-lock v3.4.2
+   Compiling memmap2 v0.9.11
+   Compiling qenlo-core v0.1.0-alpha.1 (/workspace/qenlo-deep/baseline/crates/qenlo-core)
+   Compiling web-time v1.1.0
+   Compiling qenlo v0.1.0-alpha.1 (/workspace/qenlo-deep/baseline/crates/qenlo)
+   Compiling qenlo-bench v0.1.0-alpha.1 (/workspace/qenlo-deep/baseline/crates/qenlo-bench)
+    Finished `release` profile [optimized] target(s) in 1m 28s
+prepared rows=5000 tuning=16 evaluation=64 dimension=384 crc32=7fa1c649 source=synthetic-uniform-v1
+prepared rows=25000 tuning=16 evaluation=64 dimension=384 crc32=6c2ac3a8 source=synthetic-uniform-v1
+prepared rows=50000 tuning=16 evaluation=64 dimension=384 crc32=d13a0b5c source=synthetic-uniform-v1
+prepared rows=100000 tuning=16 evaluation=64 dimension=768 crc32=50b69280 source=synthetic-uniform-v1
+prepared rows=25000 tuning=16 evaluation=64 dimension=768 crc32=c27ac55c source=synthetic-uniform-v1

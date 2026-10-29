@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    import torch; x=torch.randn(10148,768,device=\ cuda\); q=torch.randn(768,device=\cuda\); print(torch.topk(torch.mv(x,q),10)[0][0].item())
+                                                  ^
+SyntaxError: unexpected character after line continuation character

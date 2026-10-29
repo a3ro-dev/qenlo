@@ -1,0 +1,20 @@
+0d1d53fa4efe51709877533a833a356bf3cc49034249069630dc75d7605fc3c1 independent_fp64_oracle.npz
+bbf8920857f72a6ceca73b3d3a79d04a624271ab658e7172387ddb329819e6a6 environment.json
+3f926705aa92454630afef4f3d3a1ed3ec22de39d49445b6a3fb4f9d519182ad raw_samples.csv
+4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 failures.json
+73ab9e89a6af4b66c8cd3038671ccc57567a3fb7301c382f61eae3aa54e33e54 summary.json
+{
+  "summary": [
+    {
+      "system": "qenlo_cuda_predicate_prototype",
+      "samples": 5000,
+      "p50_ms": 0.160011,
+      "p95_ms": 0.17072245000000003,
+      "p99_ms": 0.18093209000000002,
+      "mean_recall_at_10": 1.0,
+      "min_recall_at_10": 1.0,
+      "perfect_recall_rows": 5000
+    }
+  ],
+  "failures": 0
+}

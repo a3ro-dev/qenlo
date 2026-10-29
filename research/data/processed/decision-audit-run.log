@@ -1,0 +1,124 @@
+{
+  "corpus": {
+    "path": "data\\ag-news\\ag-news-100k-384.qnb",
+    "sha256": "ba87a322b6846ce225ce54140cf00ac33250271447ef8f9f83df246131719cba",
+    "crc32": "beb3c848",
+    "dimension": 384,
+    "seed": 42,
+    "source": 4706889458,
+    "raw_sha256_verified": true,
+    "splits": [
+      {
+        "split": "corpus",
+        "rows": 100000,
+        "nonfinite_rows": 0,
+        "zero_rows": 0,
+        "duplicate_excess": 125,
+        "norm_min": 0.9999998783673556,
+        "norm_p50": 1.0000000000364504,
+        "norm_max": 1.0000001161957015
+      },
+      {
+        "split": "tuning",
+        "rows": 1000,
+        "nonfinite_rows": 0,
+        "zero_rows": 0,
+        "duplicate_excess": 0,
+        "norm_min": 0.9999999080536952,
+        "norm_p50": 0.9999999993486648,
+        "norm_max": 1.0000000918961067
+      },
+      {
+        "split": "evaluation",
+        "rows": 5000,
+        "nonfinite_rows": 0,
+        "zero_rows": 0,
+        "duplicate_excess": 8,
+        "norm_min": 0.9999999049760473,
+        "norm_p50": 0.9999999998632276,
+        "norm_max": 1.0000000997443144
+      }
+    ],
+    "exact_content_overlap": {
+      "corpus__tuning": {
+        "shared_unique_vectors": 0,
+        "affected_rows_in_second": 0
+      },
+      "corpus__evaluation": {
+        "shared_unique_vectors": 0,
+        "affected_rows_in_second": 0
+      },
+      "tuning__evaluation": {
+        "shared_unique_vectors": 0,
+        "affected_rows_in_second": 0
+      }
+    },
+    "limitations": [
+      "Byte equality only; near duplicates, article identity and semantic relevance not established.",
+      "These are retrieval benchmark splits, not embedding-model training splits."
+    ]
+  },
+  "router": {
+    "cells": 16,
+    "engine_cells": 48,
+    "sample_rows": 58200,
+    "checks": "schema, numeric ranges, metadata joins, truth cardinality, split coverage, matched order, summary equality passed",
+    "source_flags": {
+      "dirty_source_cells": 48,
+      "missing_source_bundle_hash_cells": 48
+    },
+    "missing_fields": {
+      "recall_at_10": 34200,
+      "max_qenlo_allocation_bytes": 30400,
+      "upload_enqueue_ns": 30400,
+      "readback_completion_ns": 30400,
+      "device_scoring_ns": 30400,
+      "device_selection_ns": 30400,
+      "routing_reasons": 38800,
+      "gpu_row_preparation": 38800,
+      "row_materialization_ns": 19400,
+      "materialized_rows": 19400,
+      "row_cache_hit": 58200,
+      "eligibility_predicate_kind": 19400,
+      "eligibility_representation": 19400,
+      "eligibility_generation": 19400,
+      "corpus_rows": 19400,
+      "eligible_contiguous_runs": 19400
+    },
+    "baselines": [
+      {
+        "policy": "cpu_regret",
+        "median_regret": 0.0,
+        "mean_regret": 0.07551726028621797,
+        "max_regret": 1.1766857506361323,
+        "cells_above_25pct": 1
+      },
+      {
+        "policy": "gpu_regret",
+        "median_regret": 0.5352037500150091,
+        "mean_regret": 1.252729424592531,
+        "max_regret": 4.997887621461766,
+        "cells_above_25pct": 12
+      },
+      {
+        "policy": "candidate_choice_regret",
+        "median_regret": 0.004286083139685037,
+        "mean_regret": 0.4598446956535211,
+        "max_regret": 2.3565180285897163,
+        "cells_above_25pct": 5
+      },
+      {
+        "policy": "realized_auto_regret",
+        "median_regret": 0.2263768072507566,
+        "mean_regret": 1.000024054212483,
+        "max_regret": 4.393247741321921,
+        "cells_above_25pct": 8
+      }
+    ],
+    "cpu_winners": 14,
+    "auto_same_outside_25pct": 9,
+    "pointwise_ci_excludes_one": 11,
+    "simultaneous_percentile_excludes_one": 10,
+    "caveat": "Whole-run independent bootstrap; only five consecutive runs per engine. Does not remove session/order confounding. Bonferroni percentile intervals are exploratory, not validated coverage with n=5. Auto/forced is not a true A/A control."
+  }
+}

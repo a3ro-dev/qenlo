@@ -1,0 +1,9 @@
+0d1d53fa4efe51709877533a833a356bf3cc49034249069630dc75d7605fc3c1 independent_fp64_oracle.npz
+877ebc7608f2f3ba836446e219a008d2b030974b080cca425b2b177eabe92872 environment.json
+ef902bbece0a89bb593279ab2dbdbe4efe35e2a9954a24e974ae47ed00446e7a raw_samples.csv
+59bf2e421ab5099ea20b7b13db910f502b4a76bcf051699487e3690f32d1adf6 failures.json
+4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 summary.json
+{
+  "summary": [],
+  "failures": 1
+}

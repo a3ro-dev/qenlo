@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "backend": "milvus",
+  "algorithm": "Milvus Lite AUTOINDEX cosine",
+  "package": "pymilvus",
+  "package_version": "3.0.1",
+  "build_ns": 48446905429,
+  "tuning_ns": 8358659549,
+  "tuning_recall_at_10": 1.0,
+  "evaluation_recall_at_10": 0.9987999999999998,
+  "recall_target": 0.95,
+  "recall_target_passed": true,
+  "median_run_p95_ns": 76229414,
+  "min_run_p95_ns": 75876618,
+  "max_run_p95_ns": 77516170,
+  "latency_boundary": "in-process single-query API completion",
+  "filter_semantics": "no filter; reference fraction=1 includes all corpus rows",
+  "native_query_threads": null,
+  "dataset_sha256": "906ee4134368ce50691a2a664844d55250c33ab721c7708a6816b9caf1abe4e2",
+  "reference_revision": "bb519873c00128e1fec93836d6f55a69ce418b57",
+  "python": "3.12.3 (main, Aug 14 2025, 17:47:21) [GCC 13.3.0]",
+  "platform": "Linux-6.8.0-52-generic-x86_64-with-glibc2.39"
+}

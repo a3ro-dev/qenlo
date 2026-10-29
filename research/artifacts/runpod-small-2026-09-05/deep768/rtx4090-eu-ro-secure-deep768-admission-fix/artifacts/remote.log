@@ -1,0 +1,585 @@
+Get:1 http://archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+Get:2 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64  InRelease [1578 B]
+Get:3 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+Get:4 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble InRelease [17.8 kB]
+Get:5 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64  Packages [1759 kB]
+Get:6 http://archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+Get:7 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu noble/main amd64 Packages [46.2 kB]
+Get:8 http://archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+Get:9 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+Get:10 http://archive.ubuntu.com/ubuntu noble/universe amd64 Packages [19.3 MB]
+Get:11 http://archive.ubuntu.com/ubuntu noble/restricted amd64 Packages [117 kB]
+Get:12 http://archive.ubuntu.com/ubuntu noble/multiverse amd64 Packages [331 kB]
+Get:13 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1562 kB]
+Get:14 http://archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [55.8 kB]
+Get:15 http://archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1903 kB]
+Get:16 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [2151 kB]
+Get:17 http://archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [35.9 kB]
+Get:18 http://archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Packages [671 B]
+Get:19 http://archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [48.9 kB]
+Get:20 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages [1237 kB]
+Get:21 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1530 kB]
+Get:22 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [50.0 kB]
+Get:23 http://security.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1786 kB]
+Fetched 34.4 MB in 3s (11.5 MB/s)
+Reading package lists...
+W: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
+Reading package lists...
+Building dependency tree...
+Reading state information...
+build-essential is already the newest version (12.10ubuntu1).
+libgl1 is already the newest version (1.7.0-1build1).
+libglvnd0 is already the newest version (1.7.0-1build1).
+libglvnd0 set to manually installed.
+libglx0 is already the newest version (1.7.0-1build1).
+libglx0 set to manually installed.
+libvulkan1 is already the newest version (1.3.275.0-1build1).
+libvulkan1 set to manually installed.
+The following package was automatically installed and is no longer required:
+  libwayland-server0
+Use 'apt autoremove' to remove it.
+The following additional packages will be installed:
+  clang-18 cpp-13 cpp-13-x86-64-linux-gnu g++-13 g++-13-x86-64-linux-gnu
+  gcc-13 gcc-13-base gcc-13-x86-64-linux-gnu gcc-14-base gfortran-13
+  gfortran-13-x86-64-linux-gnu libasan8 libatomic1 libcc1-0 libclang-18-dev
+  libclang-common-18-dev libclang-cpp18 libclang1-18 libcurl3t64-gnutls
+  libcurl4-openssl-dev libcurl4t64 libdrm-amdgpu1 libdrm-common libdrm-intel1
+  libdrm2 libegl-mesa0 libgbm1 libgc1 libgcc-13-dev libgcc-s1
+  libgfortran-13-dev libgfortran5 libgl1-mesa-dri libglx-mesa0 libgomp1
+  libhwasan0 libitm1 libllvm18 liblsan0 libobjc-13-dev libobjc4 libpkgconf3
+  libquadmath0 libstdc++-13-dev libstdc++6 libtsan2 libubsan1
+  llvm-18-linker-tools mesa-libgallium pkgconf pkgconf-bin
+Suggested packages:
+  clang-18-doc wasi-libc gcc-13-locales cpp-13-doc g++-13-multilib gcc-13-doc
+  gcc-13-multilib gfortran-13-multilib gfortran-13-doc libcoarrays-dev
+  libcurl4-doc libidn-dev libkrb5-dev libldap2-dev librtmp-dev libssh2-1-dev
+  libstdc++-13-doc
+Recommended packages:
+  llvm-18-dev libclang-rt-18-dev
+The following NEW packages will be installed:
+  clang clang-18 libclang-18-dev libclang-common-18-dev libclang-cpp18
+  libclang-dev libclang1-18 libegl-mesa0 libegl1 libgc1 libllvm18
+  libobjc-13-dev libobjc4 libpkgconf3 llvm-18-linker-tools pkg-config pkgconf
+  pkgconf-bin python3-venv time vulkan-tools
+The following packages will be upgraded:
+  ca-certificates cpp-13 cpp-13-x86-64-linux-gnu curl g++-13
+  g++-13-x86-64-linux-gnu gcc-13 gcc-13-base gcc-13-x86-64-linux-gnu
+  gcc-14-base gfortran-13 gfortran-13-x86-64-linux-gnu libasan8 libatomic1
+  libcc1-0 libcurl3t64-gnutls libcurl4-openssl-dev libcurl4t64 libdrm-amdgpu1
+  libdrm-common libdrm-intel1 libdrm2 libgbm1 libgcc-13-dev libgcc-s1
+  libgfortran-13-dev libgfortran5 libgl1-mesa-dri libglx-mesa0 libgomp1
+  libhwasan0 libitm1 liblsan0 libquadmath0 libstdc++-13-dev libstdc++6
+  libtsan2 libubsan1 mesa-libgallium
+39 upgraded, 21 newly installed, 0 to remove and 213 not upgraded.
+Need to get 167 MB of archives.
+After this operation, 539 MB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libasan8 amd64 14.2.0-4ubuntu2~24.04.1 [3027 kB]
+Get:2 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libubsan1 amd64 14.2.0-4ubuntu2~24.04.1 [1184 kB]
+Get:3 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libstdc++-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [2420 kB]
+Get:4 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgfortran-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [928 kB]
+Get:5 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gfortran-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [11.4 MB]
+Get:6 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gfortran-13 amd64 13.3.0-6ubuntu2~24.04.1 [13.9 kB]
+Get:7 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13 amd64 13.3.0-6ubuntu2~24.04.1 [494 kB]
+Get:8 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1 [16.0 kB]
+Get:9 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [12.2 MB]
+Get:10 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [21.1 MB]
+Get:11 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 cpp-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [10.7 MB]
+Get:12 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 cpp-13 amd64 13.3.0-6ubuntu2~24.04.1 [1042 B]
+Get:13 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-base amd64 13.3.0-6ubuntu2~24.04.1 [51.6 kB]
+Get:14 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgcc-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [2681 kB]
+Get:15 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libtsan2 amd64 14.2.0-4ubuntu2~24.04.1 [2772 kB]
+Get:16 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-14-base amd64 14.2.0-4ubuntu2~24.04.1 [51.0 kB]
+Get:17 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libstdc++6 amd64 14.2.0-4ubuntu2~24.04.1 [792 kB]
+Get:18 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libquadmath0 amd64 14.2.0-4ubuntu2~24.04.1 [153 kB]
+Get:19 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 liblsan0 amd64 14.2.0-4ubuntu2~24.04.1 [1322 kB]
+Get:20 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libitm1 amd64 14.2.0-4ubuntu2~24.04.1 [29.7 kB]
+Get:21 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libhwasan0 amd64 14.2.0-4ubuntu2~24.04.1 [1641 kB]
+Get:22 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgomp1 amd64 14.2.0-4ubuntu2~24.04.1 [148 kB]
+Get:23 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgfortran5 amd64 14.2.0-4ubuntu2~24.04.1 [916 kB]
+Get:24 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcc1-0 amd64 14.2.0-4ubuntu2~24.04.1 [48.0 kB]
+Get:25 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libatomic1 amd64 14.2.0-4ubuntu2~24.04.1 [10.5 kB]
+Get:26 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgcc-s1 amd64 14.2.0-4ubuntu2~24.04.1 [78.4 kB]
+Get:27 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 ca-certificates all 20260601~24.04.1 [139 kB]
+Get:28 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libdrm-common all 2.4.125-1ubuntu0.1~24.04.2 [9250 B]
+Get:29 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libdrm2 amd64 2.4.125-1ubuntu0.1~24.04.2 [41.4 kB]
+Get:30 http://archive.ubuntu.com/ubuntu noble/main amd64 time amd64 1.9-0.2build1 [45.2 kB]
+Get:31 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libllvm18 amd64 1:18.1.3-1ubuntu1 [27.5 MB]
+Get:32 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libclang-cpp18 amd64 1:18.1.3-1ubuntu1 [13.5 MB]
+Get:33 http://archive.ubuntu.com/ubuntu noble/main amd64 libgc1 amd64 1:8.2.6-1build1 [90.3 kB]
+Get:34 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 libobjc4 amd64 14.2.0-4ubuntu2~24.04.1 [47.1 kB]
+Get:35 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 libobjc-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [194 kB]
+Get:36 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 libclang-common-18-dev amd64 1:18.1.3-1ubuntu1 [736 kB]
+Get:37 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 llvm-18-linker-tools amd64 1:18.1.3-1ubuntu1 [1314 kB]
+Get:38 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libclang1-18 amd64 1:18.1.3-1ubuntu1 [7803 kB]
+Get:39 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 clang-18 amd64 1:18.1.3-1ubuntu1 [80.0 kB]
+Get:40 http://archive.ubuntu.com/ubuntu noble/universe amd64 clang amd64 1:18.0-59~exp2 [5846 B]
+Get:41 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl4-openssl-dev amd64 8.5.0-2ubuntu10.13 [446 kB]
+Get:42 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 curl amd64 8.5.0-2ubuntu10.13 [226 kB]
+Get:43 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl4t64 amd64 8.5.0-2ubuntu10.13 [343 kB]
+Get:44 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 libclang-18-dev amd64 1:18.1.3-1ubuntu1 [28.8 MB]
+Get:45 http://archive.ubuntu.com/ubuntu noble/universe amd64 libclang-dev amd64 1:18.0-59~exp2 [5424 B]
+Get:46 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl3t64-gnutls amd64 8.5.0-2ubuntu10.13 [335 kB]
+Get:47 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libdrm-amdgpu1 amd64 2.4.125-1ubuntu0.1~24.04.2 [21.4 kB]
+Get:48 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libdrm-intel1 amd64 2.4.125-1ubuntu0.1~24.04.2 [63.9 kB]
+Get:49 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgl1-mesa-dri amd64 25.2.8-0ubuntu0.24.04.2 [37.9 kB]
+Get:50 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libglx-mesa0 amd64 25.2.8-0ubuntu0.24.04.2 [110 kB]
+Get:51 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgbm1 amd64 25.2.8-0ubuntu0.24.04.2 [34.2 kB]
+Get:52 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 mesa-libgallium amd64 25.2.8-0ubuntu0.24.04.2 [10.8 MB]
+Get:53 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libegl-mesa0 amd64 25.2.8-0ubuntu0.24.04.2 [117 kB]
+Get:54 http://archive.ubuntu.com/ubuntu noble/main amd64 libpkgconf3 amd64 1.8.1-2build1 [30.7 kB]
+Get:55 http://archive.ubuntu.com/ubuntu noble/main amd64 pkgconf-bin amd64 1.8.1-2build1 [20.7 kB]
+Get:56 http://archive.ubuntu.com/ubuntu noble/main amd64 pkgconf amd64 1.8.1-2build1 [16.8 kB]
+Get:57 http://archive.ubuntu.com/ubuntu noble/main amd64 pkg-config amd64 1.8.1-2build1 [7264 B]
+Get:58 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 python3-venv amd64 3.12.3-0ubuntu2.1 [1032 B]
+Get:59 http://archive.ubuntu.com/ubuntu noble/universe amd64 vulkan-tools amd64 1.3.275.0+dfsg1-1 [298 kB]
+Get:60 http://archive.ubuntu.com/ubuntu noble/main amd64 libegl1 amd64 1.7.0-1build1 [28.7 kB]
+debconf: delaying package configuration, since apt-utils is not installed
+Fetched 167 MB in 1s (126 MB/s)
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../00-libasan8_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libasan8:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../01-libubsan1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libubsan1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../02-libstdc++-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libstdc++-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../03-libgfortran-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgfortran-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../04-gfortran-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gfortran-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../05-gfortran-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gfortran-13 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../06-gcc-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../07-g++-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking g++-13 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../08-g++-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking g++-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../09-gcc-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../10-cpp-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking cpp-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../11-cpp-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking cpp-13 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../12-gcc-13-base_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13-base:amd64 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../13-libgcc-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgcc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) over (13.3.0-6ubuntu2~24.04) ...
+Preparing to unpack .../14-libtsan2_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libtsan2:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../15-gcc-14-base_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-14-base:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Setting up gcc-14-base:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../libstdc++6_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libstdc++6:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Setting up libstdc++6:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../0-libquadmath0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libquadmath0:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../1-liblsan0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking liblsan0:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../2-libitm1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libitm1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../3-libhwasan0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libhwasan0:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../4-libgomp1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgomp1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../5-libgfortran5_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgfortran5:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../6-libcc1-0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libcc1-0:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../7-libatomic1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libatomic1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Preparing to unpack .../8-libgcc-s1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgcc-s1:amd64 (14.2.0-4ubuntu2~24.04.1) over (14.2.0-4ubuntu2~24.04) ...
+Setting up libgcc-s1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../00-ca-certificates_20260601~24.04.1_all.deb ...
+Unpacking ca-certificates (20260601~24.04.1) over (20240203) ...
+Preparing to unpack .../01-libdrm-common_2.4.125-1ubuntu0.1~24.04.2_all.deb ...
+Unpacking libdrm-common (2.4.125-1ubuntu0.1~24.04.2) over (2.4.122-1~ubuntu0.24.04.2) ...
+Preparing to unpack .../02-libdrm2_2.4.125-1ubuntu0.1~24.04.2_amd64.deb ...
+Unpacking libdrm2:amd64 (2.4.125-1ubuntu0.1~24.04.2) over (2.4.122-1~ubuntu0.24.04.2) ...
+Selecting previously unselected package time.
+Preparing to unpack .../03-time_1.9-0.2build1_amd64.deb ...
+Unpacking time (1.9-0.2build1) ...
+Selecting previously unselected package libllvm18:amd64.
+Preparing to unpack .../04-libllvm18_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libllvm18:amd64 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package libclang-cpp18.
+Preparing to unpack .../05-libclang-cpp18_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libclang-cpp18 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package libgc1:amd64.
+Preparing to unpack .../06-libgc1_1%3a8.2.6-1build1_amd64.deb ...
+Unpacking libgc1:amd64 (1:8.2.6-1build1) ...
+Selecting previously unselected package libobjc4:amd64.
+Preparing to unpack .../07-libobjc4_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libobjc4:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libobjc-13-dev:amd64.
+Preparing to unpack .../08-libobjc-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libobjc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package libclang-common-18-dev:amd64.
+Preparing to unpack .../09-libclang-common-18-dev_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libclang-common-18-dev:amd64 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package llvm-18-linker-tools.
+Preparing to unpack .../10-llvm-18-linker-tools_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking llvm-18-linker-tools (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package libclang1-18.
+Preparing to unpack .../11-libclang1-18_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libclang1-18 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package clang-18.
+Preparing to unpack .../12-clang-18_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking clang-18 (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package clang.
+Preparing to unpack .../13-clang_1%3a18.0-59~exp2_amd64.deb ...
+Unpacking clang (1:18.0-59~exp2) ...
+Preparing to unpack .../14-libcurl4-openssl-dev_8.5.0-2ubuntu10.13_amd64.deb ...
+Unpacking libcurl4-openssl-dev:amd64 (8.5.0-2ubuntu10.13) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../15-curl_8.5.0-2ubuntu10.13_amd64.deb ...
+Unpacking curl (8.5.0-2ubuntu10.13) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../16-libcurl4t64_8.5.0-2ubuntu10.13_amd64.deb ...
+Unpacking libcurl4t64:amd64 (8.5.0-2ubuntu10.13) over (8.5.0-2ubuntu10.6) ...
+Selecting previously unselected package libclang-18-dev.
+Preparing to unpack .../17-libclang-18-dev_1%3a18.1.3-1ubuntu1_amd64.deb ...
+Unpacking libclang-18-dev (1:18.1.3-1ubuntu1) ...
+Selecting previously unselected package libclang-dev.
+Preparing to unpack .../18-libclang-dev_1%3a18.0-59~exp2_amd64.deb ...
+Unpacking libclang-dev (1:18.0-59~exp2) ...
+Preparing to unpack .../19-libcurl3t64-gnutls_8.5.0-2ubuntu10.13_amd64.deb ...
+Unpacking libcurl3t64-gnutls:amd64 (8.5.0-2ubuntu10.13) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../20-libdrm-amdgpu1_2.4.125-1ubuntu0.1~24.04.2_amd64.deb ...
+Unpacking libdrm-amdgpu1:amd64 (2.4.125-1ubuntu0.1~24.04.2) over (2.4.122-1~ubuntu0.24.04.2) ...
+Preparing to unpack .../21-libdrm-intel1_2.4.125-1ubuntu0.1~24.04.2_amd64.deb ...
+Unpacking libdrm-intel1:amd64 (2.4.125-1ubuntu0.1~24.04.2) over (2.4.122-1~ubuntu0.24.04.2) ...
+Preparing to unpack .../22-libgl1-mesa-dri_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking libgl1-mesa-dri:amd64 (25.2.8-0ubuntu0.24.04.2) over (25.0.7-0ubuntu0.24.04.2) ...
+Preparing to unpack .../23-libglx-mesa0_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking libglx-mesa0:amd64 (25.2.8-0ubuntu0.24.04.2) over (25.0.7-0ubuntu0.24.04.2) ...
+Preparing to unpack .../24-libgbm1_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking libgbm1:amd64 (25.2.8-0ubuntu0.24.04.2) over (25.0.7-0ubuntu0.24.04.2) ...
+Preparing to unpack .../25-mesa-libgallium_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking mesa-libgallium:amd64 (25.2.8-0ubuntu0.24.04.2) over (25.0.7-0ubuntu0.24.04.2) ...
+Selecting previously unselected package libegl-mesa0:amd64.
+Preparing to unpack .../26-libegl-mesa0_25.2.8-0ubuntu0.24.04.2_amd64.deb ...
+Unpacking libegl-mesa0:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Selecting previously unselected package libpkgconf3:amd64.
+Preparing to unpack .../27-libpkgconf3_1.8.1-2build1_amd64.deb ...
+Unpacking libpkgconf3:amd64 (1.8.1-2build1) ...
+Selecting previously unselected package pkgconf-bin.
+Preparing to unpack .../28-pkgconf-bin_1.8.1-2build1_amd64.deb ...
+Unpacking pkgconf-bin (1.8.1-2build1) ...
+Selecting previously unselected package pkgconf:amd64.
+Preparing to unpack .../29-pkgconf_1.8.1-2build1_amd64.deb ...
+Unpacking pkgconf:amd64 (1.8.1-2build1) ...
+Selecting previously unselected package pkg-config:amd64.
+Preparing to unpack .../30-pkg-config_1.8.1-2build1_amd64.deb ...
+Unpacking pkg-config:amd64 (1.8.1-2build1) ...
+Selecting previously unselected package python3-venv.
+Preparing to unpack .../31-python3-venv_3.12.3-0ubuntu2.1_amd64.deb ...
+Unpacking python3-venv (3.12.3-0ubuntu2.1) ...
+Selecting previously unselected package vulkan-tools.
+Preparing to unpack .../32-vulkan-tools_1.3.275.0+dfsg1-1_amd64.deb ...
+Unpacking vulkan-tools (1.3.275.0+dfsg1-1) ...
+Selecting previously unselected package libegl1:amd64.
+Preparing to unpack .../33-libegl1_1.7.0-1build1_amd64.deb ...
+Unpacking libegl1:amd64 (1.7.0-1build1) ...
+Setting up time (1.9-0.2build1) ...
+Setting up libcurl4t64:amd64 (8.5.0-2ubuntu10.13) ...
+Setting up libcurl3t64-gnutls:amd64 (8.5.0-2ubuntu10.13) ...
+Setting up vulkan-tools (1.3.275.0+dfsg1-1) ...
+Setting up libgomp1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up ca-certificates (20260601~24.04.1) ...
+Updating certificates in /etc/ssl/certs...
+rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+14 added, 39 removed; done.
+Setting up libpkgconf3:amd64 (1.8.1-2build1) ...
+Setting up gcc-13-base:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up python3-venv (3.12.3-0ubuntu2.1) ...
+Setting up libcurl4-openssl-dev:amd64 (8.5.0-2ubuntu10.13) ...
+Setting up libquadmath0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libatomic1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up pkgconf-bin (1.8.1-2build1) ...
+Setting up libclang-common-18-dev:amd64 (1:18.1.3-1ubuntu1) ...
+Setting up libgc1:amd64 (1:8.2.6-1build1) ...
+Setting up libgfortran5:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libubsan1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libhwasan0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libasan8:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up curl (8.5.0-2ubuntu10.13) ...
+Setting up libtsan2:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libdrm-common (2.4.125-1ubuntu0.1~24.04.2) ...
+Setting up libcc1-0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up liblsan0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libitm1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libllvm18:amd64 (1:18.1.3-1ubuntu1) ...
+Setting up libclang1-18 (1:18.1.3-1ubuntu1) ...
+Setting up cpp-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libobjc4:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up pkgconf:amd64 (1.8.1-2build1) ...
+Setting up pkg-config:amd64 (1.8.1-2build1) ...
+Setting up llvm-18-linker-tools (1:18.1.3-1ubuntu1) ...
+Setting up libdrm2:amd64 (2.4.125-1ubuntu0.1~24.04.2) ...
+Setting up libgcc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libgfortran-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libclang-cpp18 (1:18.1.3-1ubuntu1) ...
+Setting up libobjc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libstdc++-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libdrm-amdgpu1:amd64 (2.4.125-1ubuntu0.1~24.04.2) ...
+Setting up cpp-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up gcc-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libdrm-intel1:amd64 (2.4.125-1ubuntu0.1~24.04.2) ...
+Setting up clang-18 (1:18.1.3-1ubuntu1) ...
+Setting up gfortran-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libclang-18-dev (1:18.1.3-1ubuntu1) ...
+Setting up clang (1:18.0-59~exp2) ...
+Setting up gcc-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up mesa-libgallium:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Setting up libclang-dev (1:18.0-59~exp2) ...
+Setting up g++-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libgbm1:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Setting up libgl1-mesa-dri:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Setting up libegl-mesa0:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Setting up gfortran-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libegl1:amd64 (1.7.0-1build1) ...
+Setting up g++-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libglx-mesa0:amd64 (25.2.8-0ubuntu0.24.04.2) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.6) ...
+Processing triggers for ca-certificates (20260601~24.04.1) ...
+Updating certificates in /etc/ssl/certs...
+0 added, 0 removed; done.
+Running hooks in /etc/ca-certificates/update.d...
+done.
+info: downloading installer
+info: profile set to minimal
+info: default host tuple is x86_64-unknown-linux-gnu
+info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+info: latest update on 2026-09-03 for version 1.98.1 (48a229cea 2026-09-01)
+info: downloading 3 components
+info: default toolchain set to stable-x86_64-unknown-linux-gnu
+
+  stable-x86_64-unknown-linux-gnu installed - rustc 1.98.1 (48a229cea 2026-09-01)
+
+
+Rust is installed now. Great!
+
+To get started you may need to restart your current shell.
+This would reload your PATH environment variable to include
+Cargo's bin directory ($HOME/.cargo/bin).
+
+To configure your current shell, you need to source the
+corresponding env file under $HOME/.cargo.
+
+Consider running the right command for your shell (note the leading DOT):
+. "$HOME/.cargo/env" # For sh/ash/dash/pdksh/bash
+cargo:rerun-if-env-changed=CC_x86_64-unknown-linux-gnu
+CC_x86_64-unknown-linux-gnu = None
+cargo:rerun-if-env-changed=CC_x86_64_unknown_linux_gnu
+CC_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=HOST_CC
+HOST_CC = None
+cargo:rerun-if-env-changed=CC
+CC = None
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+cargo:rerun-if-env-changed=CFLAGS
+CFLAGS = None
+cargo:rerun-if-env-changed=HOST_CFLAGS
+HOST_CFLAGS = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64_unknown_linux_gnu
+CFLAGS_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64-unknown-linux-gnu
+CFLAGS_x86_64-unknown-linux-gnu = None
+info: syncing channel updates for 1.98.0-x86_64-unknown-linux-gnu
+info: latest update on 2026-08-20 for version 1.98.0 (88d9e12ae 2026-08-18)
+info: downloading 3 components
+
+  1.98.0-x86_64-unknown-linux-gnu installed - rustc 1.98.0 (88d9e12ae 2026-08-18)
+
+info: checking for self-update (current version: 1.29.1)
+info: using existing install for 1.98.0-x86_64-unknown-linux-gnu
+info: default toolchain set to 1.98.0-x86_64-unknown-linux-gnu
+
+  1.98.0-x86_64-unknown-linux-gnu unchanged - rustc 1.98.0 (88d9e12ae 2026-08-18)
+
+Collecting numpy==2.3.3
+  Downloading numpy-2.3.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.1/62.1 kB 2.4 MB/s eta 0:00:00
+Collecting faiss-cpu==1.15.0
+  Downloading faiss_cpu-1.15.0-cp310-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (7.8 kB)
+Collecting psutil==7.0.0
+  Downloading psutil-7.0.0-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (22 kB)
+Requirement already satisfied: packaging in /usr/local/lib/python3.12/dist-packages (from faiss-cpu==1.15.0) (25.0)
+Downloading numpy-2.3.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.6/16.6 MB 168.6 MB/s eta 0:00:00
+Downloading faiss_cpu-1.15.0-cp310-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (18.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.8/18.8 MB 102.3 MB/s eta 0:00:00
+Downloading psutil-7.0.0-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (277 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 278.0/278.0 kB 621.8 MB/s eta 0:00:00
+Installing collected packages: psutil, numpy, faiss-cpu
+  Attempting uninstall: psutil
+    Found existing installation: psutil 7.1.3
+    Not uninstalling psutil at /usr/local/lib/python3.12/dist-packages, outside environment /workspace/qenlo-deep768/venv
+    Can't uninstall 'psutil'. No files were found to uninstall.
+Successfully installed faiss-cpu-1.15.0 numpy-2.3.3 psutil-7.0.0
+'DISPLAY' environment variable not set... skipping surface info
+error: XDG_RUNTIME_DIR is invalid or not set in the environment.
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded crc32fast v1.5.1
+  Downloaded bitflags v2.13.1
+  Downloaded event-listener-strategy v0.5.4
+  Downloaded equivalent v1.0.2
+  Downloaded cfg_aliases v0.2.2
+  Downloaded cfg-if v1.0.4
+  Downloaded profiling v1.0.18
+  Downloaded parking v2.2.1
+  Downloaded wgpu-core-deps-windows-linux-android v30.0.1
+  Downloaded wgpu-naga-bridge v30.0.1
+  Downloaded document-features v0.2.12
+  Downloaded bit-set v0.10.0
+  Downloaded dlib v0.5.3
+  Downloaded rustc-hash v1.1.0
+  Downloaded async-lock v3.4.2
+  Downloaded naga-types v30.0.1
+  Downloaded khronos-egl v6.0.0
+  Downloaded wayland-sys v0.31.11
+  Downloaded pin-project-lite v0.2.17
+  Downloaded bit-vec v0.9.1
+  Downloaded foldhash v0.2.0
+  Downloaded scopeguard v1.2.0
+  Downloaded autocfg v1.5.1
+  Downloaded event-listener v5.4.2
+  Downloaded lock_api v0.4.14
+  Downloaded bytemuck_derive v1.12.0
+  Downloaded thiserror v2.0.20
+  Downloaded web-time v1.1.0
+  Downloaded arrayvec v0.7.8
+  Downloaded pkg-config v0.3.34
+  Downloaded renderdoc-sys v1.1.0
+  Downloaded termcolor v1.4.1
+  Downloaded thiserror-impl v2.0.20
+  Downloaded libloading v0.8.9
+  Downloaded quote v1.0.47
+  Downloaded static_assertions v1.1.0
+  Downloaded raw-window-handle v0.6.2
+  Downloaded litrs v1.0.0
+  Downloaded once_cell v1.21.4
+  Downloaded parking_lot v0.12.5
+  Downloaded allocator-api2 v0.2.21
+  Downloaded bytemuck v1.25.2
+  Downloaded gpu-allocator v0.28.0
+  Downloaded log v0.4.34
+  Downloaded tracing-attributes v0.1.31
+  Downloaded presser v0.3.1
+  Downloaded spirv v0.4.0+sdk-1.4.341.0
+  Downloaded memmap2 v0.9.11
+  Downloaded ordered-float v5.5.0
+  Downloaded parking_lot_core v0.9.12
+  Downloaded half v2.7.1
+  Downloaded proc-macro2 v1.0.107
+  Downloaded serde_core v1.0.229
+  Downloaded num-traits v0.2.19
+  Downloaded serde_derive v1.0.229
+  Downloaded tracing-core v0.1.36
+  Downloaded unicode-ident v1.0.24
+  Downloaded codespan-reporting v0.13.1
+  Downloaded smallvec v1.15.2
+  Downloaded serde v1.0.229
+  Downloaded indexmap v2.14.0
+  Downloaded zerocopy-derive v0.8.56
+  Downloaded hashbrown v0.16.1
+  Downloaded wgpu-types v30.0.1
+  Downloaded glow v0.17.0
+  Downloaded libm v0.2.16
+  Downloaded hashbrown v0.17.1
+  Downloaded wgpu v30.0.1
+  Downloaded unicode-width v0.2.0
+  Downloaded zerocopy v0.8.56
+  Downloaded syn v2.0.119
+  Downloaded syn v3.0.4
+  Downloaded wgpu-core v30.0.1
+  Downloaded ash v0.38.0+1.3.281
+  Downloaded wgpu-hal v30.0.1
+  Downloaded tracing v0.1.44
+  Downloaded naga v30.0.1
+  Downloaded libc v0.2.189
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling cfg-if v1.0.4
+   Compiling cfg_aliases v0.2.2
+   Compiling syn v3.0.4
+   Compiling foldhash v0.2.0
+   Compiling syn v2.0.119
+   Compiling equivalent v1.0.2
+   Compiling thiserror v2.0.20
+   Compiling libm v0.2.16
+   Compiling autocfg v1.5.1
+   Compiling num-traits v0.2.19
+   Compiling thiserror-impl v2.0.20
+   Compiling libc v0.2.189
+   Compiling hashbrown v0.17.1
+   Compiling libloading v0.8.9
+   Compiling log v0.4.34
+   Compiling once_cell v1.21.4
+   Compiling zerocopy v0.8.56
+   Compiling indexmap v2.14.0
+   Compiling zerocopy-derive v0.8.56
+   Compiling bitflags v2.13.1
+   Compiling rustc-hash v1.1.0
+   Compiling naga-types v30.0.1
+   Compiling bytemuck_derive v1.12.0
+   Compiling naga v30.0.1
+   Compiling ash v0.38.0+1.3.281
+   Compiling unicode-width v0.2.0
+   Compiling bit-vec v0.9.1
+   Compiling parking_lot_core v0.9.12
+   Compiling pkg-config v0.3.34
+   Compiling wayland-sys v0.31.11
+   Compiling bit-set v0.10.0
+   Compiling codespan-reporting v0.13.1
+   Compiling bytemuck v1.25.2
+   Compiling half v2.7.1
+   Compiling spirv v0.4.0+sdk-1.4.341.0
+   Compiling static_assertions v1.1.0
+   Compiling allocator-api2 v0.2.21
+   Compiling khronos-egl v6.0.0
+   Compiling scopeguard v1.2.0
+   Compiling raw-window-handle v0.6.2
+   Compiling arrayvec v0.7.8
+   Compiling smallvec v1.15.2
+   Compiling wgpu-types v30.0.1
+   Compiling lock_api v0.4.14
+   Compiling hashbrown v0.16.1
+   Compiling dlib v0.5.3
+   Compiling wgpu-hal v30.0.1
+   Compiling presser v0.3.1
+   Compiling gpu-allocator v0.28.0
+   Compiling parking_lot v0.12.5
+   Compiling wgpu-naga-bridge v30.0.1
+   Compiling ordered-float v5.5.0
+   Compiling pin-project-lite v0.2.17
+   Compiling renderdoc-sys v1.1.0
+   Compiling glow v0.17.0
+   Compiling profiling v1.0.18
+   Compiling wgpu-core v30.0.1
+   Compiling litrs v1.0.0
+   Compiling parking v2.2.1
+   Compiling event-listener v5.4.2
+   Compiling document-features v0.2.12
+   Compiling wgpu-core-deps-windows-linux-android v30.0.1
+   Compiling wgpu v30.0.1
+   Compiling crc32fast v1.5.1
+   Compiling event-listener-strategy v0.5.4
+   Compiling tracing-core v0.1.36
+   Compiling tracing-attributes v0.1.31
+   Compiling tracing v0.1.44
+   Compiling async-lock v3.4.2
+   Compiling memmap2 v0.9.11
+   Compiling qenlo-core v0.1.0-alpha.1 (/workspace/qenlo-deep768/current/crates/qenlo-core)
+   Compiling web-time v1.1.0
+   Compiling qenlo v0.1.0-alpha.1 (/workspace/qenlo-deep768/current/crates/qenlo)
+   Compiling qenlo-bench v0.1.0-alpha.1 (/workspace/qenlo-deep768/current/crates/qenlo-bench)
+    Finished `release` profile [optimized] target(s) in 1m 31s
+prepared rows=100000 tuning=16 evaluation=64 dimension=768 crc32=50b69280 source=synthetic-uniform-v1

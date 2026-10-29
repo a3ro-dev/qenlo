@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/workspace/venv/lib/python3.12/site-packages/faiss/__init__.py", line 17, in <module>
+    from .loader import *
+  File "/workspace/venv/lib/python3.12/site-packages/faiss/loader.py", line 63, in <module>
+    _load_shared_library(target)
+  File "/workspace/venv/lib/python3.12/site-packages/faiss/loader.py", line 47, in _load_shared_library
+    ctypes.CDLL(path, mode=ctypes.RTLD_GLOBAL)
+  File "/usr/lib/python3.12/ctypes/__init__.py", line 379, in __init__
+    self._handle = _dlopen(self._name, mode)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: /workspace/venv/lib/python3.12/site-packages/nvidia/cublas/lib/libcublas.so.12: undefined symbol: cublasLtGetEnvironmentMode, version libcublasLt.so.12

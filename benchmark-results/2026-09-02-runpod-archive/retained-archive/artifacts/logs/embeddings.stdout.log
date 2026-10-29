@@ -1,0 +1,33 @@
+{
+  "format": "qenlo-local-embedding-source-v1",
+  "dataset": "fancyzhx/ag_news",
+  "dataset_revision": "eb185aade064a813bc0b7f42de02595523103ca4",
+  "dataset_fingerprint": "a0b86db7b77ad2f1",
+  "selection": "train[0:100600] in publisher order",
+  "model": "sentence-transformers/all-MiniLM-L12-v2",
+  "model_revision": "a50ef00143b4d5391434df20ae11632588ac25be",
+  "inference": "local CUDA; normalized float32 output; no remote embedding API",
+  "rows": 100000,
+  "tuning": 100,
+  "evaluation": 500,
+  "dimensions": 384,
+  "batch_size": 512,
+  "encode_seconds": 60.30572009086609,
+  "total_seconds": 63.136959075927734,
+  "output": "/workspace/qenlo-runpod/data/ag-news-local-100k-384.f32",
+  "output_hashes": {
+    "sha256": "70f5f11325823020c23e4b6ebbfbbb1b7849dd5fd15dd747777af7d1a5b8021a",
+    "crc32": "fac5e822"
+  },
+  "python": "3.12.3 (main, Aug 14 2025, 17:47:21) [GCC 13.3.0]",
+  "platform": "Linux-6.8.0-52-generic-x86_64-with-glibc2.39",
+  "torch": "2.8.0+cu128",
+  "cuda": "12.8",
+  "gpu": "NVIDIA GeForce RTX 3070",
+  "packages": {
+    "datasets": "5.0.1",
+    "numpy": "2.1.2",
+    "sentence-transformers": "6.0.1",
+    "transformers": "5.16.1"
+  }
+}

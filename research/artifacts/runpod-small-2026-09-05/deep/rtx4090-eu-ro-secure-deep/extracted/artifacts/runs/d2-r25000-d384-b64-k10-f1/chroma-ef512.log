@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/workspace/qenlo-deep/current/scripts/chroma_replay.py", line 269, in <module>
+    replay(parser.parse_args())
+  File "/workspace/qenlo-deep/current/scripts/chroma_replay.py", line 219, in replay
+    raise ValueError("tuning recall target not met; held-out evaluation not run; tuning metadata retained")
+ValueError: tuning recall target not met; held-out evaluation not run; tuning metadata retained
