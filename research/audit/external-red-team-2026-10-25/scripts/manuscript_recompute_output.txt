@@ -1,0 +1,191 @@
+
+==============================================================================
+TABLE 1: max/min column vs (min-max) range, with rounding bounds
+==============================================================================
+  OK  E= 1000 4050 laptop  heavy: 0.954/0.949 = 1.005; feasible [1.004,1.006]; reported 1.01
+  OK  E= 1000 4050 laptop  light: 0.030/0.030 = 1.000; feasible [0.967,1.034]; reported 1.0
+  OK  E= 1000 4090 host A  heavy: 0.711/0.711 = 1.000; feasible [0.999,1.001]; reported 1.0
+  OK  E= 1000 4090 host A  light: 0.065/0.051 = 1.275; feasible [1.252,1.297]; reported 1.27
+  OK  E= 1000 4090 pods B  heavy: 0.695/0.650 = 1.069; feasible [1.068,1.071]; reported 1.07
+  OK  E= 1000 4090 pods B  light: 0.056/0.027 = 2.074; feasible [2.018,2.132]; reported 2.08
+  OK  E= 1000 H100         heavy: 0.987/0.982 = 1.005; feasible [1.004,1.006]; reported 1.0
+  OK  E= 1000 H100         light: 0.039/0.039 = 1.000; feasible [0.975,1.026]; reported 1.02
+  OK  E= 3000 4050 laptop  heavy: 0.956/0.951 = 1.005; feasible [1.004,1.006]; reported 1.01
+  OK  E= 3000 4050 laptop  light: 0.230/0.055 = 4.182; feasible [4.135,4.229]; reported 4.16
+  OK  E= 3000 4090 host A  heavy: 0.711/0.711 = 1.000; feasible [0.999,1.001]; reported 1.0
+  OK  E= 3000 4090 host A  light: 0.251/0.098 = 2.561; feasible [2.543,2.579]; reported 2.56
+  OK  E= 3000 4090 pods B  heavy: 0.700/0.652 = 1.074; feasible [1.072,1.075]; reported 1.07
+  OK  E= 3000 4090 pods B  light: 0.216/0.050 = 4.320; feasible [4.267,4.374]; reported 4.3
+  OK  E= 3000 H100         heavy: 0.988/0.988 = 1.000; feasible [0.999,1.001]; reported 1.0
+  OK  E= 3000 H100         light: 0.104/0.088 = 1.182; feasible [1.169,1.194]; reported 1.18
+  OK  E=10000 4050 laptop  heavy: 0.941/0.940 = 1.001; feasible [1.000,1.002]; reported 1.0
+  OK  E=10000 4050 laptop  light: 0.595/0.425 = 1.400; feasible [1.397,1.403]; reported 1.4
+  OK  E=10000 4090 host A  heavy: 0.703/0.703 = 1.000; feasible [0.999,1.001]; reported 1.0
+  OK  E=10000 4090 host A  light: 0.512/0.337 = 1.519; feasible [1.516,1.523]; reported 1.52
+  OK  E=10000 4090 pods B  heavy: 0.687/0.643 = 1.068; feasible [1.067,1.070]; reported 1.07
+  OK  E=10000 4090 pods B  light: 0.589/0.128 = 4.602; feasible [4.580,4.624]; reported 4.61
+  OK  E=10000 H100         heavy: 0.977/0.972 = 1.005; feasible [1.004,1.006]; reported 1.01
+  OK  E=10000 H100         light: 0.206/0.188 = 1.096; feasible [1.090,1.101]; reported 1.1
+
+==============================================================================
+Abstract/intro/caption spread claims: which E and GPU they come from
+==============================================================================
+  laptop light max/min by E: [(1000, 1.0), (3000, 4.16), (10000, 1.4)]
+  -> abstract/contribution '4.2x on the laptop' = E=3,000 (4.16); at E=10,000 laptop spread is 1.40x
+  pods light max/min by E: [(1000, 2.08), (3000, 4.3), (10000, 4.61)]
+  -> Sec.4 '4.3-4.6x across the five 4090 pods' omits E=1,000 (2.08x)
+  host A light max/min by E: [(1000, 1.27), (3000, 2.56), (10000, 1.52)]
+  -> Fig.1 caption 'up to 1.5x on a machine' = host A at E=10,000 (1.52); intro '1.4x on the laptop' = E=10,000
+  heavy within-machine max/min max = 1.0053 (claim <=1%); across pods max = 1.0736 (claim 7%)
+  4090 host A + pods light at E=10k: 0.589/0.128 = 4.602 (Sec.8 '4.6x span')
+  light faster than heavy in every Table 1 cell: True
+
+==============================================================================
+Sec. 8: device-time advantage heavy/light at E=10,000 (Table 1) and locked (Table 4)
+==============================================================================
+  4050 laptop : 0.941/0.461 = 2.04x
+  4090 host A : 0.703/0.440 = 1.60x
+  4090 pods B : 0.673/0.142 = 4.74x
+  H100        : 0.977/0.205 = 4.77x
+  reported: 1.6 (host A), 2.0 (laptop), 4.7 (pods), 4.8 (H100)
+  OK  locked-boost heavy/light E=10k (Table 4: 0.941/0.113): computed=8.3274 reported=8.3 (tol 0.05)
+
+==============================================================================
+TABLE 4 (E-LOCK): U, Lhi, Llo light; heavy Lhi
+==============================================================================
+  U/Lhi light: ['2.88', '3.91', '5.02']  (Sec.8 claims 2.9-5.0x)
+  Llo/Lhi light: ['4.00', '3.93', '3.93']  SM ratio 2670/585 = 4.56
+  Llo/U light: ['1.39', '1.01', '0.78']  (<1 => unlocked median SLOWER than the 'low-state' lock)
+  E-LOCK U vs D1 unlocked laptop (Table 1) light medians: [(1000, 0.069, 0.03, '2.30x'), (3000, 0.176, 0.106, '1.66x'), (10000, 0.567, 0.461, '1.23x')]
+  E-LOCK U max/min vs D1 laptop max/min: E=1k 2.84 vs 1.00; E=3k 2.11 vs 4.16; E=10k 1.51 vs 1.40
+  Lhi vs D1 unlocked median (alt. 'understatement'): ['1.25x', '2.36x', '4.08x']
+  OK  K3: Llo(E=10k)/D1 light (0.444/0.461) deviation: computed=0.0369 reported=0.04 (tol 0.005)
+  K3 against SAME-experiment U arm instead: 0.444/0.567 = 0.783 -> 21.7% off (K3 tolerance 25%)
+  OK  heavy slowdown low lock (Table 5 LL/HH heavy E=1k: 3.615/0.947): computed=3.8173 reported=3.8 (tol 0.05)
+  Sec.7 '0.95 to 3.6 ms' = 3.79x ; heavy Llo is NOT in Table 4 (it appears only in Table 5)
+  K2 reconstruction (assume best unlocked median = U x heater ratio, ratio-of-medians approximation):
+    E=1000: U+heater ~ 0.0393 ms; Lhi/that = 0.610; 1 - that = 0.390
+    E=3000: U+heater ~ 0.0651 ms; Lhi/that = 0.691; 1 - that = 0.309
+    E=10000: U+heater ~ 0.2268 ms; Lhi/that = 0.498; 1 - that = 0.502
+  reported: Lhi = 0.50-0.68 of best unlocked median <=> 32-50% less time (1-0.68=0.32, 1-0.50=0.50): mutually consistent
+  with heater-off U as reference Lhi/U would be ['0.348', '0.256', '0.199'] -> so 'best unlocked' must be heater-on
+  U+heater vs Lhi as 'understatement' factor: ['1.64x', '1.45x', '2.01x'] (vs 2.9-5.0x quoted)
+
+==============================================================================
+TABLE 5 (E-SPLIT): memory share m = ln(tHL/tHH)/ln(tLL/tHH); SM share s = ln(tLH/tHH)/ln(tLL/tHH)
+==============================================================================
+  Light E= 1000 sel: m=0.000 (rep 0.0) rounding-range [-0.031,0.030] s=1.000 m+s=1.000 | score: m=0.000 (rep 0.0) range [-0.130,0.115] s=1.000 m+s=1.000
+  Light E= 3000 sel: m=0.016 (rep 0.0) rounding-range [0.000,0.032] s=1.000 m+s=1.016 | score: m=0.000 (rep 0.0) range [-0.067,0.063] s=1.000 m+s=1.000
+  Light E=10000 sel: m=0.068 (rep 0.07) rounding-range [0.062,0.074] s=0.983 m+s=1.051 | score: m=0.479 (rep 0.48) range [0.468,0.490] s=0.870 m+s=1.349
+  Heavy E= 1000 sel: m=0.000 (rep 0.0) rounding-range [-0.001,0.001] s=1.000 m+s=1.000 | score: m=0.000 (rep 0.0) range [-0.005,0.005] s=1.000 m+s=1.000
+  Heavy E= 3000 sel: m=0.000 (rep 0.0) rounding-range [-0.001,0.001] s=1.000 m+s=1.000 | score: m=0.000 (rep 0.0) range [-0.005,0.005] s=1.000 m+s=1.000
+  Heavy E=10000 sel: m=0.020 (rep 0.02) rounding-range [0.019,0.020] s=0.995 m+s=1.014 | score: m=0.243 (rep 0.24) range [0.240,0.246] s=0.908 m+s=1.151
+  OK  light scoring 0.069/0.034 ('doubled'): computed=2.0294 reported=2.0 (tol 0.05)
+  OK  heavy scoring 0.282/0.196 ('+44%'): computed=1.4388 reported=1.44 (tol 0.005)
+  OK  light selection HL/HH E=10k 0.124/0.113 ('+10%'): computed=1.0973 reported=1.1 (tol 0.005)
+  heavy scoring HH grows with E: 0.126 -> 0.140 -> 0.196 = 1.56x (heavy path said to do work 'proportional to N regardless of E')
+  E-SPLIT corners vs E-LOCK (claimed within 0.2%):
+    E=1000: light HH 0.024 vs Lhi 0.024 (+0.0% at display precision); light LL 0.096 vs Llo 0.096 (+0.0%); heavy HH 0.947 vs Lhi 0.948 (-0.11%)
+    E=3000: light HH 0.044 vs Lhi 0.045 (-2.2% at display precision); light LL 0.177 vs Llo 0.177 (+0.0%); heavy HH 0.951 vs Lhi 0.951 (+0.00%)
+    E=10000: light HH 0.113 vs Lhi 0.113 (+0.0% at display precision); light LL 0.444 vs Llo 0.444 (+0.0%); heavy HH 0.94 vs Lhi 0.941 (-0.11%)
+
+==============================================================================
+TABLE 3: achievable fractions; descriptive tests (NOT independent; pairing ignored)
+==============================================================================
+  laptop off: 13/25 = 52.0% (reported 52%)
+  pods off: 7/25 = 28.0% (reported 28%)
+  pods on: 4/25 = 16.0% (reported 16%)
+  H100 off: 1/9 = 11.1% (reported 11%)
+  Fisher exact (descriptive only) laptop 13/25 vs 0/25: p=2.931e-05
+  Fisher exact (descriptive only) pods 7/25 vs 4/25: p=0.4962
+  Fisher exact (descriptive only) H100 1/9 vs 0/9: p=1
+  Note: Fig.1c pods heater-off hollow squares reach ~4.8x; Sec.6 'tail reaching 3.3x' is the p90 (3.29), not the max
+
+==============================================================================
+TABLE 7 vs TABLE 6 vs Sec.6/Scorecard
+==============================================================================
+  laptop E=  100: Lcall 1.11 vs Hcall 1.09 -> no; Ldev 0.91 vs Hdev 1.19 -> yes; consistent
+  laptop E= 1000: Lcall 1.13 vs Hcall 1.06 -> no; Ldev 1.0 vs Hdev 1.18 -> yes; consistent
+  laptop E= 3000: Lcall 0.96 vs Hcall 1.07 -> yes; Ldev 0.65 vs Hdev 1.19 -> yes; consistent
+  laptop E=10000: Lcall 0.97 vs Hcall 1.08 -> yes; Ldev 0.46 vs Hdev 1.19 -> yes; consistent
+  laptop E=30000: Lcall 0.95 vs Hcall 1.07 -> yes; Ldev 0.59 vs Hdev 1.0 -> yes; consistent
+  pods   E=  100: Lcall 0.97 vs Hcall 1.07 -> yes; Ldev 0.92 vs Hdev 1.0 -> yes; P4=no although light device 0.92 (host criterion must have failed)
+  pods   E= 1000: Lcall 0.97 vs Hcall 1.07 -> yes; Ldev 0.9 vs Hdev 1.0 -> yes; consistent
+  pods   E= 3000: Lcall 0.96 vs Hcall 1.07 -> yes; Ldev 0.87 vs Hdev 1.0 -> yes; consistent
+  pods   E=10000: Lcall 0.94 vs Hcall 1.07 -> yes; Ldev 0.82 vs Hdev 1.0 -> yes; consistent
+  pods   E=30000: Lcall 1.07 vs Hcall 1.07 -> TIE; Ldev 1.0 vs Hdev 1.0 -> TIE; P3-call recomputed TIE vs T6 no; P3-dev recomputed TIE vs T6 yes; P4=yes but light device ratio 1.0 (no fall at shown precision)
+  H100   E= 1000: Lcall 1.24 vs Hcall 1.26 -> yes; Ldev 0.86 vs Hdev 1.36 -> yes; consistent
+  H100   E= 3000: Lcall 1.1 vs Hcall 1.27 -> yes; Ldev 0.71 vs Hdev 1.35 -> yes; consistent
+  H100   E=10000: Lcall 1.18 vs Hcall 1.25 -> yes; Ldev 0.81 vs Hdev 1.36 -> yes; consistent
+  Table 6 counts: P3 call yes=10/13 (claim 10), P3 device yes=13/13 (claim 13), P4 yes=6/13 (claim 6)
+  Sec.6: light call with heater 0.94-0.96 on pods at E=3k-10k (T7: 0.96, 0.94); laptop E>=3k 0.95-0.97 (T7: 0.96,0.97,0.95): OK
+  Sec.6: heavy calls 6-9% slower consumer (T7 1.06-1.09 laptop, 1.07 pods), 25-27% H100 (1.25-1.27): OK
+  Sec.6: heavy device 'uniformly slower on the laptop (1.19x)' -- but laptop E=30,000 heavy device = 1.00 [1.00,1.00]
+  Sec.7 heater effect unlocked (E-LOCK) 0.57/0.37/0.40 vs D1 Table 7 laptop 1.00/0.65/0.46 at E=1k/3k/10k
+
+==============================================================================
+TABLE 8: winners, ratio-of-medians vs Table 7 median-of-ratios, CPU per-row cost
+==============================================================================
+  laptop E=  100: CPU 0.01 light-off 0.172 (CPU) light-on 0.253 (CPU) heavy 1.999; on/off=1.471 vs T7 light call 1.11; CPU us/row=0.100
+  laptop E= 1000: CPU 0.083 light-off 0.23 (CPU) light-on 0.374 (CPU) heavy 2.05; on/off=1.626 vs T7 light call 1.13; CPU us/row=0.083
+  laptop E= 3000: CPU 0.308 light-off 0.548 (CPU) light-on 0.559 (CPU) heavy 2.109; on/off=1.020 vs T7 light call 0.96; CPU us/row=0.103
+  laptop E=10000: CPU 3.332 light-off 1.682 (GPU) light-on 1.685 (GPU) heavy 2.204; on/off=1.002 vs T7 light call 0.97; CPU us/row=0.333
+  laptop E=30000: CPU 9.187 light-off 2.265 (GPU) light-on 2.138 (GPU) heavy 2.791; on/off=0.944 vs T7 light call 0.95; CPU us/row=0.306
+  pods   E=  100: CPU 0.008 light-off 0.103 (CPU) light-on 0.1 (CPU) heavy 0.828; on/off=0.971 vs T7 light call 0.97; CPU us/row=0.080
+  pods   E= 1000: CPU 0.048 light-off 0.123 (CPU) light-on 0.123 (CPU) heavy 0.835; on/off=1.000 vs T7 light call 0.97; CPU us/row=0.048
+  pods   E= 3000: CPU 0.133 light-off 0.178 (CPU) light-on 0.175 (CPU) heavy 0.849; on/off=0.983 vs T7 light call 0.96; CPU us/row=0.044
+  pods   E=10000: CPU 1.495 light-off 0.43 (GPU) light-on 0.405 (GPU) heavy 0.86; on/off=0.942 vs T7 light call 0.94; CPU us/row=0.149
+  pods   E=30000: CPU 4.907 light-off 0.779 (GPU) light-on 0.833 (GPU) heavy 0.894; on/off=1.069 vs T7 light call 1.07; CPU us/row=0.164
+  laptop: CPU per-row cost jumps 3.25x between E=3k (FP32+FP64 rescoring) and E=10k (FP64 throughout); FP32-rate extrapolation to E=10k = 1.027 ms vs light GPU 1.682 ms
+  pods: CPU per-row cost jumps 3.37x between E=3k (FP32+FP64 rescoring) and E=10k (FP64 throughout); FP32-rate extrapolation to E=10k = 0.443 ms vs light GPU 0.43 ms
+  H100 and RTX 4090 host A are absent from Table 8 -> abstract's 'at E=10,000 light faster than CPU' unverifiable for H100
+  Busy-fraction at LOCKED BOOST (E-LOCK Lhi sel + E-SPLIT HH scoring) / D1 laptop light call (Table 8):
+    E=1000: (0.024+0.007)/0.23 = 13.5%  (unlocked D1 top-k only: 13.0%)
+    E=3000: (0.045+0.012)/0.548 = 10.4%  (unlocked D1 top-k only: 19.3%)
+    E=10000: (0.113+0.034)/1.682 = 8.7%  (unlocked D1 top-k only: 27.4%)
+  Laptop E=10k: heater cut light device 0.461 by 54% (~0.249 ms) yet light call 1.682 -> 1.685 ms
+
+==============================================================================
+Appendix C and Section 4 statistics
+==============================================================================
+  OK  235.7% regret -> ratio: computed=3.3570 reported=3.36 (tol 0.005)
+  Median regret over 16 workloads with 8 at zero = mean of 8th/9th order stats = (0 + r_min_wrong)/2 if 'median' is the usual even-n definition
+  => a 0.4% median implies smallest non-zero regret ~0.8% under that definition (cannot check: per-workload regrets not in PDF)
+  Spearman rho=-0.83, n=10: t-approx t=-4.209, two-sided p=0.0030
+  exact permutation (no ties): P(|rho|>=0.83)=0.00471, one-sided P(rho<=-0.83)=0.00236
+  rho achievable values near -0.83: sum d^2 = 301.9 -> rho(302)=-0.8303, rho(300)=-0.8182
+
+==============================================================================
+Percentile bootstrap of the median with n = 3 or 5 blocks
+==============================================================================
+  n=3: P(boot median = min) = 0.2593 (>0.025 => 2.5th pct = sample min, 97.5th = sample max); interval = [min,max]; distribution-free coverage of population median = 0.7500; distinct resamples = 10
+  n=5: P(boot median = min) = 0.0579 (>0.025 => 2.5th pct = sample min, 97.5th = sample max); interval = [min,max]; distribution-free coverage of population median = 0.9375; distinct resamples = 126
+  simulation n=3: sample min/max 1.3916/2.2742; bootstrap 2.5/97.5 pct 1.3916/2.2742
+  simulation n=5: sample min/max 0.8008/2.2011; bootstrap 2.5/97.5 pct 0.8008/2.2011
+  coverage of nominal 95% percentile-bootstrap CI for median, bimodal population, n=3: 0.746
+  coverage of nominal 95% percentile-bootstrap CI for median, bimodal population, n=5: 0.928
+  coverage of nominal 95% percentile-bootstrap CI for median, bimodal population, n=10: 0.935
+
+==============================================================================
+Exact sign test: smallest attainable two-sided p with all blocks in one direction
+==============================================================================
+  n=3: p_min = 0.2500
+  n=5: p_min = 0.0625
+  n=10: p_min = 0.0020
+  Multiplicity: D1/D1R/H100 scorecard = 13 cells x 4 predictions (+P3 split) = 52-65 tests; E-LOCK K1-K5 x 3 E; E-SPLIT S0-S3 x cells
+  Bonferroni alpha for 52 tests = 0.00096; unattainable with n<=5 blocks by any exact rank/sign test (min p=0.0625)
+
+==============================================================================
+Telemetry vs device time: does the heater's clock change (Table 2) predict its device-time change (Table 7)?
+==============================================================================
+  laptop E= 1000: SM 2130->2130 MHz => predicted device ratio 1.00; observed 1.00; observed/predicted 1.00
+  laptop E= 3000: SM 1080->1912 MHz => predicted device ratio 0.56; observed 0.65; observed/predicted 1.15
+  laptop E=10000: SM 585->1215 MHz => predicted device ratio 0.48; observed 0.46; observed/predicted 0.96
+  pods   E= 1000: SM 2520->2550 MHz => predicted device ratio 0.99; observed 0.90; observed/predicted 0.91
+  pods   E= 3000: SM 2505->2550 MHz => predicted device ratio 0.98; observed 0.87; observed/predicted 0.89
+  pods   E=10000: SM 2235->2520 MHz => predicted device ratio 0.89; observed 0.82; observed/predicted 0.92
+  H100   E= 1000: SM 1605->1980 MHz => predicted device ratio 0.81; observed 0.86; observed/predicted 1.06
+  H100   E= 3000: SM 1275->1980 MHz => predicted device ratio 0.64; observed 0.71; observed/predicted 1.10
+  H100   E=10000: SM 645->1980 MHz => predicted device ratio 0.33; observed 0.81; observed/predicted 2.49
+  pods E=10k: 'boost' 2820 vs light-median 2235 => at most 1.26x slowdown from the median clock, vs 4.61x process spread
+  laptop Table 2 light E=10k 585 MHz vs Fig.1b caption 'about 500 MHz' (one process) vs E-LOCK low lock 585 MHz

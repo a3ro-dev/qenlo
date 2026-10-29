@@ -1,0 +1,38 @@
+diff --git a/crates/qenlo/examples/gpu_heater.rs b/crates/qenlo/examples/gpu_heater.rs
+index a3809cf..996764b 100644
+--- a/crates/qenlo/examples/gpu_heater.rs
++++ b/crates/qenlo/examples/gpu_heater.rs
+@@ -114,6 +114,15 @@ fn main() {
+             .expect("poll");
+         busy += t.elapsed();
+         cycles += 1;
++        // The runner terminates this process, so the final summary is never printed;
++        // emit a cumulative line every 1,000 cycles so duty cycle is recorded.
++        if cycles % 1_000 == 0 {
++            eprintln!(
++                "heater progress cycles={cycles} mean_busy_ms={:.3} duty={:.3}",
++                busy.as_secs_f64() * 1e3 / cycles as f64,
++                busy.as_secs_f64() / start.elapsed().as_secs_f64()
++            );
++        }
+         std::thread::sleep(Duration::from_millis(sleep_ms));
+     }
+     eprintln!(
+diff --git a/crates/qenlo/src/lib.rs b/crates/qenlo/src/lib.rs
+index 8c0a8be..f689abf 100644
+--- a/crates/qenlo/src/lib.rs
++++ b/crates/qenlo/src/lib.rs
+@@ -555,8 +555,11 @@ impl EligibilityPlan {
+             EligibilityRepresentation::TinyRows | EligibilityRepresentation::SortedRows => {
+                 eligible_count as u64 * 4
+             }
+-            EligibilityRepresentation::DenseMask => corpus_size as u64 * 4,
+-            EligibilityRepresentation::ShaderPredicate => 0,
++            // Mask and shader-predicate modes both upload one u32 per row per query
++            // (gpu.rs chunk_eligibility: mask bits or per-row liveness).
++            EligibilityRepresentation::DenseMask | EligibilityRepresentation::ShaderPredicate => {
++                corpus_size as u64 * 4
++            }
+         };
+         Self {
+             generation,
