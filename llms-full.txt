@@ -11,27 +11,58 @@ URL: https://a3ro-dev.github.io/qenlo/docs/README.md
 Description: Core introduction, boundaries, and documentation index
 ================================================================================
 
-# Qenlo documentation
+# Qenlo
 
-Qenlo is a local-first embedded vector store for durable, exact retrieval over metadata-filtered collections. It keeps one canonical record store and makes the execution path observable.
+Qenlo is an embedded vector store. It runs inside your application, keeps its records in one durable file, applies your metadata filters *before* ranking, and returns exact nearest neighbours. There is no server to run and no network access.
 
-> **Research-grade beta.** GPU and ANN paths are optional. Benchmark observations are scoped to their named hardware, source revision, workload, and timing boundary.
+It is a research beta (`0.1.0-beta.2`). The storage format and API are unchanged since alpha.11; performance numbers on this site are tied to the hardware they were measured on.
 
-## Start here
+## Install
 
-- [Quickstart](quickstart.md): build and run the Rust example from this checkout.
-- [Core concepts](concepts.md): canonical records, filtering, and execution reports.
-- [Architecture](architecture.md): storage, recovery, derived indexes, and routing.
-- [SDKs](sdks/rust.md): language-specific source-checkout guidance.
+| Language | Command |
+| --- | --- |
+| Rust | `cargo add qenlo` |
+| Python | `pip install qenlo==0.1.0b2` |
+| TypeScript | `npm install @a3ro.dev/qenlo@beta` |
 
-## Evidence and release status
+Go, Kotlin and Swift bindings are previews. See [SDKs](sdks/rust.md).
 
-- [Verification record](verification.md): checks that have been run and their scope.
-- [Measured results](results-2026-08-28.md): retained benchmark evidence.
-- [Implementation status](implementation-status.md): supported, preview, and open work.
-- [Research paper](../QENLO-RESEARCH-PAPER.pdf): GPU power states and the latency of light vector-search queries. The earlier [evidence audit](../paper/archive/qenlo-evidence-audit-v1.pdf) covers routing methodology and limits.
+## Headline numbers
 
-Need a specific answer? Start with the quickstart, then use the sidebar to move deeper.
+Exact results, recall 1.000. P95 call latency, lower is better.*
+
+| Matchup | Qenlo | Other | Faster |
+| --- | ---: | ---: | ---: |
+| Exact search vs LanceDB, 100k × 384, CPU | 12.9 ms | 242.3 ms | **18.8x** |
+| Exact search vs Milvus Lite, same cell | 12.9 ms | 76.2 ms | **5.9x** |
+| Selective filter vs Chroma, laptop, 1% eligible | 0.24 ms | 43.0 ms | **~180x** |
+| GPU vs FAISS flat (CPU), 100k × 768 | 0.90 ms | 14.8 ms | **16.5x** |
+| GPU vs Qenlo CPU, 100k × 768, batch 8 | 0.90 ms | 28.6 ms | **32x** |
+
+\* Measured on specific machines, with the losses listed too. See the [full table and caveats](highlights.md).
+
+## Where to go
+
+<div class="card-grid">
+<a href="#/quickstart"><strong>Quickstart</strong><span>Create a collection, filter, search, reopen it.</span></a>
+<a href="#/concepts"><strong>Core concepts</strong><span>Records, filters, exact search and the execution report.</span></a>
+<a href="#/browser"><strong>Collection browser</strong><span>Inspect a collection from the terminal, web or desktop.</span></a>
+<a href="#/use-cases"><strong>Use cases</strong><span>Where Qenlo fits, and where it does not.</span></a>
+<a href="#/architecture"><strong>Architecture</strong><span>Storage, recovery, derived indexes and routing.</span></a>
+<a href="#/trade-offs"><strong>Trade-offs</strong><span>Memory, CPU versus GPU, and when to use something else.</span></a>
+</div>
+
+## What is new in beta.2
+
+- Exact CPU search runs certified FP32 at any size and splits large queries across threads. The old 4,096-row cliff is gone.
+- Exact GPU search selects top-k with a tiled kernel, 3 to 4.5 times faster on the device at 10k or more eligible rows.
+- Results are unchanged: every mode is checked against an FP64 reference.
+
+Full notes are in the [changelog](https://github.com/a3ro-dev/qenlo/blob/main/CHANGELOG.md).
+
+## Research
+
+Qenlo ships with its evidence. The [research paper](../QENLO-RESEARCH-PAPER.pdf ':ignore') studies GPU power states and the latency of light vector-search queries. The [benchmark protocol](benchmark-protocol.md), [measured results](results-2026-08-28.md) and [verification record](verification.md) say exactly what was run, where, and what it does not show.
 
 
 ================================================================================
@@ -43,49 +74,91 @@ Description: Build from source, create collections, insert, search, and reopen
 
 # Quickstart
 
-Qenlo alphas are published to crates.io (`qenlo`), PyPI (`qenlo`), and npm
-(`@a3ro.dev/qenlo`, dist-tag `beta`). Install commands with the current version
-are in the [Rust](sdks/rust.md), [Python](sdks/python.md), and
-[TypeScript](sdks/typescript.md) guides. The full Rust API reference is on
-[docs.rs](https://docs.rs/qenlo/latest/qenlo/struct.Collection.html), and the
-terminal browser's `?` tab lists every `Collection` method with an example.
+Create a collection, add records, search with a filter, and reopen it. Every example uses 3-dimensional vectors so you can read them; use your embedding model's dimension in practice.
 
-## Rust from this checkout
+A record is `(id, user_id, timestamp, vector)`. A filter selects live records by optional `user_id` and a timestamp range (start inclusive, end exclusive), and search ranks only those records.
 
-```powershell
-cargo run -p qenlo --example quickstart -- ./demo.qenlo cpu
-$env:WGPU_BACKEND = 'dx12'
-cargo run -p qenlo --features gpu-wgpu --example quickstart -- ./gpu-demo.qenlo gpu
+## Rust
+
+```bash
+cargo add qenlo
+cargo add tokio --features full
 ```
 
-Use a new directory. The example adds records, runs a filtered cosine search, deletes a row, closes the collection, and verifies state after reopen. Required GPU mode fails if the requested adapter cannot execute it.
-
-## Minimal Rust API
-
 ```rust
-use qenlo::{Collection, CollectionConfig, Filter};
+use qenlo::{Collection, CollectionConfig, Filter, NewRecord, TimestampRange};
 
-async fn search() -> Result<(), qenlo::Error> {
-    let db = Collection::new(CollectionConfig::cpu_exact(3)).await?;
-    db.add(1, 42, 1_700_000_000, &[0.1, 0.8, 0.5])?;
-    let response = db.search(&[0.1, 0.7, 0.5], &Filter::ALL, 5).await?;
-    println!("{:?}", response.results);
+#[tokio::main]
+async fn main() -> Result<(), qenlo::Error> {
+    let config = CollectionConfig::cpu_exact(3);
+    let db = Collection::create("./notes.qenlo", config.clone()).await?;
+
+    db.add_batch(&[
+        NewRecord { id: 1, user_id: 7, timestamp: 10, vector: vec![1.0, 0.0, 0.0] },
+        NewRecord { id: 2, user_id: 7, timestamp: 20, vector: vec![0.0, 1.0, 0.0] },
+    ])?;
+
+    let filter = Filter::new(Some(7), TimestampRange::new(Some(0), Some(30)));
+    let response = db.search(&[1.0, 0.0, 0.0], &filter, 10).await?;
+    assert_eq!(response.results[0].id, 1);
+
+    db.delete(1)?;
+    db.close()?;
+
+    let reopened = Collection::open("./notes.qenlo", config).await?;
+    assert_eq!(reopened.filter(&Filter::ALL), vec![2]);
     Ok(())
 }
 ```
 
-Collections above the default admission limit need an explicit budget, including in-memory benchmark collections:
+Use a new path for `create`. Collections larger than the default admission limit need an explicit budget through `Collection::new_with_options` and `StorageOptions { max_load_bytes }`.
 
-```rust
-use qenlo::{Collection, CollectionConfig, StorageOptions};
+## Python
 
-let db = Collection::new_with_options(
-    CollectionConfig::cpu_exact(768),
-    StorageOptions { max_load_bytes: 2 * 1024 * 1024 * 1024 },
-).await?;
+```bash
+pip install "qenlo==0.1.0b2"
 ```
 
-See the language-specific pages under `docs/sdks/` for source-checkout examples. Do not advertise an SDK backend unless its packaged native artifact contains that feature.
+```python
+from qenlo import Collection, Filter, Record
+
+with Collection.memory(dimension=3) as db:
+    db.add(Record(id=1, user_id=7, timestamp=10, vector=(1.0, 0.0, 0.0)))
+    db.add(Record(id=2, user_id=7, timestamp=20, vector=(0.0, 1.0, 0.0)))
+    response = db.search(query=(1.0, 0.0, 0.0), filter=Filter(user_id=7), k=5)
+    print(response.results[0].id)
+```
+
+## TypeScript
+
+```bash
+npm install @a3ro.dev/qenlo@beta
+```
+
+```typescript
+import { Collection } from "@a3ro.dev/qenlo";
+
+using db = Collection.memory(3);
+db.add({ id: 1n, userId: 7n, timestamp: 10n, vector: [1, 0, 0] });
+const response = db.search([1, 0, 0], { userId: 7n }, 5);
+console.log(response.results[0]?.id);
+```
+
+## Run the bundled example
+
+From a checkout of the repository:
+
+```bash
+cargo run -p qenlo --example quickstart -- ./demo.qenlo cpu
+```
+
+It adds records, runs a filtered cosine search, deletes a row, closes the collection and verifies state after reopen. Add `--features gpu-wgpu` and pass `gpu` instead of `cpu` to require the GPU path; it fails rather than silently falling back if the adapter cannot run it.
+
+## Next
+
+- [Core concepts](concepts.md) for filters, exactness and the execution report.
+- [Collection browser](browser.md) to look inside a collection.
+- Per-language details: [Rust](sdks/rust.md), [Python](sdks/python.md), [TypeScript](sdks/typescript.md). Full Rust API reference on [docs.rs](https://docs.rs/qenlo).
 
 
 ================================================================================
@@ -337,7 +410,7 @@ Canonical vectors, metadata indexes, and prepared scan layouts consume host memo
 
 ### CPU performance
 
-CPU is the conservative default and often wins when filtering leaves very few candidates. Qenlo's measured CPU implementation is not a bound on optimized libraries: in one corrected filtered batch cell, FAISS Flat and Torch CPU were roughly nine times faster than Qenlo CPU. General CPU/GPU crossover claims therefore require a stronger CPU baseline.
+CPU is the default and wins when filtering leaves few candidates. Since beta.2 the exact scan runs certified FP32 at any size and splits large queries across threads. On a 12-thread laptop (100k rows, 384 dimensions, k=10) 30,000 eligible rows went from 6.6 to 3.3 ms and 100,000 from 15.2 to 6.6 ms. That is still not a bound on optimized libraries: earlier retained runs had FAISS Flat and Torch CPU roughly nine times faster on one filtered batch cell, and that gap has not been re-measured against the new scan.
 
 ### GPU portability
 
@@ -353,7 +426,7 @@ Canonical mutations can invalidate prepared eligibility and accelerator state. R
 
 ## Routing guidance
 
-Start with exact CPU execution. Add WGPU or tensor execution only after measuring completed calls on the target device and realistic filters. Treat the built-in automatic threshold as a fallback, not a learned or transferable router.
+Start with exact CPU execution. Add WGPU or tensor execution only after measuring completed calls on the target device and realistic filters. The automatic router still sends 4,096 or more eligible rows to the GPU; with the faster CPU scan that threshold is probably too low, so measure before relying on it.
 
 The September 2026 paper found route reversals, but its cohorts differ in hardware, data, and source revision. Its headline corrected WGPU cells used a selector candidate that was later rejected. Those results motivate profiling; they do not select a production default.
 
@@ -414,12 +487,12 @@ This page describes Qenlo's current code and evidence. It does not infer competi
 
 The September 5, 2026 campaign contains 182 status rows: 131 completed, 42 marked failed or unavailable, seven failed, and two invalid-harness rows. Only 130 qualify because one completed USearch row misses its recall gate. On one RTX 4090/Vulkan host, exact WGPU P95 was 0.897 ms for 100k by 768, batch one, `k=1`, and 0.896 ms for batch eight, `k=64`, at 10% eligibility. PyTorch CUDA was faster in both cells. Those WGPU rows used a lane-minimum selector candidate that won five and lost seven of 12 frozen-baseline pairs and was subsequently rejected.
 
-These numbers do not describe the retained selector and select no deployment default. See [the performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) and [the evidence audit](../paper/archive/qenlo-evidence-audit-v1.pdf) for timing boundaries and limitations.
+These numbers do not describe the retained selector and select no deployment default. See [the performance report](https://github.com/a3ro-dev/qenlo/blob/main/research/artifacts/runpod-small-2026-09-05/report/performance-report.md) and [the evidence audit](https://github.com/a3ro-dev/qenlo/blob/main/paper/archive/qenlo-evidence-audit-v1.pdf) for timing boundaries and limitations.
 
 Alpha.5 evaluated a simpler automatic-routing rule derived from the retained
 campaign. It fit the development pairs but failed the preregistered held-out
 gate (8/16 wrong routes; 235.7% maximum regret), so it was not shipped. See the
-[held-out gate report](../research/data/processed/alpha5-router-heldout/report.md).
+[held-out gate report](https://github.com/a3ro-dev/qenlo/blob/main/research/data/processed/alpha5-router-heldout/report.md).
 
 
 ================================================================================
@@ -633,7 +706,7 @@ Description: JNA bindings for JVM applications
 
 JNA bindings for JVM applications. Android packaging and bridge validation are tracked separately, so this JVM artifact does not provide Android support on its own.
 
-Alpha.5 ships a preview JAR in the GitHub release. Maven Central publication is
+Each release ships a preview JAR in the GitHub release. Maven Central publication is
 not guaranteed; build from `sdk/kotlin` with `gradle build` when no registry
 artifact is available.
 
@@ -666,7 +739,7 @@ Description: Swift bindings over the shared C ABI
 Swift bindings over the shared C ABI for macOS 13+ and iOS 16+.
 
 The source package lives in `sdk/apple`. The repository root is not currently a
-SwiftPM package, so alpha.5 does not claim remote `Package.swift` installation.
+SwiftPM package, so this release does not claim remote `Package.swift` installation.
 Build the wrapper from source or use the `QenloFFI.xcframework.zip` attached to
 the matching GitHub release.
 
@@ -1036,8 +1109,8 @@ Description: Custom WGSL scoring, selection pipelines, chunking, and memory aren
 # How Qenlo's GPU search works
 
 The GPU implementation is a custom exact cosine-search kernel in
-[`gpu_exact.wgsl`](../crates/qenlo/src/gpu_exact.wgsl), driven by
-[`gpu.rs`](../crates/qenlo/src/gpu.rs). The wgpu backend provides device access, buffer
+[`gpu_exact.wgsl`](https://github.com/a3ro-dev/qenlo/blob/main/crates/qenlo/src/gpu_exact.wgsl), driven by
+[`gpu.rs`](https://github.com/a3ro-dev/qenlo/blob/main/crates/qenlo/src/gpu.rs). The wgpu backend provides device access, buffer
 management, shader compilation, and synchronization. It does not supply a vector
 index or nearest-neighbor algorithm. USearch is a separate, externally supplied
 CPU HNSW implementation; its graph does not run on the GPU.
@@ -1142,7 +1215,7 @@ fallback, not a claimed universal crossover or a completed adaptive phase engine
 
 The original implementation scored one vector per thread and selected top-k
 serially. Cooperative loads, parallel reduction, and larger bounded chunks removed
-measured bottlenecks. [The retained tuning runs](../benchmarks/2026-08-28/gpu-tuning/)
+measured bottlenecks. [The retained tuning runs](https://github.com/a3ro-dev/qenlo/tree/main/benchmarks/2026-08-28/gpu-tuning)
 show broad-scan gains and selective-filter losses on this laptop. Their small
 query sets are exploratory, not the preregistered scale gate.
 
@@ -1430,7 +1503,7 @@ The preregistered gate is 1m x 768, 1% eligible, batch 1, k=10: at least 2x lowe
 P95 than the best validated CPU path at the recall target, no invalid results,
 five shuffled runs with uncertainty reported, and complete transfer/selection
 costs with basic diagnostics. This runner enables measurements; it does not
-establish that gate. [Native Chroma replay](../scripts/chroma-replay.md) now
+establish that gate. [Native Chroma replay](https://github.com/a3ro-dev/qenlo/blob/main/scripts/chroma-replay.md) now
 validates the same vectors, canonical synthetic metadata, compound filter,
 independent truth, and shuffled query order. `scripts/compare_runs.py` checks
 workload compatibility and recall gates before reporting latency ratios and
@@ -1497,7 +1570,7 @@ The suite covers invalid inputs, filter semantics, durable reopen, exact CPU sea
 
 ## Retained device submissions
 
-The [Intel Arc submission](../benchmarks/2026-08-31/device-lab/intel-arc/README.md)
+The [Intel Arc submission](https://github.com/a3ro-dev/qenlo/blob/main/benchmarks/2026-08-31/device-lab/intel-arc/README.md)
 retains two embedded `quick` reports and one `soak` report from an Intel Arc
 Vulkan adapter. All 21 cells passed with Recall@10 = 1.0 and no fallback. The
 soak result recorded exact GPU P95 of 4,444 µs versus exact CPU P95 of 16,486 µs.
@@ -1576,7 +1649,7 @@ the [benchmark protocol](benchmark-protocol.md).
   `CARGO_INCREMENTAL=0`, and features `usearch,gpu-wgpu`.
 - 100,000 rows × 384 dimensions from the DTU AG News
   `all-MiniLM-L12-v2` HDF5 source. The source checksum, license, author, and
-  extraction details are in [the dataset record](../benchmarks/2026-08-28/real/dataset/ag-news-384.json).
+  extraction details are in [the dataset record](https://github.com/a3ro-dev/qenlo/blob/main/benchmarks/2026-08-28/real/dataset/ag-news-384.json).
 
 The corpus, tuning queries, and evaluation queries are disjoint. Every cell used
 the same metadata, compound user-and-time filter, query order, k=10, 200 warmups,
@@ -1610,7 +1683,7 @@ Chroma and USearch are approximate indexes; the exact Qenlo GPU paths are not
 ANN implementations.
 
 Raw configurations, samples, truth, and measurements are retained under
-[`benchmarks/2026-08-28/real/`](../benchmarks/2026-08-28/real/). The comparison
+[`benchmarks/2026-08-28/real/`](https://github.com/a3ro-dev/qenlo/tree/main/benchmarks/2026-08-28/real). The comparison
 files contain the workload compatibility checks and seeded 10,000-draw
 whole-run intervals.
 
@@ -1642,7 +1715,7 @@ Use fresh output directories and the prepared dataset described in the protocol.
 For an actual GPU run, set `WGPU_BACKEND=dx12` and use a build with
 `--features gpu-wgpu`; required GPU mode fails instead of silently falling back.
 The Chroma procedure and its failed runtime ef sweep are documented in
-[`scripts/chroma-replay.md`](../scripts/chroma-replay.md).
+[`scripts/chroma-replay.md`](https://github.com/a3ro-dev/qenlo/blob/main/scripts/chroma-replay.md).
 
 
 ================================================================================
@@ -1683,7 +1756,7 @@ failed, and two invalid-harness rows. The invalid rows remain visible and are
 excluded from conclusions. Corrected 100K × 768 RTX 4090 cells reached oracle
 recall 1.0. WGPU P95 was 0.897 ms for batch one, k=1, and 0.896 ms for batch
 eight, k=64, with 10% eligibility. PyTorch CUDA reached 0.671 ms and 0.384 ms
-respectively. See the [performance report](../research/artifacts/runpod-small-2026-09-05/report/performance-report.md) for timing scopes and all losses.
+respectively. See the [performance report](https://github.com/a3ro-dev/qenlo/blob/main/research/artifacts/runpod-small-2026-09-05/report/performance-report.md) for timing scopes and all losses.
 
 The selector candidate won five and lost seven of 12 qualified frozen-revision
 pairs and was therefore reverted. Mutation cells reported zero resident rebuilds;
@@ -1909,20 +1982,22 @@ URL: https://a3ro-dev.github.io/qenlo/docs/implementation-status.md
 Description: Engineering roadmap status and hardware gates
 ================================================================================
 
-# Heterogeneous roadmap status
+# Implementation status
 
-This ledger separates implemented code from research directions and distribution prerequisites. "Built" means source and automated packaging exist; "physically validated" means the test ran on hardware available during implementation.
+Current release: `0.1.0-beta.2`. This ledger separates implemented code from research directions and distribution prerequisites. "Built" means source and automated packaging exist; "physically validated" means the test ran on hardware available during implementation.
 
 | Milestone | Status | Evidence or remaining gate |
 |---|---|---|
 | correctness/oracle hardening | implemented | deterministic semantic checks and independent exact truth in `qenlo-lab` |
 | storage v2 WAL/manifest/mmap | implemented | atomic batch, recovery, corruption, reopen, and fail-closed tests |
-| query-level router | partial | eligibility plans and hardware-bound threshold profiles are implemented; an alpha.5 scalar-work rule failed its held-out regret gate, while persisted calibration and online adaptation remain open |
+| query-level router | partial | eligibility plans and hardware-bound threshold profiles are implemented; a scalar-work rule failed its held-out regret gate, while persisted calibration and online adaptation remain open |
 | ARM NEON fallback | implemented | target compilation; physical ARM run comes from macOS/mobile packages |
 | portable exact GPU | implemented | persistent arenas, chunked bounded readback, true B×D batches |
 | small-collection Runpod matrix | completed | 182 retained rows across six GPU configurations plus a corrected 100K × 768 supplement; final known spend $0.9401 |
 | lane-minimum selector candidate | measured and rejected | won five and lost seven of 12 qualified pairs; final source retains the simpler full-rescan selector |
-| scalar-work router candidate | measured and rejected | fit 31 retained pairs, then missed 8/16 held-out routes with 235.7% maximum regret; alpha.4 routing remains |
+| scalar-work router candidate | measured and rejected | fit 31 retained pairs, then missed 8/16 held-out routes with 235.7% maximum regret; the fixed threshold remains |
+| certified FP32 multithreaded CPU scan | implemented (beta.2) | any eligible count, checked against FP64 reference incl. near-ties; `ExactScan::Legacy` kept as control |
+| tiled GPU top-k selection | implemented (beta.2) | default for exact mask/row filters; `GpuSelectKernel::KPass` kept as control |
 | post-mutation resident updates | implemented and measured | append/live-mask cells rebuilt zero times; reopen remains a full resident rebuild |
 | optional PyTorch index | implemented, desktop-only | lazy CPU/CUDA/MPS tensor API bound to canonical generation; CUDA and CPU measured, MPS unavailable in this campaign |
 | portable IVF-Flat | implemented | Recall@10 ≥ 0.95 tester gate and exact FP32 GPU rerank |
@@ -1965,8 +2040,8 @@ Several items that looked open in the earlier positioning report are already com
 | Earlier action | Current evidence | Disposition |
 | --- | --- | --- |
 | Add a telemetry opt-out | The [feature matrix](feature-matrix.md) says core and SDKs make no automatic network requests. [Device-lab upload](device-lab.md) is explicit and host-controlled; the collector is a separate service. | Complete. Preserve this privacy boundary with regression tests and release review. |
-| Publish the paper/writeup | The [research paper](../QENLO-RESEARCH-PAPER.pdf) (source `paper/v2/`) and the preserved [v1 evidence audit](../paper/archive/qenlo-evidence-audit-v1.pdf), with its source, figures, claim ledger and [reproduction instructions](../paper/REPRODUCE.md), are committed. The next experiments are specified in `research/specs/2026-09-25-clock-lock-and-faiss.md`. | Repository publication complete. A DOI, arXiv entry, or external engineering article remains optional distribution work. |
-| Benchmark LanceDB | The retained [100K x 384 replay](../benchmarks/runpod/2026-09-02-bb51987/README.md) includes LanceDB Flat with raw artifacts and disclosed timing boundaries. | Complete for one historical cohort. Do not imply broad coverage. |
+| Publish the paper/writeup | The [research paper](../QENLO-RESEARCH-PAPER.pdf ':ignore') (source `paper/v2/`) and the preserved [v1 evidence audit](https://github.com/a3ro-dev/qenlo/blob/main/paper/archive/qenlo-evidence-audit-v1.pdf), with its source, figures, claim ledger and [reproduction instructions](https://github.com/a3ro-dev/qenlo/blob/main/paper/REPRODUCE.md), are committed. The next experiments are specified in `research/specs/2026-09-25-clock-lock-and-faiss.md`. | Repository publication complete. A DOI, arXiv entry, or external engineering article remains optional distribution work. |
+| Benchmark LanceDB | The retained [100K x 384 replay](https://github.com/a3ro-dev/qenlo/blob/main/benchmarks/runpod/2026-09-02-bb51987/README.md) includes LanceDB Flat with raw artifacts and disclosed timing boundaries. | Complete for one historical cohort. Do not imply broad coverage. |
 | Benchmark sqlite-vec | No retained sqlite-vec adapter or result was found. | Open. This is the remaining closest-competitor gap. |
 | Close the 1M x 768 gate | The [strict A6000 experiment](reports/2026-09-02-strict-topk-research-gate.md) ran and failed the pre-registered 2x CPU gate; Qenlo's prototype also lost to FAISS GPU Flat in that cell. | Complete as a negative result. Publish the verdict; do not rerun until a named implementation change creates a falsifiable new hypothesis. |
 | State a v1 format | [`.qn` v1](qn-format-v1.md) is implemented, documented, and covered by round-trip, version, checksum, tombstone, and non-overwrite tests. | Technical format complete. Add a user-facing compatibility promise before calling it stable. |
@@ -2182,5 +2257,5 @@ Automated release workflows publish Qenlo builds across public package registrie
 Rust, Python, and TypeScript are supported release surfaces. Publication is not
 complete until the workflow resolves the exact new versions from crates.io,
 PyPI, and npm. Go, Kotlin/JVM, and Swift remain preview artifacts; Maven Central
-credentials or propagation do not block the supported alpha release.
+credentials or propagation do not block the supported release.
 
