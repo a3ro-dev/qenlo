@@ -14,6 +14,20 @@ It is a research beta (`0.1.0-beta.2`). The storage format and API are unchanged
 
 Go, Kotlin and Swift bindings are previews. See [SDKs](sdks/rust.md).
 
+## Headline numbers
+
+Exact results, recall 1.000. P95 call latency, lower is better.*
+
+| Matchup | Qenlo | Other | Faster |
+| --- | ---: | ---: | ---: |
+| Exact search vs LanceDB, 100k × 384, CPU | 12.9 ms | 242.3 ms | **18.8x** |
+| Exact search vs Milvus Lite, same cell | 12.9 ms | 76.2 ms | **5.9x** |
+| Selective filter vs Chroma, laptop, 1% eligible | 0.24 ms | 43.0 ms | **~180x** |
+| GPU vs FAISS flat (CPU), 100k × 768 | 0.90 ms | 14.8 ms | **16.5x** |
+| GPU vs Qenlo CPU, 100k × 768, batch 8 | 0.90 ms | 28.6 ms | **32x** |
+
+\* Measured on specific machines, with the losses listed too. See the [full table and caveats](highlights.md).
+
 ## Where to go
 
 <div class="card-grid">

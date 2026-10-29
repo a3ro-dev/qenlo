@@ -3,6 +3,7 @@
   * [Quickstart](quickstart.md)
   * [Core concepts](concepts.md)
   * [Collection browser](browser.md)
+  * [Headline numbers](highlights.md)
 
 * **Guides**
   * [Use cases](use-cases.md)

@@ -31,6 +31,24 @@
 
 Qenlo is a local, embedded vector store: one process owns a canonical durable record store, applies metadata filters before ranking, and runs exact search on CPU by default, with optional WGPU, USearch, and PyTorch execution paths. It is built for engineers embedding vector search directly into an application and for researchers who want to check the evidence behind any number before relying on it. Qenlo is not a distributed vector database, a hosted service, or a fastest-in-class ANN engine.
 
+## Where Qenlo wins*
+
+Every row below returns exact results (recall 1.000) from one embedded file. There is no index to tune and no server to run.
+
+| Matchup | Qenlo | Other | Faster |
+| --- | ---: | ---: | ---: |
+| Exact search vs LanceDB 0.38, 100k × 384, CPU only | 12.9 ms | 242.3 ms | **18.8x** |
+| Exact search vs Milvus Lite 3.0, same cell | 12.9 ms | 76.2 ms | **5.9x** |
+| Time to first query vs FAISS HNSW, Chroma, Milvus Lite (index build) | 0.64 s | 79.7 s, 56.1 s, 48.4 s | **76x to 124x** |
+| Selective filter vs Chroma, laptop, 1% of rows eligible | 0.24 ms | 43.0 ms | **~180x** |
+| GPU vs FAISS flat (CPU), 100k × 768, k=1 | 0.90 ms | 14.8 ms | **16.5x** |
+| GPU vs FAISS flat (CPU), 25k × 384, batch 64 | 1.26 ms | 25.3 ms | **20x** |
+| Filter-first CPU vs FAISS flat (CPU), 50k × 384, 0.1% eligible | 7.5 µs | 29.3 µs | **3.9x** |
+| Qenlo GPU vs Qenlo CPU, 100k × 768, batch 8, k=64 | 0.90 ms | 28.6 ms | **32x** |
+| Qenlo GPU vs Qenlo CPU, laptop RTX 4050, 100k × 384 | 3.24 ms | 16.66 ms | **5.1x** (3.6x to 6.8x) |
+
+\* All numbers are P95 call latency from retained raw files: [RunPod RTX 3070 cohort](benchmarks/runpod/2026-09-02-bb51987/README.md), [RTX 4090 matrix](research/artifacts/runpod-small-2026-09-05/report/performance-matrix.csv), and the [laptop record](docs/results-2026-08-28.md). They were measured on those machines and aren't a ranking. The FAISS in the rows above is `faiss-cpu` flat; Chroma's number includes its Python API; the 4090 cells have 3 repetitions for the baselines. Qenlo does not win everywhere: FAISS HNSW answers the 100k × 384 cell in 1.5 ms against Qenlo's 12.9 ms exact, FAISS on a GPU beat the Qenlo CUDA prototype by 1.29x at 1M × 768, a plain PyTorch CUDA matmul beat Qenlo's GPU path in several 4090 cells, and at 1% selectivity the laptop CPU beats the laptop GPU. The full table, losses included, is on the [highlights page](docs/highlights.md).
+
 ## Install
 
 | Language | Command |
