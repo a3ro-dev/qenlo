@@ -98,8 +98,10 @@ unavailable. A generation-bound
 `EligibilityPlan` performs the default host predicate traversal once and retains
 the selected row, mask, or shader-predicate representation and diagnostics.
 GPU-required mode returns errors. Automatic mode uses a matching hardware-bound
-profile when supplied; otherwise fewer than 4,096 eligible rows route to exact CPU
-and larger sets route to GPU, with availability or execution failures falling back.
+profile when supplied; otherwise single queries and batches under 8 stay on exact
+CPU at any eligible count, and batches of 8 or more route to GPU, with availability
+or execution failures falling back. A batch-1 GPU call lost to the int8 CPU scan at
+E=100k on all seven measured hosts (`research/experiments/gpu-crossover-int8`).
 Reports and benchmark samples retain the routing reason. The static rule remains a
 fallback, not a claimed universal crossover or a completed adaptive phase engine.
 

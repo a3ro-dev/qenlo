@@ -15,6 +15,12 @@
 - rows live in 1,024-row chunks instead of one growing buffer, so `add` no
   longer copies the whole store when it grows: at 100k x 384 the add-built heap
   went 2,226 -> 2,047 B/row and the build peak 348 -> 196 MiB.
+- automatic GPU mode keeps single queries on the CPU at any eligible count
+  (it used to send 4,096+ rows to the GPU). against the int8 CPU scan a batch-1
+  GPU call lost at E=100k on all seven measured hosts, the RTX 4050 laptop
+  included (2.48 vs 3.38 ms p95), and won only at mid-sized scattered filters
+  on a few devices. batches of 8 or more and matching tuning profiles still
+  route to the GPU; `WgpuRequired` is unchanged.
 - costs: `add` is about 16% slower (2.36 -> 2.73 us, quantization), a store
   reopened from disk holds about 400 B/row more (the int8 copy), and certified
   FP32 at E=1k is about 3 us slower.

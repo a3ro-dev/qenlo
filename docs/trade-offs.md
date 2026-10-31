@@ -35,7 +35,7 @@ Canonical mutations can invalidate prepared eligibility and accelerator state. R
 
 ## Routing guidance
 
-Start with exact CPU execution. Add WGPU or tensor execution only after measuring completed calls on the target device and realistic filters. The automatic router still sends 4,096 or more eligible rows to the GPU; with the faster CPU scan that threshold is probably too low, so measure before relying on it.
+Start with exact CPU execution. Add WGPU or tensor execution only after measuring completed calls on the target device and realistic filters. Without a tuning profile the automatic router keeps single queries on the CPU at any size and sends batches of 8 or more to the GPU: against the int8 CPU scan, a batch-1 GPU call won only at mid-sized scattered filters on a few devices and lost at E=100k on all seven measured hosts.
 
 The September 2026 paper found route reversals, but its cohorts differ in hardware, data, and source revision. Its headline corrected WGPU cells used a selector candidate that was later rejected. Those results motivate profiling; they do not select a production default.
 

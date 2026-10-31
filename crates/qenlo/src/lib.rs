@@ -52,8 +52,6 @@ pub use qenlo_core::{Predicate as Filter, TimestampRange};
 pub const MAX_K: usize = 64;
 /// Default cap for Qenlo-owned GPU buffer bytes, including scratch buffers.
 pub const DEFAULT_GPU_BUDGET_BYTES: u64 = 512 * 1024 * 1024;
-#[cfg(feature = "gpu-wgpu")]
-const AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS: usize = 4_096;
 
 /// Requested execution policy. Required backends error; automatic GPU mode reports CPU fallback.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1722,14 +1720,11 @@ impl CollectionState {
             Backend::Usearch(index) => index.search(&self.store, query, filter, k)?,
             #[cfg(feature = "gpu-wgpu")]
             Backend::Wgpu(gpu) => {
-                let automatic_eligible_rows =
-                    matches!(self.config.backend, BackendSelection::Automatic(_))
-                        .then(|| self.store.filter_count(filter));
-                if automatic_eligible_rows.is_some_and(route_automatic_to_cpu) {
-                    let eligible_rows = automatic_eligible_rows.expect("checked as present");
-                    routing_reason = Some(format!(
-                        "automatic CPU route: {eligible_rows} eligible rows below GPU crossover {AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS}"
-                    ));
+                if matches!(self.config.backend, BackendSelection::Automatic(_)) {
+                    // A batch-1 GPU call lost to the int8 CPU scan at E=100k on all seven
+                    // measured hosts (research/experiments/gpu-crossover-int8), so no static row
+                    // count sends single queries to the GPU; batches and tuning profiles still can.
+                    routing_reason = Some("automatic CPU route: single query".into());
                     let exact = self.store.search(query, filter, k)?;
                     BackendOutput::cpu(
                         exact.hits,
@@ -1737,39 +1732,9 @@ impl CollectionState {
                         execution_started.elapsed(),
                     )
                 } else {
-                    if let Some(eligible_rows) = automatic_eligible_rows {
-                        routing_reason = Some(format!(
-                            "automatic GPU route: {eligible_rows} eligible rows meet GPU crossover {AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS}"
-                        ));
-                    }
-                    match gpu.search(&self.store, query, filter, k).await {
-                        Ok(output) => output,
-                        Err(error)
-                            if matches!(self.config.backend, BackendSelection::Automatic(_)) =>
-                        {
-                            fallback_reason = Some(error.to_string());
-                            let exact = self.store.search(query, filter, k)?;
-                            let mut output = BackendOutput::cpu(
-                                exact.hits,
-                                exact.evaluated_rows as u64,
-                                execution_started.elapsed(),
-                            );
-                            output.upload_bytes = Measurement::unavailable(
-                                "failed GPU attempt: partial transfers unavailable",
-                            );
-                            output.readback_bytes = Measurement::unavailable(
-                                "failed GPU attempt: partial readback unavailable",
-                            );
-                            output.dispatch_count = Measurement::unavailable(
-                                "failed GPU attempt: partial dispatch count unavailable",
-                            );
-                            output.allocation_bytes = Measurement::unavailable(
-                                "failed GPU attempt may retain resident allocations",
-                            );
-                            output
-                        }
-                        Err(error) => return Err(Error::Search(error.to_string())),
-                    }
+                    gpu.search(&self.store, query, filter, k)
+                        .await
+                        .map_err(|error| Error::Search(error.to_string()))?
                 }
             }
         };
@@ -2080,22 +2045,13 @@ impl CollectionState {
 }
 
 #[cfg(feature = "gpu-wgpu")]
-fn route_automatic_to_cpu(eligible_rows: usize) -> bool {
-    // ponytail: static crossover; replace with the persisted per-device autotune profile.
-    eligible_rows < AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS
-}
-
-#[cfg(feature = "gpu-wgpu")]
 fn route_automatic_to_cpu_batch(
     eligible_rows: usize,
     batch_size: usize,
     profiled_gpu_min_rows: Option<usize>,
 ) -> bool {
-    let below_crossover = profiled_gpu_min_rows.map_or_else(
-        || route_automatic_to_cpu(eligible_rows),
-        |minimum| eligible_rows < minimum,
-    );
-    below_crossover && batch_size < 8
+    // Without a profile, small batches stay on the CPU at any E (see search_inner).
+    profiled_gpu_min_rows.is_none_or(|minimum| eligible_rows < minimum) && batch_size < 8
 }
 
 fn backend_tag(backend: &Backend) -> u8 {
@@ -2197,10 +2153,11 @@ mod tests {
 
     #[cfg(feature = "gpu-wgpu")]
     #[test]
-    fn automatic_router_keeps_selective_work_on_cpu() {
-        assert!(route_automatic_to_cpu(0));
-        assert!(route_automatic_to_cpu(AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS - 1));
-        assert!(!route_automatic_to_cpu(AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS));
+    fn automatic_router_keeps_small_batches_on_cpu_without_a_profile() {
+        assert!(route_automatic_to_cpu_batch(1_000_000, 7, None));
+        assert!(!route_automatic_to_cpu_batch(0, 8, None));
+        assert!(route_automatic_to_cpu_batch(4, 1, Some(5)));
+        assert!(!route_automatic_to_cpu_batch(5, 1, Some(5)));
     }
 
     use super::*;
@@ -3099,7 +3056,7 @@ mod tests {
                     }
                     Err(error) => panic!("GPU required: {error}"),
                 };
-                let rows = (1..=AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS as u64)
+                let rows = (1..=8)
                     .map(|id| NewRecord {
                         id,
                         user_id: 1,
@@ -3113,13 +3070,18 @@ mod tests {
                     Backend::Wgpu(gpu) => gpu.destroy_device_for_test(),
                     _ => continue,
                 }
-                let response = collection.search(&[1.0, 0.0], &Filter::ALL, 1).await;
                 if matches!(backend, BackendSelection::Automatic(_)) {
-                    let response = response.unwrap();
+                    // Automatic sends only batches of 8+ to the GPU without a tuning profile.
+                    let responses = collection
+                        .search_batch(&[&[1.0f32, 0.0][..]; 8], &Filter::ALL, 1)
+                        .await
+                        .unwrap();
+                    let response = &responses[0];
                     assert_eq!(response.results[0].id, 1);
                     assert_eq!(response.report.actual_backend, BackendKind::Cpu);
                     assert!(response.report.fallback_reason.is_some());
                 } else {
+                    let response = collection.search(&[1.0, 0.0], &Filter::ALL, 1).await;
                     assert!(matches!(response, Err(Error::Search(_))));
                     assert!(collection.prepare().await.unwrap());
                     assert_eq!(
@@ -3152,13 +3114,14 @@ mod tests {
             if !matches!(&collection.inner.read_blocking().backend, &Backend::Wgpu(_)) {
                 return;
             }
-            for id in 1..=AUTOMATIC_GPU_MIN_ELIGIBLE_ROWS as u64 {
+            for id in 1..=8 {
                 collection.add(id, 7, 0, &[1.0, 0.0]).unwrap();
             }
-            let response = collection
-                .search(&[1.0, 0.0], &Filter::ALL, 1)
+            let responses = collection
+                .search_batch(&[&[1.0f32, 0.0][..]; 8], &Filter::ALL, 1)
                 .await
                 .unwrap();
+            let response = &responses[0];
             assert_eq!(response.results[0].id, 1);
             assert_eq!(response.report.actual_backend, BackendKind::Cpu);
             assert!(
