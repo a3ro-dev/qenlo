@@ -3,7 +3,8 @@
 //! Also measures heap slack of the `add` growth path against exact-reserve `restore_iter`.
 //!
 //! cargo run --release -p qenlo-core --example sq8_probe -- [path to ag-news-100k-384.f32]
-//! Without a path it uses uniform random vectors.
+//! Without a path it uses uniform random vectors. x86-64 with AVX2 only.
+#![cfg_attr(not(target_arch = "x86_64"), allow(dead_code, unused_imports))]
 use qenlo_core::{CoreStore, ExactScan, Predicate, RestoredRecord, TimestampRange};
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering::Relaxed};
@@ -57,6 +58,7 @@ fn quantize(x: &[f32]) -> Codes {
     }
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn dot_i8_avx2(a: &[i8], b: &[i8]) -> i32 {
     use std::arch::x86_64::*;
@@ -93,6 +95,12 @@ fn offer(best: &mut Vec<(f32, u64)>, hit: (f32, u64)) {
     best.truncate(K);
 }
 
+#[cfg(not(target_arch = "x86_64"))]
+fn main() {
+    eprintln!("sq8_probe needs x86-64 with AVX2");
+}
+
+#[cfg(target_arch = "x86_64")]
 fn main() {
     assert!(std::is_x86_feature_detected!("avx2"));
     let path = std::env::args().nth(1);
