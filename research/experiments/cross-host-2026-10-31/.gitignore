@@ -1,0 +1,4 @@
+raw/*/out/xover/*/samples.csv
+raw/*/out/xover/*/truth.csv
+raw/*/out/xover/*/tuning.csv
+raw/*/out/xover/*/metadata.csv

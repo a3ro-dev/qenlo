@@ -1,0 +1,32 @@
+{
+ "containerDiskInGb": 30,
+ "costPerHr": 0.07,
+ "createdAt": "2026-10-31 14:06:14.396 +0000 UTC",
+ "desiredStatus": "RUNNING",
+ "env": [
+  "PUBLIC_KEY"
+ ],
+ "gpuCount": 0,
+ "id": "52xmab56omzizq",
+ "imageName": "runpod/base:1.0.2-ubuntu2404",
+ "lastStatusChange": "Rented by User: Sat Oct 31 2026 14:06:14 GMT+0000 (Coordinated Universal Time)",
+ "machine": {
+  "dataCenterId": "EUR-IS-1",
+  "diskThroughputMBps": 5676,
+  "gpuId": "unknown",
+  "location": "IS",
+  "maxDownloadSpeedMbps": 22769,
+  "maxUploadSpeedMbps": 35369,
+  "reservedCountVersion": 230582,
+  "secureCloud": true,
+  "supportPublicIp": true
+ },
+ "memoryInGb": 4,
+ "name": "qenlo-xh-cpu",
+ "ports": [
+  "22/tcp"
+ ],
+ "vcpuCount": 2,
+ "volumeInGb": 0,
+ "volumeMountPath": "/workspace"
+}

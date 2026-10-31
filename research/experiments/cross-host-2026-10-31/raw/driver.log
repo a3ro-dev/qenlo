@@ -1,0 +1,41 @@
+19:31:56 [rtx3090] create failed: {"error":"failed to create pod: graphql error: There are no longer any instances available with the requested specifications. Please refresh and try again.","code":"graphql_error"}
+19:31:56 [a6000] create failed: {"error":"failed to create pod: graphql error: There are no longer any instances available with the requested specifications. Please refresh and try again.","code":"graphql_error"}
+19:31:56 [rtx2000ada] create failed: {"error":"failed to create pod: graphql error: There are no longer any instances available with the requested specifications. Please refresh and try again.","code":"graphql_error"}
+19:31:56 [rtx4090] create failed: {"error":"failed to create pod: graphql error: There are no longer any instances available with the requested specifications. Please refresh and try again.","code":"graphql_error"}
+19:31:56 [cpu] created 18t5npnp7hn76v at $0.07/hr
+19:32:23 [cpu] ssh ready 157.157.221.30:17026
+19:33:43 [cpu] deleted 18t5npnp7hn76v rc=0
+19:33:43 [all] finished, worst-case exposure $0.85
+19:35:56 relaunch: budget raised to $2 by the user; ~$0.08 spent in the first attempt (start-command ssh hang), guard set to $1.85
+19:35:59 [ampere-consumer] create failed NVIDIA GeForce RTX 3090 COMMUNITY: {"error":"failed to create pod: graphql error: There are no longer any instances available with the requested specifications. Please refresh and try again.","co
+19:36:00 [ada-dc] created pw6hdpav18u3ep at $0.59/hr
+19:36:00 [ada-consumer] created i9hx52ry1x2she at $0.34/hr
+19:36:00 [blackwell] created 9v028qwwrxme8o at $0.57/hr
+19:36:00 [ampere-dc] created 6yv5ipxuudvb5x at $0.59/hr
+19:36:00 [ampere-consumer] created c1kjwwahty8vik at $0.5/hr
+19:36:01 [cpu] created 52xmab56omzizq at $0.07/hr
+19:36:27 [ampere-consumer] ssh ready 213.192.2.117:40147
+19:36:28 [ada-dc] ssh ready 213.173.105.20:30121
+19:36:38 [ada-consumer] ssh ready 80.15.7.37:47700
+19:36:38 [cpu] ssh ready 157.157.221.30:17972
+19:36:40 [blackwell] ssh ready 213.173.102.11:10099
+19:36:45 [ampere-consumer] started
+19:36:49 [ampere-dc] ssh ready 194.68.245.125:22168
+19:36:58 [cpu] started
+19:36:58 [ada-consumer] started
+19:37:05 [ada-dc] started
+19:37:07 [ampere-dc] started
+19:37:14 [blackwell] started
+19:38:45 [cpu] fetched
+19:38:46 [cpu] deleted 52xmab56omzizq rc=0
+19:50:47 [ada-dc] fetched
+19:50:48 [ada-dc] deleted pw6hdpav18u3ep rc=0
+19:52:47 [ada-consumer] fetched
+19:52:48 [ada-consumer] deleted i9hx52ry1x2she rc=0
+19:55:30 [blackwell] fetched
+19:55:31 [blackwell] deleted 9v028qwwrxme8o rc=0
+19:55:50 [ampere-consumer] fetched
+19:55:51 [ampere-consumer] deleted c1kjwwahty8vik rc=0
+19:58:42 [ampere-dc] fetched
+19:58:43 [ampere-dc] deleted 6yv5ipxuudvb5x rc=0
+19:58:43 [all] finished, worst-case exposure $1.71

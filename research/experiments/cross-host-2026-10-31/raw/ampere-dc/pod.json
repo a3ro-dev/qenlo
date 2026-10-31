@@ -1,0 +1,23 @@
+{
+ "containerDiskInGb": 30,
+ "costPerHr": 0.59,
+ "desiredStatus": "RUNNING",
+ "env": [
+  "NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics",
+  "NVIDIA_VISIBLE_DEVICES=all"
+ ],
+ "gpuCount": 1,
+ "id": "6yv5ipxuudvb5x",
+ "imageName": "runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404",
+ "lastStatusChange": "Rented by User: Sat Oct 31 2026 14:06:13 GMT+0000 (Coordinated Universal Time)",
+ "machine": {
+  "gpuDisplayName": "A40",
+  "location": "SE"
+ },
+ "memoryInGb": 50,
+ "name": "qenlo-xh-ampere-dc",
+ "ports": "22/tcp",
+ "vcpuCount": 9,
+ "volumeInGb": 0,
+ "volumeMountPath": "/workspace"
+}

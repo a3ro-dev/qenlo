@@ -1,0 +1,7 @@
+heap add=194.3MiB (2037 B/row, peak 194.3MiB)  exact-reserve=193.4MiB (2027 B/row)  vectors alone=1536 B/row
+sq8 sidecar = 400 B/row
+E,certified_med_ms,sq8_med_ms,ratio,mean_rescored,mismatches
+1000,0.074,0.094,1.27,76,0
+10000,2.113,2.228,1.05,122,0
+30000,5.243,3.680,0.70,148,0
+100000,9.395,3.628,0.39,176,0
