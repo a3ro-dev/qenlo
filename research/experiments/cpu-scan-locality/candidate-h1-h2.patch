@@ -1,0 +1,119 @@
+diff --git a/crates/qenlo-core/src/lib.rs b/crates/qenlo-core/src/lib.rs
+index 507c2fa..a2d4f5b 100644
+--- a/crates/qenlo-core/src/lib.rs
++++ b/crates/qenlo-core/src/lib.rs
+@@ -395,6 +395,29 @@ impl CoreStore {
+         &self.padded_row(slot)[..self.dimension]
+     }
+ 
++    /// Hint a row's cache lines into L1 ahead of its dot product. Scattered eligible slots restart
++    /// the hardware stream prefetcher at every gap; out-of-range slots are ignored.
++    #[inline(always)]
++    fn prefetch_row(&self, slot: u32) {
++        #[cfg(target_arch = "x86_64")]
++        {
++            use std::arch::x86_64::{_MM_HINT_T0, _mm_prefetch};
++            let start = slot as usize * self.lanes_per_row;
++            if let Some(lanes) = self.vectors.get(start..start + self.lanes_per_row) {
++                // Two 32-byte lanes per 64-byte line.
++                for lane in lanes.iter().step_by(2) {
++                    // SAFETY: SSE is in the x86_64 baseline and a prefetch never faults.
++                    #[allow(unused_unsafe)]
++                    unsafe {
++                        _mm_prefetch::<_MM_HINT_T0>((lane as *const Lane).cast::<i8>())
++                    };
++                }
++            }
++        }
++        #[cfg(not(target_arch = "x86_64"))]
++        let _ = slot;
++    }
++
+     fn view(&self, slot: u32) -> RecordRef<'_> {
+         let meta = &self.rows[slot as usize];
+         RecordRef {
+@@ -686,7 +709,7 @@ impl CoreStore {
+         }
+         let query = normalize_vector(query.as_ref(), self.dimension)?;
+         let slots = self.filter(predicate);
+-        self.search_normalized_rows_optimized(&query, predicate, &slots, k)
++        self.search_normalized_rows_with_scan(&query, predicate, &slots, k, ExactScan::Auto, true)
+     }
+ 
+     /// FP64-accumulating reference search used to verify optimized exact routes.
+@@ -718,7 +741,7 @@ impl CoreStore {
+         }
+         let query = normalize_vector(query.as_ref(), self.dimension)?;
+         let slots = self.filter(predicate);
+-        self.search_normalized_rows_with_scan(&query, predicate, &slots, k, scan)
++        self.search_normalized_rows_with_scan(&query, predicate, &slots, k, scan, true)
+     }
+ 
+     /// Exact search over a previously compiled canonical eligibility list.
+@@ -805,9 +828,11 @@ impl CoreStore {
+         slots: &[u32],
+         k: usize,
+     ) -> Result<SearchOutput, Error> {
+-        self.search_normalized_rows_with_scan(query, predicate, slots, k, ExactScan::Auto)
++        self.search_normalized_rows_with_scan(query, predicate, slots, k, ExactScan::Auto, false)
+     }
+ 
++    /// `from_filter` marks slots that `filter` just produced under this borrow; only those skip
++    /// per-row revalidation, so row metadata is read only for rows that pass the FP32 gate.
+     fn search_normalized_rows_with_scan(
+         &self,
+         query: &[f32],
+@@ -815,6 +840,7 @@ impl CoreStore {
+         slots: &[u32],
+         k: usize,
+         scan: ExactScan,
++        from_filter: bool,
+     ) -> Result<SearchOutput, Error> {
+         if scan == ExactScan::Legacy {
+             return self.search_normalized_rows_legacy(query, predicate, slots, k);
+@@ -843,8 +869,13 @@ impl CoreStore {
+             // Seed with the previous chunk's last slot so ascending order is checked across chunks.
+             let mut previous = start.checked_sub(1).map(|prior| slots[prior]);
+             let mut best = TopK::new(k);
+-            for &slot in &slots[start..end] {
+-                let row = self.eligible_row(slot, &mut previous, predicate)?;
++            for (index, &slot) in slots[start..end].iter().enumerate() {
++                if let Some(&ahead) = slots[..end].get(start + index + PREFETCH_ROWS) {
++                    self.prefetch_row(ahead);
++                }
++                if !from_filter {
++                    self.eligible_row(slot, &mut previous, predicate)?;
++                }
+                 let approximate_distance =
+                     1.0 - approximate_dot(&padded_query, self.padded_row(slot));
+                 // The exact running cutoff only shrinks, so a row whose FP32 distance exceeds it
+@@ -853,7 +884,10 @@ impl CoreStore {
+                     .cutoff()
+                     .is_none_or(|cutoff| approximate_distance <= cutoff + 2.0 * error_bound)
+                 {
+-                    best.offer(row.id, (1.0 - exact_dot(query, self.row(slot))) as f32);
++                    best.offer(
++                        self.rows[slot as usize].id,
++                        (1.0 - exact_dot(query, self.row(slot))) as f32,
++                    );
+                 }
+             }
+             Ok(best)
+@@ -1045,6 +1079,9 @@ const LEGACY_CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
+ // i5-13420H, waking the whole pool costs about 25 us, and one thread per 2^18 (about 680 rows at
+ // D=384) broke even near E=700 and won from E=1,500 (examples/cpu_cliff_bench.rs).
+ const PARALLEL_MIN_WORK_PER_THREAD: usize = 1 << 18;
++// How many eligible rows ahead the certified scan prefetches. One D=384 row scores in ~60 ns
++// cache-hot against ~100 ns DRAM latency, so two rows ahead covers the miss.
++const PREFETCH_ROWS: usize = 2;
+ /// A timestamp range yielding more than `rows / divisor` slots switches to a sequential scan.
+ const RANGE_SCAN_PROBE_DIVISOR: usize = 16;
+ 
+@@ -1992,6 +2029,7 @@ mod tests {
+                     &slots,
+                     10,
+                     ExactScan::Parallel,
++                    false,
+                 );
+                 assert!(reference.is_err());
+                 assert_eq!(parallel, reference, "swapped at {at}");
