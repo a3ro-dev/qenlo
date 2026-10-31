@@ -31,3 +31,13 @@ floor.
 3. B: Auto median AND P95 <= 0.85x base in at least 2 of E in {10k, 30k, 100k}.
 4. No Certified or Auto cell regresses by > 5% + 0.005 ms in median.
 A failing part is reverted on its own and recorded as negative.
+
+## Amendment 2 (2026-10-31 20:12, before batch 3 data)
+Batch 2 (19:56) failed part 4 by the letter: Auto E=10k median 1.16x and Certified E=20k 1.34x.
+In that batch the base binary's own three runs spread 0.82-1.30 ms at E=10k Auto and 3.29-5.67 ms
+at E=20k Certified, so the batch cannot resolve a 5% change. Batch 2 stays recorded as failed.
+Added rule, fixed before batch 3: a batch is noise-invalid if, in any gate cell (Auto or
+Certified at E in {10k, 20k, 30k, 100k}), the base's max/min over its runs exceeds 1.25. A
+noise-invalid batch neither passes nor fails. Batch 3 runs at 20:30 with the batch 1/2 binaries.
+The candidate ships only if batches 1 and 3 both pass and batch 3 is noise-valid; if batch 3 is
+noise-valid and fails, the failing part is reverted as originally planned.
