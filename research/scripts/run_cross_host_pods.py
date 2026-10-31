@@ -13,23 +13,29 @@ BUDGET_USD = 1.00
 NO_WINDOW = 0x08000000  # keep ssh/scp from opening console windows on Windows
 ENV = '{"NVIDIA_DRIVER_CAPABILITIES":"compute,utility,graphics","NVIDIA_VISIBLE_DEVICES":"all"}'
 GPU_IMAGE = "runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404"
-PODS = [  # (name, gpu id or None for CPU, cloud, price cap $/hr)
-    ("rtx3090", "NVIDIA GeForce RTX 3090", "COMMUNITY", 0.25),
-    ("rtx2000ada", "NVIDIA RTX 2000 Ada Generation", "SECURE", 0.27),
-    ("a6000", "NVIDIA RTX A6000", "COMMUNITY", 0.36),
-    ("rtx4090", "NVIDIA GeForce RTX 4090", "COMMUNITY", 0.37),
-    ("cpu", None, "SECURE", 0.20),
+PODS = [  # (slot name, [(gpu id or None for CPU, cloud, price cap $/hr), ...fallbacks in order])
+    ("cpu", [(None, "SECURE", 0.20)]),
+    ("ampere-dc", [("NVIDIA A40", "SECURE", 0.62), ("NVIDIA RTX A6000", "COMMUNITY", 0.36),
+                   ("NVIDIA RTX A6000", "SECURE", 0.62)]),
+    ("ada-dc", [("NVIDIA L4", "SECURE", 0.62), ("NVIDIA RTX 2000 Ada Generation", "SECURE", 0.27),
+                ("NVIDIA RTX 6000 Ada Generation", "COMMUNITY", 0.77)]),
+    ("ada-consumer", [("NVIDIA GeForce RTX 4090", "COMMUNITY", 0.37), ("NVIDIA GeForce RTX 4090", "SECURE", 0.92)]),
+    ("ampere-consumer", [("NVIDIA GeForce RTX 3090", "COMMUNITY", 0.25), ("NVIDIA GeForce RTX 3090", "SECURE", 0.53)]),
+    ("blackwell", [("NVIDIA RTX PRO 4000 Blackwell", "SECURE", 0.60), ("NVIDIA GeForce RTX 5090", "COMMUNITY", 0.72)]),
 ]
 base_tgz, cand_tgz, out_root = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
-if len(sys.argv) > 4:  # retry: JSON list of [name, gpu, cloud, cap] and the budget left
-    PODS, BUDGET_USD = [tuple(p) for p in json.loads(sys.argv[4])], float(sys.argv[5])
+if len(sys.argv) > 4:  # override the total budget
+    BUDGET_USD = float(sys.argv[4])
 script = Path(__file__).resolve().parents[2] / "scripts/runpod/cross_host_bench.sh"
 spent = {"exposure": 0.0}
 lock = threading.Lock()
 
 
 def run(args, timeout=120):
-    return subprocess.run(args, capture_output=True, text=True, timeout=timeout, creationflags=NO_WINDOW)
+    try:
+        return subprocess.run(args, capture_output=True, text=True, timeout=timeout, creationflags=NO_WINDOW)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(args, 124, "", "timeout")
 
 
 def ssh_args(info):
@@ -44,9 +50,7 @@ def log(name, msg):
         f.write(line + "\n")
 
 
-def pod(name, gpu, cloud, cap):
-    out = out_root / name
-    out.mkdir(parents=True, exist_ok=True)
+def create(name, gpu, cloud, cap):
     args = ["runpodctl", "pod", "create", "--name", f"qenlo-xh-{name}", "--cloud-type", cloud,
             "--container-disk-in-gb", "30", "--ports", "22/tcp", "-o", "json"]
     if gpu:
@@ -57,12 +61,26 @@ def pod(name, gpu, cloud, cap):
         args += ["--compute-type", "CPU", "--image", "runpod/base:1.0.2-ubuntu2404"]
     with lock:
         if spent["exposure"] + cap * DEADLINE_MIN / 60 > BUDGET_USD:
-            log(name, "skipped: budget guard")
-            return
+            log(name, f"skipped {gpu}: budget guard")
+            return None
         spent["exposure"] += cap * DEADLINE_MIN / 60
     created = run(args)
     if created.returncode != 0:
-        log(name, f"create failed: {created.stderr.strip()[:300]}")
+        with lock:  # nothing was created, so release the reservation
+            spent["exposure"] -= cap * DEADLINE_MIN / 60
+        log(name, f"create failed {gpu} {cloud}: {created.stderr.strip()[:160]}")
+        return None
+    return created
+
+
+def pod(name, options):
+    out = out_root / name
+    out.mkdir(parents=True, exist_ok=True)
+    for gpu, cloud, cap in options:
+        created = create(name, gpu, cloud, cap)
+        if created:
+            break
+    else:
         return
     info = json.loads(created.stdout)
     pid = info["id"]
@@ -98,8 +116,10 @@ def pod(name, gpu, cloud, cap):
                 log(name, f"upload failed {local.name}: {r.stderr[:200]}")
                 return
         start = ("mkdir -p /workspace/base /workspace/cand && tar -xzf /workspace/base.tgz -C /workspace/base && "
-                 "tar -xzf /workspace/cand.tgz -C /workspace/cand && nohup bash /workspace/run.sh >/dev/null 2>&1 &")
-        run(["ssh", *ssh_args(ssh), "-p", ssh["port"], target, start], 60)
+                 "tar -xzf /workspace/cand.tgz -C /workspace/cand && "
+                 "(setsid nohup bash /workspace/run.sh </dev/null >/dev/null 2>&1 &)")
+        # -n and a fully detached child let ssh return at once instead of holding the channel.
+        run(["ssh", "-n", *ssh_args(ssh), "-p", ssh["port"], target, start], 60)
         log(name, "started")
         while time.time() < deadline - 4 * 60:
             time.sleep(30)
