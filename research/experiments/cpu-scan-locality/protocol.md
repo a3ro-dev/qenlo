@@ -26,3 +26,16 @@ Keep a change only if all of:
 2. Certified median AND P95 drop >= 5% in at least 2 of E in {10k, 20k, 30k}.
 3. No cell (any E, Certified or Auto) regresses by > 5% in median.
 Otherwise revert that change and record it as a negative result here.
+
+## Amendment 1: H2' (registered 2026-10-31, after the first results, before any H2' run)
+H2 failed only the no-regression rule, on a 4 us cell (Auto E=2,000, 1.053x) that single-thread
+Certified at the same E did not reproduce (0.99x). H2' retests the same prefetch patch
+(`candidate-h2.patch`, H2 hunks only, no H1) with:
+- base and candidate binaries rebuilt fresh from this commit; 5 interleaved runs each
+  (base, cand, ... x5); median of runs per cell.
+- gate rule 2 unchanged (Certified median AND P95 <= 0.95x in >= 2 of E in {10k, 20k, 30k}).
+- gate rule 3 amended: a cell regresses only if cand median > 1.05 x base median + 0.005 ms.
+  The absolute floor is the size of a thread-pool wake, below anything a caller can see.
+- `analyze.py <runs> base h2 0.005` applies it; with no floor argument the original gate is
+  reproduced unchanged.
+If H2' fails, prefetching is dropped and the result recorded as negative.

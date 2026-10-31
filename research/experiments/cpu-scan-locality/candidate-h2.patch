@@ -1,0 +1,56 @@
+diff --git a/crates/qenlo-core/src/lib.rs b/crates/qenlo-core/src/lib.rs
+index 507c2fa..98d75fb 100644
+--- a/crates/qenlo-core/src/lib.rs
++++ b/crates/qenlo-core/src/lib.rs
+@@ -395,6 +395,29 @@ impl CoreStore {
+         &self.padded_row(slot)[..self.dimension]
+     }
+ 
++    /// Hint a row's cache lines into L1 ahead of its dot product. Scattered eligible slots restart
++    /// the hardware stream prefetcher at every gap; out-of-range slots are ignored.
++    #[inline(always)]
++    fn prefetch_row(&self, slot: u32) {
++        #[cfg(target_arch = "x86_64")]
++        {
++            use std::arch::x86_64::{_MM_HINT_T0, _mm_prefetch};
++            let start = slot as usize * self.lanes_per_row;
++            if let Some(lanes) = self.vectors.get(start..start + self.lanes_per_row) {
++                // Two 32-byte lanes per 64-byte line.
++                for lane in lanes.iter().step_by(2) {
++                    // SAFETY: SSE is in the x86_64 baseline and a prefetch never faults.
++                    #[allow(unused_unsafe)]
++                    unsafe {
++                        _mm_prefetch::<_MM_HINT_T0>((lane as *const Lane).cast::<i8>())
++                    };
++                }
++            }
++        }
++        #[cfg(not(target_arch = "x86_64"))]
++        let _ = slot;
++    }
++
+     fn view(&self, slot: u32) -> RecordRef<'_> {
+         let meta = &self.rows[slot as usize];
+         RecordRef {
+@@ -843,7 +866,10 @@ impl CoreStore {
+             // Seed with the previous chunk's last slot so ascending order is checked across chunks.
+             let mut previous = start.checked_sub(1).map(|prior| slots[prior]);
+             let mut best = TopK::new(k);
+-            for &slot in &slots[start..end] {
++            for (index, &slot) in slots[start..end].iter().enumerate() {
++                if let Some(&ahead) = slots[..end].get(start + index + PREFETCH_ROWS) {
++                    self.prefetch_row(ahead);
++                }
+                 let row = self.eligible_row(slot, &mut previous, predicate)?;
+                 let approximate_distance =
+                     1.0 - approximate_dot(&padded_query, self.padded_row(slot));
+@@ -1045,6 +1071,9 @@ const LEGACY_CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
+ // i5-13420H, waking the whole pool costs about 25 us, and one thread per 2^18 (about 680 rows at
+ // D=384) broke even near E=700 and won from E=1,500 (examples/cpu_cliff_bench.rs).
+ const PARALLEL_MIN_WORK_PER_THREAD: usize = 1 << 18;
++// How many eligible rows ahead the certified scan prefetches. One D=384 row scores in ~60 ns
++// cache-hot against ~100 ns DRAM latency, so two rows ahead covers the miss.
++const PREFETCH_ROWS: usize = 2;
+ /// A timestamp range yielding more than `rows / divisor` slots switches to a sequential scan.
+ const RANGE_SCAN_PROBE_DIVISOR: usize = 16;
+ 
