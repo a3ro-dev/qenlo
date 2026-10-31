@@ -37,7 +37,7 @@ fn main() {
         ExactScan::Parallel,
         ExactScan::Auto,
     ];
-    println!("E,mode,median_ms,per_row_ns");
+    println!("E,mode,median_ms,p95_ms,per_row_ns");
     for e in [
         1000usize, 2000, 3000, 4096, 4097, 6000, 10000, 20000, 30000, 100000,
     ] {
@@ -55,8 +55,11 @@ fn main() {
                 })
                 .collect();
             t.sort_by(f64::total_cmp);
-            let median = t[t.len() / 2];
-            println!("{e},{scan:?},{median:.3},{:.1}", median * 1e6 / e as f64);
+            let (median, p95) = (t[t.len() / 2], t[t.len() * 95 / 100]);
+            println!(
+                "{e},{scan:?},{median:.3},{p95:.3},{:.1}",
+                median * 1e6 / e as f64
+            );
         }
     }
 }
