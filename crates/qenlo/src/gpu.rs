@@ -404,7 +404,7 @@ impl GpuExact {
             select_pipeline,
             tiles_pipeline,
             merge_pipeline,
-            select_kernel: Default::default(),
+            select_kernel: default_select_kernel(&capabilities),
             group0_layout,
             group1_layout,
             chunks,
@@ -1073,10 +1073,10 @@ impl GpuBackend {
             mode,
             budget,
             exact: None,
-            capabilities,
             ivf_config: None,
             ivf: None,
-            select_kernel: Default::default(),
+            select_kernel: default_select_kernel(&capabilities),
+            capabilities,
         })
     }
 
@@ -1901,6 +1901,15 @@ fn validate_limits(limits: &wgpu::Limits, dimension: usize) -> Result<(), GpuErr
     }
 }
 
+// Software adapters such as WARP spend about 50 s JIT-compiling the tiled sort on first use.
+fn default_select_kernel(capabilities: &GpuCapabilities) -> super::GpuSelectKernel {
+    if capabilities.device_type == format!("{:?}", wgpu::DeviceType::Cpu) {
+        super::GpuSelectKernel::KPass
+    } else {
+        super::GpuSelectKernel::default()
+    }
+}
+
 fn adapter_capabilities(adapter: &wgpu::Adapter, budget: u64) -> GpuCapabilities {
     let info = adapter.get_info();
     let limits = adapter.limits();
@@ -1984,6 +1993,15 @@ mod tests {
             }
             Err(error) => panic!("GPU initialization failed: {error}"),
         }
+    }
+
+    // The tiled kernel's first use on a software adapter outlasts DEVICE_TIMEOUT.
+    fn testable_kernels(exact: &GpuExact) -> Vec<super::super::GpuSelectKernel> {
+        let mut kernels = vec![super::super::GpuSelectKernel::KPass];
+        if default_select_kernel(&exact.capabilities) == super::super::GpuSelectKernel::Tiled {
+            kernels.push(super::super::GpuSelectKernel::Tiled);
+        }
+        kernels
     }
 
     fn tiny_gpu() -> Option<GpuExact> {
@@ -2360,12 +2378,7 @@ mod tests {
             ))) else {
                 return;
             };
-            for (kernel, filter) in [
-                super::super::GpuSelectKernel::KPass,
-                super::super::GpuSelectKernel::Tiled,
-            ]
-            .into_iter()
-            .flat_map(|kernel| {
+            for (kernel, filter) in testable_kernels(&exact).into_iter().flat_map(|kernel| {
                 [
                     FilterMode::Mask(&mask),
                     FilterMode::EligibleRows(&eligible),
@@ -2477,10 +2490,7 @@ mod tests {
                     .iter()
                     .map(|&(distance, id)| (id, distance.to_bits()))
                     .collect();
-                for kernel in [
-                    super::super::GpuSelectKernel::KPass,
-                    super::super::GpuSelectKernel::Tiled,
-                ] {
+                for kernel in testable_kernels(&exact) {
                     exact.select_kernel = kernel;
                     let (hits, _) = block_on(exact.search(&[1.0, 0.0], k, filter)).unwrap();
                     let hits: Vec<_> = hits
