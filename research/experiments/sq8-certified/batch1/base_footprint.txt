@@ -1,0 +1,3 @@
+rows=2000 dim=384 heap=3.9MiB (2036 B/row) add=2.61us search_all=48.5us search_user=17.7us search_recent1k=28.3us add+search=48.8us
+rows=100000 dim=384 heap=213.2MiB (2235 B/row) add=2.36us search_all=5276.6us search_user=1770.0us search_recent1k=31.0us add+search=5177.3us
+peak heap=347.7MiB
