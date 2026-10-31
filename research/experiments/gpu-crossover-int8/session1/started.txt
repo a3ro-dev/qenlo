@@ -1,0 +1,4 @@
+Sat Oct 31 20:17:40 IST 2026
+name, driver_version, power.draw [W], pstate
+NVIDIA GeForce RTX 4050 Laptop GPU, 616.56, 1.36 W, P8
+Sat Oct 31 20:33:07 IST 2026
