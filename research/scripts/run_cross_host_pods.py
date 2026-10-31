@@ -21,6 +21,8 @@ PODS = [  # (name, gpu id or None for CPU, cloud, price cap $/hr)
     ("cpu", None, "SECURE", 0.20),
 ]
 base_tgz, cand_tgz, out_root = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
+if len(sys.argv) > 4:  # retry: JSON list of [name, gpu, cloud, cap] and the budget left
+    PODS, BUDGET_USD = [tuple(p) for p in json.loads(sys.argv[4])], float(sys.argv[5])
 script = Path(__file__).resolve().parents[2] / "scripts/runpod/cross_host_bench.sh"
 spent = {"exposure": 0.0}
 lock = threading.Lock()
