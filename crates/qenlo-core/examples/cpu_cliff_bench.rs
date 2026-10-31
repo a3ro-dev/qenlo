@@ -35,6 +35,7 @@ fn main() {
         ExactScan::Legacy,
         ExactScan::Certified,
         ExactScan::Parallel,
+        ExactScan::Int8,
         ExactScan::Auto,
     ];
     println!("E,mode,median_ms,p95_ms,per_row_ns");

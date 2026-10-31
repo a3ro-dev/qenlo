@@ -48,7 +48,10 @@ fn quantize(x: &[f32]) -> Codes {
     let max = x.iter().map(|v| v.abs()).fold(0.0f32, f32::max) as f64;
     let scale = max / 127.0;
     Codes {
-        codes: x.iter().map(|&v| (v as f64 / scale).round() as i8).collect(),
+        codes: x
+            .iter()
+            .map(|&v| (v as f64 / scale).round() as i8)
+            .collect(),
         scale,
         l1: x.iter().map(|&v| (v as f64).abs()).sum(),
     }
@@ -96,8 +99,10 @@ fn main() {
     let raw: Vec<f32> = match &path {
         Some(p) => std::fs::read(p)
             .unwrap()
-            .chunks_exact(4)
-            .map(|b| f32::from_le_bytes(b.try_into().unwrap()))
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|&b| f32::from_le_bytes(b))
             .collect(),
         None => {
             let mut s = 7;
@@ -108,7 +113,13 @@ fn main() {
     };
     // ag-news layout: corpus 0..100k, evaluation 101k..106k.
     let corpus = &raw[..N * D];
-    let queries: Vec<&[f32]> = raw[101_000 * D..].chunks_exact(D).take(200).collect();
+    let queries: Vec<&[f32]> = raw[101_000 * D..]
+        .as_chunks::<D>()
+        .0
+        .iter()
+        .take(200)
+        .map(|q| q.as_slice())
+        .collect();
     let mut s = 1u64;
     let mut perm: Vec<usize> = (0..N).collect();
     for i in (1..N).rev() {
@@ -119,7 +130,7 @@ fn main() {
     let before = LIVE.load(Relaxed);
     PEAK.store(before, Relaxed);
     let mut store = CoreStore::new(D).unwrap();
-    for (id, v) in corpus.chunks_exact(D).enumerate() {
+    for (id, v) in corpus.as_chunks::<D>().0.iter().enumerate() {
         store.add(id as u64, 0, perm[id] as i64, v).unwrap();
     }
     let (add_heap, add_peak) = (LIVE.load(Relaxed) - before, PEAK.load(Relaxed) - before);
@@ -160,7 +171,9 @@ fn main() {
         let (mut tc, mut ts, mut rescored, mut mismatches) = (vec![], vec![], 0usize, 0usize);
         for (round, q) in queries.iter().enumerate() {
             let t = Instant::now();
-            let want = store.search_with_scan(q, &p, K, ExactScan::Certified).unwrap();
+            let want = store
+                .search_with_scan(q, &p, K, ExactScan::Certified)
+                .unwrap();
             tc.push(t.elapsed().as_secs_f64() * 1e3);
 
             let t = Instant::now();
@@ -175,9 +188,8 @@ fn main() {
                 let int = unsafe { dot_i8_avx2(&qc.codes, &c.codes) } as f64;
                 let approx = qc.scale * c.scale * int;
                 // |q.x - approx| <= sq*(sx/2)*|q^|_1 + (sq/2)*|x|_1, padded for f64 rounding.
-                let bound = (qc.scale * c.scale * 0.5 * q_codes_l1 + qc.scale * 0.5 * c.l1)
-                    * 1.0001
-                    + 1e-7;
+                let bound =
+                    (qc.scale * c.scale * 0.5 * q_codes_l1 + qc.scale * 0.5 * c.l1) * 1.0001 + 1e-7;
                 let lower = (1.0 - approx - bound) as f32;
                 if best.len() < K || lower <= best[K - 1].0 {
                     rescored += 1;

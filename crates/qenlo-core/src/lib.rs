@@ -140,6 +140,50 @@ struct Lane([f32; LANE]);
 
 const LANE: usize = 8;
 
+/// Rows per vector chunk. Small under test so every test crosses chunk edges.
+const CHUNK_ROWS: usize = if cfg!(test) { 8 } else { 1024 };
+/// Int8 code rows are zero-padded to whole 16-byte AVX2 loads.
+const CODE_ALIGN: usize = 16;
+
+#[derive(Clone, Debug, Default)]
+struct Chunk {
+    vectors: Vec<Lane>,
+    codes: Vec<i8>,
+    scales: Vec<CodeScale>,
+}
+
+/// Per-row int8 scale and an upward-rounded L1 norm of the canonical row, for the error bound.
+#[derive(Clone, Copy, Debug)]
+struct CodeScale {
+    scale: f32,
+    l1: f32,
+}
+
+/// Append int8 codes for a unit vector: `x_i = scale * code_i + e_i` with `|e_i| <= scale / 2`
+/// (plus f64 rounding, which the scan's bound pads for). Codes are zero-padded to `stride`.
+fn quantize_into(vector: &[f32], stride: usize, codes: &mut Vec<i8>) -> CodeScale {
+    let maximum = vector
+        .iter()
+        .fold(0.0f32, |max, value| max.max(value.abs()));
+    // Unit vectors have a component of at least 1/sqrt(D), so the scale is positive and
+    // |value / scale| <= 127 * (1 + 2^-24), which rounds to 127 at most.
+    let scale = maximum / 127.0;
+    codes.extend(
+        vector
+            .iter()
+            .map(|&value| (f64::from(value) / f64::from(scale)).round() as i8),
+    );
+    codes.resize(codes.len() + stride - vector.len(), 0);
+    let l1 = vector
+        .iter()
+        .map(|&value| f64::from(value).abs())
+        .sum::<f64>();
+    CodeScale {
+        scale,
+        l1: (l1 as f32).next_up(),
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SearchHit {
     pub id: u64,
@@ -271,15 +315,17 @@ impl std::error::Error for Error {}
 
 /// Canonical record storage with metadata indexes and exact cosine search.
 ///
-/// Vectors are canonical in one row-major, 32-byte-aligned buffer whose rows are zero-padded to a
-/// multiple of eight floats. Exact search scans that buffer directly, so there is no second copy
-/// to build after a write.
+/// Vectors are canonical in row-major, 32-byte-aligned chunks of whole rows, each row zero-padded
+/// to a multiple of eight floats. Exact search scans those chunks directly, so there is no second
+/// copy to build after a write. Each row also carries transient int8 codes for the first pass of
+/// the certified scan; they are derived from the canonical row and never persisted.
 #[derive(Clone, Debug)]
 pub struct CoreStore {
     dimension: usize,
     lanes_per_row: usize,
+    code_stride: usize,
     rows: Vec<RowMeta>,
-    vectors: Vec<Lane>,
+    chunks: Vec<Chunk>,
     ids: HashMap<u64, u32>,
     users: BTreeMap<u64, BTreeSet<u32>>,
     // One flat ordered set: timestamps are usually unique, and a set per key costs ~100 B/row.
@@ -296,8 +342,9 @@ impl CoreStore {
         Ok(Self {
             dimension,
             lanes_per_row: dimension.div_ceil(LANE),
+            code_stride: dimension.next_multiple_of(CODE_ALIGN),
             rows: Vec::new(),
-            vectors: Vec::new(),
+            chunks: Vec::new(),
             ids: HashMap::new(),
             users: BTreeMap::new(),
             timestamps: BTreeSet::new(),
@@ -331,9 +378,6 @@ impl CoreStore {
         // Snapshots know their row count; reserve once instead of growing by doubling.
         let expected = records.size_hint().0;
         store.rows.reserve_exact(expected);
-        store
-            .vectors
-            .reserve_exact(expected.saturating_mul(store.lanes_per_row));
         store.ids.reserve(expected);
         for restored in records {
             let restored = restored?;
@@ -368,24 +412,35 @@ impl CoreStore {
 
     fn push_row(&mut self, meta: RowMeta, vector: &[f32]) {
         debug_assert_eq!(vector.len(), self.dimension);
-        let start = self.vectors.len();
-        if self.vectors.capacity() - start < self.lanes_per_row {
-            // Grow by half instead of doubling: the vector buffer dominates resident memory.
-            self.vectors
-                .reserve_exact(self.lanes_per_row.max(start / 2));
+        let slot = self.rows.len();
+        if slot.is_multiple_of(CHUNK_ROWS) {
+            // Later chunks are allocated whole; the first grows from empty so small stores stay
+            // small. Chunks never move, so no regrow copies more than one chunk.
+            let rows = if slot == 0 { 0 } else { CHUNK_ROWS };
+            self.chunks.push(Chunk {
+                vectors: Vec::with_capacity(rows * self.lanes_per_row),
+                codes: Vec::with_capacity(rows * self.code_stride),
+                scales: Vec::with_capacity(rows),
+            });
         }
-        self.vectors
+        let chunk = self.chunks.last_mut().expect("a chunk was just ensured");
+        let start = chunk.vectors.len();
+        chunk
+            .vectors
             .resize(start + self.lanes_per_row, Lane::default());
-        for (lane, chunk) in self.vectors[start..].iter_mut().zip(vector.chunks(LANE)) {
-            lane.0[..chunk.len()].copy_from_slice(chunk);
+        for (lane, values) in chunk.vectors[start..].iter_mut().zip(vector.chunks(LANE)) {
+            lane.0[..values.len()].copy_from_slice(values);
         }
+        let scale = quantize_into(vector, self.code_stride, &mut chunk.codes);
+        chunk.scales.push(scale);
         self.rows.push(meta);
     }
 
     /// The padded row (a multiple of eight floats, zero tail) as stored.
     fn padded_row(&self, slot: u32) -> &[f32] {
-        let start = slot as usize * self.lanes_per_row;
-        let lanes = &self.vectors[start..start + self.lanes_per_row];
+        let chunk = &self.chunks[slot as usize / CHUNK_ROWS];
+        let start = slot as usize % CHUNK_ROWS * self.lanes_per_row;
+        let lanes = &chunk.vectors[start..start + self.lanes_per_row];
         // SAFETY: `Lane` is `repr(C)` around `[f32; 8]` with size 32 and align 32, so a slice of
         // lanes is a contiguous, initialized run of `8 * lanes.len()` f32 values.
         unsafe { std::slice::from_raw_parts(lanes.as_ptr().cast::<f32>(), lanes.len() * LANE) }
@@ -393,6 +448,17 @@ impl CoreStore {
 
     fn row(&self, slot: u32) -> &[f32] {
         &self.padded_row(slot)[..self.dimension]
+    }
+
+    /// The row's int8 codes (zero-padded to `code_stride`) and their scale.
+    fn code_row(&self, slot: u32) -> (&[i8], CodeScale) {
+        let chunk = &self.chunks[slot as usize / CHUNK_ROWS];
+        let index = slot as usize % CHUNK_ROWS;
+        let start = index * self.code_stride;
+        (
+            &chunk.codes[start..start + self.code_stride],
+            chunk.scales[index],
+        )
     }
 
     fn view(&self, slot: u32) -> RecordRef<'_> {
@@ -427,9 +493,17 @@ impl CoreStore {
         self.generation
     }
 
-    /// Bytes held by canonical vectors, including row padding and spare capacity.
+    /// Bytes held by canonical vectors and their int8 scan codes, including row padding and spare
+    /// capacity.
     pub fn vector_bytes(&self) -> usize {
-        self.vectors.capacity() * std::mem::size_of::<Lane>()
+        self.chunks
+            .iter()
+            .map(|chunk| {
+                chunk.vectors.capacity() * std::mem::size_of::<Lane>()
+                    + chunk.codes.capacity()
+                    + chunk.scales.capacity() * std::mem::size_of::<CodeScale>()
+            })
+            .sum()
     }
 
     pub fn record(&self, slot: u32) -> Option<RecordRef<'_>> {
@@ -829,8 +903,21 @@ impl CoreStore {
         let mut padded_query = vec![0.0; self.lanes_per_row * LANE];
         padded_query[..self.dimension].copy_from_slice(query);
         let exact_dot = dot_implementation();
+        // The int8 pass reads a quarter of the bytes; it loses below a few thousand rows, where
+        // quantizing the query costs more than the rows it saves (sq8-certified probe).
+        let int8 = int8_dot_implementation()
+            .filter(|_| self.dimension <= INT8_MAX_DIMENSION)
+            .filter(|_| {
+                scan == ExactScan::Int8 || (scan == ExactScan::Auto && slots.len() >= INT8_MIN_ROWS)
+            })
+            .map(|dot| {
+                let mut codes = Vec::with_capacity(self.code_stride);
+                let scale = quantize_into(query, self.code_stride, &mut codes);
+                let code_l1 = codes.iter().map(|&code| f64::from(code).abs()).sum::<f64>();
+                (dot, codes, f64::from(scale.scale), code_l1)
+            });
         let parts = match scan {
-            ExactScan::Certified | ExactScan::Legacy => 1,
+            ExactScan::Certified | ExactScan::Int8 | ExactScan::Legacy => 1,
             ExactScan::Parallel => pool::threads(),
             ExactScan::Auto => (slots.len() * self.dimension / PARALLEL_MIN_WORK_PER_THREAD)
                 .clamp(1, pool::threads()),
@@ -845,14 +932,30 @@ impl CoreStore {
             let mut best = TopK::new(k);
             for &slot in &slots[start..end] {
                 let row = self.eligible_row(slot, &mut previous, predicate)?;
-                let approximate_distance =
-                    1.0 - approximate_dot(&padded_query, self.padded_row(slot));
-                // The exact running cutoff only shrinks, so a row whose FP32 distance exceeds it
-                // by more than the error bound can never reach the final top k.
-                if best
-                    .cutoff()
-                    .is_none_or(|cutoff| approximate_distance <= cutoff + 2.0 * error_bound)
-                {
+                // The exact running cutoff only shrinks, so a row whose distance lower bound
+                // exceeds it can never reach the final top k.
+                let cutoff = best.cutoff();
+                let candidate = match &int8 {
+                    Some((dot, query_codes, query_scale, query_code_l1)) => {
+                        let (codes, row_scale) = self.code_row(slot);
+                        let scales = query_scale * f64::from(row_scale.scale);
+                        let approximate = scales * f64::from(dot(query_codes, codes));
+                        // |q.x - approximate| <= sq*sx/2*|cq|_1 + sq/2*|x|_1 (quantize_into),
+                        // padded for f64 rounding; the integer dot itself is exact.
+                        let bound = (scales * 0.5 * query_code_l1
+                            + query_scale * 0.5 * f64::from(row_scale.l1))
+                            * 1.0001
+                            + 1e-7;
+                        cutoff.is_none_or(|cutoff| {
+                            1.0 - approximate - bound <= f64::from(cutoff) + 1e-6
+                        })
+                    }
+                    None => cutoff.is_none_or(|cutoff| {
+                        1.0 - approximate_dot(&padded_query, self.padded_row(slot))
+                            <= cutoff + 2.0 * error_bound
+                    }),
+                };
+                if candidate {
                     best.offer(row.id, (1.0 - exact_dot(query, self.row(slot))) as f32);
                 }
             }
@@ -1022,6 +1125,8 @@ pub enum CpuDistancePath {
     Fp32Avx2Certified,
     /// AVX2/FMA float32 candidate scoring with a conservative FP64 boundary verification.
     Fp32Avx2FmaCertified,
+    /// AVX2 int8 candidate scoring with a conservative bound and FP64 rescoring.
+    Int8Avx2Certified,
 }
 
 /// Exact CPU scan strategy. Every variant returns results identical to the FP64 reference.
@@ -1034,11 +1139,20 @@ pub enum ExactScan {
     Certified,
     /// Certified FP32 split across every scan-pool thread regardless of size.
     Parallel,
-    /// Certified FP32, split across the scan pool once E*D exceeds the measured threshold.
+    /// Certified int8 first pass (a quarter of the FP32 bytes) with FP64 rescoring, one thread.
+    /// Falls back to the FP64 reference where AVX2 is missing.
+    Int8,
+    /// Certified FP32, or int8 once E reaches `INT8_MIN_ROWS`, split across the scan pool once
+    /// E*D exceeds the measured threshold.
     #[default]
     Auto,
 }
 
+// Auto switches the certified first pass from FP32 to int8 at this many eligible rows.
+// shortcut: midpoint of the probe's loss at E=1k and win at E=10k, re-measure per host if it matters.
+const INT8_MIN_ROWS: usize = 4_096;
+// 127 * 127 * D must fit the i32 accumulator with room to spare.
+const INT8_MAX_DIMENSION: usize = 65_536;
 // The v2 paper's route switched to FP64 accumulation above this many eligible rows.
 const LEGACY_CERTIFIED_FP32_MAX_ROWS: usize = 4_096;
 // Eligible rows times dimension each scan thread must have before `Auto` adds it. On a 12-thread
@@ -1053,9 +1167,11 @@ pub fn cpu_distance_path() -> CpuDistancePath {
     cpu_distance_path_for_eligible_count(0)
 }
 
-/// Report the exact distance implementation `search` selects; the certified route covers every
-/// eligible-row count, so the count no longer changes the answer.
-pub fn cpu_distance_path_for_eligible_count(_eligible_rows: usize) -> CpuDistancePath {
+/// Report the exact distance implementation `search` selects for this many eligible rows.
+pub fn cpu_distance_path_for_eligible_count(eligible_rows: usize) -> CpuDistancePath {
+    if eligible_rows >= INT8_MIN_ROWS && int8_dot_implementation().is_some() {
+        return CpuDistancePath::Int8Avx2Certified;
+    }
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     if std::is_x86_feature_detected!("avx2") && std::is_x86_feature_detected!("fma") {
         return CpuDistancePath::Fp32Avx2FmaCertified;
@@ -1107,6 +1223,45 @@ fn dot_implementation() -> fn(&[f32], &[f32]) -> f64 {
 }
 
 type Fp32Dot = fn(&[f32], &[f32]) -> f32;
+
+type Int8Dot = fn(&[i8], &[i8]) -> i32;
+
+fn int8_dot_implementation() -> Option<Int8Dot> {
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if std::is_x86_feature_detected!("avx2") {
+        // SAFETY: selected only after runtime AVX2 detection; callers pass equal-length rows
+        // padded to whole 16-byte blocks.
+        return Some(|left, right| unsafe { dot_i8_avx2(left, right) });
+    }
+    None
+}
+
+/// Exact integer dot of int8 rows whose length is a multiple of 16.
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2")]
+unsafe fn dot_i8_avx2(left: &[i8], right: &[i8]) -> i32 {
+    #[cfg(target_arch = "x86")]
+    use std::arch::x86::*;
+    #[cfg(target_arch = "x86_64")]
+    use std::arch::x86_64::*;
+    debug_assert_eq!(left.len(), right.len());
+    debug_assert_eq!(left.len() % CODE_ALIGN, 0);
+    let mut sum = _mm256_setzero_si256();
+    for offset in (0..left.len()).step_by(CODE_ALIGN) {
+        // SAFETY: offset + 16 <= len for both rows, and unaligned loads are allowed.
+        let (a, b) = unsafe {
+            (
+                _mm256_cvtepi8_epi16(_mm_loadu_si128(left.as_ptr().add(offset).cast())),
+                _mm256_cvtepi8_epi16(_mm_loadu_si128(right.as_ptr().add(offset).cast())),
+            )
+        };
+        sum = _mm256_add_epi32(sum, _mm256_madd_epi16(a, b));
+    }
+    let mut lanes = [0i32; 8];
+    // SAFETY: lanes has room for all eight i32 values and unaligned stores are allowed.
+    unsafe { _mm256_storeu_si256(lanes.as_mut_ptr().cast(), sum) };
+    lanes.iter().sum()
+}
 
 fn fp32_dot_implementation() -> Option<Fp32Dot> {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
@@ -1731,12 +1886,16 @@ mod tests {
     }
 
     #[test]
-    fn cpu_distance_route_is_certified_at_every_eligible_count() {
-        for eligible in [0, LEGACY_CERTIFIED_FP32_MAX_ROWS + 1, 1_000_000] {
-            assert_eq!(
-                cpu_distance_path_for_eligible_count(eligible),
-                cpu_distance_path()
-            );
+    fn cpu_distance_route_switches_to_int8_at_its_threshold() {
+        assert_eq!(
+            cpu_distance_path_for_eligible_count(INT8_MIN_ROWS - 1),
+            cpu_distance_path()
+        );
+        let large = cpu_distance_path_for_eligible_count(INT8_MIN_ROWS);
+        if int8_dot_implementation().is_some() {
+            assert_eq!(large, CpuDistancePath::Int8Avx2Certified);
+        } else {
+            assert_eq!(large, cpu_distance_path());
         }
     }
 
@@ -1967,6 +2126,7 @@ mod tests {
                             ExactScan::Legacy,
                             ExactScan::Certified,
                             ExactScan::Parallel,
+                            ExactScan::Int8,
                             ExactScan::Auto,
                         ] {
                             assert_eq!(

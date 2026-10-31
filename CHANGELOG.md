@@ -1,5 +1,24 @@
 # changelog
 
+## unreleased
+
+### changed
+
+- large exact CPU scans read a quarter of the bytes. each row now also keeps an
+  int8 copy with one scale; `ExactScan::Auto` scores int8 first once E reaches
+  4,096 rows, keeps every row whose deterministic error bound could put it in
+  the top k, and rescores those in FP64. results are identical to the FP64
+  reference (near-tie test included). `ExactScan::Int8` forces it on one
+  thread. single-thread int8 was 0.31-0.51x of certified FP32 at E=100k on six
+  cloud CPUs; on the laptop Auto P95 went 5.7 -> 1.9 ms at E=100k and
+  1.0 -> 0.8 ms at E=10k. `cpu_distance_path` reports `Int8Avx2Certified`.
+- rows live in 1,024-row chunks instead of one growing buffer, so `add` no
+  longer copies the whole store when it grows: at 100k x 384 the add-built heap
+  went 2,226 -> 2,047 B/row and the build peak 348 -> 196 MiB.
+- costs: `add` is about 16% slower (2.36 -> 2.73 us, quantization), a store
+  reopened from disk holds about 400 B/row more (the int8 copy), and certified
+  FP32 at E=1k is about 3 us slower.
+
 ## 0.1.0-beta.2 - 2026-10-25
 
 faster exact search on both sides of the CPU/GPU split. results are unchanged:
